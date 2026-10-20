@@ -554,6 +554,40 @@ fn tools_not_fetched_on_this_machine() {
     assert!(env.pixi_args().is_none());
 }
 
+#[test] // rq-f3b637ee rq-956cc0ad
+fn external_job_waiting_for_the_human() {
+    let env = Env::preregistered();
+    let config = env.read("studies/x-vs-docking/config/base.yaml");
+    env.write(
+        "studies/x-vs-docking/config/base.yaml",
+        &format!(
+            "{config}  - name: md\n    run: cp {{in.system}}/1abc.pdb {{out}}/\n    inputs: {{system: stage:prepare}}\n    external: {{}}\n"
+        ),
+    );
+    env.commit();
+    env.run_by_hand("base", "prepare");
+    let key = env.keys("base")["md"].clone();
+    tophat::pipeline::write_job_folder(
+        &env.root(),
+        &SealRequest {
+            study: "x-vs-docking".into(),
+            stage: "md".into(),
+            key,
+            variant: Some("base".into()),
+            item: None,
+            trial: false,
+        },
+    )
+    .unwrap();
+    let next = env.next();
+    assert_eq!((next.row, next.who), (8, Who::You), "{next:?}");
+    assert_eq!(
+        next.command.as_deref(),
+        Some("tophat stage instructions x-vs-docking md --variant base")
+    );
+    assert!(next.line().starts_with("next (you): "), "{}", next.line());
+}
+
 #[test] // rq-14542671 rq-956cc0ad
 fn failed_qc() {
     let env = Env::preregistered();

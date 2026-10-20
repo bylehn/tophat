@@ -19,6 +19,8 @@ pub const EXIT_OK: i32 = 0;
 pub const EXIT_FAILED: i32 = 1;
 /// Exit code: the command could not run (usage error, not in a project, internal error).
 pub const EXIT_UNABLE: i32 = 2;
+/// Exit code of `tophat stage external`: the job folder is ready and waits for the human.
+pub const EXIT_WAITING: i32 = 3;
 
 const USAGE: &str = "\
 Usage: tophat <command> [options]
@@ -51,6 +53,10 @@ Commands:
   stage qc-status <STUDY> <STAGE> --key <K>      Exit 0 if the verdict is pass
   stage seal <STUDY> <STAGE> --key <K> [--variant V] [--item I] [--trial]
                                                  Record provenance for a finished stage
+  stage external <STUDY> <STAGE> --key <K> [--variant V] [--trial]
+                                                 Write an external job folder, or ingest it
+  stage instructions <STUDY> <STAGE> [--variant V]
+                                                 Show the steps for an external stage
   data retire <NAME>@v<N> --reason <TEXT>        Mark a dataset version as defective
   data lineage <NAME>@v<N>|<STUDY>/<STAGE>@<KEY> [--json]
                                                  Show what a dataset or output derives from
@@ -596,12 +602,16 @@ fn run_stage_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
         EXIT_UNABLE
     };
     let Some((sub, rest)) = args.split_first() else {
-        return usage(io, "expected `seal`, `begin`, `qc` or `qc-status`");
+        return usage(
+            io,
+            "expected `seal`, `begin`, `qc`, `qc-status`, `external` or `instructions`",
+        );
     };
     let (trial, rest) = take_flag(rest, "--trial");
     let known: &[&str] = match sub.as_str() {
         "seal" | "begin" => &["key", "variant", "item"],
-        "qc" => &["variant"],
+        "external" => &["key", "variant"],
+        "qc" | "instructions" => &["variant"],
         "qc-status" => &["key"],
         other => return usage(io, &format!("unknown stage subcommand `{other}`")),
     };
@@ -640,6 +650,17 @@ fn run_stage_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
                 Err(e) => fail(io, &e),
             }
         }
+        // rq-9eddd05a
+        "instructions" => {
+            let variant = option(&options, "variant").unwrap_or("base");
+            match pipeline::instructions(&root, study, stage, variant) {
+                Ok(text) => {
+                    let _ = io.out.write_all(text.as_bytes());
+                    EXIT_OK
+                }
+                Err(e) => fail(io, &e),
+            }
+        }
         "qc-status" => {
             let Some(key) = option(&options, "key") else {
                 return usage(io, "--key is required");
@@ -671,6 +692,27 @@ fn run_stage_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
                 item: option(&options, "item").map(str::to_string),
                 trial,
             };
+            // rq-530610d9
+            if sub == "external" {
+                let mut warnings = Vec::new();
+                let result = pipeline::stage_external(&root, &request, &mut |w| {
+                    warnings.push(w.to_string())
+                });
+                for w in warnings {
+                    let _ = writeln!(io.err, "tophat stage external: warning: {w}");
+                }
+                return match result {
+                    Ok(path) => {
+                        let _ = writeln!(io.out, "Ingested and sealed {}", path.display());
+                        EXIT_OK
+                    }
+                    Err(pipeline::ExternalError::Waiting(steps)) => {
+                        let _ = io.out.write_all(steps.as_bytes());
+                        EXIT_WAITING
+                    }
+                    Err(e) => fail(io, &e),
+                };
+            }
             if sub == "begin" {
                 match pipeline::begin(&root, &request) {
                     Ok(job) => {

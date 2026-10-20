@@ -86,6 +86,7 @@ struct Job {
     inputs: Vec<PathBuf>,
     qc: Vec<(String, String, String)>,
     fan_out: Option<ItemSource>,
+    external: bool,
 }
 
 const HELPERS: &str = r#"import json as _tophat_json
@@ -113,7 +114,7 @@ def _tophat_checkpoint_items(upstream, directory):
     return _tophat_items(directory)
 
 
-def _tophat_job(stage, key, variant, item=None, trial=False, qc=()):
+def _tophat_job(stage, key, variant, item=None, trial=False, qc=(), external=False):
     for qc_stage, qc_key, qc_variant in qc:
         status = _tophat_subprocess.run(
             ["tophat", "stage", "qc-status", _TOPHAT_STUDY, qc_stage, "--key", qc_key]
@@ -127,6 +128,17 @@ def _tophat_job(stage, key, variant, item=None, trial=False, qc=()):
                 + _TOPHAT_STUDY + " " + qc_stage + " --variant " + qc_variant + "`"
             )
     extra = (["--item", item] if item else []) + (["--trial"] if trial else [])
+    if external:
+        status = _tophat_subprocess.run(
+            ["tophat", "stage", "external", _TOPHAT_STUDY, stage, "--key", key, "--variant", variant, *extra]
+        )
+        if status.returncode == 3:
+            raise ValueError(
+                "External job for stage " + stage + " is waiting for you: follow the steps above, then run the pipeline again"
+            )
+        if status.returncode != 0:
+            raise ValueError("The returned job folder of stage " + stage + " cannot be ingested (see above)")
+        return
     begun = _tophat_json.loads(
         _tophat_subprocess.run(
             ["tophat", "stage", "begin", _TOPHAT_STUDY, stage, "--key", key, "--variant", variant, *extra],
@@ -265,6 +277,7 @@ pub fn generate_rules(root: &Path, study: &str) -> Result<String, PipelineError>
                 inputs,
                 qc,
                 fan_out,
+                external: stage.external.is_some(),
             });
         }
         variant_records.push((variant.clone(), all, results));
@@ -335,13 +348,17 @@ pub fn generate_rules(root: &Path, study: &str) -> Result<String, PipelineError>
             format!("    input:\n{inputs}")
         };
         let trial_arg = if trial { ", trial=True" } else { "" };
+        let external_arg = if job.external { ", external=True" } else { "" };
         let job_args = format!(
-            "{}, {}, {}{trial_arg}, qc={}",
+            "{}, {}, {}{trial_arg}, qc={}{external_arg}",
             py(&job.stage),
             py(&job.key),
             py(&job.variant),
             qc_list(&job.qc)
         );
+        // rq-4acafba4
+        // An external job only writes or ingests its job folder locally.
+        let threads = if job.external { 1 } else { job.threads };
         match &job.fan_out {
             None => {
                 let kind = if checkpoints.contains(&(job.stage.clone(), job.key.clone())) {
@@ -350,9 +367,8 @@ pub fn generate_rules(root: &Path, study: &str) -> Result<String, PipelineError>
                     "rule"
                 };
                 out.push_str(&format!(
-                    "{kind} {name}:\n{input_block}    output:\n        {}\n    threads: {}\n    run:\n        _tophat_job({job_args})\n\n",
+                    "{kind} {name}:\n{input_block}    output:\n        {}\n    threads: {threads}\n    run:\n        _tophat_job({job_args})\n\n",
                     pattern(&record),
-                    job.threads
                 ));
             }
             Some(source) => {

@@ -33,7 +33,7 @@ pub struct CodeFile {
 }
 
 /// Normalizes a path lexically. Returns `None` if it climbs above its starting point.
-fn normalize(path: &Path) -> Option<PathBuf> {
+pub(crate) fn normalize(path: &Path) -> Option<PathBuf> {
     let mut out = PathBuf::new();
     for c in path.components() {
         match c {
@@ -303,16 +303,24 @@ pub fn compute_keys_until(
         }
     };
     for stage in &config.stages[..end] {
-        let env = ctx
-            .stage_environment_hash(stage)
-            .map_err(|e| key_error(stage, e))?;
+        // rq-23d21623
+        let env = match &stage.external {
+            Some(_) => "external".to_string(),
+            None => ctx
+                .stage_environment_hash(stage)
+                .map_err(|e| key_error(stage, e))?,
+        };
         let mut lines = vec![KEY_FORMAT.to_string(), format!("run {}", stage.run)];
         // Only tool stages have a `tool` line, so other stages' keys are unaffected.
         if let Some(tool) = ctx.tool_info(stage).map_err(|e| key_error(stage, e))? {
             lines.push(format!("tool {}@{}", tool.pin.name, tool.commit));
         }
+        lines.push(format!("env {env}"));
+        // Only external stages have an `external` line, so other stages' keys are unaffected.
+        if let Some(external) = &stage.external {
+            lines.push(format!("external {}", external.key_json()));
+        }
         lines.extend([
-            format!("env {env}"),
             format!("threads {}", stage.threads),
             format!("foreach {}", stage.foreach.as_deref().unwrap_or("-")),
             format!("result {}", stage.result.as_deref().unwrap_or("-")),
