@@ -100,6 +100,13 @@
     "title": "study_status",
     "type": "api-item"
   },
+  "rq-032bd279": {
+    "decl": "Scenario: Tools not fetched on this machine",
+    "file": "workflow",
+    "refs": [],
+    "title": "Tools not fetched on this machine",
+    "type": "scenario"
+  },
   "rq-03cab891": {
     "decl": "# Feature: Snakemake Pipelines, QC Gates and Summaries",
     "file": "pipeline/snakemake",
@@ -147,6 +154,13 @@
     ],
     "title": "Output directory is named by the key",
     "type": "scenario"
+  },
+  "rq-052f542d": {
+    "decl": "- `tophat tools sync`",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
   },
   "rq-079894b1": {
     "decl": "### Commands",
@@ -202,6 +216,20 @@
     "title": "Frozen Fingerprint",
     "type": "section"
   },
+  "rq-08c87cc4": {
+    "decl": "Scenario: Sync resolves a prefix and caches the checkout",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "Sync resolves a prefix and caches the checkout",
+    "type": "scenario"
+  },
+  "rq-097c7d03": {
+    "decl": "- `sync(root: &Path) -> Result<SyncReport, ToolsError>` — performs `tophat tools sync`.",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "sync",
+    "type": "api-item"
+  },
   "rq-09eda840": {
     "decl": "## SUMMARY.md Format",
     "file": "study/format",
@@ -242,6 +270,13 @@
     "refs": [],
     "title": "Feature API",
     "type": "section"
+  },
+  "rq-0ab3c68d": {
+    "decl": "- `ingest(root: &Path, request: &SealRequest) -> Result<PathBuf, ExternalError>` — verifies a",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "ingest",
+    "type": "api-item"
   },
   "rq-0b009184": {
     "decl": "## Gherkin Scenarios",
@@ -359,6 +394,13 @@
     "title": "Feature: Project Integrity Check (`tophat check`)",
     "type": "file"
   },
+  "rq-10f972ce": {
+    "decl": "- `Receipt` — a parsed `receipt.txt`.",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "Receipt",
+    "type": "api-item"
+  },
   "rq-11940cec": {
     "decl": "Scenario: Keys command with an unconfigured results root",
     "file": "pipeline/provenance",
@@ -394,6 +436,14 @@
       }
     ],
     "title": "Running a Study",
+    "type": "section"
+  },
+  "rq-13602cac": {
+    "decl": "## Job Script",
+    "file": "pipeline/external",
+    "level": 2,
+    "refs": [],
+    "title": "Job Script",
     "type": "section"
   },
   "rq-13a88566": {
@@ -450,6 +500,14 @@
     "level": 3,
     "refs": [],
     "title": "Commands",
+    "type": "section"
+  },
+  "rq-149b947a": {
+    "decl": "### Functions",
+    "file": "pipeline/tools",
+    "level": 3,
+    "refs": [],
+    "title": "Functions",
     "type": "section"
   },
   "rq-14d17a56": {
@@ -523,6 +581,13 @@
     "title": "Scoped check still resolves cross-references project-wide",
     "type": "scenario"
   },
+  "rq-172dd12a": {
+    "decl": "Scenario: SLURM defaults and stage options are merged",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "SLURM defaults and stage options are merged",
+    "type": "scenario"
+  },
   "rq-17514314": {
     "decl": "Scenario: Stamped heading without text",
     "file": "question-tree",
@@ -533,6 +598,13 @@
       }
     ],
     "title": "Stamped heading without text",
+    "type": "scenario"
+  },
+  "rq-175f7439": {
+    "decl": "Scenario: The tool runs in its own environment",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "The tool runs in its own environment",
     "type": "scenario"
   },
   "rq-180689f2": {
@@ -681,6 +753,13 @@
     "title": "A failed item is retried alone",
     "type": "scenario"
   },
+  "rq-1b912496": {
+    "decl": "Scenario: The receipt is written when the command fails",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "The receipt is written when the command fails",
+    "type": "scenario"
+  },
   "rq-1bce095c": {
     "decl": "- `tophat check [--json] [--strict] [PATH...]`",
     "file": "check",
@@ -707,6 +786,13 @@
       }
     ],
     "title": "Duplicate item names fail the gather job",
+    "type": "scenario"
+  },
+  "rq-1d95d762": {
+    "decl": "Scenario: A receipt for another key is refused",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "A receipt for another key is refused",
     "type": "scenario"
   },
   "rq-1dd3778a": {
@@ -850,6 +936,14 @@
     "title": "Check runs from the project root",
     "type": "scenario"
   },
+  "rq-23d21623": {
+    "decl": "## Keys",
+    "file": "pipeline/external",
+    "level": 2,
+    "refs": [],
+    "title": "Keys",
+    "type": "section"
+  },
   "rq-23d4abbf": {
     "decl": "Scenario: Trial run of a draft",
     "file": "workflow",
@@ -923,6 +1017,13 @@
     "title": "Stamp leaves duplicated IDs for the user",
     "type": "scenario"
   },
+  "rq-254e43a2": {
+    "decl": "Scenario: The key covers setup and keep, not resources",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "The key covers setup and keep, not resources",
+    "type": "scenario"
+  },
   "rq-256e64ad": {
     "decl": "Scenario: Direct Snakemake on a draft only offers trial targets",
     "file": "workflow",
@@ -946,6 +1047,21 @@
     ],
     "title": "Summary goes stale when the code changes",
     "type": "scenario"
+  },
+  "rq-27bb0a4e": {
+    "decl": "Scenario: Changing the pinned commit re-runs the stage and downstream",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "Changing the pinned commit re-runs the stage and downstream",
+    "type": "scenario"
+  },
+  "rq-2891bce5": {
+    "decl": "## Gherkin Scenarios",
+    "file": "pipeline/external",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
   },
   "rq-2960fd26": {
     "decl": "- `load_roots(root: &Path) -> Result<Roots, DataError>` — reads the declared roots and resolves",
@@ -1182,6 +1298,13 @@
     "title": "Stub can be restored",
     "type": "scenario"
   },
+  "rq-3132a729": {
+    "decl": "Scenario: Return steps leave kept files on the cluster",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "Return steps leave kept files on the cluster",
+    "type": "scenario"
+  },
   "rq-3301d594": {
     "decl": "## Verification",
     "file": "data",
@@ -1217,6 +1340,14 @@
     ],
     "title": "tophat",
     "type": "api-item"
+  },
+  "rq-340771e5": {
+    "decl": "## The Job Folder",
+    "file": "pipeline/external",
+    "level": 2,
+    "refs": [],
+    "title": "The Job Folder",
+    "type": "section"
   },
   "rq-3460a0ee": {
     "decl": "## Gherkin Scenarios",
@@ -1270,6 +1401,21 @@
     "title": "Feature: Question Tree",
     "type": "file"
   },
+  "rq-3727b411": {
+    "decl": "Scenario: Any other edit to the job script is refused",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "Any other edit to the job script is refused",
+    "type": "scenario"
+  },
+  "rq-37a6119e": {
+    "decl": "## Keys and Provenance",
+    "file": "pipeline/tools",
+    "level": 2,
+    "refs": [],
+    "title": "Keys and Provenance",
+    "type": "section"
+  },
   "rq-383b2154": {
     "decl": "Scenario: Uncommitted code makes the record unclean",
     "file": "pipeline/provenance",
@@ -1293,6 +1439,14 @@
     ],
     "title": "Citing a draft study",
     "type": "scenario"
+  },
+  "rq-3898af16": {
+    "decl": "## Check Rules (`pipeline` family, external)",
+    "file": "pipeline/external",
+    "level": 2,
+    "refs": [],
+    "title": "Check Rules (`pipeline` family, external)",
+    "type": "section"
   },
   "rq-38c13472": {
     "decl": "Scenario: Invalid status value",
@@ -1348,6 +1502,13 @@
     "title": "Environment hash",
     "type": "section"
   },
+  "rq-3b6d26cd": {
+    "decl": "Scenario: Existing keys are unchanged by this feature",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "Existing keys are unchanged by this feature",
+    "type": "scenario"
+  },
   "rq-3b86c7d4": {
     "decl": "Scenario: Keys command reports sealed and missing outputs",
     "file": "pipeline/provenance",
@@ -1370,6 +1531,13 @@
       }
     ],
     "title": "stub",
+    "type": "api-item"
+  },
+  "rq-3c1af8c0": {
+    "decl": "- `ToolsError` — error type of the tool commands, with at minimum:",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "ToolsError",
     "type": "api-item"
   },
   "rq-3cc4a23d": {
@@ -1404,6 +1572,13 @@
     "title": "pixi not available",
     "type": "scenario"
   },
+  "rq-3de08c05": {
+    "decl": "- `write_job_folder(root: &Path, request: &SealRequest) -> Result<PathBuf, ExternalError>` — writes",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "write_job_folder",
+    "type": "api-item"
+  },
   "rq-3e058fe4": {
     "decl": "Scenario: Study ID does not match directory",
     "file": "study/format",
@@ -1414,6 +1589,13 @@
       }
     ],
     "title": "Study ID does not match directory",
+    "type": "scenario"
+  },
+  "rq-3f18bffc": {
+    "decl": "Scenario: Large inputs are copied with a warning",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "Large inputs are copied with a warning",
     "type": "scenario"
   },
   "rq-3fd30bb8": {
@@ -1470,6 +1652,13 @@
       }
     ],
     "title": "Open question needs neither answer nor evidence",
+    "type": "scenario"
+  },
+  "rq-42c672ac": {
+    "decl": "Scenario: An unexpected returned file is refused",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "An unexpected returned file is refused",
     "type": "scenario"
   },
   "rq-43b7a9e6": {
@@ -1577,6 +1766,13 @@
     "title": "Unlisted variant config",
     "type": "scenario"
   },
+  "rq-4865c985": {
+    "decl": "Scenario: Kept files copied back anyway are accepted",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "Kept files copied back anyway are accepted",
+    "type": "scenario"
+  },
   "rq-49765877": {
     "decl": "Scenario: Environment variable overrides the local roots file",
     "file": "data",
@@ -1604,6 +1800,14 @@
       }
     ],
     "title": "Stage Keys",
+    "type": "section"
+  },
+  "rq-4acafba4": {
+    "decl": "### External stages",
+    "file": "pipeline/snakemake",
+    "level": 3,
+    "refs": [],
+    "title": "External stages",
     "type": "section"
   },
   "rq-4b2809d2": {
@@ -1679,6 +1883,20 @@
     "title": "Feature API",
     "type": "section"
   },
+  "rq-4ebf0587": {
+    "decl": "- `tophat tools list [--json]`",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-4f2cf51c": {
+    "decl": "Scenario: A recorded resolution never changes",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "A recorded resolution never changes",
+    "type": "scenario"
+  },
   "rq-4fc6c2a5": {
     "decl": "- `tophat data publish <study> --stage <stage> [--variant <variant>] --as <name>`",
     "file": "data",
@@ -1719,6 +1937,13 @@
     "title": "Publishing an unsealed output fails",
     "type": "scenario"
   },
+  "rq-51d60cdc": {
+    "decl": "Scenario: An external stage cannot have a pixi environment",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "An external stage cannot have a pixi environment",
+    "type": "scenario"
+  },
   "rq-520893f5": {
     "decl": "Scenario: Scenario without a tag",
     "file": "study/format",
@@ -1731,6 +1956,14 @@
     "title": "Scenario without a tag",
     "type": "scenario"
   },
+  "rq-52dc4a39": {
+    "decl": "## Receipt",
+    "file": "pipeline/external",
+    "level": 2,
+    "refs": [],
+    "title": "Receipt",
+    "type": "section"
+  },
   "rq-52e3a974": {
     "decl": "Scenario: Create a new study",
     "file": "study/format",
@@ -1742,6 +1975,20 @@
     ],
     "title": "Create a new study",
     "type": "scenario"
+  },
+  "rq-52e5c665": {
+    "decl": "Scenario: The job script writes a receipt",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "The job script writes a receipt",
+    "type": "scenario"
+  },
+  "rq-530610d9": {
+    "decl": "- `tophat stage external <study> <stage> --key <key> [--variant <variant>] [--trial]`",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
   },
   "rq-533606d2": {
     "decl": "## Provenance Records",
@@ -1759,6 +2006,13 @@
     ],
     "title": "Provenance Records",
     "type": "section"
+  },
+  "rq-533b4dc3": {
+    "decl": "Scenario: List tools and their use",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "List tools and their use",
+    "type": "scenario"
   },
   "rq-543d641b": {
     "decl": "Scenario: Fan-out over a dataset",
@@ -1890,6 +2144,13 @@
     "title": "One job per key",
     "type": "section"
   },
+  "rq-57a8f3ae": {
+    "decl": "- `ExternalError` — error type of the external commands, with at minimum:",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "ExternalError",
+    "type": "api-item"
+  },
   "rq-580c8189": {
     "decl": "Scenario: Check outside any TopHat project",
     "file": "check",
@@ -1931,6 +2192,13 @@
     "title": "Full verification",
     "type": "section"
   },
+  "rq-59a106f1": {
+    "decl": "Scenario: An uncommitted lock makes the record unclean",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "An uncommitted lock makes the record unclean",
+    "type": "scenario"
+  },
   "rq-59d28b94": {
     "decl": "Scenario: Key text follows the specified construction",
     "file": "pipeline/provenance",
@@ -1965,6 +2233,13 @@
       }
     ],
     "title": "Check errors come first",
+    "type": "scenario"
+  },
+  "rq-5aaa8478": {
+    "decl": "Scenario: Undeclared tool",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "Undeclared tool",
     "type": "scenario"
   },
   "rq-5b6f6e50": {
@@ -2003,6 +2278,13 @@
     ],
     "title": "StageInput",
     "type": "api-item"
+  },
+  "rq-5cf6fbfe": {
+    "decl": "Scenario: The pipeline stops at an external stage and resumes after the return",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "The pipeline stops at an external stage and resumes after the return",
+    "type": "scenario"
   },
   "rq-5d07156c": {
     "decl": "- `tophat question tree [--json]`",
@@ -2043,6 +2325,14 @@
     ],
     "title": "Stopped at a QC gate",
     "type": "scenario"
+  },
+  "rq-5e395d39": {
+    "decl": "### Functions",
+    "file": "pipeline/external",
+    "level": 3,
+    "refs": [],
+    "title": "Functions",
+    "type": "section"
   },
   "rq-5e9d0d62": {
     "decl": "- `Status` — enum `Draft`, `Preregistered`, `Reported`, `Superseded`, `Retrospective`.",
@@ -2184,6 +2474,13 @@
     "title": "Retrospective study cannot carry a pre-registration block",
     "type": "scenario"
   },
+  "rq-648eee87": {
+    "decl": "Scenario: Prefix without a lock entry",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "Prefix without a lock entry",
+    "type": "scenario"
+  },
   "rq-65465008": {
     "decl": "Scenario: Pre-registration refused for a non-draft study",
     "file": "study/format",
@@ -2317,6 +2614,20 @@
     "title": "Amendment dated before pre-registration",
     "type": "scenario"
   },
+  "rq-692c1c23": {
+    "decl": "Scenario: Not cached on this machine is a warning",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "Not cached on this machine is a warning",
+    "type": "scenario"
+  },
+  "rq-69a74980": {
+    "decl": "Scenario: An external stage cannot fan out",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "An external stage cannot fan out",
+    "type": "scenario"
+  },
   "rq-6a6e86ca": {
     "decl": "Scenario: Untracked config makes the record unclean",
     "file": "pipeline/provenance",
@@ -2425,6 +2736,14 @@
     "title": "Unknown study",
     "type": "scenario"
   },
+  "rq-6ed3a5ea": {
+    "decl": "## Out of Scope",
+    "file": "pipeline/tools",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
+    "type": "section"
+  },
   "rq-6ef37d58": {
     "decl": "Scenario: Study names a question when PROJECT.md is missing",
     "file": "question-tree",
@@ -2485,6 +2804,14 @@
     "title": "Amendment dated in the future",
     "type": "scenario"
   },
+  "rq-71385ea7": {
+    "decl": "## Assumptions",
+    "file": "pipeline/tools",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
+  },
   "rq-719acfdc": {
     "decl": "- `tophat stage seal <study> <stage> --key <key> [--variant <variant>] [--item <item name>] [--trial]`",
     "file": "pipeline/provenance",
@@ -2511,6 +2838,13 @@
       }
     ],
     "title": "Adding from an unconfigured root fails",
+    "type": "scenario"
+  },
+  "rq-71e65d00": {
+    "decl": "Scenario: The key records the resolved commit",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "The key records the resolved commit",
     "type": "scenario"
   },
   "rq-731766dd": {
@@ -2541,6 +2875,13 @@
     ],
     "title": "A warning fails the check in strict mode",
     "type": "scenario"
+  },
+  "rq-750c490b": {
+    "decl": "# Feature: External (Cluster) Stages",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "Feature: External (Cluster) Stages",
+    "type": "file"
   },
   "rq-765490e4": {
     "decl": "Scenario: Supersede refuses a missing replacement",
@@ -2591,6 +2932,13 @@
     ],
     "title": "Question body",
     "type": "section"
+  },
+  "rq-77e1e92c": {
+    "decl": "Scenario: An unknown commit fails sync for that pin only",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "An unknown commit fails sync for that pin only",
+    "type": "scenario"
   },
   "rq-78b231e3": {
     "decl": "Scenario: A stage that nothing consumes is never gated",
@@ -2794,6 +3142,13 @@
     "title": "Directory without STUDY.md",
     "type": "scenario"
   },
+  "rq-7f815511": {
+    "decl": "Scenario: Generation refuses an uncached tool",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "Generation refuses an uncached tool",
+    "type": "scenario"
+  },
   "rq-7fcedcf8": {
     "decl": "Scenario: Create a private study",
     "file": "study/format",
@@ -2828,6 +3183,13 @@
       }
     ],
     "title": "Upstream of a fan-out is a checkpoint",
+    "type": "scenario"
+  },
+  "rq-80cee75b": {
+    "decl": "Scenario: Project-supplied environment for a tool without one",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "Project-supplied environment for a tool without one",
     "type": "scenario"
   },
   "rq-80f63e5c": {
@@ -2871,6 +3233,13 @@
     "title": "Dirty summary means commit and run again",
     "type": "scenario"
   },
+  "rq-82d88391": {
+    "decl": "Scenario: Receipts are parsed strictly",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "Receipts are parsed strictly",
+    "type": "scenario"
+  },
   "rq-83c71c3c": {
     "decl": "Scenario: QC refused without an interactive terminal",
     "file": "pipeline/snakemake",
@@ -2881,6 +3250,13 @@
       }
     ],
     "title": "QC refused without an interactive terminal",
+    "type": "scenario"
+  },
+  "rq-843afa31": {
+    "decl": "Scenario: Reaching an external stage writes the job folder and waits",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "Reaching an external stage writes the job folder and waits",
     "type": "scenario"
   },
   "rq-84e20fdc": {
@@ -2923,6 +3299,14 @@
     ],
     "title": "Superseded study keeps its frozen-section check",
     "type": "scenario"
+  },
+  "rq-85215682": {
+    "decl": "## Check Rules (`pipeline` family, tools)",
+    "file": "pipeline/tools",
+    "level": 2,
+    "refs": [],
+    "title": "Check Rules (`pipeline` family, tools)",
+    "type": "section"
   },
   "rq-85aa702f": {
     "decl": "Scenario: A new dataset version changes the key",
@@ -3237,6 +3621,21 @@
     "title": "Summary is dirty when an upstream record is unclean",
     "type": "scenario"
   },
+  "rq-96163724": {
+    "decl": "Scenario: An existing job folder is never overwritten",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "An existing job folder is never overwritten",
+    "type": "scenario"
+  },
+  "rq-964a4533": {
+    "decl": "## SLURM Defaults",
+    "file": "pipeline/external",
+    "level": 2,
+    "refs": [],
+    "title": "SLURM Defaults",
+    "type": "section"
+  },
   "rq-96dcd148": {
     "decl": "### Types",
     "file": "check",
@@ -3312,6 +3711,14 @@
     ],
     "title": "Extra sections are allowed",
     "type": "scenario"
+  },
+  "rq-9a642ead": {
+    "decl": "## Out of Scope",
+    "file": "pipeline/external",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
+    "type": "section"
   },
   "rq-9acfe92b": {
     "decl": "Scenario: Report refuses a stale summary",
@@ -3422,6 +3829,14 @@
     "title": "Dropped question without a reason",
     "type": "scenario"
   },
+  "rq-9d5b8ddf": {
+    "decl": "### Commands",
+    "file": "pipeline/tools",
+    "level": 3,
+    "refs": [],
+    "title": "Commands",
+    "type": "section"
+  },
   "rq-9e24cb69": {
     "decl": "Scenario: QC settings do not change keys",
     "file": "pipeline/provenance",
@@ -3433,6 +3848,21 @@
     ],
     "title": "QC settings do not change keys",
     "type": "scenario"
+  },
+  "rq-9eddd05a": {
+    "decl": "- `tophat stage instructions <study> <stage> [--variant <variant>]`",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-9f1e97a5": {
+    "decl": "## The Human's Steps",
+    "file": "pipeline/external",
+    "level": 2,
+    "refs": [],
+    "title": "The Human's Steps",
+    "type": "section"
   },
   "rq-9f2c5cd1": {
     "decl": "- `tophat study supersede <old-id> --by <new-id>`",
@@ -3551,6 +3981,13 @@
     "title": "Editing a scenario is detected",
     "type": "scenario"
   },
+  "rq-a06c8348": {
+    "decl": "Scenario: Provenance records the tool",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "Provenance records the tool",
+    "type": "scenario"
+  },
   "rq-a147f8cf": {
     "decl": "## Study Links",
     "file": "question-tree",
@@ -3583,6 +4020,14 @@
       }
     ],
     "title": "Variants",
+    "type": "section"
+  },
+  "rq-a1948f0a": {
+    "decl": "## Ingest",
+    "file": "pipeline/external",
+    "level": 2,
+    "refs": [],
+    "title": "Ingest",
     "type": "section"
   },
   "rq-a27155bc": {
@@ -3792,6 +4237,14 @@
     "title": "Headings inside code fences are not sections",
     "type": "scenario"
   },
+  "rq-a7c6edbc": {
+    "decl": "## Feature API",
+    "file": "pipeline/tools",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
   "rq-a85bdde8": {
     "decl": "Scenario: Invalid status value",
     "file": "question-tree",
@@ -3815,6 +4268,14 @@
     ],
     "title": "An unparseable file does not stop other files being checked",
     "type": "scenario"
+  },
+  "rq-a96b0574": {
+    "decl": "## Tool Environments",
+    "file": "pipeline/tools",
+    "level": 2,
+    "refs": [],
+    "title": "Tool Environments",
+    "type": "section"
   },
   "rq-a97cc02c": {
     "decl": "Scenario: Missing pre-registration block on a preregistered study",
@@ -3897,6 +4358,14 @@
     "title": "generate_rules",
     "type": "api-item"
   },
+  "rq-ab9a813f": {
+    "decl": "### The tools lock",
+    "file": "pipeline/tools",
+    "level": 3,
+    "refs": [],
+    "title": "The tools lock",
+    "type": "section"
+  },
   "rq-abbd00cd": {
     "decl": "### Project discovery",
     "file": "check",
@@ -3924,6 +4393,13 @@
       }
     ],
     "title": "Supersedes entry without a matching forward link",
+    "type": "scenario"
+  },
+  "rq-add5fac2": {
+    "decl": "Scenario: Edited SBATCH lines are accepted",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "Edited SBATCH lines are accepted",
     "type": "scenario"
   },
   "rq-adfff14c": {
@@ -3965,6 +4441,13 @@
     ],
     "title": "tophat",
     "type": "api-item"
+  },
+  "rq-afe4a64f": {
+    "decl": "Scenario: Ingest a returned job folder",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "Ingest a returned job folder",
+    "type": "scenario"
   },
   "rq-b01ceeeb": {
     "decl": "- `parse_study(dir: &Path) -> Result<Study, StudyError>` — parses `STUDY.md` in a study directory.",
@@ -4070,6 +4553,14 @@
     ],
     "title": "Unconfigured root is a warning, not an error",
     "type": "scenario"
+  },
+  "rq-b499b7e1": {
+    "decl": "### Types",
+    "file": "pipeline/external",
+    "level": 3,
+    "refs": [],
+    "title": "Types",
+    "type": "section"
   },
   "rq-b4d5c830": {
     "decl": "## Assumptions",
@@ -4294,6 +4785,13 @@
     "title": "DataError",
     "type": "api-item"
   },
+  "rq-bd5b27af": {
+    "decl": "Scenario: A full pin needs no lock entry",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "A full pin needs no lock entry",
+    "type": "scenario"
+  },
   "rq-bdfef246": {
     "decl": "### Summary rule",
     "file": "pipeline/snakemake",
@@ -4335,6 +4833,13 @@
     "title": "Invalid QC file",
     "type": "scenario"
   },
+  "rq-bf589d85": {
+    "decl": "Scenario: Branch names are not pins",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "Branch names are not pins",
+    "type": "scenario"
+  },
   "rq-bf93285a": {
     "decl": "- `next_action(root: &Path, study: &str) -> Result<NextAction, StudyError>` — evaluates the",
     "file": "workflow",
@@ -4351,6 +4856,13 @@
     "title": "next_action",
     "type": "api-item"
   },
+  "rq-bfa261cf": {
+    "decl": "Scenario: The job refuses changed inputs",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "The job refuses changed inputs",
+    "type": "scenario"
+  },
   "rq-c0a68ab3": {
     "decl": "## Out of Scope",
     "file": "pipeline/snakemake",
@@ -4358,6 +4870,13 @@
     "refs": [],
     "title": "Out of Scope",
     "type": "section"
+  },
+  "rq-c0f8402d": {
+    "decl": "Scenario: A failed job is refused",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "A failed job is refused",
+    "type": "scenario"
   },
   "rq-c112cac7": {
     "decl": "## Gherkin Scenarios",
@@ -4423,6 +4942,14 @@
     "title": "Code outside the project",
     "type": "scenario"
   },
+  "rq-c4003645": {
+    "decl": "## Feature API",
+    "file": "pipeline/external",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
   "rq-c5416f0d": {
     "decl": "## Assumptions",
     "file": "study/format",
@@ -4442,6 +4969,14 @@
     ],
     "title": "Retrospective study with hand-written result is flagged as legacy",
     "type": "scenario"
+  },
+  "rq-c5b9e99a": {
+    "decl": "## The Tool Cache",
+    "file": "pipeline/tools",
+    "level": 2,
+    "refs": [],
+    "title": "The Tool Cache",
+    "type": "section"
   },
   "rq-c62bd382": {
     "decl": "Scenario: Tree shows questions and attached studies",
@@ -4498,6 +5033,14 @@
     ],
     "title": "Missing verdict stops the pipeline before downstream stages",
     "type": "scenario"
+  },
+  "rq-c7516f9a": {
+    "decl": "## Gherkin Scenarios",
+    "file": "pipeline/tools",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
   },
   "rq-c7d50a4a": {
     "decl": "- `tophat pipeline stub <study>`",
@@ -4575,6 +5118,13 @@
     "title": "Run a preregistered study",
     "type": "scenario"
   },
+  "rq-c8a251ef": {
+    "decl": "Scenario: Code files travel with the job folder",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "Code files travel with the job folder",
+    "type": "scenario"
+  },
   "rq-c985c1d6": {
     "decl": "Scenario: Retrospective study with a pipeline uses strict results",
     "file": "study/format",
@@ -4586,6 +5136,13 @@
     ],
     "title": "Retrospective study with a pipeline uses strict results",
     "type": "scenario"
+  },
+  "rq-c989449c": {
+    "decl": "# Feature: Tool Stages",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "Feature: Tool Stages",
+    "type": "file"
   },
   "rq-cb65dab4": {
     "decl": "Scenario: Editing a non-frozen section is allowed",
@@ -4638,6 +5195,13 @@
     ],
     "title": "Escaped braces are allowed",
     "type": "scenario"
+  },
+  "rq-ccd30a25": {
+    "decl": "- `resolve_pin(root: &Path, pin: &ToolPin) -> Result<String, ToolsError>` — the resolved commit,",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "resolve_pin",
+    "type": "api-item"
   },
   "rq-cd497e41": {
     "decl": "Scenario: Duplicated governed section",
@@ -4761,6 +5325,14 @@
     "title": "Scope",
     "type": "section"
   },
+  "rq-cfae36f4": {
+    "decl": "## Pinning a Tool in a Stage",
+    "file": "pipeline/tools",
+    "level": 2,
+    "refs": [],
+    "title": "Pinning a Tool in a Stage",
+    "type": "section"
+  },
   "rq-cfed6415": {
     "decl": "Scenario: Malformed question ID",
     "file": "question-tree",
@@ -4841,6 +5413,13 @@
     "title": "Snakemake's exit code is returned",
     "type": "scenario"
   },
+  "rq-d39d6009": {
+    "decl": "- `parse_receipt(text: &str) -> Result<Receipt, String>` — parses and validates a receipt.",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "parse_receipt",
+    "type": "api-item"
+  },
   "rq-d4227e28": {
     "decl": "Scenario: Renaming a pre-registered study is detected",
     "file": "study/format",
@@ -4877,6 +5456,14 @@
     "title": "JSON output structure",
     "type": "scenario"
   },
+  "rq-d49687d5": {
+    "decl": "### Types",
+    "file": "pipeline/tools",
+    "level": 3,
+    "refs": [],
+    "title": "Types",
+    "type": "section"
+  },
   "rq-d4c65f91": {
     "decl": "### Functions",
     "file": "question-tree",
@@ -4896,6 +5483,13 @@
     ],
     "title": "StudyStatus",
     "type": "api-item"
+  },
+  "rq-d571140f": {
+    "decl": "Scenario: A changed returned file is refused",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "A changed returned file is refused",
+    "type": "scenario"
   },
   "rq-d6677222": {
     "decl": "Scenario: Hand-edited result is detected",
@@ -4957,6 +5551,20 @@
     "title": "Generated rules are deterministic",
     "type": "scenario"
   },
+  "rq-d7bdbaae": {
+    "decl": "- `ToolPin` — `name: String`, `pin: String` (as written).",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "ToolPin",
+    "type": "api-item"
+  },
+  "rq-d7d4093c": {
+    "decl": "Scenario: A tool without any environment",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "A tool without any environment",
+    "type": "scenario"
+  },
   "rq-d7fc4287": {
     "decl": "### Commands",
     "file": "pipeline/snakemake",
@@ -4964,6 +5572,13 @@
     "refs": [],
     "title": "Commands",
     "type": "section"
+  },
+  "rq-d8643ac5": {
+    "decl": "Scenario: Connection details are not configuration",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "Connection details are not configuration",
+    "type": "scenario"
   },
   "rq-d89c8a6b": {
     "decl": "- `tophat data declare <name> --root <root> --path <path> --statement <text> [--visibility public|private]`",
@@ -5005,6 +5620,13 @@
     "title": "Summarize refuses a study without result stages",
     "type": "scenario"
   },
+  "rq-d966a5fb": {
+    "decl": "- `job_script(stage: &ResolvedStage, …) -> String` — the job script text.",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "job_script",
+    "type": "api-item"
+  },
   "rq-d9fd0437": {
     "decl": "Scenario: Summarize sealed results",
     "file": "pipeline/snakemake",
@@ -5016,6 +5638,14 @@
     ],
     "title": "Summarize sealed results",
     "type": "scenario"
+  },
+  "rq-da50d924": {
+    "decl": "## Declaring Tools",
+    "file": "pipeline/tools",
+    "level": 2,
+    "refs": [],
+    "title": "Declaring Tools",
+    "type": "section"
   },
   "rq-da8648ca": {
     "decl": "- `content_hash(files: &[(String, String)]) -> String` — the `content_hash` of `(path, sha256)`",
@@ -5150,6 +5780,13 @@
     "title": "Stamp adds a missing status line to a stamped question",
     "type": "scenario"
   },
+  "rq-dc6ab3b5": {
+    "decl": "Scenario: The steps contain no connection details",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "The steps contain no connection details",
+    "type": "scenario"
+  },
   "rq-dcafcef0": {
     "decl": "- `QuestionTree` — the questions of `PROJECT.md` in file order, plus the problems found while",
     "file": "question-tree",
@@ -5173,6 +5810,14 @@
     ],
     "title": "Study names a question with sub-questions",
     "type": "scenario"
+  },
+  "rq-dd882acb": {
+    "decl": "### Commands",
+    "file": "pipeline/external",
+    "level": 3,
+    "refs": [],
+    "title": "Commands",
+    "type": "section"
   },
   "rq-ddb6cfbc": {
     "decl": "Scenario: Missing back-link",
@@ -5213,6 +5858,13 @@
     "title": "Seal a completed stage",
     "type": "scenario"
   },
+  "rq-deeead81": {
+    "decl": "Scenario: Local stages keep their keys",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "Local stages keep their keys",
+    "type": "scenario"
+  },
   "rq-df68d9f7": {
     "decl": "Scenario: Summarize refuses missing outputs",
     "file": "pipeline/snakemake",
@@ -5223,6 +5875,13 @@
       }
     ],
     "title": "Summarize refuses missing outputs",
+    "type": "scenario"
+  },
+  "rq-df6d227b": {
+    "decl": "Scenario: A modified checkout is refused",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "A modified checkout is refused",
     "type": "scenario"
   },
   "rq-dffba6fd": {
@@ -5263,6 +5922,13 @@
       }
     ],
     "title": "A code directory is hashed file by file",
+    "type": "scenario"
+  },
+  "rq-e2b68626": {
+    "decl": "Scenario: Sync is idempotent",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "Sync is idempotent",
     "type": "scenario"
   },
   "rq-e35a8bdd": {
@@ -5546,7 +6212,7 @@
     "type": "api-item"
   },
   "rq-eda3d443": {
-    "decl": "Scenario: Reserved tool key",
+    "decl": "Scenario: A stage cannot be both a tool stage and an external stage",
     "file": "pipeline/provenance",
     "refs": [
       {
@@ -5554,7 +6220,7 @@
         "kind": "code"
       }
     ],
-    "title": "Reserved tool key",
+    "title": "A stage cannot be both a tool stage and an external stage",
     "type": "scenario"
   },
   "rq-ee88aae5": {
@@ -5659,6 +6325,13 @@
     "title": "Referencing datasets",
     "type": "section"
   },
+  "rq-f1e21338": {
+    "decl": "Scenario: Variants pin different versions side by side",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "Variants pin different versions side by side",
+    "type": "scenario"
+  },
   "rq-f2135c24": {
     "decl": "Scenario: Empty result in a reported study",
     "file": "study/format",
@@ -5698,6 +6371,13 @@
       }
     ],
     "title": "Unknown front-matter field",
+    "type": "scenario"
+  },
+  "rq-f3b637ee": {
+    "decl": "Scenario: External job waiting for the human",
+    "file": "workflow",
+    "refs": [],
+    "title": "External job waiting for the human",
     "type": "scenario"
   },
   "rq-f40ffa2b": {
@@ -5740,6 +6420,14 @@
     "title": "frozen_fingerprint",
     "type": "api-item"
   },
+  "rq-f5aed182": {
+    "decl": "## Assumptions",
+    "file": "pipeline/external",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
+  },
   "rq-f678e5d8": {
     "decl": "Scenario: Missing base config",
     "file": "study/format",
@@ -5780,6 +6468,13 @@
     "title": "Mixed citations are each checked",
     "type": "scenario"
   },
+  "rq-f8136bd3": {
+    "decl": "- `tool_checkout(root: &Path, pin: &ToolPin) -> Result<PathBuf, ToolsError>` — the cached, pristine",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "tool_checkout",
+    "type": "api-item"
+  },
   "rq-f8dfe570": {
     "decl": "- `load_pipeline(root: &Path, study: &str, variant: &str) -> Result<PipelineConfig, PipelineError>`",
     "file": "pipeline/provenance",
@@ -5796,6 +6491,13 @@
     "title": "load_pipeline",
     "type": "api-item"
   },
+  "rq-f8fa9801": {
+    "decl": "Scenario: The {tool} placeholder is only for tool stages",
+    "file": "pipeline/tools",
+    "refs": [],
+    "title": "The {tool} placeholder is only for tool stages",
+    "type": "scenario"
+  },
   "rq-f94476f9": {
     "decl": "Scenario: JSON omits absent optional fields",
     "file": "check",
@@ -5806,6 +6508,21 @@
       }
     ],
     "title": "JSON omits absent optional fields",
+    "type": "scenario"
+  },
+  "rq-f9ae0061": {
+    "decl": "## Running a Tool Stage",
+    "file": "pipeline/tools",
+    "level": 2,
+    "refs": [],
+    "title": "Running a Tool Stage",
+    "type": "section"
+  },
+  "rq-f9c4d1f4": {
+    "decl": "Scenario: Invalid SLURM defaults",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "Invalid SLURM defaults",
     "type": "scenario"
   },
   "rq-f9fd06bf": {
@@ -5900,6 +6617,14 @@
       }
     ],
     "title": "Amendments",
+    "type": "section"
+  },
+  "rq-fd86ea5e": {
+    "decl": "## Configuration",
+    "file": "pipeline/external",
+    "level": 2,
+    "refs": [],
+    "title": "Configuration",
     "type": "section"
   },
   "rq-fd9f1a7c": {

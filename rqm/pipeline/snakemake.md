@@ -76,9 +76,18 @@ file missing or of the wrong size. The output is deterministic for a given proje
      with an error if it is missing or `fail`.
   2. Empty the output directory (create it if absent), removing any partial results of a failed run.
   2. Run the stage's `run` command, with placeholders substituted, from the study directory in its
-     pixi environment (`pixi run --frozen -e <env>`).
+     pixi environment (`pixi run --frozen -e <env>`; for a tool stage, with `--manifest-path` of
+     the tool environment, see `rqm/pipeline/tools.md`).
   4. Run `tophat stage seal` with the study, stage, key and variant.
 - The rule's `threads` are the stage's `threads`.
+
+### External stages <!-- rq-4acafba4 -->
+
+The job of an external stage (see `rqm/pipeline/external.md`) checks the verdicts of gated upstream
+stages like any job, then runs `tophat stage external`. While the job has not been returned, that
+command writes the bundle, prints the instructions and fails, so Snakemake stops there; once the
+receipt and outputs have been copied back, it ingests and seals the stage and downstream stages
+continue.
 
 ### Fan-out <!-- rq-a44c3b76 -->
 
@@ -203,7 +212,7 @@ configuration.
 
 ## Out of Scope <!-- rq-c0a68ab3 -->
 
-- Tool stages, external (cluster) stages, and Snakemake cluster or executor profiles.
+- Snakemake cluster or executor profiles.
 - Cleaning up output directories of old keys.
 - Generating rules for studies of other projects.
 

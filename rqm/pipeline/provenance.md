@@ -59,13 +59,15 @@ stages:
 | `qc` | no | `skip` to exempt the stage from the QC gate it has by default (see `rqm/pipeline/snakemake.md`); no other value is allowed |
 | `qc_reason` | with `qc: skip` | Why the stage's output needs no human verdict; required with `qc: skip` and not allowed without it |
 | `result` | no | File, relative to the output directory, whose single line is the stage's result line |
+| `tool` | no | `<tool>@<commit>`: run the stage with a pinned tool (see `rqm/pipeline/tools.md`) |
+| `external` | no | Run the stage on a remote machine (see `rqm/pipeline/external.md`) |
 
 - `stage:` inputs name a stage that appears **earlier** in the list, so the pipeline has no cycles.
 - `foreach` and `result` are not allowed on the same stage.
 - `qc` and `qc_reason` only decide whether the stage is gated; which stages are gated is specified
   in `rqm/pipeline/snakemake.md`.
-- `tool` and `external` are reserved keys for tool stages and external stages, specified separately;
-  until then they are configuration errors.
+- `tool` makes the stage a tool stage (see `rqm/pipeline/tools.md`) and `external` makes it an
+  external stage run on a remote machine (see `rqm/pipeline/external.md`); a stage cannot have both.
 - Unknown keys are configuration errors.
 
 ### Variants <!-- rq-a17aa884 -->
@@ -99,14 +101,16 @@ A stage key is `sk-` followed by the first 16 lowercase hex characters of the SH
 
 1. `tophat-stage-key/1`
 2. `run <run template exactly as configured>`
-3. `env <environment hash>` (see below)
-4. `threads <n>`
-5. `foreach <input name>` if fan-out, otherwise `foreach -`
-6. `result <file>` if set, otherwise `result -`
-7. One line `code <path> <sha256>` per file reached through `code` (directories expanded to all
+3. Tool stages only: `tool <tool>@<resolved commit>` (see `rqm/pipeline/tools.md`)
+4. `env <environment hash>` (see below), or `env external` for an external stage
+5. External stages only: `external <canonical JSON>` (see `rqm/pipeline/external.md`)
+6. `threads <n>`
+7. `foreach <input name>` if fan-out, otherwise `foreach -`
+8. `result <file>` if set, otherwise `result -`
+9. One line `code <path> <sha256>` per file reached through `code` (directories expanded to all
    files recursively), sorted by path, with paths relative to the study directory and `/`-separated
-8. `params <canonical JSON>`: the merged parameters, serialized with sorted keys and no whitespace
-9. One line per input, sorted by input name: `input <name> stage <upstream key>` or
+10. `params <canonical JSON>`: the merged parameters, serialized with sorted keys and no whitespace
+11. One line per input, sorted by input name: `input <name> stage <upstream key>` or
    `input <name> dataset <name>@v<n> <content_hash>`
 
 The study ID, variant name and QC settings (`qc`, `qc_reason`) are not part of the key, so two variants with identical
@@ -114,8 +118,12 @@ effective settings for a stage share one output.
 
 ### Environment hash <!-- rq-3ac5de89 -->
 
+Lines 3 and 5 appear only for tool and external stages, so stages of other kinds have exactly the
+key text they would have without those features.
+
 The environment hash is `sha256:` followed by the SHA-256 of the sorted list of package entries
-recorded in the project's `pixi.lock` for the stage's environment, across all platforms, one entry
+recorded in the project's `pixi.lock` (for a tool stage, the tool environment's `pixi.lock`) for the
+stage's environment, across all platforms, one entry
 per line. It does not depend on the machine computing it, so keys agree across platforms. A missing
 lock file or environment is a configuration error for stages that use it.
 
@@ -228,7 +236,7 @@ A study with no `stages` (or an empty list) has no pipeline and no `pipeline` di
 
 | Rule | Severity | Condition |
 |---|---|---|
-| `pipeline.config-invalid` | error | A configuration file cannot be parsed, a stage is malformed (missing `name` or `run`, unknown or reserved key, duplicate name, bad `threads`, unknown placeholder, `foreach` naming no input, `foreach` with `result`, `qc` other than `skip`, `qc_reason` without `qc: skip`), an input references a later or unknown stage, or a variant names an unknown stage or adds stages |
+| `pipeline.config-invalid` | error | A configuration file cannot be parsed, a stage is malformed (missing `name` or `run`, unknown or key, `tool` together with `external`, duplicate name, bad `threads`, unknown placeholder, `foreach` naming no input, `foreach` with `result`, `qc` other than `skip`, `qc_reason` without `qc: skip`), an input references a later or unknown stage, or a variant names an unknown stage or adds stages |
 | `pipeline.qc-reason-missing` | error | A stage declares `qc: skip` without a non-empty `qc_reason` |
 | `pipeline.code-missing` | error | A `code` entry does not exist or lies outside the project |
 | `pipeline.env-missing` | error | `pixi.lock` is missing or lacks the stage's environment |
@@ -243,7 +251,6 @@ A study with no `stages` (or an empty list) has no pipeline and no `pipeline` di
 
 ## Out of Scope <!-- rq-d1d175cd -->
 
-- Tool stages (`tool:`) and external stages (`external:`), including the tool cache.
 - Snakemake rule generation, fan-out execution, QC gates and summaries (`rqm/pipeline/snakemake.md`).
 - Deleting old output directories.
 
@@ -290,10 +297,10 @@ Feature: Stage configuration, keys and provenance
     Then no error is reported
 
   @rq-eda3d443
-  Scenario: Reserved tool key
-    Given stage "score" has "tool: method-x@a1b2c3d"
+  Scenario: A stage cannot be both a tool stage and an external stage
+    Given stage "score" has "tool: method-x@a1b2c3d" and an "external" mapping
     When "tophat check" is run
-    Then an error "pipeline.config-invalid" stating that tool stages are not yet supported is reported
+    Then an error "pipeline.config-invalid" naming "tool" and "external" is reported
 
   @rq-a5ab4b78
   Scenario: Fan-out stage cannot declare a result

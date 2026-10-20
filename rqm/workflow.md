@@ -33,15 +33,17 @@ actions only a human may take; `anyone` marks actions a human or an agent may ta
 | 4 | Status is `draft` | Pre-register: `tophat study preregister <study>` | you |
 | 5 | The study has no stages | Add stages to `config/base.yaml` | anyone |
 | 6 | The `results` root is unconfigured | Configure the `results` data root | anyone |
-| 7 | A gated stage (see `rqm/pipeline/snakemake.md`) is sealed for a variant's current key, has no verdict, and a stage consuming it has no sealed output | Give a QC verdict: `tophat stage qc <study> <stage> --variant <variant>` | you |
-| 8 | A QC verdict for a current key is `fail` | Fix the cause of the failed QC of `<stage>` (`<variant>`); the next run uses a new key | anyone |
-| 9 | Some stage of some listed variant has no sealed output for its current key, or `SUMMARY.md` is missing or stale | Run the pipeline: `tophat run <study>` | anyone |
-| 10 | `SUMMARY.md` is dirty | Commit the code listed as unclean, then `tophat run <study>` | anyone |
-| 11 | Status is `preregistered` | Report: `tophat study report <study>` | anyone |
-| 12 | The study's question is `open` and no answered question cites the study | Answer question `<question>` in `PROJECT.md`, citing this study | anyone |
-| 13 | Otherwise | None: done | — |
+| 7 | A tool stage's pinned commit is unresolved or not cached on this machine | Fetch tools: `tophat tools sync` | anyone |
+| 8 | An external stage's bundle is written for a variant's current key and the job has not been returned | Run the external job for `<stage>` (`<variant>`): `tophat stage instructions <study> <stage> --variant <variant>` | you |
+| 9 | A gated stage (see `rqm/pipeline/snakemake.md`) is sealed for a variant's current key, has no verdict, and a stage consuming it has no sealed output | Give a QC verdict: `tophat stage qc <study> <stage> --variant <variant>` | you |
+| 10 | A QC verdict for a current key is `fail` | Fix the cause of the failed QC of `<stage>` (`<variant>`); the next run uses a new key | anyone |
+| 11 | Some stage of some listed variant has no sealed output for its current key, or `SUMMARY.md` is missing or stale | Run the pipeline: `tophat run <study>` | anyone |
+| 12 | `SUMMARY.md` is dirty | Commit the code listed as unclean, then `tophat run <study>` | anyone |
+| 13 | Status is `preregistered` | Report: `tophat study report <study>` | anyone |
+| 14 | The study's question is `open` and no answered question cites the study | Answer question `<question>` in `PROJECT.md`, citing this study | anyone |
+| 15 | Otherwise | None: done | — |
 
-Retrospective studies without stages skip rows 5 to 11. A study whose `STUDY.md` cannot be parsed
+Retrospective studies without stages skip rows 5 to 13. A study whose `STUDY.md` cannot be parsed
 has the next action of row 2.
 
 ### Study scope <!-- rq-b1f6d54f -->
@@ -49,7 +51,7 @@ has the next action of row 2.
 The errors that block a study (row 2, and `tophat run`) are the `error` diagnostics of
 `tophat check` whose path is under `studies/<study>/`, under `datasets/<name>/` for a dataset one of
 the study's stages references, or is `.tophat/roots.yaml` or `.tophat/roots.local.yaml`, except
-`pipeline.summary-stale`: running the pipeline is what resolves a stale summary (row 9), so it never
+`pipeline.summary-stale`: running the pipeline is what resolves a stale summary (row 11), so it never
 blocks a run.
 
 ## Feature API <!-- rq-07a0e0ea -->
@@ -96,7 +98,8 @@ blocks a run.
     | `--draft` | `trial` | `trial_<v>` |
 
   - After Snakemake exits, prints a blank line and the study's next action (as in
-    `tophat status`). When Snakemake stopped at a QC gate, the next action is that gate's row 7.
+    `tophat status`). When Snakemake stopped at a QC gate, the next action is that gate's row 9;
+    when it stopped at an external stage, it is that stage's row 8.
   - Exits with Snakemake's exit code; exits 2 if `pixi` cannot be started.
 
 ### Types <!-- rq-5cc877ea -->
@@ -190,11 +193,23 @@ Feature: Status and run
     When "tophat status x-vs-docking" is run
     Then the next action is "(you)" "tophat stage qc x-vs-docking score --variant pbe"
 
+  @rq-032bd279
+  Scenario: Tools not fetched on this machine
+    Given preregistered study "x-vs-docking" has a tool stage whose pinned commit is not cached
+    When "tophat status x-vs-docking" is run
+    Then the next action is row 7 "Fetch tools: tophat tools sync"
+
+  @rq-f3b637ee
+  Scenario: External job waiting for the human
+    Given preregistered study "x-vs-docking" has an external stage "md" whose bundle is written and whose job has not been returned
+    When "tophat status x-vs-docking" is run
+    Then the next action is "(you)" "tophat stage instructions x-vs-docking md --variant base"
+
   @rq-14542671
   Scenario: Failed QC
     Given the current verdict for "score" in variant "base" is "fail"
     When "tophat status x-vs-docking" is run
-    Then the next action is row 8 naming "score" and "base"
+    Then the next action is row 10 naming "score" and "base"
 
   @rq-4b2809d2
   Scenario: Stages left to run
@@ -207,13 +222,13 @@ Feature: Status and run
   Scenario: Stale summary means run again
     Given every stage is sealed but SUMMARY.md has keys that no longer match
     When "tophat status x-vs-docking" is run
-    Then the next action is row 9
+    Then the next action is row 11
 
   @rq-82ac8f57
   Scenario: Dirty summary means commit and run again
     Given every stage is sealed and SUMMARY.md is current but dirty
     When "tophat status x-vs-docking" is run
-    Then the next action is row 10
+    Then the next action is row 12
 
   @rq-f0049ad3
   Scenario: Ready to report
@@ -226,14 +241,14 @@ Feature: Status and run
     Given study "x-vs-docking" is reported with question "q-9c0d1e2f"
     And no question cites "x-vs-docking"
     When "tophat status x-vs-docking" is run
-    Then the next action is row 12 naming "q-9c0d1e2f"
+    Then the next action is row 14 naming "q-9c0d1e2f"
 
   @rq-62e72400
   Scenario: Reported study that is cited is done
     Given study "x-vs-docking" is reported
     And question "q-9c0d1e2f" is answered citing "x-vs-docking"
     When "tophat status x-vs-docking" is run
-    Then the next action is row 13 "None: done"
+    Then the next action is row 15 "None: done"
 
   @rq-dffba6fd
   Scenario: Superseded study
@@ -245,7 +260,7 @@ Feature: Status and run
   Scenario: Retrospective study without a pipeline
     Given retrospective study "old-benchmark" has no stages and its question is answered citing it
     When "tophat status old-benchmark" is run
-    Then the next action is row 13
+    Then the next action is row 15
 
   # --- Status output ---
 
@@ -260,7 +275,7 @@ Feature: Status and run
   Scenario: JSON status for agents
     Given preregistered study "x-vs-docking" waits for a QC verdict on "score" for "pbe"
     When "tophat status x-vs-docking --json" is run
-    Then the study's "next" is {"row": 7, "who": "you", "command": "tophat stage qc x-vs-docking score --variant pbe"} with its text
+    Then the study's "next" is {"row": 9, "who": "you", "command": "tophat stage qc x-vs-docking score --variant pbe"} with its text
 
   @rq-8a1808bb
   Scenario: Status is read-only
