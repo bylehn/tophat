@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.riprap/managed/hooks/check-container.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

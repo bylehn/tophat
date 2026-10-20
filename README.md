@@ -1,0 +1,251 @@
+
+# TopHat
+
+An LLM skill/structure based on riprap applied to science workflows
+
+## Getting Started
+
+### Prerequisites
+
+Install Podman by following the official [installation instructions](https://podman.io/docs/installation).
+
+You will also need access to Claude Code.
+
+### Launching the development environment
+
+All development **must** take place within the development container.
+The template includes hooks that prevent Claude Code from answering prompts unless you are running in a containerized environment. Podman builds and runs that container on your own machine; on a host that cannot build one, such as a compute cluster, Apptainer runs a prebuilt image (see [Running on a compute cluster](#running-on-a-compute-cluster) below).
+
+Run `bash rr.sh` on Linux/Mac, or `rr.bat` on Windows.
+This builds the container and drops you into an interactive shell in `/work`.
+
+From the shell, run `claude` to start Claude Code.
+Agent authentication is stored in separate Podman named volumes scoped by the random UUID in
+`.riprap/state/project-id`; the launchers never mount your host agent configuration directories.
+The UUID is non-secret project metadata and should be committed. To clear authentication, run
+`bash rr.sh --reset-agent-state` with `claude`, or `all` (use `rr.bat` on Windows).
+
+
+
+
+
+#### Updating the agents
+
+The agents update themselves automatically, at most once a week, with no action from you.
+
+The agents will not auto-update *within* the container (such changes would only last as long as
+the container itself, and would need to be repeated every time you launch a new container).
+Instead, the launcher reinstalls them when the calendar week changes, so the agents are never more
+than a week behind their current releases. One launch a week therefore takes a few minutes longer
+while the agent layers rebuild; every other launch reuses the cache and contacts the network not
+at all. If a rebuild fails — no network, or a broken upstream release — the launcher says so and
+carries on with the image you already have, so a refresh can never block your work.
+
+##### Pinning a release
+
+If a new agent release turns out to be a bad one, you can pin your way out of it without waiting
+for an upstream fix. Create `.riprap/user/agent-pin.env`:
+
+```
+CLAUDE_VERSION=2.1.205
+```
+
+Pinned agents are held at exactly those releases; any agent you leave out keeps tracking its
+current release. Only exact `x.y.z` versions are accepted; values such as `latest` will error.
+Delete the file to return to the weekly schedule described above.
+
+
+#### Running on a compute cluster
+
+Many clusters run [Apptainer](https://apptainer.org) rather than Podman, and often you cannot build
+an image on them at all. Riprap allows you to instead build the image on a machine where you do have
+Podman and subsequently run it on the cluster.
+
+First: on a machine with Podman, build the image and export it as a single Apptainer image (this step
+needs Apptainer installed alongside Podman):
+
+```
+bash rr.sh --export-sif
+```
+
+This writes `.riprap/state/apptainer/riprap-<uuid>-project.sif`. Copy the entire repository
+to the cluster with whatever you already use (e.g, `scp`, `rsync`, or a shared filesystem). Then,
+from the repository on the cluster:
+
+```
+bash rr.sh --run-sif
+```
+
+This drops you into an Apptainer container that works much the same way as the Podman containers.
+The launcher contains the invoking user's home directory and environment, so the container
+sees neither, and it presents the image read-only. Exporting and running are Unix-only; Windows
+does not support Apptainer.
+
+Note that `.sif` files can be quite large, and therefore should not be committed to the git
+repository.
+
+Agent authentication on the cluster is stored in directories under
+`.riprap/state/apptainer/credentials/`, created readable only by you. Note that cluster home and
+project filesystems are commonly shared, backed up, and readable by administrators, who could
+potentially view your agent credentials.
+
+### Initializing the project
+
+
+
+The repository contains a skeletal Rust crate: a `Cargo.toml`, `src/lib.rs`
+with a placeholder function, a `tests/` directory, and a GitHub Actions
+workflow (`.github/workflows/CI.yaml`) that checks formatting, runs clippy, and
+runs the test suite with coverage on every push and pull request. These files
+were seeded by the template and are yours to edit; the template never updates
+them.
+
+Check that the sample tests pass:
+
+```
+cargo test
+```
+
+Replace the placeholder `canvas` function in `src/lib.rs` (and its tests) with
+your own code as your first features land.
+
+
+
+
+The template also seeds a CodeQL security-scanning workflow at
+`.github/workflows/codeql.yaml`. Like the other seeded files, it is yours to
+edit: choose the languages it analyzes, the query suites it runs, and how often
+it is scheduled. Keeping its `github/codeql-action` versions current is the
+project's responsibility, as GitHub retires older versions over time.
+
+## Development Workflow
+
+### 1. Define the project architecture
+
+Start by capturing the project's high-level goals and architecture. Run the built-in skill.
+
+In Claude Code, use:
+
+```
+/rr-architecture <one-line description of what you are building>
+```
+
+
+
+
+The agent will ask questions to pin down the decisions with broad architectural leverage — intended scale and audience, execution targets, extensibility (for example, whether a plugin system is needed), key libraries, and the whole-project testing strategy — and record them in `rqm/ARCHITECTURE.md`.
+The agent's project guidance references that file, so every later step shares the same context.
+Re-run the skill whenever the architecture needs to evolve.
+
+### 2. Write a requirements document
+
+Before generating code, create a requirements document in the `rqm/` directory.
+Use the built-in skill by prompting:
+
+```
+Help me plan <feature description>. Place the requirements document in rqm/<feature>.md.
+```
+
+
+Or invoke the skill explicitly in Claude Code:
+
+```
+/rr-plan Help me plan <feature description>. Place the requirements document in rqm/<feature>.md.
+```
+
+
+
+
+The agent will ask clarifying questions and write a complete requirements file including Gherkin scenarios.
+
+### 3. Implement the feature
+
+```
+Implement the feature in rqm/<feature>.md
+```
+
+### 4. Iterate
+
+If the output is incorrect or incomplete, **modify the requirements file first**, then ask the agent to update the implementation:
+
+```
+I have updated rqm/<feature>.md. Update the implementation to match.
+```
+
+### 5. Verify understanding with quizzes
+
+Run the `rr-quiz` skill — `/rr-quiz` in Claude Code. The
+agent will ask you a multiple-choice question about the implementation to help ensure you understand
+the code.
+
+### Customizing skills
+
+The authoritative, agent-neutral skill implementations live under `.riprap/managed/skills/`.
+Claude discovers adapters under `.claude/skills/`. 
+Project-owned extensions live under `.riprap/user/skills/<skill-name>/local.md`. Use those files to
+extend or override skills with project-specific conventions; Copier preserves them during template
+updates. Avoid editing `SKILL.md` directly because canonical implementations and adapters are
+managed by Riprap.
+
+### File ownership
+
+Riprap-managed implementations live under `.riprap/managed/` and should not be edited. Supported
+project customization lives under `.riprap/user/`, and generated project or machine state lives
+under `.riprap/state/`. A small number of managed adapters remain at conventional or tool-mandated
+paths, including `rr.sh`, `rr.bat`, and the agent discovery directories. Conventional project files
+outside `.riprap`, such as source files, manifests, `README.md`, and the root `Containerfile`, belong
+to the project.
+
+Run template updates with `copier update`.
+
+
+### Agent permissions
+
+`.claude/settings.json` is Riprap-managed. It pre-approves the commands Riprap's own skills run and
+your language's routine build, test, and lint commands, and it denies reading credential files. It
+deliberately does not pre-approve a general interpreter, a package installer, or a shell, so those
+prompt the first time they are used.
+
+Add your project's own permissions to `.claude/settings.local.json`, which Claude Code merges with
+the managed settings rather than replacing them. Choosing "don't ask again" at a prompt writes the
+rule there for you. That file is ignored by Git, so your approvals stay yours and template updates
+never disturb them.
+
+
+
+
+## Key Rules
+
+### Only ever use agentic AI inside a rootless container
+
+LLMs are susceptible to prompt injection and data poisoning.
+This repository includes hooks that block Claude Code unless they are running inside a rootless container,
+such as a Podman container.
+Even inside a container, you should:
+
+- Never share private SSH keys or other sensitive credentials.
+- Never give the LLM write access to remote repositories.
+- Never push LLM-generated code without reviewing it carefully first.
+
+### Keep credentials out of Git
+
+Install the version-controlled pre-commit scanner with `bash rr.sh --install-git-hooks` (or
+`rr.bat --install-git-hooks`). It refuses to replace an existing custom `core.hooksPath`; follow
+the reported composition instructions in that case. Run
+`.riprap/managed/hooks/check-secrets.sh --repository` in CI to scan committed content. Ignore rules and
+local hooks are bypassable safeguards, so repositories hosted on GitHub should also enable secret
+scanning and push protection in their security settings.
+
+### Treat requirements documents as the source of truth
+
+The `rqm/` directory should contain a complete, version-controlled description of every intended behavior of the project.
+If you delete everything in `src/`, it should be possible to reproduce your code from the requirements files alone.
+**Never write code that isn't directly necessitated by a requirements file.**
+
+### Use memory-safe languages and modern tooling
+
+
+Rust's compiler catches a large class of bugs at compile time.
+Always resolve all compiler errors and warnings before considering a feature complete.
+
+

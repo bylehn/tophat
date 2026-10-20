@@ -1,0 +1,15 @@
+# Riprap-managed.
+# Keep version-controlled scripts runnable on every host. Git for Windows' bundled
+# bash cannot execute a script with CRLF endings, and cmd.exe control-flow blocks can
+# break with LF endings, so pin each script type to the endings its interpreter needs.
+* text=auto
+*.sh   text eol=lf
+*.ps1  text eol=lf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+# Templated scripts carry the same endings as the scripts they render to, so a "#!"
+# script source is discovered and checked out with the endings its interpreter needs.
+*.sh.jinja   text eol=lf
+*.ps1.jinja  text eol=lf
+.riprap/managed/hooks/* text eol=lf
+.riprap/managed/container/opencode text eol=lf
