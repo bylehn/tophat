@@ -35,6 +35,8 @@ Commands:
   study supersede <OLD-ID> --by <NEW-ID>         Mark a study as replaced by another
   study summarize <ID>                           Write SUMMARY.md from sealed result stages
   question stamp                                 Assign IDs to new questions in PROJECT.md
+  tools sync                                     Fetch and resolve pinned tool versions
+  tools list [--json]                            Show tools, pins and cache state
   data add <NAME> --root <R> --path <P> --source <TEXT> [--date D] [--license L] [--visibility V]
                                                  Register raw data as the next dataset version
   data declare <NAME> --root <R> --path <P> --statement <TEXT> [--visibility V]
@@ -674,6 +676,7 @@ fn run_stage_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
                     Ok(job) => {
                         let value = serde_json::json!({
                             "run": job.run, "env": job.env, "cwd": job.cwd.display().to_string(),
+                            "manifest": job.manifest.as_ref().map(|m| m.display().to_string()),
                         });
                         let _ = writeln!(io.out, "{value}");
                         EXIT_OK
@@ -791,6 +794,87 @@ fn run_run_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
     code
 }
 
+fn run_tools_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
+    let (json, rest) = take_flag(args, "--json");
+    let sub = match rest.as_slice() {
+        [sub] if sub == "sync" || sub == "list" => sub.clone(),
+        _ => {
+            let _ = writeln!(
+                io.err,
+                "tophat tools: expected `sync` or `list [--json]`\n\n{USAGE}"
+            );
+            return EXIT_UNABLE;
+        }
+    };
+    let root = match find_project_root(cwd) {
+        Ok(root) => root,
+        Err(e) => {
+            let _ = writeln!(io.err, "tophat tools: {e}");
+            return EXIT_UNABLE;
+        }
+    };
+    if sub == "sync" {
+        return match crate::tools::sync(&root) {
+            Ok(report) => {
+                for line in &report.lines {
+                    let _ = writeln!(io.out, "{line}");
+                }
+                if report.ok {
+                    EXIT_OK
+                } else {
+                    EXIT_FAILED
+                }
+            }
+            Err(e) => {
+                let _ = writeln!(io.err, "tophat tools sync: {e}");
+                EXIT_FAILED
+            }
+        };
+    }
+    match crate::tools::list(&root) {
+        Ok((declared, pins)) => {
+            if json {
+                let value = serde_json::json!({
+                    "tools": declared.iter().map(|(name, url)| serde_json::json!({"name": name, "url": url})).collect::<Vec<_>>(),
+                    "pins": pins.iter().map(|p| serde_json::json!({
+                        "pin": p.pin.to_string(), "commit": p.commit, "state": p.state,
+                        "used_by": p.used_by.iter().map(|(s, v, st)| format!("{s}/{v}/{st}")).collect::<Vec<_>>(),
+                    })).collect::<Vec<_>>(),
+                });
+                let _ = writeln!(
+                    io.out,
+                    "{}",
+                    serde_json::to_string_pretty(&value).expect("serializes")
+                );
+            } else {
+                for (name, url) in &declared {
+                    let _ = writeln!(io.out, "{name}  {url}");
+                    for p in pins.iter().filter(|p| &p.pin.name == name) {
+                        let users: Vec<String> = p
+                            .used_by
+                            .iter()
+                            .map(|(s, v, st)| format!("{s}/{v}/{st}"))
+                            .collect();
+                        let _ = writeln!(
+                            io.out,
+                            "  @{}  {}  {}  used by {}",
+                            p.pin.pin,
+                            p.commit.as_deref().unwrap_or("-"),
+                            p.state,
+                            users.join(", ")
+                        );
+                    }
+                }
+            }
+            EXIT_OK
+        }
+        Err(e) => {
+            let _ = writeln!(io.err, "tophat tools list: {e}");
+            EXIT_FAILED
+        }
+    }
+}
+
 fn run_question_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
     let usage_error = |io: &mut Streams<'_>, message: &str| {
         let _ = writeln!(io.err, "tophat question: {message}\n\n{USAGE}");
@@ -857,6 +941,7 @@ pub fn run(args: &[String], cwd: &Path, families: &[RuleFamily], io: &mut Stream
         Some("study") => run_study_command(&args[1..], cwd, io),
         Some("question") => run_question_command(&args[1..], cwd, io),
         Some("data") => run_data_command(&args[1..], cwd, io),
+        Some("tools") => run_tools_command(&args[1..], cwd, io),
         Some("pipeline") => run_pipeline_command(&args[1..], cwd, io),
         Some("stage") => run_stage_command(&args[1..], cwd, io),
         Some("-h" | "--help" | "help") => {

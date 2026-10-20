@@ -28,6 +28,28 @@ fn diagnostic(rule: &'static str, problem: ConfigProblem, hint: &str) -> Diagnos
 pub fn pipeline_rules(project: &Project) -> Vec<Diagnostic> {
     let ctx = KeyContext::new(project.root());
     let mut out = Vec::new();
+    // rq-85215682
+    let declared = match crate::tools::declared_tools(project.root())
+        .and_then(|d| crate::tools::read_lock(project.root()).map(|_| d))
+    {
+        Ok(declared) => Some(declared),
+        Err(e) => {
+            let path = if e.to_string().starts_with(crate::tools::LOCK_FILE) {
+                crate::tools::LOCK_FILE
+            } else {
+                crate::tools::TOOLS_FILE
+            };
+            out.push(Diagnostic {
+                rule: "pipeline.tools-invalid",
+                severity: Severity::Error,
+                path: path.to_string(),
+                line: None,
+                message: e.to_string(),
+                hint: Some("Fix the file; the lock is written by `tophat tools sync`".into()),
+            });
+            None
+        }
+    };
     for study in project.list_dir(STUDIES_DIR).unwrap_or_default() {
         let mut problems = Vec::new();
         let Some(base) = load_base(project, &study, &mut problems) else {
@@ -111,17 +133,26 @@ pub fn pipeline_rules(project: &Project) -> Vec<Diagnostic> {
                     ));
                 }
             }
-            if let Err(message) = ctx.environment_hash(&stage.env) {
-                if reported.insert((stage.file.clone(), stage.name.clone(), "env")) {
-                    out.push(diagnostic(
-                        "pipeline.env-missing",
-                        ConfigProblem {
-                            file: stage.file.clone(),
-                            line: stage.line,
-                            message: format!("stage `{}`: {message}", stage.name),
-                        },
-                        "Add the environment to pixi.toml and run `pixi lock`",
-                    ));
+            if !reported.insert((stage.file.clone(), stage.name.clone(), "env")) {
+                continue;
+            }
+            let at = |message: String| ConfigProblem {
+                file: stage.file.clone(),
+                line: stage.line,
+                message: format!("stage `{}`: {message}", stage.name),
+            };
+            match &stage.tool {
+                None => {
+                    if let Err(message) = ctx.environment_hash(&stage.env) {
+                        out.push(diagnostic(
+                            "pipeline.env-missing",
+                            at(message),
+                            "Add the environment to pixi.toml and run `pixi lock`",
+                        ));
+                    }
+                }
+                Some(raw) => {
+                    out.extend(tool_diagnostics(project, &ctx, stage, raw, &declared, &at))
                 }
             }
         }
@@ -242,4 +273,73 @@ fn check_execution(
         ),
         &format!("Run `tophat run {study}` to bring the results up to date"),
     ));
+}
+
+// rq-85215682
+/// The diagnostics of a tool stage's pin, cache and environment.
+fn tool_diagnostics(
+    project: &Project,
+    ctx: &KeyContext,
+    stage: &super::config::StageConfig,
+    raw: &str,
+    declared: &Option<std::collections::BTreeMap<String, String>>,
+    at: &dyn Fn(String) -> ConfigProblem,
+) -> Vec<Diagnostic> {
+    use crate::tools::{resolve_pin, tool_checkout, ToolPin, ToolsError};
+    let one = |rule, severity, message: String, hint: &str| {
+        let mut d = diagnostic(rule, at(message), hint);
+        d.severity = severity;
+        vec![d]
+    };
+    let Some(pin) = ToolPin::parse(raw) else {
+        return one(
+            "pipeline.tool-pin-invalid",
+            Severity::Error,
+            format!("`{raw}` is not a tool pin"),
+            "Use <tool>@<7 to 40 lowercase hex characters of a commit>; branches and tags are not pins",
+        );
+    };
+    let Some(declared) = declared else {
+        return Vec::new();
+    };
+    if !declared.contains_key(&pin.name) {
+        return one(
+            "pipeline.tool-unknown",
+            Severity::Error,
+            format!("tool `{}` is not declared", pin.name),
+            "Declare it with its git URL in .tophat/tools.yaml",
+        );
+    }
+    if let Err(e) = resolve_pin(project.root(), &pin) {
+        return one(
+            "pipeline.tool-unlocked",
+            Severity::Error,
+            e.to_string(),
+            "Run `tophat tools sync`",
+        );
+    }
+    match tool_checkout(project.root(), &pin) {
+        Err(e @ ToolsError::NotCached { .. }) => one(
+            "pipeline.tool-not-cached",
+            Severity::Warning,
+            e.to_string(),
+            "Run `tophat tools sync` on this machine before running the study",
+        ),
+        Err(e @ ToolsError::NotPristine { .. }) => one(
+            "pipeline.tool-not-pristine",
+            Severity::Error,
+            e.to_string(),
+            "Tool code is never changed from a study; change it through the tool's own repository",
+        ),
+        Err(e) => one("pipeline.tools-invalid", Severity::Error, e.to_string(), "Run `tophat tools sync`"),
+        Ok(_) => match ctx.stage_environment_hash(stage) {
+            Ok(_) => Vec::new(),
+            Err(message) => one(
+                "pipeline.env-missing",
+                Severity::Error,
+                message,
+                "Give the tool a pixi environment, or add envs/<tool>/pixi.toml and pixi.lock to the project",
+            ),
+        },
+    }
 }

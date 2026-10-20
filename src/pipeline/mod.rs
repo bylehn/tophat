@@ -12,13 +12,13 @@ mod summary;
 use std::fmt;
 
 pub use config::{
-    config_path, load_pipeline, parse_template, PipelineConfig, StageConfig, StageInput,
-    TemplatePart,
+    config_path, load_pipeline, load_variant_lenient, parse_template, PipelineConfig, StageConfig,
+    StageInput, TemplatePart,
 };
 pub use generate::{generate_rules, snakefile_path, stub, variant_target};
 pub use keys::{
-    compute_keys, items_of, output_dir, params_file, render_run, shell_quote, stage_key,
-    stage_key_text, CodeFile, KeyContext, RunPaths, StageKeys,
+    compute_keys, compute_keys_until, items_of, output_dir, params_file, render_run, shell_quote,
+    stage_key, stage_key_text, CodeFile, KeyContext, RunPaths, StageKeys,
 };
 pub use provenance::{
     begin, cleanliness, is_valid_item_name, key_status, platform, seal, BegunJob, Cleanliness,

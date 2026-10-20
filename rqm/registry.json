@@ -103,7 +103,12 @@
   "rq-032bd279": {
     "decl": "Scenario: Tools not fetched on this machine",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Tools not fetched on this machine",
     "type": "scenario"
   },
@@ -158,7 +163,16 @@
   "rq-052f542d": {
     "decl": "- `tophat tools sync`",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/tools/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -219,14 +233,28 @@
   "rq-08c87cc4": {
     "decl": "Scenario: Sync resolves a prefix and caches the checkout",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Sync resolves a prefix and caches the checkout",
     "type": "scenario"
   },
   "rq-097c7d03": {
     "decl": "- `sync(root: &Path) -> Result<SyncReport, ToolsError>` — performs `tophat tools sync`.",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/tools/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "sync",
     "type": "api-item"
   },
@@ -603,7 +631,12 @@
   "rq-175f7439": {
     "decl": "Scenario: The tool runs in its own environment",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The tool runs in its own environment",
     "type": "scenario"
   },
@@ -1051,7 +1084,12 @@
   "rq-27bb0a4e": {
     "decl": "Scenario: Changing the pinned commit re-runs the stage and downstream",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Changing the pinned commit re-runs the stage and downstream",
     "type": "scenario"
   },
@@ -1412,7 +1450,16 @@
     "decl": "## Keys and Provenance",
     "file": "pipeline/tools",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/keys.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Keys and Provenance",
     "type": "section"
   },
@@ -1505,7 +1552,12 @@
   "rq-3b6d26cd": {
     "decl": "Scenario: Existing keys are unchanged by this feature",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Existing keys are unchanged by this feature",
     "type": "scenario"
   },
@@ -1536,7 +1588,12 @@
   "rq-3c1af8c0": {
     "decl": "- `ToolsError` — error type of the tool commands, with at minimum:",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/tools/mod.rs",
+        "kind": "code"
+      }
+    ],
     "title": "ToolsError",
     "type": "api-item"
   },
@@ -1886,14 +1943,28 @@
   "rq-4ebf0587": {
     "decl": "- `tophat tools list [--json]`",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/tools/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
   "rq-4f2cf51c": {
     "decl": "Scenario: A recorded resolution never changes",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/tools/mod.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A recorded resolution never changes",
     "type": "scenario"
   },
@@ -2010,7 +2081,12 @@
   "rq-533b4dc3": {
     "decl": "Scenario: List tools and their use",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "List tools and their use",
     "type": "scenario"
   },
@@ -2195,7 +2271,12 @@
   "rq-59a106f1": {
     "decl": "Scenario: An uncommitted lock makes the record unclean",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An uncommitted lock makes the record unclean",
     "type": "scenario"
   },
@@ -2238,7 +2319,12 @@
   "rq-5aaa8478": {
     "decl": "Scenario: Undeclared tool",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Undeclared tool",
     "type": "scenario"
   },
@@ -2477,7 +2563,12 @@
   "rq-648eee87": {
     "decl": "Scenario: Prefix without a lock entry",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Prefix without a lock entry",
     "type": "scenario"
   },
@@ -2617,7 +2708,12 @@
   "rq-692c1c23": {
     "decl": "Scenario: Not cached on this machine is a warning",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Not cached on this machine is a warning",
     "type": "scenario"
   },
@@ -2843,7 +2939,12 @@
   "rq-71e65d00": {
     "decl": "Scenario: The key records the resolved commit",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The key records the resolved commit",
     "type": "scenario"
   },
@@ -2936,7 +3037,12 @@
   "rq-77e1e92c": {
     "decl": "Scenario: An unknown commit fails sync for that pin only",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An unknown commit fails sync for that pin only",
     "type": "scenario"
   },
@@ -3145,7 +3251,12 @@
   "rq-7f815511": {
     "decl": "Scenario: Generation refuses an uncached tool",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Generation refuses an uncached tool",
     "type": "scenario"
   },
@@ -3188,7 +3299,12 @@
   "rq-80cee75b": {
     "decl": "Scenario: Project-supplied environment for a tool without one",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Project-supplied environment for a tool without one",
     "type": "scenario"
   },
@@ -3304,7 +3420,16 @@
     "decl": "## Check Rules (`pipeline` family, tools)",
     "file": "pipeline/tools",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Check Rules (`pipeline` family, tools)",
     "type": "section"
   },
@@ -3984,7 +4109,12 @@
   "rq-a06c8348": {
     "decl": "Scenario: Provenance records the tool",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Provenance records the tool",
     "type": "scenario"
   },
@@ -4273,7 +4403,20 @@
     "decl": "## Tool Environments",
     "file": "pipeline/tools",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/keys.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/tools/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Tool Environments",
     "type": "section"
   },
@@ -4362,7 +4505,16 @@
     "decl": "### The tools lock",
     "file": "pipeline/tools",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/tools/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The tools lock",
     "type": "section"
   },
@@ -4788,7 +4940,12 @@
   "rq-bd5b27af": {
     "decl": "Scenario: A full pin needs no lock entry",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A full pin needs no lock entry",
     "type": "scenario"
   },
@@ -4836,7 +4993,16 @@
   "rq-bf589d85": {
     "decl": "Scenario: Branch names are not pins",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/tools/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Branch names are not pins",
     "type": "scenario"
   },
@@ -4974,7 +5140,20 @@
     "decl": "## The Tool Cache",
     "file": "pipeline/tools",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/tools/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The Tool Cache",
     "type": "section"
   },
@@ -5199,7 +5378,12 @@
   "rq-ccd30a25": {
     "decl": "- `resolve_pin(root: &Path, pin: &ToolPin) -> Result<String, ToolsError>` — the resolved commit,",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/tools/mod.rs",
+        "kind": "code"
+      }
+    ],
     "title": "resolve_pin",
     "type": "api-item"
   },
@@ -5329,7 +5513,16 @@
     "decl": "## Pinning a Tool in a Stage",
     "file": "pipeline/tools",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/tools/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Pinning a Tool in a Stage",
     "type": "section"
   },
@@ -5554,14 +5747,28 @@
   "rq-d7bdbaae": {
     "decl": "- `ToolPin` — `name: String`, `pin: String` (as written).",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/tools/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "ToolPin",
     "type": "api-item"
   },
   "rq-d7d4093c": {
     "decl": "Scenario: A tool without any environment",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A tool without any environment",
     "type": "scenario"
   },
@@ -5643,7 +5850,12 @@
     "decl": "## Declaring Tools",
     "file": "pipeline/tools",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/tools/mod.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Declaring Tools",
     "type": "section"
   },
@@ -5880,7 +6092,12 @@
   "rq-df6d227b": {
     "decl": "Scenario: A modified checkout is refused",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A modified checkout is refused",
     "type": "scenario"
   },
@@ -5927,7 +6144,12 @@
   "rq-e2b68626": {
     "decl": "Scenario: Sync is idempotent",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Sync is idempotent",
     "type": "scenario"
   },
@@ -6328,7 +6550,12 @@
   "rq-f1e21338": {
     "decl": "Scenario: Variants pin different versions side by side",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Variants pin different versions side by side",
     "type": "scenario"
   },
@@ -6471,7 +6698,12 @@
   "rq-f8136bd3": {
     "decl": "- `tool_checkout(root: &Path, pin: &ToolPin) -> Result<PathBuf, ToolsError>` — the cached, pristine",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/tools/mod.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tool_checkout",
     "type": "api-item"
   },
@@ -6494,7 +6726,12 @@
   "rq-f8fa9801": {
     "decl": "Scenario: The {tool} placeholder is only for tool stages",
     "file": "pipeline/tools",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The {tool} placeholder is only for tool stages",
     "type": "scenario"
   },
@@ -6514,7 +6751,16 @@
     "decl": "## Running a Tool Stage",
     "file": "pipeline/tools",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/keys.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Running a Tool Stage",
     "type": "section"
   },

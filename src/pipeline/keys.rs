@@ -215,22 +215,108 @@ fn key_error(stage: &StageConfig, message: String) -> PipelineError {
     }
 }
 
+/// What a tool stage runs with: its pin, resolved commit, pristine checkout and environment.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ToolInfo {
+    pub pin: crate::tools::ToolPin,
+    pub commit: String,
+    pub checkout: PathBuf,
+    /// The environment's `pixi.toml`.
+    pub manifest: PathBuf,
+    /// The environment's `pixi.lock`.
+    pub lock: PathBuf,
+}
+
+impl KeyContext {
+    // rq-f9ae0061 rq-a96b0574
+    /// The tool a stage runs with, or why it cannot be used (unresolved, not cached, modified, or
+    /// without an environment).
+    pub fn tool_info(&self, stage: &StageConfig) -> Result<Option<ToolInfo>, String> {
+        let Some(raw) = &stage.tool else {
+            return Ok(None);
+        };
+        let pin = crate::tools::ToolPin::parse(raw)
+            .ok_or_else(|| crate::tools::ToolsError::InvalidPin(raw.clone()).to_string())?;
+        let checkout = crate::tools::tool_checkout(&self.root, &pin).map_err(|e| e.to_string())?;
+        let commit = crate::tools::resolve_pin(&self.root, &pin).map_err(|e| e.to_string())?;
+        let (manifest, lock) = crate::tools::tool_environment(&self.root, &pin.name, &checkout)
+            .ok_or_else(|| {
+                format!(
+                    "tool `{}` at {commit} has no pixi.toml and pixi.lock, and the project has no envs/{}/",
+                    pin.name, pin.name
+                )
+            })?;
+        Ok(Some(ToolInfo {
+            pin,
+            commit,
+            checkout,
+            manifest,
+            lock,
+        }))
+    }
+
+    /// The environment hash of a stage: from the tool's environment for a tool stage, otherwise
+    /// from the project's `pixi.lock`.
+    pub fn stage_environment_hash(&self, stage: &StageConfig) -> Result<String, String> {
+        match self.tool_info(stage)? {
+            None => self.environment_hash(&stage.env),
+            Some(tool) => {
+                let text = fs::read_to_string(&tool.lock).map_err(|e| e.to_string())?;
+                environment_hashes(&text)?
+                    .get(&stage.env)
+                    .cloned()
+                    .ok_or_else(|| {
+                        format!(
+                            "the environment of tool `{}` has no environment `{}`",
+                            tool.pin.name, stage.env
+                        )
+                    })
+            }
+        }
+    }
+}
+
+// rq-37a6119e
 /// Computes the key texts and keys of all stages.
 pub fn compute_keys(config: &PipelineConfig, ctx: &KeyContext) -> Result<StageKeys, PipelineError> {
+    compute_keys_until(config, ctx, None)
+}
+
+/// Computes the keys of the stages up to and including `last` (all stages when `None`). A stage's
+/// key depends only on itself and earlier stages, so later stages cannot prevent it.
+pub fn compute_keys_until(
+    config: &PipelineConfig,
+    ctx: &KeyContext,
+    last: Option<&str>,
+) -> Result<StageKeys, PipelineError> {
     let mut texts = BTreeMap::new();
     let mut keys: BTreeMap<String, String> = BTreeMap::new();
-    for stage in &config.stages {
+    let end = match last {
+        None => config.stages.len(),
+        Some(name) => {
+            config
+                .stages
+                .iter()
+                .position(|s| s.name == name)
+                .ok_or_else(|| PipelineError::UnknownStage(name.to_string()))?
+                + 1
+        }
+    };
+    for stage in &config.stages[..end] {
         let env = ctx
-            .environment_hash(&stage.env)
+            .stage_environment_hash(stage)
             .map_err(|e| key_error(stage, e))?;
-        let mut lines = vec![
-            KEY_FORMAT.to_string(),
-            format!("run {}", stage.run),
+        let mut lines = vec![KEY_FORMAT.to_string(), format!("run {}", stage.run)];
+        // Only tool stages have a `tool` line, so other stages' keys are unaffected.
+        if let Some(tool) = ctx.tool_info(stage).map_err(|e| key_error(stage, e))? {
+            lines.push(format!("tool {}@{}", tool.pin.name, tool.commit));
+        }
+        lines.extend([
             format!("env {env}"),
             format!("threads {}", stage.threads),
             format!("foreach {}", stage.foreach.as_deref().unwrap_or("-")),
             format!("result {}", stage.result.as_deref().unwrap_or("-")),
-        ];
+        ]);
         for code in ctx
             .code_files(&config.study, stage)
             .map_err(|e| key_error(stage, e))?
@@ -272,7 +358,7 @@ pub fn stage_key_text(
     stage: &str,
     ctx: &KeyContext,
 ) -> Result<String, PipelineError> {
-    compute_keys(config, ctx)?
+    compute_keys_until(config, ctx, Some(stage))?
         .texts
         .remove(stage)
         .ok_or_else(|| PipelineError::UnknownStage(stage.to_string()))
@@ -355,6 +441,8 @@ pub struct RunPaths {
     pub inputs: BTreeMap<String, PathBuf>,
     pub item: Option<(String, PathBuf)>,
     pub params_file: PathBuf,
+    /// The tool checkout, for a tool stage.
+    pub tool: Option<PathBuf>,
 }
 
 /// The `run` command with its placeholders substituted and shell-quoted.
@@ -367,6 +455,7 @@ pub fn render_run(stage: &StageConfig, paths: &RunPaths) -> Result<String, Strin
                 let value = match p.as_str() {
                     "out" => paths.out.display().to_string(),
                     "params_file" => paths.params_file.display().to_string(),
+                    "tool" => paths.tool.as_ref().ok_or("no tool")?.display().to_string(),
                     "threads" => stage.threads.to_string(),
                     // Without a current item (the stage-level record of a fan-out stage), the
                     // item placeholders stay as written: no single item ran.

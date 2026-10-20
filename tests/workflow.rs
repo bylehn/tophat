@@ -502,11 +502,56 @@ fn waiting_for_a_qc_verdict() {
     let env = Env::preregistered();
     env.run_by_hand("pbe", "score");
     let next = env.next();
-    assert_eq!((next.row, next.who), (7, Who::You));
+    assert_eq!((next.row, next.who), (9, Who::You));
     assert_eq!(
         next.command.as_deref(),
         Some("tophat stage qc x-vs-docking score --variant pbe")
     );
+}
+
+#[test] // rq-032bd279 rq-956cc0ad rq-c5b9e99a
+fn tools_not_fetched_on_this_machine() {
+    let env = Env::preregistered();
+    let repo = env.base.join("method-x");
+    fs::create_dir_all(&repo).unwrap();
+    let git_in = |args: &[&str]| {
+        let out = Command::new("git")
+            .args([
+                "-c",
+                "user.name=T",
+                "-c",
+                "user.email=t@example.com",
+                "-c",
+                "commit.gpgsign=false",
+            ])
+            .args(args)
+            .current_dir(&repo)
+            .output()
+            .unwrap();
+        assert!(out.status.success());
+        String::from_utf8(out.stdout).unwrap().trim().to_string()
+    };
+    git_in(&["init", "-q"]);
+    fs::write(repo.join("tool.sh"), "echo tool\n").unwrap();
+    git_in(&["add", "-A"]);
+    git_in(&["commit", "-q", "-m", "A"]);
+    let commit = git_in(&["rev-parse", "HEAD"]);
+    env.write(
+        ".tophat/tools.yaml",
+        &format!("tools:\n  method-x:\n    url: {}\n", repo.display()),
+    );
+    let config = env.read("studies/x-vs-docking/config/base.yaml");
+    env.write(
+        "studies/x-vs-docking/config/base.yaml",
+        &format!("{config}  - name: extra\n    tool: method-x@{commit}\n    run: sh {{tool}}/tool.sh > {{out}}/x\n"),
+    );
+    let next = env.next();
+    assert_eq!(next.row, 7, "{next:?}");
+    assert_eq!(next.command.as_deref(), Some("tophat tools sync"));
+    let (code, _, err) = env.tophat(&["run", "x-vs-docking"], &[]);
+    assert_eq!(code, 1);
+    assert!(err.contains("tophat tools sync"), "{err}");
+    assert!(env.pixi_args().is_none());
 }
 
 #[test] // rq-14542671 rq-956cc0ad
@@ -515,7 +560,7 @@ fn failed_qc() {
     env.run_by_hand("base", "score");
     env.verdict("base", "fail");
     let next = env.next();
-    assert_eq!(next.row, 8);
+    assert_eq!(next.row, 10);
     assert!(
         next.text.contains("score") && next.text.contains("base"),
         "{}",
@@ -531,7 +576,7 @@ fn stages_left_to_run() {
     let pipeline = status.pipeline.unwrap();
     assert_eq!(pipeline[0], ("base".to_string(), Some((1, 3))));
     assert_eq!(pipeline[1], ("pbe".to_string(), Some((1, 3))));
-    assert_eq!(status.next.row, 9);
+    assert_eq!(status.next.row, 11);
     assert_eq!(
         status.next.command.as_deref(),
         Some("tophat run x-vs-docking")
@@ -542,14 +587,14 @@ fn stages_left_to_run() {
 fn stale_summary_means_run_again() {
     let env = Env::preregistered();
     env.complete();
-    assert_eq!(env.next().row, 11);
+    assert_eq!(env.next().row, 13);
     let key = env.keys("base")["analyse"].clone();
     env.edit(
         "studies/x-vs-docking/SUMMARY.md",
         &format!("\"base/analyse\": \"{key}\""),
         "\"base/analyse\": \"sk-0000000000000000\"",
     );
-    assert_eq!(env.next().row, 9);
+    assert_eq!(env.next().row, 11);
     // The stale summary is a check error, yet it does not stop the run that fixes it.
     assert!(run_check(&env.root(), &[])
         .unwrap()
@@ -567,7 +612,7 @@ fn dirty_summary_means_commit_and_run_again() {
     env.write("pixi.toml", &committed);
     env.complete();
     let next = env.next();
-    assert_eq!(next.row, 10);
+    assert_eq!(next.row, 12);
     assert_eq!(next.command.as_deref(), Some("tophat run x-vs-docking"));
 }
 
@@ -576,7 +621,7 @@ fn ready_to_report() {
     let env = Env::preregistered();
     env.complete();
     let next = env.next();
-    assert_eq!(next.row, 11);
+    assert_eq!(next.row, 13);
     assert_eq!(
         next.command.as_deref(),
         Some("tophat study report x-vs-docking")
@@ -589,7 +634,7 @@ fn reported_study_whose_question_is_still_open() {
     env.complete();
     report(&env.root(), "x-vs-docking").unwrap();
     let next = env.next();
-    assert_eq!(next.row, 12);
+    assert_eq!(next.row, 14);
     assert!(next.text.contains("q-9c0d1e2f"));
 }
 
@@ -606,7 +651,7 @@ fn reported_study_that_is_cited_is_done() {
     let next = env.next();
     assert_eq!(
         (next.row, next.text.as_str(), next.who),
-        (13, "None: done", Who::Nobody)
+        (15, "None: done", Who::Nobody)
     );
 }
 
@@ -646,7 +691,7 @@ fn retrospective_study_without_a_pipeline() {
         "### q-9c0d1e2f · Does X rank binders better than docking?\nstatus: answered\n\n**Answer:** Partly.\nEvidence: old-benchmark\n",
     );
     let next = next_action(&env.root(), "old-benchmark").unwrap();
-    assert_eq!(next.row, 13, "{next:?}");
+    assert_eq!(next.row, 15, "{next:?}");
 }
 
 // --- Status output ----------------------------------------------------------------------------
@@ -681,7 +726,7 @@ fn json_status_for_agents() {
     assert_eq!(code, 0);
     let json: serde_json::Value = serde_json::from_str(&out).unwrap();
     let next = &json["studies"][0]["next"];
-    assert_eq!(next["row"], 7);
+    assert_eq!(next["row"], 9);
     assert_eq!(next["who"], "you");
     assert_eq!(
         next["command"],

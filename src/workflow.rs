@@ -168,7 +168,34 @@ fn progress(root: &Path, study: &str, variants: &[String]) -> Vec<(String, Progr
         .collect()
 }
 
-/// Rows 7 to 10: QC gates, unrun stages, and the summary.
+// rq-956cc0ad
+/// The tool pins of a study (any variant) that cannot be used on this machine yet: unresolved or
+/// not cached.
+fn missing_tools(root: &Path, variants: &[String], study: &str) -> Vec<String> {
+    let project = Project::new(root);
+    let mut missing = Vec::new();
+    for variant in variants {
+        let Some(config) = crate::pipeline::load_variant_lenient(&project, study, variant) else {
+            continue;
+        };
+        for raw in config.stages.iter().filter_map(|s| s.tool.as_deref()) {
+            let Some(pin) = crate::tools::ToolPin::parse(raw) else {
+                continue;
+            };
+            let unusable = matches!(
+                crate::tools::tool_checkout(root, &pin),
+                Err(crate::tools::ToolsError::NotCached { .. }
+                    | crate::tools::ToolsError::Unlocked { .. })
+            );
+            if unusable && !missing.contains(&raw.to_string()) {
+                missing.push(raw.to_string());
+            }
+        }
+    }
+    missing
+}
+
+/// Rows 9 to 12: QC gates, unrun stages, and the summary.
 fn pipeline_action(root: &Path, study: &Study, variants: &[String]) -> Option<NextAction> {
     let id = &study.id;
     let run_cmd = format!("tophat run {id}");
@@ -199,7 +226,7 @@ fn pipeline_action(root: &Path, study: &Study, variants: &[String]) -> Option<Ne
                 Ok(Verdict::Fail) => {
                     qc_failed.get_or_insert_with(|| {
                         NextAction::new(
-                            8,
+                            10,
                             Who::Anyone,
                             format!(
                                 "Fix the cause of the failed QC of {} ({variant}); the next run uses a new key",
@@ -221,7 +248,7 @@ fn pipeline_action(root: &Path, study: &Study, variants: &[String]) -> Option<Ne
                             format!("tophat stage qc {id} {} --variant {variant}", stage.name);
                         qc_needed.get_or_insert_with(|| {
                             NextAction::new(
-                                7,
+                                9,
                                 Who::You,
                                 format!("Give a QC verdict: {cmd}"),
                                 Some(cmd),
@@ -243,7 +270,7 @@ fn pipeline_action(root: &Path, study: &Study, variants: &[String]) -> Option<Ne
     });
     if unsealed || (has_result_stage && (summary.is_none() || stale)) {
         return Some(NextAction::new(
-            9,
+            11,
             Who::Anyone,
             format!("Run the pipeline: {run_cmd}"),
             Some(run_cmd),
@@ -251,7 +278,7 @@ fn pipeline_action(root: &Path, study: &Study, variants: &[String]) -> Option<Ne
     }
     if summary.is_some_and(|s| s.dirty) {
         return Some(NextAction::new(
-            10,
+            12,
             Who::Anyone,
             format!("Commit the code listed as unclean, then {run_cmd}"),
             Some(run_cmd),
@@ -296,7 +323,7 @@ fn evaluate(root: &Path, view: &ProjectView, study_id: &str) -> Result<StudyStat
         question_text,
         superseded_by: superseded_by.clone(),
         pipeline,
-        next: NextAction::new(13, Who::Nobody, "None: done", None),
+        next: NextAction::new(15, Who::Nobody, "None: done", None),
     };
 
     let id = study_id;
@@ -347,12 +374,21 @@ fn evaluate(root: &Path, view: &ProjectView, study_id: &str) -> Result<StudyStat
                 None,
             ));
         }
+        if !missing_tools(root, &variants, id).is_empty() {
+            let cmd = "tophat tools sync".to_string();
+            return Some(NextAction::new(
+                7,
+                Who::Anyone,
+                format!("Fetch tools: {cmd}"),
+                Some(cmd),
+            ));
+        }
         pipeline_action(root, &study, &variants)
     })() {
         action
     } else if status == Some(Status::Preregistered) {
         let cmd = format!("tophat study report {id}");
-        NextAction::new(11, Who::Anyone, format!("Report: {cmd}"), Some(cmd))
+        NextAction::new(13, Who::Anyone, format!("Report: {cmd}"), Some(cmd))
     } else if let Some(q) = question.as_ref().filter(|q| {
         let tree = &view.questions;
         let open = tree
@@ -368,13 +404,13 @@ fn evaluate(root: &Path, view: &ProjectView, study_id: &str) -> Result<StudyStat
         open && !cited
     }) {
         NextAction::new(
-            12,
+            14,
             Who::Anyone,
             format!("Answer question {q} in PROJECT.md, citing this study"),
             None,
         )
     } else {
-        NextAction::new(13, Who::Nobody, "None: done", None)
+        NextAction::new(15, Who::Nobody, "None: done", None)
     };
     result.next = next;
     Ok(result)
@@ -550,6 +586,13 @@ pub fn run_command(root: &Path, study: &str, options: &RunOptions) -> Result<Vec
         if !doc.variants().contains(v) {
             return refuse(format!("variant `{v}` is not listed in STUDY.md"));
         }
+    }
+    let missing = missing_tools(root, doc.variants(), study);
+    if !missing.is_empty() {
+        return refuse(format!(
+            "these tool versions are not on this machine yet: {}; run `tophat tools sync` first",
+            missing.join(", ")
+        ));
     }
     let view = ProjectView::load(root).map_err(|e| Refusal(e.to_string()))?;
     let errors = blocking_errors(root, &view, study);
