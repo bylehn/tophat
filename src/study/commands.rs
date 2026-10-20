@@ -1,0 +1,362 @@
+//! The `tophat study` commands: `new`, `preregister`, `report` and `supersede`.
+
+use std::fs;
+use std::io::{BufRead, Write};
+use std::path::{Path, PathBuf};
+
+use chrono::NaiveDate;
+
+use super::edit::EditableDoc;
+use super::rules::{check_study, Context};
+use super::{
+    frozen_fingerprint, is_valid_question_id, is_valid_study_id, parse_study_text, parse_summary,
+    Status, Study, StudyError, FROZEN_SECTIONS, STUDIES_DIR, STUDY_FILE, SUMMARY_FILE,
+};
+use crate::check::{Project, Severity};
+use crate::fsutil::write_atomic;
+
+/// The terminal a command talks to.
+pub struct Console<'a> {
+    /// Whether standard input and standard output are both interactive terminals.
+    pub interactive: bool,
+    pub input: &'a mut dyn BufRead,
+    pub out: &'a mut dyn Write,
+}
+
+fn study_dir(root: &Path, id: &str) -> Result<PathBuf, StudyError> {
+    if !is_valid_study_id(id) {
+        return Err(StudyError::InvalidStudyId(id.to_string()));
+    }
+    Ok(root.join(STUDIES_DIR).join(id))
+}
+
+/// A study loaded for editing: its file path, original text, and parsed form.
+struct Loaded {
+    path: PathBuf,
+    text: String,
+    study: Study,
+}
+
+fn load(root: &Path, id: &str) -> Result<Loaded, StudyError> {
+    let path = study_dir(root, id)?.join(STUDY_FILE);
+    let text = fs::read_to_string(&path).map_err(|e| {
+        if e.kind() == std::io::ErrorKind::NotFound {
+            StudyError::StudyNotFound(id.to_string())
+        } else {
+            StudyError::Io(format!("{}: {e}", path.display()))
+        }
+    })?;
+    let rel = format!("{STUDIES_DIR}/{id}/{STUDY_FILE}");
+    let study = parse_study_text(id, &rel, &text)?;
+    Ok(Loaded { path, text, study })
+}
+
+fn editable(loaded: &Loaded) -> Result<EditableDoc, StudyError> {
+    EditableDoc::new(&loaded.text).map_err(|message| StudyError::FrontMatter {
+        path: loaded.path.display().to_string(),
+        line: Some(1),
+        message,
+    })
+}
+
+fn require_status(study: &Study, allowed: &[Status]) -> Result<Status, StudyError> {
+    match study.status() {
+        Some(s) if allowed.contains(&s) => Ok(s),
+        status => Err(StudyError::WrongStatus {
+            study: study.id.clone(),
+            status,
+            required: allowed.to_vec(),
+        }),
+    }
+}
+
+fn template(id: &str, question: &str, visibility: &str) -> String {
+    format!(
+        "---
+study: {id}
+title: \"{id}\"
+question: {question}
+status: draft
+visibility: {visibility}
+variants:
+  - base
+---
+
+# {id}
+
+## Question
+
+<!-- The single question this study answers. Frozen once pre-registered. -->
+
+## Primary endpoint
+
+<!-- The one quantity that answers the question, and how it is measured. Frozen once
+     pre-registered. -->
+
+## Decision rule
+
+<!-- How the endpoint's value maps to an answer, including thresholds. Frozen once
+     pre-registered. -->
+
+## Scenarios
+
+<!-- Testable expectations as gherkin code blocks. Put a tag such as @S1 on the line before each
+     Scenario. Tests under tests/ reference a scenario with th:S1. Frozen once pre-registered. -->
+
+## Variants
+
+<!-- Describe each variant listed in the front matter. `base` uses config/base.yaml; any other
+     variant uses config/<variant>.yaml holding only what differs. -->
+
+## Stages
+
+<!-- Describe the pipeline stages. The machine-readable definition lives in config/. -->
+
+## Amendments
+
+<!-- After pre-registration only, one line per change:
+     - YYYY-MM-DD — results seen: yes|no — reason -->
+
+## Result
+
+<!-- Written by `tophat study report` from SUMMARY.md. Do not edit by hand. -->
+
+## Interpretation
+
+<!-- Your interpretation of the result. -->
+"
+    )
+}
+
+// rq-f689a538
+/// Creates `studies/<id>/` with a draft `STUDY.md`, `config/base.yaml` and an empty `tests/`.
+/// Writes nothing if validation fails; removes the partially created directory on I/O failure.
+pub fn new_study(
+    root: &Path,
+    id: &str,
+    question: &str,
+    private: bool,
+) -> Result<PathBuf, StudyError> {
+    let dir = study_dir(root, id)?;
+    if !is_valid_question_id(question) {
+        return Err(StudyError::InvalidQuestionId(question.to_string()));
+    }
+    if dir.exists() {
+        return Err(StudyError::StudyExists(id.to_string()));
+    }
+    fs::create_dir_all(root.join(STUDIES_DIR))?;
+    fs::create_dir(&dir).map_err(|e| {
+        if e.kind() == std::io::ErrorKind::AlreadyExists {
+            StudyError::StudyExists(id.to_string())
+        } else {
+            e.into()
+        }
+    })?;
+    let visibility = if private { "private" } else { "public" };
+    let populate = || -> std::io::Result<()> {
+        fs::create_dir(dir.join("config"))?;
+        fs::create_dir(dir.join("tests"))?;
+        fs::write(
+            dir.join("config/base.yaml"),
+            format!("# Base pipeline configuration for study {id}.\n"),
+        )?;
+        fs::write(dir.join(STUDY_FILE), template(id, question, visibility))
+    };
+    if let Err(e) = populate() {
+        let _ = fs::remove_dir_all(&dir);
+        return Err(e.into());
+    }
+    Ok(dir)
+}
+
+// rq-bcb83d0a
+/// Pre-registers a draft study after interactive confirmation by a human. `today` is the
+/// pre-registration date.
+pub fn preregister(
+    root: &Path,
+    id: &str,
+    today: NaiveDate,
+    console: &mut Console<'_>,
+) -> Result<(), StudyError> {
+    let loaded = load(root, id)?;
+    if !console.interactive {
+        return Err(StudyError::NotInteractive);
+    }
+    require_status(&loaded.study, &[Status::Draft])?;
+
+    let fingerprint = frozen_fingerprint(&loaded.study);
+    let mut doc = editable(&loaded)?;
+    doc.set_field("status", &["status: preregistered".to_string()]);
+    doc.set_field(
+        "preregistered",
+        &[
+            "preregistered:".to_string(),
+            format!("  date: \"{}\"", today.format("%Y-%m-%d")),
+            format!("  frozen_hash: \"{fingerprint}\""),
+        ],
+    );
+    let new_text = doc.text();
+
+    // Evaluate the study as it would be after pre-registration.
+    let rel = format!("{STUDIES_DIR}/{id}/{STUDY_FILE}");
+    let hypothetical = parse_study_text(id, &rel, &new_text)?;
+    let project = Project::new(root);
+    let ctx = Context::load(&project, today);
+    let problems: Vec<_> = check_study(&ctx, &hypothetical)
+        .into_iter()
+        .filter(|d| d.severity == Severity::Error)
+        .collect();
+    if !problems.is_empty() {
+        return Err(StudyError::NotReady(problems));
+    }
+
+    let out = &mut *console.out;
+    writeln!(
+        out,
+        "Pre-registering study `{id}`. These sections will be frozen:\n"
+    )?;
+    for name in FROZEN_SECTIONS {
+        writeln!(out, "## {name}")?;
+        if let Some(section) = loaded.study.section(name) {
+            for (_, line) in &section.content {
+                writeln!(out, "{line}")?;
+            }
+        }
+    }
+    write!(out, "\nType the study ID (`{id}`) to confirm: ")?;
+    out.flush()?;
+    let mut answer = String::new();
+    console.input.read_line(&mut answer)?;
+    if answer.trim() != id {
+        return Err(StudyError::ConfirmationMismatch);
+    }
+
+    write_atomic(&loaded.path, &new_text)?;
+    writeln!(
+        console.out,
+        "Study `{id}` is pre-registered. Commit {STUDY_FILE} now, before running any \
+         answer-stage computation."
+    )?;
+    Ok(())
+}
+
+// rq-ecacda48
+/// Copies the result lines of `SUMMARY.md` into the `## Result` section verbatim.
+pub fn report(root: &Path, id: &str) -> Result<(), StudyError> {
+    let loaded = load(root, id)?;
+    let study = &loaded.study;
+    let status = require_status(
+        study,
+        &[
+            Status::Preregistered,
+            Status::Reported,
+            Status::Retrospective,
+        ],
+    )?;
+    let summary_path = study_dir(root, id)?.join(SUMMARY_FILE);
+    if status == Status::Retrospective && !summary_path.is_file() {
+        return Err(StudyError::Summary(
+            "a retrospective study can only be reported from an existing SUMMARY.md".into(),
+        ));
+    }
+    let summary = parse_summary(&summary_path)?;
+    if summary.study != id {
+        return Err(StudyError::Summary(format!(
+            "it is for study `{}`, not `{id}`",
+            summary.study
+        )));
+    }
+    if summary.dirty {
+        return Err(StudyError::Summary(
+            "the pipeline ran from uncommitted code (`dirty: true`); commit the code and re-run \
+             the pipeline first"
+                .into(),
+        ));
+    }
+    if let Some(line) = summary
+        .results
+        .iter()
+        .find(|l| !study.variants().contains(&l.variant))
+    {
+        return Err(StudyError::Summary(format!(
+            "line {} names variant `{}`, which is not listed in STUDY.md",
+            line.line, line.variant
+        )));
+    }
+
+    let structure_error = |message: &str| StudyError::Structure {
+        path: loaded.path.display().to_string(),
+        message: message.to_string(),
+    };
+    let result_sections: Vec<_> = study.sections_named("Result").collect();
+    let heading = match result_sections.as_slice() {
+        [one] => one.heading_line,
+        [] => return Err(structure_error("there is no `## Result` section")),
+        _ => return Err(structure_error("`## Result` appears more than once")),
+    };
+    let next_heading = study
+        .sections
+        .iter()
+        .map(|s| s.heading_line)
+        .find(|&l| l > heading);
+
+    let mut content = vec![String::new()];
+    content.extend(summary.results.iter().map(|l| l.raw.clone()));
+    if next_heading.is_some() {
+        content.push(String::new());
+    }
+    let mut doc = editable(&loaded)?;
+    doc.replace_section_content(heading, next_heading, &content);
+    if status == Status::Preregistered {
+        doc.set_field("status", &["status: reported".to_string()]);
+    }
+    write_atomic(&loaded.path, &doc.text())?;
+    Ok(())
+}
+
+// rq-9f2c5cd1
+/// Marks `old` as superseded by `new` and links both studies.
+pub fn supersede(root: &Path, old: &str, new: &str) -> Result<(), StudyError> {
+    study_dir(root, old)?;
+    study_dir(root, new)?;
+    if old == new {
+        return Err(StudyError::SameStudy(old.to_string()));
+    }
+    let old_loaded = load(root, old)?;
+    let new_loaded = load(root, new)?;
+    require_status(
+        &old_loaded.study,
+        &[
+            Status::Preregistered,
+            Status::Reported,
+            Status::Retrospective,
+        ],
+    )?;
+
+    let mut old_doc = editable(&old_loaded)?;
+    old_doc.set_field("status", &["status: superseded".to_string()]);
+    old_doc.set_field("superseded_by", &[format!("superseded_by: \"{new}\"")]);
+
+    let existing = new_loaded
+        .study
+        .front
+        .supersedes
+        .as_ref()
+        .map(|f| f.value.clone())
+        .unwrap_or_default();
+    if !existing.iter().any(|s| s == old) {
+        let mut lines = vec!["supersedes:".to_string()];
+        lines.extend(
+            existing
+                .iter()
+                .map(String::as_str)
+                .chain([old])
+                .map(|s| format!("  - \"{s}\"")),
+        );
+        let mut new_doc = editable(&new_loaded)?;
+        new_doc.set_field("supersedes", &lines);
+        write_atomic(&new_loaded.path, &new_doc.text())?;
+    }
+    write_atomic(&old_loaded.path, &old_doc.text())?;
+    Ok(())
+}

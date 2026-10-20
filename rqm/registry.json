@@ -1,0 +1,2641 @@
+{
+  "rq-01b7434d": {
+    "decl": "Scenario: Citing an answered sub-question",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Citing an answered sub-question",
+    "type": "scenario"
+  },
+  "rq-04595081": {
+    "decl": "### Scenarios",
+    "file": "study/format",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/study/document.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Scenarios",
+    "type": "section"
+  },
+  "rq-08c7718c": {
+    "decl": "## Frozen Fingerprint",
+    "file": "study/format",
+    "level": 2,
+    "refs": [
+      {
+        "file": "src/study/fingerprint.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/study/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Frozen Fingerprint",
+    "type": "section"
+  },
+  "rq-09eda840": {
+    "decl": "## SUMMARY.md Format",
+    "file": "study/format",
+    "level": 2,
+    "refs": [
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/study/summary.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "SUMMARY.md Format",
+    "type": "section"
+  },
+  "rq-0bdbef43": {
+    "decl": "Scenario: A warning does not fail the check by default",
+    "file": "check",
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A warning does not fail the check by default",
+    "type": "scenario"
+  },
+  "rq-0d2a06e5": {
+    "decl": "Scenario: Missing governed section",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Missing governed section",
+    "type": "scenario"
+  },
+  "rq-0e435215": {
+    "decl": "Scenario: Answered question without an answer",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Answered question without an answer",
+    "type": "scenario"
+  },
+  "rq-0e66003f": {
+    "decl": "- `parse_project(text: &str) -> QuestionTree` — parses `PROJECT.md` text; never fails, recording",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "src/question/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "parse_project",
+    "type": "api-item"
+  },
+  "rq-10af2996": {
+    "decl": "# Feature: Project Integrity Check (`tophat check`)",
+    "file": "check",
+    "refs": [],
+    "title": "Feature: Project Integrity Check (`tophat check`)",
+    "type": "file"
+  },
+  "rq-11b56000": {
+    "decl": "Scenario: Human output separates legacy items",
+    "file": "check",
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Human output separates legacy items",
+    "type": "scenario"
+  },
+  "rq-13aae895": {
+    "decl": "Scenario: Report refuses a draft",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Report refuses a draft",
+    "type": "scenario"
+  },
+  "rq-13deda96": {
+    "decl": "Scenario: Citing a question that does not exist",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Citing a question that does not exist",
+    "type": "scenario"
+  },
+  "rq-148e9ae7": {
+    "decl": "### Commands",
+    "file": "question-tree",
+    "level": 3,
+    "refs": [],
+    "title": "Commands",
+    "type": "section"
+  },
+  "rq-14d17a56": {
+    "decl": "Scenario: Reported study whose summary became dirty",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Reported study whose summary became dirty",
+    "type": "scenario"
+  },
+  "rq-1513da11": {
+    "decl": "- `tophat question stamp`",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "src/question/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-170877ff": {
+    "decl": "Scenario: Scoped check still resolves cross-references project-wide",
+    "file": "check",
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Scoped check still resolves cross-references project-wide",
+    "type": "scenario"
+  },
+  "rq-17514314": {
+    "decl": "Scenario: Stamped heading without text",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Stamped heading without text",
+    "type": "scenario"
+  },
+  "rq-192a5ff9": {
+    "decl": "### Severities",
+    "file": "check",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/check.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Severities",
+    "type": "section"
+  },
+  "rq-1931327f": {
+    "decl": "Scenario: Untested scenario in a reported study is an error",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Untested scenario in a reported study is an error",
+    "type": "scenario"
+  },
+  "rq-1a1c0293": {
+    "decl": "Scenario: First question is not a level-two heading",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "First question is not a level-two heading",
+    "type": "scenario"
+  },
+  "rq-1aa65ab4": {
+    "decl": "Scenario: Superseded-by target does not exist",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Superseded-by target does not exist",
+    "type": "scenario"
+  },
+  "rq-1bce095c": {
+    "decl": "- `tophat check [--json] [--strict] [PATH...]`",
+    "file": "check",
+    "refs": [
+      {
+        "file": "src/cli.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-1dd3778a": {
+    "decl": "Scenario: Commands write atomically",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Commands write atomically",
+    "type": "scenario"
+  },
+  "rq-1dd39a2c": {
+    "decl": "Scenario: Headings in code fences are not questions",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Headings in code fences are not questions",
+    "type": "scenario"
+  },
+  "rq-1f183c28": {
+    "decl": "Scenario: Parent is the nearest shallower question",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Parent is the nearest shallower question",
+    "type": "scenario"
+  },
+  "rq-214c0020": {
+    "decl": "Scenario: Malformed amendment",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Malformed amendment",
+    "type": "scenario"
+  },
+  "rq-23b830b6": {
+    "decl": "Scenario: Check runs from the project root",
+    "file": "check",
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Check runs from the project root",
+    "type": "scenario"
+  },
+  "rq-2431d4ff": {
+    "decl": "## Check Rules (`study` family)",
+    "file": "study/format",
+    "level": 2,
+    "refs": [
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Check Rules (`study` family)",
+    "type": "section"
+  },
+  "rq-24fdff0d": {
+    "decl": "Scenario: Stamp leaves duplicated IDs for the user",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Stamp leaves duplicated IDs for the user",
+    "type": "scenario"
+  },
+  "rq-2b3be8cc": {
+    "decl": "## Assumptions",
+    "file": "question-tree",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
+  },
+  "rq-2b94ea79": {
+    "decl": "Scenario: Invalid scenario tag",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Invalid scenario tag",
+    "type": "scenario"
+  },
+  "rq-2c9834f8": {
+    "decl": "Scenario: Stamp keeps existing IDs and status lines",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Stamp keeps existing IDs and status lines",
+    "type": "scenario"
+  },
+  "rq-2db7a1dd": {
+    "decl": "# Feature: Study Document Format and Lifecycle",
+    "file": "study/format",
+    "refs": [],
+    "title": "Feature: Study Document Format and Lifecycle",
+    "type": "file"
+  },
+  "rq-2dd95e98": {
+    "decl": "### Commands",
+    "file": "study/format",
+    "level": 3,
+    "refs": [],
+    "title": "Commands",
+    "type": "section"
+  },
+  "rq-2e00ed22": {
+    "decl": "Scenario: Whitespace and line-ending changes do not alter the fingerprint",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Whitespace and line-ending changes do not alter the fingerprint",
+    "type": "scenario"
+  },
+  "rq-330e2712": {
+    "decl": "Scenario: Report refuses a dirty summary",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Report refuses a dirty summary",
+    "type": "scenario"
+  },
+  "rq-35e01b00": {
+    "decl": "### Exit codes",
+    "file": "check",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/cli.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Exit codes",
+    "type": "section"
+  },
+  "rq-36072125": {
+    "decl": "Scenario: Reject a study ID that already exists",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Reject a study ID that already exists",
+    "type": "scenario"
+  },
+  "rq-3650b3f0": {
+    "decl": "# Feature: Question Tree",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Feature: Question Tree",
+    "type": "file"
+  },
+  "rq-384cc812": {
+    "decl": "Scenario: Citing a draft study",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Citing a draft study",
+    "type": "scenario"
+  },
+  "rq-38c13472": {
+    "decl": "Scenario: Invalid status value",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Invalid status value",
+    "type": "scenario"
+  },
+  "rq-39ebb522": {
+    "decl": "### Read-only and offline",
+    "file": "check",
+    "level": 3,
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Read-only and offline",
+    "type": "section"
+  },
+  "rq-3a79a3f7": {
+    "decl": "Scenario: Retrospective study can be reported from a summary",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Retrospective study can be reported from a summary",
+    "type": "scenario"
+  },
+  "rq-3cc4a23d": {
+    "decl": "Scenario: Untested scenario in a preregistered study warns",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Untested scenario in a preregistered study warns",
+    "type": "scenario"
+  },
+  "rq-3e058fe4": {
+    "decl": "Scenario: Study ID does not match directory",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Study ID does not match directory",
+    "type": "scenario"
+  },
+  "rq-3fd30bb8": {
+    "decl": "## Feature API",
+    "file": "study/format",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
+  "rq-4151372b": {
+    "decl": "Scenario: Legacy items never fail the check, even in strict mode",
+    "file": "check",
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Legacy items never fail the check, even in strict mode",
+    "type": "scenario"
+  },
+  "rq-41dc6a2d": {
+    "decl": "Scenario: Tree as JSON",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Tree as JSON",
+    "type": "scenario"
+  },
+  "rq-427db370": {
+    "decl": "Scenario: Open question needs neither answer nor evidence",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Open question needs neither answer nor evidence",
+    "type": "scenario"
+  },
+  "rq-44727473": {
+    "decl": "### Title and preamble",
+    "file": "question-tree",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/question/mod.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Title and preamble",
+    "type": "section"
+  },
+  "rq-451aca52": {
+    "decl": "Scenario: Scope path outside the project",
+    "file": "check",
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Scope path outside the project",
+    "type": "scenario"
+  },
+  "rq-46e1add4": {
+    "decl": "Scenario: Report copies result lines verbatim",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Report copies result lines verbatim",
+    "type": "scenario"
+  },
+  "rq-4838d3a2": {
+    "decl": "Scenario: Unlisted variant config",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Unlisted variant config",
+    "type": "scenario"
+  },
+  "rq-4d76640c": {
+    "decl": "Scenario: Citing an open sub-question",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Citing an open sub-question",
+    "type": "scenario"
+  },
+  "rq-4e7bac77": {
+    "decl": "## Feature API",
+    "file": "question-tree",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
+  "rq-503474ab": {
+    "decl": "Scenario: Citing a question that is not a descendant",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Citing a question that is not a descendant",
+    "type": "scenario"
+  },
+  "rq-520893f5": {
+    "decl": "Scenario: Scenario without a tag",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Scenario without a tag",
+    "type": "scenario"
+  },
+  "rq-52e3a974": {
+    "decl": "Scenario: Create a new study",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Create a new study",
+    "type": "scenario"
+  },
+  "rq-544bf01b": {
+    "decl": "Scenario: Citing a malformed identifier",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Citing a malformed identifier",
+    "type": "scenario"
+  },
+  "rq-54c9eb81": {
+    "decl": "Scenario: Pre-registration refused without an interactive terminal",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Pre-registration refused without an interactive terminal",
+    "type": "scenario"
+  },
+  "rq-55f9341a": {
+    "decl": "Scenario: Returning to a shallower level is allowed",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Returning to a shallower level is allowed",
+    "type": "scenario"
+  },
+  "rq-563ae19a": {
+    "decl": "### Types",
+    "file": "question-tree",
+    "level": 3,
+    "refs": [],
+    "title": "Types",
+    "type": "section"
+  },
+  "rq-580c8189": {
+    "decl": "Scenario: Check outside any TopHat project",
+    "file": "check",
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Check outside any TopHat project",
+    "type": "scenario"
+  },
+  "rq-588d371f": {
+    "decl": "Scenario: Summary line with an unlisted variant",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Summary line with an unlisted variant",
+    "type": "scenario"
+  },
+  "rq-5d07156c": {
+    "decl": "- `tophat question tree [--json]`",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "src/question/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-5e9d0d62": {
+    "decl": "- `Status` — enum `Draft`, `Preregistered`, `Reported`, `Superseded`, `Retrospective`.",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "src/study/mod.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Status",
+    "type": "api-item"
+  },
+  "rq-5ef3ab11": {
+    "decl": "Scenario: A project without PROJECT.md has an empty tree",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A project without PROJECT.md has an empty tree",
+    "type": "scenario"
+  },
+  "rq-607bbcc0": {
+    "decl": "Scenario: Commands preserve unrelated content",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Commands preserve unrelated content",
+    "type": "scenario"
+  },
+  "rq-60a2fa37": {
+    "decl": "Scenario: Duplicate question IDs",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Duplicate question IDs",
+    "type": "scenario"
+  },
+  "rq-6106e112": {
+    "decl": "Scenario: Stamp ignores headings in code fences",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Stamp ignores headings in code fences",
+    "type": "scenario"
+  },
+  "rq-6236fe4c": {
+    "decl": "- `run_check(root: &Path, scope: &[PathBuf]) -> Result<Vec<Diagnostic>, CheckError>`",
+    "file": "check",
+    "refs": [
+      {
+        "file": "src/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "run_check",
+    "type": "api-item"
+  },
+  "rq-647102ae": {
+    "decl": "Scenario: Retrospective study cannot carry a pre-registration block",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Retrospective study cannot carry a pre-registration block",
+    "type": "scenario"
+  },
+  "rq-65465008": {
+    "decl": "Scenario: Pre-registration refused for a non-draft study",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Pre-registration refused for a non-draft study",
+    "type": "scenario"
+  },
+  "rq-6764653f": {
+    "decl": "- `Summary` — a parsed `SUMMARY.md`: study ID, commit, dirty flag, generated timestamp, tophat",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "src/study/summary.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Summary",
+    "type": "api-item"
+  },
+  "rq-67b9306b": {
+    "decl": "Scenario: Duplicate scenario numbers",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Duplicate scenario numbers",
+    "type": "scenario"
+  },
+  "rq-68a6dd72": {
+    "decl": "Scenario: Output is deterministic",
+    "file": "check",
+    "refs": [
+      {
+        "file": "src/check.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Output is deterministic",
+    "type": "scenario"
+  },
+  "rq-68f43997": {
+    "decl": "Scenario: Amendment dated before pre-registration",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Amendment dated before pre-registration",
+    "type": "scenario"
+  },
+  "rq-6a843b0a": {
+    "decl": "Scenario: Test reference in a Julia file counts as a test",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Test reference in a Julia file counts as a test",
+    "type": "scenario"
+  },
+  "rq-6ef37d58": {
+    "decl": "Scenario: Study names a question when PROJECT.md is missing",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Study names a question when PROJECT.md is missing",
+    "type": "scenario"
+  },
+  "rq-70b0f2e4": {
+    "decl": "Scenario: Amendment dated in the future",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Amendment dated in the future",
+    "type": "scenario"
+  },
+  "rq-74adaff3": {
+    "decl": "Scenario: A warning fails the check in strict mode",
+    "file": "check",
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A warning fails the check in strict mode",
+    "type": "scenario"
+  },
+  "rq-765490e4": {
+    "decl": "Scenario: Supersede refuses a missing replacement",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Supersede refuses a missing replacement",
+    "type": "scenario"
+  },
+  "rq-76ac5b2e": {
+    "decl": "### Study ID",
+    "file": "study/format",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/study/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Study ID",
+    "type": "section"
+  },
+  "rq-76dbbbfa": {
+    "decl": "### Question body",
+    "file": "question-tree",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/question/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/question/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Question body",
+    "type": "section"
+  },
+  "rq-78ed7708": {
+    "decl": "Scenario: Supersede a reported study",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Supersede a reported study",
+    "type": "scenario"
+  },
+  "rq-7aba8e5c": {
+    "decl": "## Out of Scope",
+    "file": "question-tree",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
+    "type": "section"
+  },
+  "rq-7bc95d75": {
+    "decl": "Scenario: Reject an invalid study ID",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Reject an invalid study ID",
+    "type": "scenario"
+  },
+  "rq-7bde5706": {
+    "decl": "- `QuestionError` — error type of the commands, with at minimum:",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "src/question/mod.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "QuestionError",
+    "type": "api-item"
+  },
+  "rq-7d741e69": {
+    "decl": "Scenario: Tree does not validate",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Tree does not validate",
+    "type": "scenario"
+  },
+  "rq-7eba13df": {
+    "decl": "Scenario: Stamp without PROJECT.md",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Stamp without PROJECT.md",
+    "type": "scenario"
+  },
+  "rq-7effa48d": {
+    "decl": "Scenario: Directory without STUDY.md",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Directory without STUDY.md",
+    "type": "scenario"
+  },
+  "rq-7fcedcf8": {
+    "decl": "Scenario: Create a private study",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Create a private study",
+    "type": "scenario"
+  },
+  "rq-8071e60f": {
+    "decl": "- `Study` — a parsed study: ID, front-matter fields, governed sections with their content and",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "src/study/document.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Study",
+    "type": "api-item"
+  },
+  "rq-8148f10b": {
+    "decl": "### Question headings",
+    "file": "question-tree",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/question/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/question/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Question headings",
+    "type": "section"
+  },
+  "rq-84ef0512": {
+    "decl": "- `Diagnostic` — one finding:",
+    "file": "check",
+    "refs": [
+      {
+        "file": "src/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Diagnostic",
+    "type": "api-item"
+  },
+  "rq-84fe523b": {
+    "decl": "Scenario: Superseded study keeps its frozen-section check",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Superseded study keeps its frozen-section check",
+    "type": "scenario"
+  },
+  "rq-86db826d": {
+    "decl": "Scenario: Missing status line",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Missing status line",
+    "type": "scenario"
+  },
+  "rq-87476c9b": {
+    "decl": "## Out of Scope",
+    "file": "study/format",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
+    "type": "section"
+  },
+  "rq-8889d0ed": {
+    "decl": "Scenario: Check runs from a subdirectory of the project",
+    "file": "check",
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Check runs from a subdirectory of the project",
+    "type": "scenario"
+  },
+  "rq-8d5c3082": {
+    "decl": "Scenario: Invalid YAML front matter",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Invalid YAML front matter",
+    "type": "scenario"
+  },
+  "rq-8da81b81": {
+    "decl": "- `parse_summary(path: &Path) -> Result<Summary, StudyError>` — parses a `SUMMARY.md`.",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "src/study/summary.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "parse_summary",
+    "type": "api-item"
+  },
+  "rq-91713e05": {
+    "decl": "Scenario: Study with a malformed question field is left to the study rules",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Study with a malformed question field is left to the study rules",
+    "type": "scenario"
+  },
+  "rq-9197f110": {
+    "decl": "Scenario: Orphan test reference after pre-registration is an error",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Orphan test reference after pre-registration is an error",
+    "type": "scenario"
+  },
+  "rq-919c4647": {
+    "decl": "Scenario: Report refuses a summary for another study",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Report refuses a summary for another study",
+    "type": "scenario"
+  },
+  "rq-930cacde": {
+    "decl": "Scenario: Reordering sections does not alter the fingerprint",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Reordering sections does not alter the fingerprint",
+    "type": "scenario"
+  },
+  "rq-9334c74c": {
+    "decl": "Scenario: Pre-registration refused when the draft is not ready",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Pre-registration refused when the draft is not ready",
+    "type": "scenario"
+  },
+  "rq-940d0a4b": {
+    "decl": "Scenario: Stamp assigns IDs and status lines",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Stamp assigns IDs and status lines",
+    "type": "scenario"
+  },
+  "rq-96dcd148": {
+    "decl": "### Types",
+    "file": "check",
+    "level": 3,
+    "refs": [],
+    "title": "Types",
+    "type": "section"
+  },
+  "rq-9a610110": {
+    "decl": "Scenario: Extra sections are allowed",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Extra sections are allowed",
+    "type": "scenario"
+  },
+  "rq-9b44b88f": {
+    "decl": "- `RULE_FAMILIES: &[fn(&Project) -> Vec<Diagnostic>]` — the static list of rule families. Adding a",
+    "file": "check",
+    "refs": [
+      {
+        "file": "src/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "RULE_FAMILIES",
+    "type": "api-item"
+  },
+  "rq-9b9f7ee6": {
+    "decl": "### Rule identifiers",
+    "file": "check",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Rule identifiers",
+    "type": "section"
+  },
+  "rq-9bca6bbf": {
+    "decl": "Scenario: Check does not modify the working tree",
+    "file": "check",
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Check does not modify the working tree",
+    "type": "scenario"
+  },
+  "rq-9c53f79c": {
+    "decl": "Scenario: Pre-register a ready draft interactively",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Pre-register a ready draft interactively",
+    "type": "scenario"
+  },
+  "rq-9cadbb01": {
+    "decl": "Scenario: Citing a reported study about this question",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Citing a reported study about this question",
+    "type": "scenario"
+  },
+  "rq-9d3f67c8": {
+    "decl": "Scenario: Dropped question without a reason",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Dropped question without a reason",
+    "type": "scenario"
+  },
+  "rq-9f2c5cd1": {
+    "decl": "- `tophat study supersede <old-id> --by <new-id>`",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "src/study/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-9f4d2081": {
+    "decl": "Scenario: Citing a superseded study",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Citing a superseded study",
+    "type": "scenario"
+  },
+  "rq-a046955d": {
+    "decl": "Scenario: Editing a scenario is detected",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Editing a scenario is detected",
+    "type": "scenario"
+  },
+  "rq-a147f8cf": {
+    "decl": "## Study Links",
+    "file": "question-tree",
+    "level": 2,
+    "refs": [
+      {
+        "file": "src/question/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Study Links",
+    "type": "section"
+  },
+  "rq-a32e7ed9": {
+    "decl": "Scenario: Amendment on a draft",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Amendment on a draft",
+    "type": "scenario"
+  },
+  "rq-a3b4939d": {
+    "decl": "### Front Matter",
+    "file": "study/format",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/study/document.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/study/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Front Matter",
+    "type": "section"
+  },
+  "rq-a3e1bf1f": {
+    "decl": "Scenario: Editing a frozen section is detected",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Editing a frozen section is detected",
+    "type": "scenario"
+  },
+  "rq-a4669866": {
+    "decl": "Scenario: Skipped heading level",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Skipped heading level",
+    "type": "scenario"
+  },
+  "rq-a79ad3ba": {
+    "decl": "Scenario: Headings inside code fences are not sections",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Headings inside code fences are not sections",
+    "type": "scenario"
+  },
+  "rq-a85bdde8": {
+    "decl": "Scenario: Invalid status value",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Invalid status value",
+    "type": "scenario"
+  },
+  "rq-a8be8316": {
+    "decl": "Scenario: An unparseable file does not stop other files being checked",
+    "file": "check",
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "An unparseable file does not stop other files being checked",
+    "type": "scenario"
+  },
+  "rq-a97cc02c": {
+    "decl": "Scenario: Missing pre-registration block on a preregistered study",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Missing pre-registration block on a preregistered study",
+    "type": "scenario"
+  },
+  "rq-a9a0b08d": {
+    "decl": "Scenario: Stamp preserves unrelated content",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Stamp preserves unrelated content",
+    "type": "scenario"
+  },
+  "rq-a9de1b5b": {
+    "decl": "Scenario: Supersede refuses a draft",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Supersede refuses a draft",
+    "type": "scenario"
+  },
+  "rq-aa0fe39a": {
+    "decl": "### Scenario Test References",
+    "file": "study/format",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Scenario Test References",
+    "type": "section"
+  },
+  "rq-abbd00cd": {
+    "decl": "### Project discovery",
+    "file": "check",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/check.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Project discovery",
+    "type": "section"
+  },
+  "rq-ada3b70f": {
+    "decl": "Scenario: Supersedes entry without a matching forward link",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Supersedes entry without a matching forward link",
+    "type": "scenario"
+  },
+  "rq-af111715": {
+    "decl": "Scenario: Gaps in scenario numbers are allowed",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Gaps in scenario numbers are allowed",
+    "type": "scenario"
+  },
+  "rq-b01ceeeb": {
+    "decl": "- `parse_study(dir: &Path) -> Result<Study, StudyError>` — parses `STUDY.md` in a study directory.",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "src/study/document.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "parse_study",
+    "type": "api-item"
+  },
+  "rq-b17553a6": {
+    "decl": "Scenario: An error fails the check",
+    "file": "check",
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "An error fails the check",
+    "type": "scenario"
+  },
+  "rq-b358b21a": {
+    "decl": "Scenario: Empty evidence list",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Empty evidence list",
+    "type": "scenario"
+  },
+  "rq-b620446f": {
+    "decl": "## Behaviour",
+    "file": "check",
+    "level": 2,
+    "refs": [],
+    "title": "Behaviour",
+    "type": "section"
+  },
+  "rq-b757d2fc": {
+    "decl": "### Output",
+    "file": "check",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/report.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Output",
+    "type": "section"
+  },
+  "rq-b8e989cd": {
+    "decl": "Scenario: Orphan test reference in a draft warns",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Orphan test reference in a draft warns",
+    "type": "scenario"
+  },
+  "rq-ba118d75": {
+    "decl": "## PROJECT.md Format",
+    "file": "question-tree",
+    "level": 2,
+    "refs": [
+      {
+        "file": "src/question/mod.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "PROJECT.md Format",
+    "type": "section"
+  },
+  "rq-ba94061b": {
+    "decl": "Scenario: Stamp produces unique IDs",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Stamp produces unique IDs",
+    "type": "scenario"
+  },
+  "rq-bb0e22f1": {
+    "decl": "Scenario: Reject a malformed question ID",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Reject a malformed question ID",
+    "type": "scenario"
+  },
+  "rq-bcb83d0a": {
+    "decl": "- `tophat study preregister <study-id>`",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "src/study/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-be41ffc1": {
+    "decl": "Scenario: Result in a preregistered study",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Result in a preregistered study",
+    "type": "scenario"
+  },
+  "rq-c112cac7": {
+    "decl": "## Gherkin Scenarios",
+    "file": "check",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
+  },
+  "rq-c18830cc": {
+    "decl": "Scenario: Unstamped question heading",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Unstamped question heading",
+    "type": "scenario"
+  },
+  "rq-c35dd468": {
+    "decl": "## Feature API",
+    "file": "check",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
+  "rq-c5416f0d": {
+    "decl": "## Assumptions",
+    "file": "study/format",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
+  },
+  "rq-c55140e8": {
+    "decl": "Scenario: Retrospective study with hand-written result is flagged as legacy",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Retrospective study with hand-written result is flagged as legacy",
+    "type": "scenario"
+  },
+  "rq-c62bd382": {
+    "decl": "Scenario: Tree shows questions and attached studies",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Tree shows questions and attached studies",
+    "type": "scenario"
+  },
+  "rq-c65bf680": {
+    "decl": "Scenario: Retrospective study may have empty decision rule and scenarios",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Retrospective study may have empty decision rule and scenarios",
+    "type": "scenario"
+  },
+  "rq-c66110cf": {
+    "decl": "## STUDY.md Format",
+    "file": "study/format",
+    "level": 2,
+    "refs": [],
+    "title": "STUDY.md Format",
+    "type": "section"
+  },
+  "rq-c7e4a9d5": {
+    "decl": "Scenario: Citing a study that is only pre-registered",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Citing a study that is only pre-registered",
+    "type": "scenario"
+  },
+  "rq-c8046ff3": {
+    "decl": "- `CheckError` — failure to run the check at all, with at minimum:",
+    "file": "check",
+    "refs": [
+      {
+        "file": "src/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "CheckError",
+    "type": "api-item"
+  },
+  "rq-c985c1d6": {
+    "decl": "Scenario: Retrospective study with a pipeline uses strict results",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Retrospective study with a pipeline uses strict results",
+    "type": "scenario"
+  },
+  "rq-cb65dab4": {
+    "decl": "Scenario: Editing a non-frozen section is allowed",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Editing a non-frozen section is allowed",
+    "type": "scenario"
+  },
+  "rq-cc797bfb": {
+    "decl": "- `question_rules(project: &Project) -> Vec<Diagnostic>` — the `question` rule family registered",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "src/question/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "question_rules",
+    "type": "api-item"
+  },
+  "rq-cd497e41": {
+    "decl": "Scenario: Duplicated governed section",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Duplicated governed section",
+    "type": "scenario"
+  },
+  "rq-ce0bc1c8": {
+    "decl": "Scenario: Report refuses a missing summary",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Report refuses a missing summary",
+    "type": "scenario"
+  },
+  "rq-ce7c6815": {
+    "decl": "- `study_rules(project: &Project) -> Vec<Diagnostic>` — the `study` rule family registered in",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "study_rules",
+    "type": "api-item"
+  },
+  "rq-ceffcdab": {
+    "decl": "## Check Rules (`question` family)",
+    "file": "question-tree",
+    "level": 2,
+    "refs": [
+      {
+        "file": "src/question/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Check Rules (`question` family)",
+    "type": "section"
+  },
+  "rq-cf46eca9": {
+    "decl": "### Command",
+    "file": "check",
+    "level": 3,
+    "refs": [],
+    "title": "Command",
+    "type": "section"
+  },
+  "rq-cf68a3b8": {
+    "decl": "### Scope",
+    "file": "check",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/check.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Scope",
+    "type": "section"
+  },
+  "rq-cfed6415": {
+    "decl": "Scenario: Malformed question ID",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Malformed question ID",
+    "type": "scenario"
+  },
+  "rq-cffe1a61": {
+    "decl": "Scenario: Citing a reported study about a descendant question",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Citing a reported study about a descendant question",
+    "type": "scenario"
+  },
+  "rq-d19b87ac": {
+    "decl": "Scenario: Stamp leaves malformed IDs for the user",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Stamp leaves malformed IDs for the user",
+    "type": "scenario"
+  },
+  "rq-d4227e28": {
+    "decl": "Scenario: Renaming a pre-registered study is detected",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Renaming a pre-registered study is detected",
+    "type": "scenario"
+  },
+  "rq-d4308b0e": {
+    "decl": "Scenario: Missing variant config",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Missing variant config",
+    "type": "scenario"
+  },
+  "rq-d47ba6b9": {
+    "decl": "Scenario: JSON output structure",
+    "file": "check",
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "JSON output structure",
+    "type": "scenario"
+  },
+  "rq-d4c65f91": {
+    "decl": "### Functions",
+    "file": "question-tree",
+    "level": 3,
+    "refs": [],
+    "title": "Functions",
+    "type": "section"
+  },
+  "rq-d6677222": {
+    "decl": "Scenario: Hand-edited result is detected",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Hand-edited result is detected",
+    "type": "scenario"
+  },
+  "rq-d94a6490": {
+    "decl": "- `Project` — a read-only view of the project used by rule families: the project root and accessors",
+    "file": "check",
+    "refs": [
+      {
+        "file": "src/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Project",
+    "type": "api-item"
+  },
+  "rq-dacbc76e": {
+    "decl": "### Types",
+    "file": "study/format",
+    "level": 3,
+    "refs": [],
+    "title": "Types",
+    "type": "section"
+  },
+  "rq-db030abe": {
+    "decl": "### Functions",
+    "file": "check",
+    "level": 3,
+    "refs": [],
+    "title": "Functions",
+    "type": "section"
+  },
+  "rq-db0d11c1": {
+    "decl": "Scenario: Citing a retrospective study is flagged as legacy",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Citing a retrospective study is flagged as legacy",
+    "type": "scenario"
+  },
+  "rq-dba2a6b7": {
+    "decl": "- `StudyError` — error type returned by parsing and by the study commands, with at minimum:",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "src/study/mod.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "StudyError",
+    "type": "api-item"
+  },
+  "rq-dc4c3c26": {
+    "decl": "Scenario: Stamp adds a missing status line to a stamped question",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Stamp adds a missing status line to a stamped question",
+    "type": "scenario"
+  },
+  "rq-dcafcef0": {
+    "decl": "- `QuestionTree` — the questions of `PROJECT.md` in file order, plus the problems found while",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "src/question/mod.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "QuestionTree",
+    "type": "api-item"
+  },
+  "rq-dd539d53": {
+    "decl": "Scenario: Study names a question with sub-questions",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Study names a question with sub-questions",
+    "type": "scenario"
+  },
+  "rq-ddb6cfbc": {
+    "decl": "Scenario: Missing back-link",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Missing back-link",
+    "type": "scenario"
+  },
+  "rq-de80fc6b": {
+    "decl": "## Out of Scope",
+    "file": "check",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
+    "type": "section"
+  },
+  "rq-e10b269c": {
+    "decl": "### Functions",
+    "file": "study/format",
+    "level": 3,
+    "refs": [],
+    "title": "Functions",
+    "type": "section"
+  },
+  "rq-e54fa7fd": {
+    "decl": "### Rule evaluation",
+    "file": "check",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/check.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Rule evaluation",
+    "type": "section"
+  },
+  "rq-e57fc88d": {
+    "decl": "Scenario: Scoped check reports only diagnostics under the given path",
+    "file": "check",
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Scoped check reports only diagnostics under the given path",
+    "type": "scenario"
+  },
+  "rq-e5eda0dd": {
+    "decl": "### Variants and Configuration",
+    "file": "study/format",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Variants and Configuration",
+    "type": "section"
+  },
+  "rq-e746f1bb": {
+    "decl": "## Gherkin Scenarios",
+    "file": "question-tree",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
+  },
+  "rq-e75cad86": {
+    "decl": "Scenario: A well-formed tree passes the check",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A well-formed tree passes the check",
+    "type": "scenario"
+  },
+  "rq-e7c71a2b": {
+    "decl": "Scenario: Re-reporting refreshes the result",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Re-reporting refreshes the result",
+    "type": "scenario"
+  },
+  "rq-e895c8ff": {
+    "decl": "Scenario: Citing a study about an unrelated question",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Citing a study about an unrelated question",
+    "type": "scenario"
+  },
+  "rq-e956ef6a": {
+    "decl": "- `Question` — a question parsed from `PROJECT.md`:",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "src/question/mod.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Question",
+    "type": "api-item"
+  },
+  "rq-e9d4388a": {
+    "decl": "### Body Sections",
+    "file": "study/format",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/markdown.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Body Sections",
+    "type": "section"
+  },
+  "rq-ea89d221": {
+    "decl": "Scenario: Answered question without evidence",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Answered question without evidence",
+    "type": "scenario"
+  },
+  "rq-ea9c4659": {
+    "decl": "Scenario: Pre-registration block on a draft",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Pre-registration block on a draft",
+    "type": "scenario"
+  },
+  "rq-ec84dc2b": {
+    "decl": "Scenario: Valid amendment",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Valid amendment",
+    "type": "scenario"
+  },
+  "rq-ecacda48": {
+    "decl": "- `tophat study report <study-id>`",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "src/study/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-ef3d43f8": {
+    "decl": "- `stamp(root: &Path) -> Result<Vec<(String, String)>, QuestionError>` — performs",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "src/question/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "stamp",
+    "type": "api-item"
+  },
+  "rq-ef5ab539": {
+    "decl": "## Evidence",
+    "file": "question-tree",
+    "level": 2,
+    "refs": [
+      {
+        "file": "src/question/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Evidence",
+    "type": "section"
+  },
+  "rq-f2135c24": {
+    "decl": "Scenario: Empty result in a reported study",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Empty result in a reported study",
+    "type": "scenario"
+  },
+  "rq-f28e6ab8": {
+    "decl": "## Lifecycle",
+    "file": "study/format",
+    "level": 2,
+    "refs": [
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Lifecycle",
+    "type": "section"
+  },
+  "rq-f2be6f14": {
+    "decl": "Scenario: Unknown front-matter field",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Unknown front-matter field",
+    "type": "scenario"
+  },
+  "rq-f448ed00": {
+    "decl": "- `QuestionStatus` — enum `Open`, `Answered`, `Dropped`.",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "src/question/mod.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "QuestionStatus",
+    "type": "api-item"
+  },
+  "rq-f5a0149d": {
+    "decl": "- `frozen_fingerprint(study: &Study) -> String` — computes the fingerprint as specified under",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "src/study/fingerprint.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "frozen_fingerprint",
+    "type": "api-item"
+  },
+  "rq-f678e5d8": {
+    "decl": "Scenario: Missing base config",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Missing base config",
+    "type": "scenario"
+  },
+  "rq-f689a538": {
+    "decl": "- `tophat study new <study-id> --question <question-id> [--visibility public|private]`",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "src/study/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-f6dec5d4": {
+    "decl": "Scenario: Mixed citations are each checked",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Mixed citations are each checked",
+    "type": "scenario"
+  },
+  "rq-f94476f9": {
+    "decl": "Scenario: JSON omits absent optional fields",
+    "file": "check",
+    "refs": [
+      {
+        "file": "tests/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "JSON omits absent optional fields",
+    "type": "scenario"
+  },
+  "rq-fbdc50b4": {
+    "decl": "## Gherkin Scenarios",
+    "file": "study/format",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
+  },
+  "rq-fc05344f": {
+    "decl": "## Study Layout",
+    "file": "study/format",
+    "level": 2,
+    "refs": [],
+    "title": "Study Layout",
+    "type": "section"
+  },
+  "rq-fd01ec6f": {
+    "decl": "Scenario: Citing a study that does not exist",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Citing a study that does not exist",
+    "type": "scenario"
+  },
+  "rq-fd31255d": {
+    "decl": "### Amendments",
+    "file": "study/format",
+    "level": 3,
+    "refs": [
+      {
+        "file": "src/study/document.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Amendments",
+    "type": "section"
+  },
+  "rq-fdb74980": {
+    "decl": "- `Severity` — enum with variants `Error`, `Warning`, `Legacy`.",
+    "file": "check",
+    "refs": [
+      {
+        "file": "src/check.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Severity",
+    "type": "api-item"
+  },
+  "rq-fdd4cac9": {
+    "decl": "Scenario: Pre-registration aborted by a wrong confirmation",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Pre-registration aborted by a wrong confirmation",
+    "type": "scenario"
+  },
+  "rq-fe8b6a81": {
+    "decl": "Scenario: Study names a question that does not exist",
+    "file": "question-tree",
+    "refs": [
+      {
+        "file": "tests/question.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Study names a question that does not exist",
+    "type": "scenario"
+  }
+}
