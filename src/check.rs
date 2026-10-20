@@ -196,6 +196,7 @@ pub static RULE_FAMILIES: &[RuleFamily] = &[
     crate::study::study_rules,
     crate::question::question_rules,
     crate::data::data_rules,
+    crate::pipeline::pipeline_rules,
 ];
 
 // rq-abbd00cd

@@ -8,6 +8,7 @@ pub mod cli;
 pub mod data;
 mod fsutil;
 mod markdown;
+pub mod pipeline;
 pub mod question;
 mod report;
 pub mod study;

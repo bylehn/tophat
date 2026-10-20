@@ -5,6 +5,7 @@
 
 use crate::check::{find_project_root, resolve_scope, run_families, CheckError, RuleFamily};
 use crate::data::{self, DataError, Origin, RegisterOptions};
+use crate::pipeline;
 use crate::question::{self, QuestionError};
 use crate::report::{render_human, render_json};
 use crate::study::{self, Console, StudyError};
@@ -33,7 +34,12 @@ Commands:
                                                  Register raw data as the next dataset version
   data declare <NAME> --root <R> --path <P> --statement <TEXT> [--visibility V]
                                                  Register data of unknown history
+  data publish <STUDY> --stage <S> [--variant V] --as <NAME>
+                                                 Publish a sealed stage output as a dataset
   data verify [<NAME>[@v<N>]]                    Re-hash datasets and compare to manifests
+  pipeline keys <STUDY> [--variant V] [--json]   Show stage keys and sealed state
+  stage seal <STUDY> <STAGE> --key <K> [--variant V] [--item I] [--trial]
+                                                 Record provenance for a finished stage
   data retire <NAME>@v<N> --reason <TEXT>        Mark a dataset version as defective
   data lineage <NAME>@v<N>|<STUDY>/<STAGE>@<KEY> [--json]
                                                  Show what a dataset or output derives from
@@ -291,13 +297,7 @@ fn run_data_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
         "declare" => &["root", "path", "statement", "visibility"],
         "retire" => &["reason"],
         "verify" | "lineage" | "used-by" => &[],
-        "publish" => {
-            let _ = writeln!(
-                io.err,
-                "tophat data publish: not available yet; it needs stage keys (rqm/pipeline/provenance.md)"
-            );
-            return EXIT_UNABLE;
-        }
+        "publish" => &["stage", "variant", "as"],
         other => return usage(io, &format!("unknown data subcommand `{other}`")),
     };
     let (positionals, options) = match parse_options(&rest, known) {
@@ -376,6 +376,19 @@ fn run_data_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
                 }
             })
         }
+        "publish" => {
+            let study = match one(&positionals) {
+                Ok(s) => s,
+                Err(m) => return usage(io, &m),
+            };
+            let (Some(stage), Some(name)) = (opt("stage"), opt("as")) else {
+                return usage(io, "--stage and --as are required");
+            };
+            data::publish(&root, &study, &stage, opt("variant").as_deref(), &name).map(|r| {
+                let _ = writeln!(io.out, "{r}");
+                EXIT_OK
+            })
+        }
         "retire" => {
             let reference = match one(&positionals) {
                 Ok(r) => r,
@@ -431,6 +444,119 @@ fn run_data_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
         Ok(code) => code,
         Err(e) => {
             let _ = writeln!(io.err, "tophat data {sub}: {e}");
+            EXIT_FAILED
+        }
+    }
+}
+
+/// Removes a boolean flag from the arguments, returning whether it was present.
+fn take_flag(args: &[String], flag: &str) -> (bool, Vec<String>) {
+    (
+        args.iter().any(|a| a == flag),
+        args.iter().filter(|a| *a != flag).cloned().collect(),
+    )
+}
+
+fn run_pipeline_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
+    let usage = |io: &mut Streams<'_>, message: &str| {
+        let _ = writeln!(io.err, "tophat pipeline: {message}\n\n{USAGE}");
+        EXIT_UNABLE
+    };
+    if args.first().map(String::as_str) != Some("keys") {
+        return usage(io, "expected `keys`");
+    }
+    let (json, rest) = take_flag(&args[1..], "--json");
+    let (positionals, options) = match parse_options(&rest, &["variant"]) {
+        Ok(parsed) => parsed,
+        Err(m) => return usage(io, &m),
+    };
+    let [study] = positionals.as_slice() else {
+        return usage(io, "`tophat pipeline keys` takes one study ID");
+    };
+    let root = match find_project_root(cwd) {
+        Ok(root) => root,
+        Err(e) => {
+            let _ = writeln!(io.err, "tophat pipeline: {e}");
+            return EXIT_UNABLE;
+        }
+    };
+    match pipeline::key_status(&root, study, option(&options, "variant").unwrap_or("base")) {
+        Ok(stages) => {
+            if json {
+                let value: Vec<_> = stages
+                    .iter()
+                    .map(|s| {
+                        serde_json::json!({
+                            "stage": s.stage, "key": s.key,
+                            "output": s.output.as_ref().map(|p| p.display().to_string()),
+                            "status": s.status,
+                        })
+                    })
+                    .collect();
+                let _ = writeln!(
+                    io.out,
+                    "{}",
+                    serde_json::to_string_pretty(&value).expect("serializes")
+                );
+            } else {
+                for s in &stages {
+                    let output = s
+                        .output
+                        .as_ref()
+                        .map_or_else(|| "-".to_string(), |p| p.display().to_string());
+                    let _ = writeln!(io.out, "{}  {}  {}  {}", s.stage, s.key, s.status, output);
+                }
+            }
+            EXIT_OK
+        }
+        Err(e) => {
+            let _ = writeln!(io.err, "tophat pipeline keys: {e}");
+            EXIT_FAILED
+        }
+    }
+}
+
+fn run_stage_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
+    let usage = |io: &mut Streams<'_>, message: &str| {
+        let _ = writeln!(io.err, "tophat stage: {message}\n\n{USAGE}");
+        EXIT_UNABLE
+    };
+    if args.first().map(String::as_str) != Some("seal") {
+        return usage(io, "expected `seal`");
+    }
+    let (trial, rest) = take_flag(&args[1..], "--trial");
+    let (positionals, options) = match parse_options(&rest, &["key", "variant", "item"]) {
+        Ok(parsed) => parsed,
+        Err(m) => return usage(io, &m),
+    };
+    let [study, stage] = positionals.as_slice() else {
+        return usage(io, "`tophat stage seal` takes a study ID and a stage name");
+    };
+    let Some(key) = option(&options, "key") else {
+        return usage(io, "--key is required");
+    };
+    let root = match find_project_root(cwd) {
+        Ok(root) => root,
+        Err(e) => {
+            let _ = writeln!(io.err, "tophat stage: {e}");
+            return EXIT_UNABLE;
+        }
+    };
+    let request = pipeline::SealRequest {
+        study: study.clone(),
+        stage: stage.clone(),
+        key: key.to_string(),
+        variant: option(&options, "variant").map(str::to_string),
+        item: option(&options, "item").map(str::to_string),
+        trial,
+    };
+    match pipeline::seal(&root, &request) {
+        Ok(path) => {
+            let _ = writeln!(io.out, "Sealed {}", path.display());
+            EXIT_OK
+        }
+        Err(e) => {
+            let _ = writeln!(io.err, "tophat stage seal: {e}");
             EXIT_FAILED
         }
     }
@@ -500,6 +626,8 @@ pub fn run(args: &[String], cwd: &Path, families: &[RuleFamily], io: &mut Stream
         Some("study") => run_study_command(&args[1..], cwd, io),
         Some("question") => run_question_command(&args[1..], cwd, io),
         Some("data") => run_data_command(&args[1..], cwd, io),
+        Some("pipeline") => run_pipeline_command(&args[1..], cwd, io),
+        Some("stage") => run_stage_command(&args[1..], cwd, io),
         Some("-h" | "--help" | "help") => {
             let _ = io.out.write_all(USAGE.as_bytes());
             EXIT_OK

@@ -635,3 +635,140 @@ pub fn used_by(project_root: &Path, query: &str) -> Result<UsedBy, DataError> {
     result.datasets.dedup();
     Ok(result)
 }
+
+// rq-4fc6c2a5
+/// Publishes a sealed, clean, non-trial stage output as the next version of dataset `name`.
+pub fn publish(
+    project_root: &Path,
+    study: &str,
+    stage: &str,
+    variant: Option<&str>,
+    name: &str,
+) -> Result<DatasetRef, DataError> {
+    use crate::pipeline::{PipelineError, ProvenanceRecord, ResolvedStage, RECORD_FILE};
+
+    if !is_valid_dataset_name(name) {
+        return Err(DataError::InvalidName(name.to_string()));
+    }
+    let resolved = ResolvedStage::load(project_root, study, variant.unwrap_or("base")).map_err(
+        |e| match e {
+            PipelineError::UnconfiguredRoot(r) => DataError::UnconfiguredRoot(r),
+            other => DataError::InvalidArgument(other.to_string()),
+        },
+    )?;
+    resolved
+        .stage(stage)
+        .map_err(|e| DataError::InvalidArgument(e.to_string()))?;
+    let key = resolved.key(stage).to_string();
+    let dir = resolved.out_dir(stage, false).map_err(|e| match e {
+        PipelineError::UnconfiguredRoot(r) => DataError::UnconfiguredRoot(r),
+        other => DataError::InvalidArgument(other.to_string()),
+    })?;
+    let record = ProvenanceRecord::read(&dir)
+        .filter(|r| r.key == key && !r.trial)
+        .ok_or_else(|| DataError::NotSealed(format!("{study}/{stage}@{key}")))?;
+    if !record.clean {
+        return Err(DataError::NotClean(record.unclean_files.join(", ")));
+    }
+
+    // What the records say the outputs are, keyed by path below the output directory.
+    let mut expected: BTreeMap<String, (u64, String)> = record
+        .outputs
+        .iter()
+        .map(|o| (o.path.clone(), (o.size, o.sha256.clone())))
+        .collect();
+    for item in record.items.iter().flatten() {
+        let item_dir = dir.join("items").join(&item.name);
+        let item_record = ProvenanceRecord::read(&item_dir).ok_or_else(|| {
+            DataError::NotSealed(format!("{study}/{stage}@{key} item {}", item.name))
+        })?;
+        for o in item_record.outputs {
+            expected.insert(
+                format!("items/{}/{}", item.name, o.path),
+                (o.size, o.sha256),
+            );
+        }
+    }
+
+    let files = collect_files(&dir)?;
+    let paths: Vec<PathBuf> = files.iter().map(|(_, p)| p.clone()).collect();
+    let mut entries = Vec::with_capacity(files.len());
+    let mut mismatches = Vec::new();
+    for ((rel, _), hashed) in files.iter().zip(hash_files(&paths)) {
+        let (size, sha256) = hashed?;
+        let is_record = rel == RECORD_FILE || rel.ends_with(&format!("/{RECORD_FILE}"));
+        if !is_record {
+            match expected.remove(rel) {
+                Some((s, h)) if s == size && h == sha256 => {}
+                _ => mismatches.push(rel.clone()),
+            }
+        }
+        entries.push(FileEntry {
+            path: rel.clone(),
+            size,
+            sha256,
+        });
+    }
+    mismatches.extend(expected.into_keys());
+    if !mismatches.is_empty() {
+        mismatches.sort();
+        return Err(DataError::OutputMismatch(mismatches));
+    }
+
+    let project = Project::new(project_root);
+    let study_file = format!(
+        "{}/{study}/{}",
+        crate::study::STUDIES_DIR,
+        crate::study::STUDY_FILE
+    );
+    let visibility = project
+        .read_to_string(&study_file)
+        .ok()
+        .and_then(|t| crate::study::parse_study_text(study, &study_file, &t).ok())
+        .and_then(|s| s.front.visibility.map(|v| v.value))
+        .filter(|v| v == "private")
+        .unwrap_or_else(|| "public".into());
+    let pairs: Vec<(String, String)> = entries
+        .iter()
+        .map(|e| (e.path.clone(), e.sha256.clone()))
+        .collect();
+    let manifest = Manifest {
+        name: name.to_string(),
+        version: next_version(&project, name),
+        kind: DatasetKind::Published,
+        visibility,
+        root: RESULTS_ROOT.to_string(),
+        path: format!("{study}/{stage}/{key}"),
+        created: chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
+        origin: Origin::Published,
+        produced_by: Some(super::ProducedBy {
+            study: study.to_string(),
+            stage: stage.to_string(),
+            key,
+        }),
+        content_hash: content_hash(&pairs),
+        files: entries,
+        retired: None,
+    };
+    let reference = manifest.reference();
+    let manifest_path = project_root.join(reference.manifest_path());
+    fs::create_dir_all(
+        manifest_path
+            .parent()
+            .expect("manifest paths have a parent"),
+    )?;
+    write_atomic(&manifest_path, &manifest.render())?;
+
+    let mut cache = HashCache::load(project_root);
+    for (entry, (_, file)) in manifest.files.iter().zip(&files) {
+        cache.record(
+            RESULTS_ROOT,
+            &format!("{}/{}", manifest.path, entry.path),
+            file,
+            entry.size,
+            &entry.sha256,
+        );
+    }
+    cache.save();
+    Ok(reference)
+}
