@@ -195,6 +195,23 @@ fn missing_tools(root: &Path, variants: &[String], study: &str) -> Vec<String> {
     missing
 }
 
+// rq-9f1e97a5
+/// Row 8: an external job whose folder is written for a current key and has not been returned.
+fn external_action(root: &Path, study: &str, variants: &[String]) -> Option<NextAction> {
+    variants.iter().find_map(|variant| {
+        let stage = crate::pipeline::waiting_jobs(root, study, variant)
+            .into_iter()
+            .next()?;
+        let cmd = format!("tophat stage instructions {study} {stage} --variant {variant}");
+        Some(NextAction::new(
+            8,
+            Who::You,
+            format!("Run the external job for {stage} ({variant}): {cmd}"),
+            Some(cmd),
+        ))
+    })
+}
+
 /// Rows 9 to 12: QC gates, unrun stages, and the summary.
 fn pipeline_action(root: &Path, study: &Study, variants: &[String]) -> Option<NextAction> {
     let id = &study.id;
@@ -383,7 +400,7 @@ fn evaluate(root: &Path, view: &ProjectView, study_id: &str) -> Result<StudyStat
                 Some(cmd),
             ));
         }
-        pipeline_action(root, &study, &variants)
+        external_action(root, id, &variants).or_else(|| pipeline_action(root, &study, &variants))
     })() {
         action
     } else if status == Some(Status::Preregistered) {

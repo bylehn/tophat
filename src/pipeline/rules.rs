@@ -50,6 +50,19 @@ pub fn pipeline_rules(project: &Project) -> Vec<Diagnostic> {
             None
         }
     };
+    // rq-3898af16
+    if let Err(message) = super::external::slurm_defaults(project.root()) {
+        out.push(Diagnostic {
+            rule: "pipeline.slurm-defaults-invalid",
+            severity: Severity::Error,
+            path: super::external::SLURM_DEFAULTS_FILE.to_string(),
+            line: None,
+            message,
+            hint: Some(
+                "Write `sbatch:` followed by a list of options such as `- --account=e123`".into(),
+            ),
+        });
+    }
     for study in project.list_dir(STUDIES_DIR).unwrap_or_default() {
         let mut problems = Vec::new();
         let Some(base) = load_base(project, &study, &mut problems) else {
@@ -142,6 +155,8 @@ pub fn pipeline_rules(project: &Project) -> Vec<Diagnostic> {
                 message: format!("stage `{}`: {message}", stage.name),
             };
             match &stage.tool {
+                // An external stage's software comes from the cluster.
+                None if stage.external.is_some() => {}
                 None => {
                     if let Err(message) = ctx.environment_hash(&stage.env) {
                         out.push(diagnostic(

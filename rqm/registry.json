@@ -302,7 +302,16 @@
   "rq-0ab3c68d": {
     "decl": "- `ingest(root: &Path, request: &SealRequest) -> Result<PathBuf, ExternalError>` — verifies a",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "ingest",
     "type": "api-item"
   },
@@ -425,7 +434,12 @@
   "rq-10f972ce": {
     "decl": "- `Receipt` — a parsed `receipt.txt`.",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Receipt",
     "type": "api-item"
   },
@@ -470,7 +484,16 @@
     "decl": "## Job Script",
     "file": "pipeline/external",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Job Script",
     "type": "section"
   },
@@ -612,7 +635,12 @@
   "rq-172dd12a": {
     "decl": "Scenario: SLURM defaults and stage options are merged",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "SLURM defaults and stage options are merged",
     "type": "scenario"
   },
@@ -789,7 +817,12 @@
   "rq-1b912496": {
     "decl": "Scenario: The receipt is written when the command fails",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The receipt is written when the command fails",
     "type": "scenario"
   },
@@ -824,7 +857,12 @@
   "rq-1d95d762": {
     "decl": "Scenario: A receipt for another key is refused",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A receipt for another key is refused",
     "type": "scenario"
   },
@@ -973,7 +1011,20 @@
     "decl": "## Keys",
     "file": "pipeline/external",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/config.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/pipeline/keys.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Keys",
     "type": "section"
   },
@@ -1053,7 +1104,12 @@
   "rq-254e43a2": {
     "decl": "Scenario: The key covers setup and keep, not resources",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The key covers setup and keep, not resources",
     "type": "scenario"
   },
@@ -1339,7 +1395,12 @@
   "rq-3132a729": {
     "decl": "Scenario: Return steps leave kept files on the cluster",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Return steps leave kept files on the cluster",
     "type": "scenario"
   },
@@ -1383,7 +1444,16 @@
     "decl": "## The Job Folder",
     "file": "pipeline/external",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The Job Folder",
     "type": "section"
   },
@@ -1442,7 +1512,12 @@
   "rq-3727b411": {
     "decl": "Scenario: Any other edit to the job script is refused",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Any other edit to the job script is refused",
     "type": "scenario"
   },
@@ -1491,7 +1566,16 @@
     "decl": "## Check Rules (`pipeline` family, external)",
     "file": "pipeline/external",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Check Rules (`pipeline` family, external)",
     "type": "section"
   },
@@ -1632,7 +1716,16 @@
   "rq-3de08c05": {
     "decl": "- `write_job_folder(root: &Path, request: &SealRequest) -> Result<PathBuf, ExternalError>` — writes",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "write_job_folder",
     "type": "api-item"
   },
@@ -1651,7 +1744,16 @@
   "rq-3f18bffc": {
     "decl": "Scenario: Large inputs are copied with a warning",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Large inputs are copied with a warning",
     "type": "scenario"
   },
@@ -1714,7 +1816,12 @@
   "rq-42c672ac": {
     "decl": "Scenario: An unexpected returned file is refused",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An unexpected returned file is refused",
     "type": "scenario"
   },
@@ -1826,7 +1933,12 @@
   "rq-4865c985": {
     "decl": "Scenario: Kept files copied back anyway are accepted",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Kept files copied back anyway are accepted",
     "type": "scenario"
   },
@@ -1863,7 +1975,16 @@
     "decl": "### External stages",
     "file": "pipeline/snakemake",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/generate.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "External stages",
     "type": "section"
   },
@@ -2011,7 +2132,12 @@
   "rq-51d60cdc": {
     "decl": "Scenario: An external stage cannot have a pixi environment",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An external stage cannot have a pixi environment",
     "type": "scenario"
   },
@@ -2031,7 +2157,16 @@
     "decl": "## Receipt",
     "file": "pipeline/external",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Receipt",
     "type": "section"
   },
@@ -2050,14 +2185,32 @@
   "rq-52e5c665": {
     "decl": "Scenario: The job script writes a receipt",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The job script writes a receipt",
     "type": "scenario"
   },
   "rq-530610d9": {
     "decl": "- `tophat stage external <study> <stage> --key <key> [--variant <variant>] [--trial]`",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/cli.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -2223,7 +2376,12 @@
   "rq-57a8f3ae": {
     "decl": "- `ExternalError` — error type of the external commands, with at minimum:",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "ExternalError",
     "type": "api-item"
   },
@@ -2368,7 +2526,12 @@
   "rq-5cf6fbfe": {
     "decl": "Scenario: The pipeline stops at an external stage and resumes after the return",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The pipeline stops at an external stage and resumes after the return",
     "type": "scenario"
   },
@@ -2720,7 +2883,12 @@
   "rq-69a74980": {
     "decl": "Scenario: An external stage cannot fan out",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An external stage cannot fan out",
     "type": "scenario"
   },
@@ -3352,7 +3520,16 @@
   "rq-82d88391": {
     "decl": "Scenario: Receipts are parsed strictly",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Receipts are parsed strictly",
     "type": "scenario"
   },
@@ -3371,7 +3548,12 @@
   "rq-843afa31": {
     "decl": "Scenario: Reaching an external stage writes the job folder and waits",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Reaching an external stage writes the job folder and waits",
     "type": "scenario"
   },
@@ -3749,7 +3931,12 @@
   "rq-96163724": {
     "decl": "Scenario: An existing job folder is never overwritten",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An existing job folder is never overwritten",
     "type": "scenario"
   },
@@ -3757,7 +3944,16 @@
     "decl": "## SLURM Defaults",
     "file": "pipeline/external",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "SLURM Defaults",
     "type": "section"
   },
@@ -3977,7 +4173,20 @@
   "rq-9eddd05a": {
     "decl": "- `tophat stage instructions <study> <stage> [--variant <variant>]`",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/cli.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -3985,7 +4194,20 @@
     "decl": "## The Human's Steps",
     "file": "pipeline/external",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/workflow.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The Human's Steps",
     "type": "section"
   },
@@ -4156,7 +4378,16 @@
     "decl": "## Ingest",
     "file": "pipeline/external",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Ingest",
     "type": "section"
   },
@@ -4550,7 +4781,12 @@
   "rq-add5fac2": {
     "decl": "Scenario: Edited SBATCH lines are accepted",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Edited SBATCH lines are accepted",
     "type": "scenario"
   },
@@ -4597,7 +4833,12 @@
   "rq-afe4a64f": {
     "decl": "Scenario: Ingest a returned job folder",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Ingest a returned job folder",
     "type": "scenario"
   },
@@ -5025,7 +5266,12 @@
   "rq-bfa261cf": {
     "decl": "Scenario: The job refuses changed inputs",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The job refuses changed inputs",
     "type": "scenario"
   },
@@ -5040,7 +5286,12 @@
   "rq-c0f8402d": {
     "decl": "Scenario: A failed job is refused",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A failed job is refused",
     "type": "scenario"
   },
@@ -5300,7 +5551,12 @@
   "rq-c8a251ef": {
     "decl": "Scenario: Code files travel with the job folder",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Code files travel with the job folder",
     "type": "scenario"
   },
@@ -5609,7 +5865,16 @@
   "rq-d39d6009": {
     "decl": "- `parse_receipt(text: &str) -> Result<Receipt, String>` — parses and validates a receipt.",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "parse_receipt",
     "type": "api-item"
   },
@@ -5680,7 +5945,12 @@
   "rq-d571140f": {
     "decl": "Scenario: A changed returned file is refused",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A changed returned file is refused",
     "type": "scenario"
   },
@@ -5783,7 +6053,12 @@
   "rq-d8643ac5": {
     "decl": "Scenario: Connection details are not configuration",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Connection details are not configuration",
     "type": "scenario"
   },
@@ -5830,7 +6105,12 @@
   "rq-d966a5fb": {
     "decl": "- `job_script(stage: &ResolvedStage, …) -> String` — the job script text.",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "job_script",
     "type": "api-item"
   },
@@ -5995,7 +6275,12 @@
   "rq-dc6ab3b5": {
     "decl": "Scenario: The steps contain no connection details",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The steps contain no connection details",
     "type": "scenario"
   },
@@ -6073,7 +6358,12 @@
   "rq-deeead81": {
     "decl": "Scenario: Local stages keep their keys",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Local stages keep their keys",
     "type": "scenario"
   },
@@ -6603,7 +6893,12 @@
   "rq-f3b637ee": {
     "decl": "Scenario: External job waiting for the human",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "External job waiting for the human",
     "type": "scenario"
   },
@@ -6767,7 +7062,12 @@
   "rq-f9c4d1f4": {
     "decl": "Scenario: Invalid SLURM defaults",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Invalid SLURM defaults",
     "type": "scenario"
   },
@@ -6869,7 +7169,20 @@
     "decl": "## Configuration",
     "file": "pipeline/external",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/config.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/pipeline/external.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Configuration",
     "type": "section"
   },

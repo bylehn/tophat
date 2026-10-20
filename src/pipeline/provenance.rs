@@ -259,8 +259,9 @@ pub(crate) fn determining_files(
             config.study, config.variant
         ));
     }
+    // An external stage's software comes from the cluster, not from pixi.
     for f in ["pixi.toml", "pixi.lock"] {
-        if ctx.root().join(f).is_file() {
+        if stage.external.is_none() && ctx.root().join(f).is_file() {
             files.push(f.to_string());
         }
     }
@@ -301,7 +302,7 @@ pub fn platform() -> String {
     format!("{os}-{arch}")
 }
 
-fn host() -> String {
+pub(crate) fn host() -> String {
     std::env::var("HOSTNAME")
         .ok()
         .or_else(|| fs::read_to_string("/etc/hostname").ok())
@@ -461,6 +462,22 @@ pub fn is_valid_item_name(name: &str) -> bool {
             .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'_' | b'-'))
 }
 
+/// External stages are sealed only by ingesting their returned job folder.
+fn refuse_external(stage: &StageConfig) -> Result<(), PipelineError> {
+    match stage.external {
+        None => Ok(()),
+        Some(_) => Err(PipelineError::Config {
+            path: stage.file.clone(),
+            line: stage.line,
+            message: format!(
+                "stage `{}` is an external stage: it runs on the cluster and is sealed by \
+                 `tophat stage external` when its job folder returns",
+                stage.name
+            ),
+        }),
+    }
+}
+
 /// What to seal.
 #[derive(Debug, Clone, Default)]
 pub struct SealRequest {
@@ -486,6 +503,7 @@ pub fn seal(root: &Path, request: &SealRequest) -> Result<PathBuf, PipelineError
             actual,
         });
     }
+    refuse_external(stage)?;
     if let Some(item) = &request.item {
         if stage.foreach.is_none() {
             return Err(PipelineError::Config {
@@ -548,17 +566,57 @@ pub fn seal(root: &Path, request: &SealRequest) -> Result<PathBuf, PipelineError
 
     let paths: Vec<PathBuf> = files.iter().map(|(_, p)| p.clone()).collect();
     let mut outputs = Vec::with_capacity(files.len());
-    for ((rel, _), hashed) in files.iter().zip(hash_files(&paths)) {
+    for ((rel, path), hashed) in files.iter().zip(hash_files(&paths)) {
         let (size, sha256) = hashed.map_err(|e| PipelineError::Io(e.to_string()))?;
-        outputs.push(OutputFile {
-            path: rel.clone(),
-            size,
-            sha256,
-        });
+        outputs.push((
+            OutputFile {
+                path: rel.clone(),
+                size,
+                sha256,
+            },
+            path.clone(),
+        ));
     }
 
     let run_paths = resolved.run_paths(stage, request.item.as_deref(), request.trial)?;
     let run = render_run(stage, &run_paths).map_err(PipelineError::Io)?;
+    write_record(
+        root,
+        &resolved,
+        stage,
+        request,
+        &dir,
+        &RecordContent {
+            run,
+            outputs,
+            items,
+            external: None,
+        },
+    )
+}
+
+/// What a record holds beyond what the stage's configuration determines.
+pub(crate) struct RecordContent {
+    /// The command as executed.
+    pub run: String,
+    /// The outputs, with the file each was hashed from.
+    pub outputs: Vec<(OutputFile, PathBuf)>,
+    pub items: Option<Vec<ItemSummary>>,
+    /// The `external` object of an external stage's record.
+    pub external: Option<Value>,
+}
+
+// rq-533606d2
+/// Determines cleanliness and writes the `provenance.json` of a stage (or item) in `dir`.
+pub(crate) fn write_record(
+    root: &Path,
+    resolved: &ResolvedStage,
+    stage: &StageConfig,
+    request: &SealRequest,
+    dir: &Path,
+    content: &RecordContent,
+) -> Result<PathBuf, PipelineError> {
+    let actual = resolved.key(&stage.name).to_string();
     let cleanliness = cleanliness(
         root,
         &determining_files(&resolved.ctx, &resolved.config, stage),
@@ -580,10 +638,17 @@ pub fn seal(root: &Path, request: &SealRequest) -> Result<PathBuf, PipelineError
             }),
         })
         .collect();
-    let env_hash = resolved
-        .ctx
-        .environment_hash(&stage.env)
-        .map_err(PipelineError::Io)?;
+    // An external stage ran with the cluster's software, so it has no pixi environment.
+    let env = match &stage.external {
+        Some(_) => Value::Null,
+        None => {
+            let hash = resolved
+                .ctx
+                .environment_hash(&stage.env)
+                .map_err(PipelineError::Io)?;
+            json!({"name": stage.env, "hash": hash})
+        }
+    };
     let record = json!({
         "format_version": 1,
         "tophat_version": env!("CARGO_PKG_VERSION"),
@@ -591,13 +656,13 @@ pub fn seal(root: &Path, request: &SealRequest) -> Result<PathBuf, PipelineError
         "stage": stage.name,
         "key": actual,
         "item": request.item,
-        "run": run,
-        "env": {"name": stage.env, "hash": env_hash},
+        "run": content.run,
+        "env": env,
         "code": code.iter().map(|c| json!({"path": c.path, "sha256": c.sha256})).collect::<Vec<_>>(),
         "params": Value::Object(stage.params.clone()),
         "inputs": inputs,
-        "outputs": outputs.iter().map(|o| json!({"path": o.path, "size": o.size, "sha256": o.sha256})).collect::<Vec<_>>(),
-        "items": items.as_ref().map(|items| items.iter().map(|i| json!({
+        "outputs": content.outputs.iter().map(|(o, _)| json!({"path": o.path, "size": o.size, "sha256": o.sha256})).collect::<Vec<_>>(),
+        "items": content.items.as_ref().map(|items| items.iter().map(|i| json!({
             "name": i.name, "key": i.key, "outputs_hash": i.outputs_hash,
         })).collect::<Vec<_>>()),
         "clean": cleanliness.clean,
@@ -611,18 +676,19 @@ pub fn seal(root: &Path, request: &SealRequest) -> Result<PathBuf, PipelineError
                 .and_then(|d| d.get(&t.pin.name).cloned());
             json!({"name": t.pin.name, "commit": t.commit, "url": url})
         }),
+        "external": content.external,
         "trial": request.trial,
         "sealed": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
     });
 
-    fs::create_dir_all(&dir).map_err(|e| PipelineError::Io(e.to_string()))?;
+    fs::create_dir_all(dir).map_err(|e| PipelineError::Io(e.to_string()))?;
     let record_path = dir.join(RECORD_FILE);
     let text = serde_json::to_string_pretty(&record).expect("JSON values always serialize") + "\n";
     write_atomic(&record_path, &text).map_err(|e| PipelineError::Io(e.to_string()))?;
 
     let results = results_root(&resolved.roots)?;
     let mut cache = HashCache::load(root);
-    for (output, (_, path)) in outputs.iter().zip(&files) {
+    for (output, path) in &content.outputs {
         if let Ok(rel) = path.strip_prefix(results) {
             let rel = rel.to_string_lossy().replace('\\', "/");
             cache.record(RESULTS_ROOT, &rel, path, output.size, &output.sha256);
@@ -658,6 +724,7 @@ pub fn begin(root: &Path, request: &SealRequest) -> Result<BegunJob, PipelineErr
             actual,
         });
     }
+    refuse_external(stage)?;
     if stage.foreach.is_some() != request.item.is_some() {
         return Err(PipelineError::Config {
             path: stage.file.clone(),

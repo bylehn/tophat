@@ -2,6 +2,7 @@
 //! `rqm/pipeline/provenance.md`.
 
 mod config;
+mod external;
 mod generate;
 mod keys;
 mod provenance;
@@ -12,8 +13,13 @@ mod summary;
 use std::fmt;
 
 pub use config::{
-    config_path, load_pipeline, load_variant_lenient, parse_template, PipelineConfig, StageConfig,
-    StageInput, TemplatePart,
+    config_path, load_pipeline, load_variant_lenient, parse_template, ExternalConfig,
+    PipelineConfig, StageConfig, StageInput, TemplatePart,
+};
+pub use external::{
+    ingest, instructions, job_folder_name, large_inputs_warning, parse_receipt, script_sha256,
+    slurm_defaults, stage_external, waiting_jobs, write_job_folder, write_job_folder_with,
+    ExternalError, Receipt, LARGE_INPUTS_BYTES, RECEIPT_FILE, SLURM_DEFAULTS_FILE,
 };
 pub use generate::{generate_rules, snakefile_path, stub, variant_target};
 pub use keys::{

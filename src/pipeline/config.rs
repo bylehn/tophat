@@ -20,6 +20,27 @@ pub enum StageInput {
     Dataset(DatasetRef),
 }
 
+// rq-fd86ea5e
+/// The `external` mapping of an external stage (see `rqm/pipeline/external.md`).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ExternalConfig {
+    /// Shell lines run in the job before the command.
+    pub setup: Vec<String>,
+    /// `sbatch` options of the stage.
+    pub slurm: Vec<String>,
+    /// Glob patterns, relative to `out/`, of output files that stay on the cluster.
+    pub keep: Vec<String>,
+}
+
+impl ExternalConfig {
+    // rq-23d21623
+    /// The canonical JSON that enters the stage key: `setup` and `keep`, sorted keys, no
+    /// whitespace. `slurm` is left out: resources do not change what a job computes.
+    pub fn key_json(&self) -> String {
+        serde_json::json!({"setup": self.setup, "keep": self.keep}).to_string()
+    }
+}
+
 // rq-9950b389 rq-081e737a
 /// One stage after variant merging.
 #[derive(Debug, Clone, PartialEq)]
@@ -32,10 +53,14 @@ pub struct StageConfig {
     /// The parameters as a JSON object (keys sorted).
     pub params: Map<String, Value>,
     pub env: String,
+    /// Whether `env` was written in the configuration (rather than defaulted).
+    pub env_set: bool,
     /// The tool pin as written (`<tool>@<commit>`), for a tool stage.
     pub tool: Option<String>,
     pub threads: u32,
     pub foreach: Option<String>,
+    /// The `external` mapping, for an external stage.
+    pub external: Option<ExternalConfig>,
     /// Whether the stage declares `qc: skip`, exempting it from its default QC gate.
     pub qc_skip: bool,
     /// Why the stage needs no QC verdict (with `qc: skip`).
@@ -170,7 +195,7 @@ fn yaml_to_json(value: &Yaml) -> Result<Value, String> {
     })
 }
 
-const STAGE_KEYS: [&str; 12] = [
+const STAGE_KEYS: [&str; 13] = [
     "name",
     "run",
     "code",
@@ -183,6 +208,7 @@ const STAGE_KEYS: [&str; 12] = [
     "qc_reason",
     "result",
     "tool",
+    "external",
 ];
 
 /// The fields given for one stage in one file, before merging.
@@ -200,6 +226,7 @@ struct StageFields {
     qc_reason: Option<String>,
     result: Option<String>,
     tool: Option<String>,
+    external: Option<ExternalConfig>,
     line: Option<u32>,
 }
 
@@ -398,10 +425,10 @@ fn parse_file(
                     Yaml::String(s) => fields.tool = Some(s),
                     _ => problems.push(bad("a pin `<tool>@<commit>`")),
                 },
-                "external" => problems.push(problem(
-                    at,
-                    format!("stage `{label}`: external stages (`external:`) are not yet supported"),
-                )),
+                "external" => match parse_external(value) {
+                    Ok(external) => fields.external = Some(external),
+                    Err(m) => problems.push(problem(at, format!("stage `{label}`: external: {m}"))),
+                },
                 other => problems.push(problem(
                     at,
                     format!(
@@ -414,6 +441,76 @@ fn parse_file(
         out.push(fields);
     }
     Some(out)
+}
+
+// rq-fd86ea5e
+/// Whether `pattern` is a usable `keep` pattern: a relative path of literal characters and the
+/// wildcards `*`, `?` and `[...]` (none of which match `/`), so that the job script, ingest and
+/// `rsync --exclude` agree on what it matches.
+fn is_valid_keep_pattern(pattern: &str) -> bool {
+    pattern
+        .split('/')
+        .all(|seg| !seg.is_empty() && seg != "." && seg != "..")
+        && !pattern.contains("**")
+        && pattern
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b"._-*?[]!".contains(&b) || b == b'/')
+}
+
+// rq-fd86ea5e
+/// Parses an `external` mapping: only `setup`, `slurm` and `keep`, each a list of text.
+fn parse_external(value: Yaml) -> Result<ExternalConfig, String> {
+    let hash = match value {
+        Yaml::Hash(hash) => hash,
+        _ => return Err("must be a mapping with `setup`, `slurm` and `keep`".into()),
+    };
+    let mut external = ExternalConfig::default();
+    for (key, value) in hash {
+        let Yaml::String(key) = key else {
+            return Err("keys must be text".into());
+        };
+        let list = match value {
+            Yaml::Null => Vec::new(),
+            Yaml::Array(items) => items
+                .into_iter()
+                .map(|i| match i {
+                    Yaml::String(s) => Ok(s),
+                    _ => Err(format!("`{key}` must be a list of text")),
+                })
+                .collect::<Result<Vec<_>, _>>()?,
+            _ => return Err(format!("`{key}` must be a list of text")),
+        };
+        if let Some(bad) = list.iter().find(|s| s.contains(['\n', '\r'])) {
+            return Err(format!("`{key}` entry {bad:?} must be a single line"));
+        }
+        match key.as_str() {
+            "setup" => external.setup = list,
+            "slurm" => {
+                if let Some(bad) = list.iter().find(|o| !o.starts_with('-')) {
+                    return Err(format!(
+                        "`slurm` option `{bad}` must be an sbatch option such as `--time=24:00:00`"
+                    ));
+                }
+                external.slurm = list;
+            }
+            "keep" => {
+                if let Some(bad) = list.iter().find(|p| !is_valid_keep_pattern(p)) {
+                    return Err(format!(
+                        "`keep` pattern `{bad}` must be a relative path using letters, digits, \
+                         `._-` and the wildcards `*`, `?` and `[...]`"
+                    ));
+                }
+                external.keep = list;
+            }
+            other => {
+                return Err(format!(
+                    "unknown key `{other}`; allowed keys are setup, slurm and keep. Connection \
+                     details (hosts, remote paths, credentials) never go in the project"
+                ))
+            }
+        }
+    }
+    Ok(external)
 }
 
 /// Builds a stage from complete fields, validating what does not depend on other stages.
@@ -478,8 +575,10 @@ fn build_stage(
         inputs,
         params: fields.params.clone().unwrap_or_default(),
         env,
+        env_set: fields.env.is_some(),
         threads: fields.threads.unwrap_or(1),
         foreach: fields.foreach.clone(),
+        external: fields.external.clone(),
         qc_skip: fields.qc_skip.unwrap_or(false),
         qc_reason: fields.qc_reason.clone(),
         tool: fields.tool.clone(),
@@ -543,6 +642,53 @@ fn validate(
                 )));
             }
         }
+        // rq-fd86ea5e
+        let external = stage.external.is_some();
+        if external {
+            let mut not_allowed = Vec::new();
+            if stage.foreach.is_some() {
+                not_allowed.push("`foreach` (external stages do not fan out)");
+            }
+            if stage.env_set {
+                not_allowed
+                    .push("`env` (its software comes from the cluster; use `external.setup`)");
+            }
+            if !not_allowed.is_empty() {
+                problems.push(problem(format!(
+                    "stage `{}`: an external stage cannot have {}",
+                    stage.name,
+                    not_allowed.join(", ")
+                )));
+            }
+            if stage.tool.is_some() {
+                problems.push(problem(format!(
+                    "stage `{}`: a stage cannot have both `tool` and `external`",
+                    stage.name
+                )));
+            }
+            for entry in &stage.code {
+                let normalized = super::keys::normalize(std::path::Path::new(entry));
+                let top = normalized
+                    .as_ref()
+                    .and_then(|p| p.components().next())
+                    .map(|c| c.as_os_str().to_string_lossy().into_owned());
+                if let Some(top) =
+                    top.filter(|t| super::external::RESERVED_NAMES.contains(&t.as_str()))
+                {
+                    problems.push(problem(format!(
+                        "stage `{}`: code `{entry}` would take the place of `{top}` in the job folder",
+                        stage.name
+                    )));
+                }
+                if normalized.is_none() {
+                    problems.push(problem(format!(
+                        "stage `{}`: code `{entry}` of an external stage must lie inside the study \
+                         directory, so it can travel with the job folder",
+                        stage.name
+                    )));
+                }
+            }
+        }
         match parse_template(&stage.run) {
             Err(e) => problems.push(problem(format!("stage `{}`: run: {e}", stage.name))),
             Ok(parts) => {
@@ -552,8 +698,8 @@ fn validate(
                     };
                     let valid = match p.as_str() {
                         "out" | "params_file" | "threads" => true,
-                        "tool" => stage.tool.is_some(),
-                        "item" | "item_name" => stage.foreach.is_some(),
+                        "tool" => stage.tool.is_some() && !external,
+                        "item" | "item_name" => stage.foreach.is_some() && !external,
                         _ => {
                             if let Some(input) = p.strip_prefix("in.") {
                                 stage.inputs.contains_key(input)
@@ -567,7 +713,12 @@ fn validate(
                             }
                         }
                     };
-                    if !valid {
+                    if !valid && external && ["tool", "item", "item_name"].contains(&p.as_str()) {
+                        problems.push(problem(format!(
+                            "stage `{}`: placeholder `{{{p}}}` is not available in an external stage",
+                            stage.name
+                        )));
+                    } else if !valid {
                         problems.push(problem(format!(
                             "stage `{}`: unknown placeholder `{{{p}}}` in run",
                             stage.name
@@ -644,6 +795,7 @@ fn merge_variant(
         }
         if let Some(env) = fields.env {
             stage.env = env;
+            stage.env_set = true;
         }
         if let Some(threads) = fields.threads {
             stage.threads = threads;
@@ -659,6 +811,9 @@ fn merge_variant(
         }
         if let Some(tool) = fields.tool {
             stage.tool = Some(tool);
+        }
+        if let Some(external) = fields.external {
+            stage.external = Some(external);
         }
         if let Some(result) = fields.result {
             stage.result = Some(result);
