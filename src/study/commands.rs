@@ -284,6 +284,16 @@ pub fn report(root: &Path, id: &str) -> Result<(), StudyError> {
         )));
     }
 
+    let unreported = crate::data::unreported_dependencies(&Project::new(root), study);
+    if !unreported.is_empty() {
+        let refs: Vec<String> = unreported.iter().map(|r| r.to_string()).collect();
+        return Err(StudyError::Summary(format!(
+            "the study depends on unreported work: {}; report the producing studies first, or \
+             accept the dependency with an amendment containing `accept <name>@v<n>`",
+            refs.join(", ")
+        )));
+    }
+
     let structure_error = |message: &str| StudyError::Structure {
         path: loaded.path.display().to_string(),
         message: message.to_string(),

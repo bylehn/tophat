@@ -192,8 +192,11 @@ pub type RuleFamily = fn(&Project) -> Vec<Diagnostic>;
 // rq-9b44b88f
 /// The static list of rule families evaluated by every check. Adding a family means adding a
 /// function here; there is no runtime plugin mechanism.
-pub static RULE_FAMILIES: &[RuleFamily] =
-    &[crate::study::study_rules, crate::question::question_rules];
+pub static RULE_FAMILIES: &[RuleFamily] = &[
+    crate::study::study_rules,
+    crate::question::question_rules,
+    crate::data::data_rules,
+];
 
 // rq-abbd00cd
 /// Finds the project root: the nearest ancestor of `start` (including `start` itself) that
