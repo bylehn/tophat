@@ -2,7 +2,12 @@
   "rq-003d3d0f": {
     "decl": "Scenario: Missing environment",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Missing environment",
     "type": "scenario"
   },
@@ -120,7 +125,12 @@
   "rq-04f01464": {
     "decl": "Scenario: Output directory is named by the key",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Output directory is named by the key",
     "type": "scenario"
   },
@@ -144,7 +154,16 @@
     "decl": "### Stage fields",
     "file": "pipeline/provenance",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/config.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Stage fields",
     "type": "section"
   },
@@ -319,7 +338,12 @@
   "rq-11940cec": {
     "decl": "Scenario: Keys command with an unconfigured results root",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Keys command with an unconfigured results root",
     "type": "scenario"
   },
@@ -499,7 +523,12 @@
   "rq-19e53a7b": {
     "decl": "Scenario: Unknown placeholder",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Unknown placeholder",
     "type": "scenario"
   },
@@ -561,7 +590,12 @@
   "rq-1abe7472": {
     "decl": "Scenario: Publishing a dirty output fails",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Publishing a dirty output fails",
     "type": "scenario"
   },
@@ -646,7 +680,12 @@
   "rq-205358e8": {
     "decl": "Scenario: Publishing an output modified after sealing fails",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Publishing an output modified after sealing fails",
     "type": "scenario"
   },
@@ -665,7 +704,12 @@
   "rq-21dcc0c2": {
     "decl": "Scenario: Parameter order does not matter",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Parameter order does not matter",
     "type": "scenario"
   },
@@ -685,7 +729,16 @@
     "decl": "## Check Rules (`pipeline` family, configuration)",
     "file": "pipeline/provenance",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Check Rules (`pipeline` family, configuration)",
     "type": "section"
   },
@@ -804,14 +857,24 @@
   "rq-297a1f84": {
     "decl": "- `PipelineError` — error type of the pipeline commands, with at minimum:",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/mod.rs",
+        "kind": "code"
+      }
+    ],
     "title": "PipelineError",
     "type": "api-item"
   },
   "rq-29ee60f1": {
     "decl": "Scenario: Outside a git repository records are unclean",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Outside a git repository records are unclean",
     "type": "scenario"
   },
@@ -944,7 +1007,12 @@
   "rq-2f5e3dcb": {
     "decl": "Scenario: Stage-level seal of a fan-out stage requires all items",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Stage-level seal of a fan-out stage requires all items",
     "type": "scenario"
   },
@@ -1046,7 +1114,12 @@
   "rq-383b2154": {
     "decl": "Scenario: Uncommitted code makes the record unclean",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Uncommitted code makes the record unclean",
     "type": "scenario"
   },
@@ -1103,14 +1176,28 @@
     "decl": "### Environment hash",
     "file": "pipeline/provenance",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/keys.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Environment hash",
     "type": "section"
   },
   "rq-3b86c7d4": {
     "decl": "Scenario: Keys command reports sealed and missing outputs",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Keys command reports sealed and missing outputs",
     "type": "scenario"
   },
@@ -1171,7 +1258,12 @@
   "rq-3fd889d8": {
     "decl": "Scenario: Variant cannot add stages",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Variant cannot add stages",
     "type": "scenario"
   },
@@ -1214,7 +1306,12 @@
   "rq-43b7a9e6": {
     "decl": "Scenario: Variant overrides merge into the base stage",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Variant overrides merge into the base stage",
     "type": "scenario"
   },
@@ -1322,7 +1419,16 @@
     "decl": "## Stage Keys",
     "file": "pipeline/provenance",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/keys.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Stage Keys",
     "type": "section"
   },
@@ -1387,7 +1493,16 @@
   "rq-4fc6c2a5": {
     "decl": "- `tophat data publish <study> --stage <stage> [--variant <variant>] --as <name>`",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -1406,7 +1521,12 @@
   "rq-510dffe3": {
     "decl": "Scenario: Publishing an unsealed output fails",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Publishing an unsealed output fails",
     "type": "scenario"
   },
@@ -1438,7 +1558,16 @@
     "decl": "## Provenance Records",
     "file": "pipeline/provenance",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/provenance.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Provenance Records",
     "type": "section"
   },
@@ -1497,7 +1626,16 @@
   "rq-55bef4eb": {
     "decl": "- `pipeline_rules(project: &Project) -> Vec<Diagnostic>` — the `pipeline` rule family registered",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "pipeline_rules",
     "type": "api-item"
   },
@@ -1588,7 +1726,12 @@
   "rq-59d28b94": {
     "decl": "Scenario: Key text follows the specified construction",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Key text follows the specified construction",
     "type": "scenario"
   },
@@ -1634,7 +1777,12 @@
   "rq-5cd91e7d": {
     "decl": "- `StageInput` — `Stage(String)` or `Dataset(DatasetRef)`.",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/config.rs",
+        "kind": "code"
+      }
+    ],
     "title": "StageInput",
     "type": "api-item"
   },
@@ -1732,7 +1880,12 @@
   "rq-6101fec0": {
     "decl": "Scenario: Missing code file",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Missing code file",
     "type": "scenario"
   },
@@ -1820,7 +1973,12 @@
   "rq-672050d2": {
     "decl": "Scenario: Seal refuses an empty output",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Seal refuses an empty output",
     "type": "scenario"
   },
@@ -1866,7 +2024,16 @@
     "decl": "### Placeholders",
     "file": "pipeline/provenance",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/config.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Placeholders",
     "type": "section"
   },
@@ -1901,7 +2068,12 @@
   "rq-6a6e86ca": {
     "decl": "Scenario: Untracked config makes the record unclean",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Untracked config makes the record unclean",
     "type": "scenario"
   },
@@ -1946,7 +2118,12 @@
   "rq-6d9d6c2d": {
     "decl": "Scenario: Updating the environment changes keys of stages using it",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Updating the environment changes keys of stages using it",
     "type": "scenario"
   },
@@ -1999,7 +2176,12 @@
   "rq-6f38a675": {
     "decl": "Scenario: Changing a script changes its key and every downstream key",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Changing a script changes its key and every downstream key",
     "type": "scenario"
   },
@@ -2030,7 +2212,16 @@
   "rq-719acfdc": {
     "decl": "- `tophat stage seal <study> <stage> --key <key> [--variant <variant>] [--item <item name>] [--trial]`",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/provenance.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -2414,7 +2605,12 @@
   "rq-85aa702f": {
     "decl": "Scenario: A new dataset version changes the key",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A new dataset version changes the key",
     "type": "scenario"
   },
@@ -2529,7 +2725,12 @@
   "rq-8d671e50": {
     "decl": "Scenario: Input referencing a later stage",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Input referencing a later stage",
     "type": "scenario"
   },
@@ -2677,7 +2878,12 @@
   "rq-96ee56c2": {
     "decl": "Scenario: Seal a fan-out item and the stage",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Seal a fan-out item and the stage",
     "type": "scenario"
   },
@@ -2716,7 +2922,12 @@
   "rq-9950b389": {
     "decl": "- `StageConfig` — one stage after variant merging: name, run, code, inputs, params, env, threads,",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/config.rs",
+        "kind": "code"
+      }
+    ],
     "title": "StageConfig",
     "type": "api-item"
   },
@@ -2846,7 +3057,16 @@
     "decl": "### Clean",
     "file": "pipeline/provenance",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/provenance.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Clean",
     "type": "section"
   },
@@ -2872,21 +3092,36 @@
   "rq-9f5b536b": {
     "decl": "Scenario: Variants with identical stage settings share a key",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Variants with identical stage settings share a key",
     "type": "scenario"
   },
   "rq-9f8a5a5e": {
     "decl": "- `ProvenanceRecord` — a parsed `provenance.json`.",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/provenance.rs",
+        "kind": "code"
+      }
+    ],
     "title": "ProvenanceRecord",
     "type": "api-item"
   },
   "rq-9fa80dbe": {
     "decl": "Scenario: Seal refuses when the configuration changed during the run",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Seal refuses when the configuration changed during the run",
     "type": "scenario"
   },
@@ -2930,7 +3165,16 @@
     "decl": "### Variants",
     "file": "pipeline/provenance",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/config.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Variants",
     "type": "section"
   },
@@ -3031,7 +3275,12 @@
   "rq-a54ab3d8": {
     "decl": "Scenario: Seal checks the result file",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Seal checks the result file",
     "type": "scenario"
   },
@@ -3039,21 +3288,40 @@
     "decl": "### Output location",
     "file": "pipeline/provenance",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/keys.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Output location",
     "type": "section"
   },
   "rq-a5ab4b78": {
     "decl": "Scenario: Fan-out stage cannot declare a result",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Fan-out stage cannot declare a result",
     "type": "scenario"
   },
   "rq-a5fd6b70": {
     "decl": "Scenario: A study without stages has no pipeline",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A study without stages has no pipeline",
     "type": "scenario"
   },
@@ -3480,7 +3748,12 @@
     "decl": "### Files",
     "file": "pipeline/provenance",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/config.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Files",
     "type": "section"
   },
@@ -3499,7 +3772,12 @@
   "rq-bbe1941a": {
     "decl": "Scenario: A valid configuration has no pipeline diagnostics",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A valid configuration has no pipeline diagnostics",
     "type": "scenario"
   },
@@ -3640,7 +3918,12 @@
   "rq-c3a5cbef": {
     "decl": "Scenario: Code outside the project",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Code outside the project",
     "type": "scenario"
   },
@@ -3744,14 +4027,28 @@
   "rq-c85070d7": {
     "decl": "Scenario: Changes elsewhere do not make a record unclean",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Changes elsewhere do not make a record unclean",
     "type": "scenario"
   },
   "rq-c8637010": {
     "decl": "- `tophat pipeline keys <study> [--variant <variant>] [--json]`",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/provenance.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -3789,7 +4086,12 @@
   "rq-cbd35529": {
     "decl": "- `PipelineConfig` — the stages of a study for one variant.",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/config.rs",
+        "kind": "code"
+      }
+    ],
     "title": "PipelineConfig",
     "type": "api-item"
   },
@@ -3812,7 +4114,12 @@
   "rq-ccaa4e30": {
     "decl": "Scenario: Escaped braces are allowed",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Escaped braces are allowed",
     "type": "scenario"
   },
@@ -4197,7 +4504,12 @@
   "rq-dbb8600d": {
     "decl": "Scenario: Publish a clean stage output",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Publish a clean stage output",
     "type": "scenario"
   },
@@ -4294,7 +4606,12 @@
   "rq-de9819a0": {
     "decl": "Scenario: Seal a completed stage",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Seal a completed stage",
     "type": "scenario"
   },
@@ -4331,14 +4648,24 @@
   "rq-e23a3422": {
     "decl": "Scenario: A code directory is hashed file by file",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A code directory is hashed file by file",
     "type": "scenario"
   },
   "rq-e35a8bdd": {
     "decl": "Scenario: Changing a parameter changes only that stage and downstream",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Changing a parameter changes only that stage and downstream",
     "type": "scenario"
   },
@@ -4420,7 +4747,16 @@
   "rq-e6252079": {
     "decl": "- `stage_key(text: &str) -> String` — `sk-` and the first 16 hex characters of the text's SHA-256.",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/keys.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "stage_key",
     "type": "api-item"
   },
@@ -4590,7 +4926,12 @@
   "rq-eda3d443": {
     "decl": "Scenario: Reserved tool key",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Reserved tool key",
     "type": "scenario"
   },
@@ -4725,7 +5066,16 @@
   "rq-f40ffa2b": {
     "decl": "- `stage_key_text(config: &PipelineConfig, stage: &str, ctx: &KeyContext) -> Result<String, PipelineError>`",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/keys.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "stage_key_text",
     "type": "api-item"
   },
@@ -4796,7 +5146,16 @@
   "rq-f8dfe570": {
     "decl": "- `load_pipeline(root: &Path, study: &str, variant: &str) -> Result<PipelineConfig, PipelineError>`",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/config.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "load_pipeline",
     "type": "api-item"
   },

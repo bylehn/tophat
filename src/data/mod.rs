@@ -16,7 +16,7 @@ use sha2::{Digest, Sha256};
 
 pub use cache::HashCache;
 pub use commands::{
-    add, declare, lineage, retire, used_by, verify, LineageNode, RegisterOptions, UsedBy,
+    add, declare, lineage, publish, retire, used_by, verify, LineageNode, RegisterOptions, UsedBy,
     VerifyReport,
 };
 pub use manifest::{
@@ -26,6 +26,9 @@ pub use manifest::{
 pub use refs::{study_dataset_refs, unreported_dependencies, ConfigRef};
 pub use roots::{load_roots, load_roots_with, Roots};
 pub use rules::{data_rules, data_rules_with};
+
+pub(crate) use manifest::is_safe_relative_path;
+pub(crate) use refs::manifests_by_ref;
 
 /// Directory, relative to the project root, holding one subdirectory of manifests per dataset.
 pub const DATASETS_DIR: &str = "datasets";
