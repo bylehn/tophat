@@ -5,6 +5,7 @@
 
 pub mod check;
 pub mod cli;
+pub mod data;
 mod fsutil;
 mod markdown;
 pub mod question;

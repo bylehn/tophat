@@ -9,7 +9,12 @@
   "rq-007499c3": {
     "decl": "Scenario: Manifest file name disagrees with its contents",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Manifest file name disagrees with its contents",
     "type": "scenario"
   },
@@ -25,7 +30,20 @@
     "decl": "### Manifests",
     "file": "data",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/manifest.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/data/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Manifests",
     "type": "section"
   },
@@ -175,7 +193,12 @@
   "rq-0a389452": {
     "decl": "Scenario: Newer version available for a draft",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Newer version available for a draft",
     "type": "scenario"
   },
@@ -217,7 +240,12 @@
   "rq-0ca6fca2": {
     "decl": "Scenario: An amendment accepts the unreported dependency",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An amendment accepts the unreported dependency",
     "type": "scenario"
   },
@@ -272,7 +300,12 @@
   "rq-0f8bd6f3": {
     "decl": "- `DatasetRef` — a parsed `<name>@v<n>`: `name: String`, `version: u32`.",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/mod.rs",
+        "kind": "code"
+      }
+    ],
     "title": "DatasetRef",
     "type": "api-item"
   },
@@ -401,7 +434,12 @@
   "rq-1690899a": {
     "decl": "Scenario: Hand-edited content hash is detected",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Hand-edited content hash is detected",
     "type": "scenario"
   },
@@ -495,7 +533,16 @@
   "rq-1a97b91b": {
     "decl": "- `tophat data lineage <target> [--json]`",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -575,7 +622,12 @@
   "rq-1eaa34af": {
     "decl": "Scenario: Lineage stops at declared data",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Lineage stops at declared data",
     "type": "scenario"
   },
@@ -620,7 +672,12 @@
   "rq-228b4cbc": {
     "decl": "Scenario: A reported study cannot rest on unreported work",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A reported study cannot rest on unreported work",
     "type": "scenario"
   },
@@ -635,7 +692,16 @@
   "rq-23b73104": {
     "decl": "- `tophat data used-by <name>[@v<n>] [--json]`",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -681,7 +747,12 @@
   "rq-2446b713": {
     "decl": "Scenario: Fresh clone without a hash cache",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Fresh clone without a hash cache",
     "type": "scenario"
   },
@@ -721,7 +792,12 @@
   "rq-2960fd26": {
     "decl": "- `load_roots(root: &Path) -> Result<Roots, DataError>` — reads the declared roots and resolves",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/roots.rs",
+        "kind": "code"
+      }
+    ],
     "title": "load_roots",
     "type": "api-item"
   },
@@ -776,7 +852,12 @@
   "rq-2ba558eb": {
     "decl": "Scenario: Version gap",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Version gap",
     "type": "scenario"
   },
@@ -829,7 +910,12 @@
   "rq-2e2aead6": {
     "decl": "Scenario: Changed file size",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Changed file size",
     "type": "scenario"
   },
@@ -892,7 +978,16 @@
   "rq-33c3cc6a": {
     "decl": "- `tophat data verify [<name>[@v<n>]]`",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -1126,7 +1221,12 @@
   "rq-43c471b8": {
     "decl": "Scenario: Verify a matching dataset",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Verify a matching dataset",
     "type": "scenario"
   },
@@ -1146,7 +1246,12 @@
   "rq-44c48945": {
     "decl": "Scenario: Adding an empty directory fails",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Adding an empty directory fails",
     "type": "scenario"
   },
@@ -1204,7 +1309,12 @@
   "rq-49765877": {
     "decl": "Scenario: Environment variable overrides the local roots file",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Environment variable overrides the local roots file",
     "type": "scenario"
   },
@@ -1227,7 +1337,16 @@
     "decl": "### Kinds",
     "file": "data",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/manifest.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Kinds",
     "type": "section"
   },
@@ -1358,7 +1477,20 @@
     "decl": "## Producer Maturity and Visibility",
     "file": "data",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/refs.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/data/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Producer Maturity and Visibility",
     "type": "section"
   },
@@ -1440,7 +1572,16 @@
     "decl": "### Full verification",
     "file": "data",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Full verification",
     "type": "section"
   },
@@ -1469,7 +1610,16 @@
     "decl": "## Check Rules (`data` family)",
     "file": "data",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Check Rules (`data` family)",
     "type": "section"
   },
@@ -1507,7 +1657,12 @@
   "rq-5dee52f5": {
     "decl": "Scenario: Public study consuming private data",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Public study consuming private data",
     "type": "scenario"
   },
@@ -1596,7 +1751,12 @@
   "rq-622fce95": {
     "decl": "Scenario: Adding again creates the next version",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Adding again creates the next version",
     "type": "scenario"
   },
@@ -1760,7 +1920,12 @@
   "rq-6c036885": {
     "decl": "Scenario: Lineage through an unconfigured root",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Lineage through an unconfigured root",
     "type": "scenario"
   },
@@ -1822,7 +1987,12 @@
   "rq-6f389d0b": {
     "decl": "- `hash_file(path: &Path) -> io::Result<(u64, String)>` — size and SHA-256 of a file, streamed.",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/mod.rs",
+        "kind": "code"
+      }
+    ],
     "title": "hash_file",
     "type": "api-item"
   },
@@ -1836,7 +2006,12 @@
   "rq-701626f2": {
     "decl": "Scenario: Adding a directory with a symbolic link fails",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Adding a directory with a symbolic link fails",
     "type": "scenario"
   },
@@ -1862,7 +2037,12 @@
   "rq-71bac1e4": {
     "decl": "Scenario: Adding from an unconfigured root fails",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Adding from an unconfigured root fails",
     "type": "scenario"
   },
@@ -1870,7 +2050,16 @@
     "decl": "### Hash cache",
     "file": "data",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/cache.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Hash cache",
     "type": "section"
   },
@@ -1959,7 +2148,12 @@
   "rq-79aca0da": {
     "decl": "Scenario: Valid manifests pass",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Valid manifests pass",
     "type": "scenario"
   },
@@ -2040,14 +2234,24 @@
   "rq-7d7e180b": {
     "decl": "Scenario: Lineage of a published dataset reaches raw data",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Lineage of a published dataset reaches raw data",
     "type": "scenario"
   },
   "rq-7d9f7e52": {
     "decl": "Scenario: Same-size modification is flagged by the cache",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Same-size modification is flagged by the cache",
     "type": "scenario"
   },
@@ -2067,7 +2271,16 @@
     "decl": "### Locating roots on a machine",
     "file": "data",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/roots.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Locating roots on a machine",
     "type": "section"
   },
@@ -2161,7 +2374,16 @@
     "decl": "### Fast check",
     "file": "data",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Fast check",
     "type": "section"
   },
@@ -2218,7 +2440,12 @@
   "rq-872d0d8b": {
     "decl": "Scenario: Adding a path that escapes the root fails",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Adding a path that escapes the root fails",
     "type": "scenario"
   },
@@ -2233,7 +2460,12 @@
   "rq-88716093": {
     "decl": "Scenario: Add a raw dataset",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Add a raw dataset",
     "type": "scenario"
   },
@@ -2273,7 +2505,12 @@
   "rq-8ccc06c7": {
     "decl": "Scenario: Used-by lists consumers",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Used-by lists consumers",
     "type": "scenario"
   },
@@ -2413,7 +2650,12 @@
   "rq-95cf00a8": {
     "decl": "Scenario: Missing data file",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Missing data file",
     "type": "scenario"
   },
@@ -2442,7 +2684,12 @@
   "rq-973f9875": {
     "decl": "Scenario: Verify reports extra files",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Verify reports extra files",
     "type": "scenario"
   },
@@ -2457,7 +2704,12 @@
   "rq-98b54f50": {
     "decl": "Scenario: Retire a dataset version",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Retire a dataset version",
     "type": "scenario"
   },
@@ -2816,7 +3068,16 @@
   "rq-a7709a28": {
     "decl": "- `tophat data retire <name>@v<n> --reason <text>`",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -2955,7 +3216,12 @@
   "rq-adfff14c": {
     "decl": "- `parse_manifest(text: &str) -> Result<Manifest, String>` — parses and validates a manifest.",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/manifest.rs",
+        "kind": "code"
+      }
+    ],
     "title": "parse_manifest",
     "type": "api-item"
   },
@@ -2974,7 +3240,16 @@
   "rq-af5ed3df": {
     "decl": "- `tophat data add <name> --root <root> --path <path> --source <text> [--date <YYYY-MM-DD>] [--license <text>] [--visibility public|private]`",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -3020,14 +3295,28 @@
   "rq-b2eccf77": {
     "decl": "- `data_rules(project: &Project) -> Vec<Diagnostic>` — the `data` rule family registered in",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "data_rules",
     "type": "api-item"
   },
   "rq-b2fecc6c": {
     "decl": "- `Manifest` — a parsed manifest: name, version, kind, visibility, root, path, created, origin,",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/manifest.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Manifest",
     "type": "api-item"
   },
@@ -3046,7 +3335,12 @@
   "rq-b418ac06": {
     "decl": "Scenario: Unconfigured root is a warning, not an error",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Unconfigured root is a warning, not an error",
     "type": "scenario"
   },
@@ -3076,14 +3370,24 @@
   "rq-b6cac057": {
     "decl": "Scenario: Relative local location is rejected",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Relative local location is rejected",
     "type": "scenario"
   },
   "rq-b6d6ddcc": {
     "decl": "Scenario: Verify skips unconfigured roots",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Verify skips unconfigured roots",
     "type": "scenario"
   },
@@ -3183,7 +3487,12 @@
   "rq-bb98136e": {
     "decl": "- `Roots` — declared root names and their resolved locations on this machine.",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/roots.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Roots",
     "type": "api-item"
   },
@@ -3197,7 +3506,12 @@
   "rq-bc2ad0ff": {
     "decl": "Scenario: Missing roots file declares only results",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Missing roots file declares only results",
     "type": "scenario"
   },
@@ -3220,7 +3534,12 @@
   "rq-bd19d141": {
     "decl": "- `DataError` — error type of the data commands, with at minimum:",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/mod.rs",
+        "kind": "code"
+      }
+    ],
     "title": "DataError",
     "type": "api-item"
   },
@@ -3289,14 +3608,24 @@
   "rq-c25e83b5": {
     "decl": "Scenario: Referencing a retired version is an error",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Referencing a retired version is an error",
     "type": "scenario"
   },
   "rq-c3395d20": {
     "decl": "Scenario: Retiring twice fails",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Retiring twice fails",
     "type": "scenario"
   },
@@ -3528,7 +3857,12 @@
   "rq-ce1e3132": {
     "decl": "Scenario: Declare data of unknown history",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Declare data of unknown history",
     "type": "scenario"
   },
@@ -3728,7 +4062,12 @@
   "rq-d682f5a4": {
     "decl": "Scenario: Report refuses while depending on unreported work",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Report refuses while depending on unreported work",
     "type": "scenario"
   },
@@ -3757,7 +4096,16 @@
   "rq-d89c8a6b": {
     "decl": "- `tophat data declare <name> --root <root> --path <path> --statement <text> [--visibility public|private]`",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -3790,7 +4138,12 @@
   "rq-da8648ca": {
     "decl": "- `content_hash(files: &[(String, String)]) -> String` — the `content_hash` of `(path, sha256)`",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/manifest.rs",
+        "kind": "code"
+      }
+    ],
     "title": "content_hash",
     "type": "api-item"
   },
@@ -3851,7 +4204,12 @@
   "rq-dbcd9057": {
     "decl": "Scenario: Referencing an unknown version is an error",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Referencing an unknown version is an error",
     "type": "scenario"
   },
@@ -3988,14 +4346,28 @@
     "decl": "### Declaring roots",
     "file": "data",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/roots.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Declaring roots",
     "type": "section"
   },
   "rq-e4c5a373": {
     "decl": "Scenario: Consuming declared data is flagged as legacy",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Consuming declared data is flagged as legacy",
     "type": "scenario"
   },
@@ -4171,7 +4543,12 @@
   "rq-eab2ab92": {
     "decl": "- `DatasetKind` — enum `Raw`, `Declared`, `Published`.",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/manifest.rs",
+        "kind": "code"
+      }
+    ],
     "title": "DatasetKind",
     "type": "api-item"
   },
@@ -4274,7 +4651,12 @@
   "rq-f19caed4": {
     "decl": "Scenario: Reported study pinned to an older version is not warned",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Reported study pinned to an older version is not warned",
     "type": "scenario"
   },
@@ -4282,7 +4664,20 @@
     "decl": "### Referencing datasets",
     "file": "data",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/refs.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/data/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Referencing datasets",
     "type": "section"
   },
@@ -4531,7 +4926,12 @@
   "rq-fed9f56b": {
     "decl": "Scenario: Consuming unreported work while still in draft warns",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Consuming unreported work while still in draft warns",
     "type": "scenario"
   }
