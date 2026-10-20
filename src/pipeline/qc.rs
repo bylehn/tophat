@@ -106,10 +106,11 @@ pub fn qc(
         ));
     }
     let resolved = ResolvedStage::load(root, study, variant)?;
-    let config = resolved.stage(stage)?;
-    if !config.qc {
+    resolved.stage(stage)?;
+    if !resolved.config.is_gated(stage) {
         return Err(PipelineError::Qc(format!(
-            "stage `{stage}` has no QC gate (`qc: true`)"
+            "stage `{stage}` has no QC gate in variant `{variant}`: nothing consumes it, or it \
+             declares `qc: skip`"
         )));
     }
     let key = resolved.key(stage).to_string();
@@ -180,7 +181,7 @@ pub fn qc(
 }
 
 /// Problems with the files under a study's `qc/` directory: `(project-relative path, message)`.
-/// `qc_stages` are the names of the stages with `qc: true`.
+/// `qc_stages` are the names of the stages that are gated in at least one variant.
 pub(crate) fn qc_file_problems(
     root: &Path,
     study: &str,
@@ -224,9 +225,10 @@ pub(crate) fn qc_file_problems(
                 Ok(_) if !all_stages.contains(&stage) => {
                     problems.push((rel, format!("there is no stage `{stage}`")))
                 }
-                Ok(_) if !qc_stages.contains(&stage) => {
-                    problems.push((rel, format!("stage `{stage}` has no QC gate (`qc: true`)")))
-                }
+                Ok(_) if !qc_stages.contains(&stage) => problems.push((
+                    rel,
+                    format!("stage `{stage}` has no QC gate in any variant"),
+                )),
                 Ok(_) => {}
             }
         }

@@ -214,7 +214,7 @@ pub fn generate_rules(root: &Path, study: &str) -> Result<String, PipelineError>
                     StageInput::Stage(upstream) => {
                         let upstream_key = resolved.key(upstream).to_string();
                         inputs.push(resolved.out_dir(upstream, trial)?.join(RECORD_FILE));
-                        if !trial && resolved.stage(upstream)?.qc {
+                        if !trial && resolved.config.is_gated(upstream) {
                             qc.push((upstream.clone(), upstream_key, variant.clone()));
                         }
                     }

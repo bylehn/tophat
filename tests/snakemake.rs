@@ -28,13 +28,14 @@ const BASE: &str = "stages:
     run: sh scripts/prepare.sh {in.raw} {out}
     code: [scripts/prepare.sh]
     inputs: {raw: dataset:benchmark-set@v1}
+    qc: skip
+    qc_reason: Copies the input structures unchanged; checked by scenario S2
   - name: score
     run: sh scripts/score.sh {item} {out} {params.level}
     code: [scripts/score.sh]
     inputs: {structures: stage:prepare}
     foreach: structures
     params: {level: b3lyp}
-    qc: true
   - name: analyse
     run: sh scripts/analyse.sh {in.scores} {out}
     code: [scripts/analyse.sh]
@@ -760,6 +761,50 @@ fn fan_out_over_a_dataset() {
 }
 
 // --- QC gates ---------------------------------------------------------------------------------
+
+#[test] // rq-29ef4225 rq-dc1e521d
+fn stages_are_gated_by_default() {
+    let env = Env::new();
+    let text = env.read("studies/x-vs-docking/config/base.yaml").replace(
+        "    qc: skip\n    qc_reason: Copies the input structures unchanged; checked by scenario S2\n",
+        "",
+    );
+    env.write("studies/x-vs-docking/config/base.yaml", &text);
+    let rules = env.rules();
+    let base = env.keys("base");
+    let item_rule = rules
+        .split(&format!("rule score_{}_item:", hex(&base["score"])))
+        .nth(1)
+        .unwrap();
+    let item_rule = item_rule.split("\nrule ").next().unwrap();
+    assert!(
+        item_rule.contains(&format!(
+            "qc=[(\"prepare\", \"{}\", \"base\")]",
+            base["prepare"]
+        )),
+        "{item_rule}"
+    );
+    let analyse = rules
+        .split(&format!("rule analyse_{}:", hex(&base["analyse"])))
+        .nth(1)
+        .unwrap();
+    assert!(analyse.contains(&format!("(\"score\", \"{}\", \"base\")", base["score"])));
+}
+
+#[test] // rq-78b231e3 rq-dc1e521d
+fn a_stage_that_nothing_consumes_is_never_gated() {
+    let env = Env::new();
+    // No job's verdict list (`qc=[...]`) names analyse.
+    for line in env.rules().lines() {
+        if let Some(list) = line.split("qc=[").nth(1) {
+            let list = list.split(']').next().unwrap();
+            assert!(!list.contains("\"analyse\""), "{line}");
+        }
+    }
+    env.run_by_hand("base", "rho=0.61", &|_| {});
+    let (result, _) = qc_typing(&env, "analyse", "pass\nok\n", true);
+    assert!(matches!(result, Err(PipelineError::Qc(m)) if m.contains("no QC gate")));
+}
 
 #[test] // rq-c705fcd3 rq-dc1e521d
 fn missing_verdict_stops_the_pipeline_before_downstream_stages() {

@@ -189,7 +189,7 @@ fn pipeline_action(root: &Path, study: &Study, variants: &[String]) -> Option<Ne
             .collect();
         unsealed |= stages.iter().any(|s| s.status != "sealed");
         has_result_stage |= config.stages.iter().any(|s| s.result.is_some());
-        for stage in config.stages.iter().filter(|s| s.qc) {
+        for stage in config.stages.iter().filter(|s| config.is_gated(&s.name)) {
             let (key, sealed) = state[stage.name.as_str()];
             if sealed != "sealed" {
                 continue;

@@ -35,13 +35,14 @@ const STAGES: &str = "stages:
     run: sh scripts/prepare.sh {in.raw} {out}
     code: [scripts/prepare.sh]
     inputs: {raw: dataset:benchmark-set@v1}
+    qc: skip
+    qc_reason: Copies the input structures unchanged; checked by scenario S2
   - name: score
     run: sh scripts/score.sh {item} {out} {params.level}
     code: [scripts/score.sh]
     inputs: {structures: stage:prepare}
     foreach: structures
     params: {level: b3lyp}
-    qc: true
   - name: analyse
     run: sh scripts/analyse.sh {in.scores} {out}
     code: [scripts/analyse.sh]
