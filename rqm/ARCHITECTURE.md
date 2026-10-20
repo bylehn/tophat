@@ -64,28 +64,57 @@ Only the primary endpoint answers the question; diagnostics inform but decide no
 
 ### Running a study end-to-end
 
-Every study runs end-to-end with a single Snakemake command. Snakemake is the single first-class
-workflow engine.
+Every study runs end-to-end with one command, `tophat run <study>`. Snakemake is the single
+first-class workflow engine and does all execution; nobody writes Snakemake rules.
 
-- Configuration is a base config plus one small override per variant, holding only what differs.
-- Each stage **computes** with a pinned `tool@version` and parameters from pinned inputs (raw or
-  published datasets, or upstream stages of the same study), or **reuses** an existing pinned run. A stage's cache key is derived from its tool version, parameters, environment lock
-  and upstream keys, so changing any of them re-runs that stage and everything downstream.
-- Stage scripts may be written in any language available in the project environment (e.g. Python,
-  R, Julia, bash), run either as shell commands or through Snakemake's native `script:` support.
-  They take input and output paths as arguments and never hard-code paths. A study can be written
-  entirely in one non-Python language; the Snakefile is the only file in Snakemake's Python-based
-  syntax, and it stays declarative (rules, inputs, outputs, commands).
+- **Stages are declared, rules are generated.** A study's stages (command, code, inputs, parameters,
+  pixi environment, threads, fan-out, QC gate, result file) are declared in `config/base.yaml`, with
+  one small override file per variant holding only what differs. The study's `Snakefile` is a fixed
+  stub that regenerates the Snakemake rules from the configuration every time Snakemake starts; the
+  generated rules are never committed and never stale, and `tophat check` rejects an edited stub.
+  Because Snakemake never takes its default target from an included file, the stub itself defines
+  the default target, which builds the summary.
+- **Stage keys and outputs.** Each stage has a key derived from its command, its pixi environment
+  (hashed across all platforms in `pixi.lock`, so keys agree between machines), the contents of its
+  code files, its parameters, and its inputs (upstream stage keys and dataset content hashes).
+  Outputs live in a directory named by the key, so changing anything that matters runs into a new
+  directory and never overwrites a result; unchanged stages are never re-run; and variants with
+  identical settings for a stage share one output.
+- **Any language.** Stage commands may call scripts in any language available in the project
+  environment (e.g. Python, R, Julia, bash). Scripts take input and output paths as arguments and
+  never hard-code paths. Users write configuration and scripts only.
+- **Fan-out.** A stage may run once per item of an input (e.g. one job per structure), in parallel,
+  with per-item provenance; a failed item is retried alone.
 - **External stages** — compute that must run elsewhere (e.g. MD simulations on an HPC cluster)
   — are described in *External stages and clusters* below. The agent never hides steps in
   agent-writable scripts that a human is asked to run.
-- **QC gates** — every compute stage whose output feeds a later stage requires a human-written QC
-  verdict before downstream stages run.
-- A `check` stage runs the study's scenario tests; a `summary` stage writes a generated summary of
-  results. `STUDY.md` is an input only to these two, never to compute stages, so editing results or
+- **QC gates** — a stage declared with `qc: true` requires a human verdict (`pass` or `fail`) on its
+  output before any stage that consumes it runs. Verdicts are given only through an interactive
+  command, belong to one stage key (any change upstream needs a new verdict), and are committed with
+  the study. Each consuming job checks the verdict before doing anything, so a missing verdict stops
+  the run with the exact command to give one, and a `fail` blocks everything downstream.
+- **Summary.** The default target writes `SUMMARY.md` from the result files of sealed stages, with
+  the key behind each result line. `STUDY.md` is never an input of any rule, so editing results or
   status never re-runs analysis.
-- Code is committed **before** any run whose numbers are reported, so every output cites a clean
-  commit. If code changes after a run, the run is repeated before reporting.
+- **Committed code.** A stage's provenance record is *clean* when every file that determined it (its
+  code, the study configuration, the pixi files) is committed unchanged; the summary is *dirty* if any
+  record it derives from is not. A dirty summary cannot be reported, and a summary whose keys no
+  longer match the configuration is *stale*: it cannot be reported and must be re-run.
+- **Trial runs.** A draft study can be run only as a trial (`tophat run --draft`): trial outputs live
+  apart, skip QC gates, never produce a summary, and can never be published or reported. After
+  pre-registration the real run computes everything again, so results seen before the plan was frozen
+  can never be reused as reported results.
+
+### Day-to-day workflow
+
+`tophat status` shows, for every study, its state, pipeline progress per variant, and the single next
+action, marked when only a human may take it (pre-registration and QC verdicts). The next action is
+computed from committed and local files by a fixed priority order: fix check errors, write the plan,
+pre-register, add stages, configure the results root, give or fix QC verdicts, run, commit and re-run
+if dirty, report, answer the question in `PROJECT.md`. `tophat run` refuses to start a run that
+cannot produce reportable results (check errors in the study's scope, a draft without `--draft`) and
+ends by printing the next action. Skills use the same information, in machine-readable form, to
+decide what to do next.
 
 ### External stages and clusters
 
@@ -130,9 +159,10 @@ version.
 - **Raw datasets** are registered once (`tophat data add`) with a stable ID, a manifest of files and
   content hashes, and origin metadata (source or instrument, date, license). After registration they
   are immutable.
-- **Stage outputs** carry a machine-readable provenance record: producing study, variant and stage,
-  cache key, project commit and clean/dirty state, tool versions, environment lock hash, parameters,
-  and content hashes of inputs and outputs. Stage outputs are internal to their study.
+- **Stage outputs** carry a machine-readable provenance record: producing study and stage, stage
+  key, the command as executed, project commit and clean/dirty state, environment hash, code hashes,
+  parameters, inputs, content hashes of outputs, host and platform. Stage outputs are internal to
+  their study.
 - **Published datasets** are the only handoff between studies. A study explicitly promotes a stage
   output to a named, versioned derived dataset (e.g. `clean-structures@v3`), whose manifest links
   back to the producing stage's provenance. Another study consumes it by pinning that name and
@@ -141,8 +171,8 @@ version.
 - **Pinning, never following.** Inputs are always pinned versions, never moving pointers (such as
   "latest" or "current"). When a producer publishes a new version, consumers keep their pinned
   version until someone deliberately bumps it, recorded as an amendment or a new variant.
-  `tophat check` reports that a newer version is available, and reports an error when the pinned
-  version has been marked as superseded because of a defect.
+  `tophat check` reports that a newer version is available (for studies not yet reported), and
+  reports an error when the pinned version has been **retired** because of a defect.
 - **Maturity.** A study may consume datasets published by studies that are not yet `reported`.
   `tophat check` flags the dependency on unreported work, and the consuming study cannot be marked
   `reported` until its producers are, unless the human explicitly accepts the dependency in an
@@ -155,12 +185,19 @@ version.
   came from, and from any dataset forward to every study that consumed it. Which study ran on which
   data is always answerable from the committed manifests alone.
 
-**Storage.** Data bytes live outside git, under one or more configured **data roots** (e.g. a local
-directory, a cluster filesystem path, an object-store URI). Committed manifests refer to files
-relative to a named root, so the same project works on a laptop and on a cluster with different root
-locations. TopHat verifies presence and hashes but never copies, moves, or deletes data, and does not
-require a data-versioning tool. `tophat check` fails when a pinned dataset's files are missing or
-their hashes no longer match.
+**Storage.** Data bytes live outside git, under one or more named **data roots** (e.g. a local
+directory or a cluster filesystem path). Root names are declared in the project; each machine says
+where they are in a git-ignored file or an environment variable, so the same project works on a
+laptop and on a cluster with different locations, and a root that is not present on a machine is a
+warning rather than an error. The root `results` holds stage outputs. Committed manifests refer to
+files relative to a named root. TopHat verifies presence and hashes but never copies, moves, or
+deletes data, and does not require a data-versioning tool.
+
+**Verification.** Re-hashing terabytes on every check is impractical, so verification has two
+levels. `tophat check` is fast: it confirms that every manifest file exists with its recorded size,
+and uses a per-machine hash cache to flag files modified since they were last verified. Full
+re-hashing is explicit (`tophat data verify`) and is performed implicitly by commands that create
+integrity claims, such as publishing a dataset.
 
 **Visibility.** Every dataset and study carries a visibility label, `public` or `private` (e.g.
 client or patient data). `tophat check` enforces that private data never flows into a public study
@@ -189,7 +226,8 @@ rejected or presented as verified.
   TopHat: reusable code to tools, raw data to raw datasets, processed data of unknown history to
   declared datasets, past analyses to retrospective studies, existing environments into pixi
   (e.g. from `environment.yml`, `requirements.txt`, or a Julia `Project.toml`), and existing
-  pipelines into study Snakefiles where practical. Content not yet mapped is listed as legacy.
+  pipelines into study stage configurations where practical. Content not yet mapped is listed as
+  legacy.
 - **Gradual adoption.** New studies receive the full checks from the start. Legacy items (declared
   datasets, retrospective studies, unmapped legacy paths) pass `tophat check` but are reported in a
   summary, so a project can migrate incrementally without hiding gaps.
@@ -217,15 +255,16 @@ This repository is one Cargo workspace plus the template sources:
    container and launcher, the pixi environment, the `PROJECT.md` question tree, study templates and
    a worked example study, CI, and hooks.
 2. **`tophat` CLI** (Rust) — a prebuilt binary shipped into every generated project's container. It
-   owns everything that must be exactly right: IDs, stage cache keys, hashing, provenance records,
+   owns everything that must be exactly right: IDs, stage keys, hashing, provenance records,
    validation of `PROJECT.md` and `STUDY.md` structure and status rules (frozen sections, amendment
-   format, scenario-to-test traceability), lineage queries, and `tophat check`, the integrity gate
-   used by agents, humans, hooks and CI alike.
-3. **Snakemake helper** (minimal Python module) — thin wrappers that Snakefiles use to invoke
-   `tophat` commands (stage keys, tool resolution, QC gate checks, summary generation). The
-   **interface is the CLI**: every operation a pipeline needs is a `tophat` command callable from a
-   shell rule, and the helper only adds convenience. It holds no integrity logic of its own, so
-   guarantees are not duplicated across languages and remain usable from any future engine.
+   format, scenario-to-test traceability), lineage queries, `tophat check` (the integrity gate used
+   by agents, humans, hooks and CI alike), and `tophat status` and `tophat run`.
+3. **Generated Snakemake rules** — `tophat` generates each study's rules from its configuration. The
+   **interface is the CLI**: generated rules hold no integrity logic of their own; every step that
+   matters (preparing a job's output directory, substituting the command, checking QC verdicts,
+   sealing outputs, writing the summary) is a `tophat` command the rule calls. Guarantees therefore
+   live in one place and remain usable from any future engine. Generated rules call `tophat` with
+   argument lists rather than shell strings, so commands are never re-interpreted by Snakemake.
 4. **Template tooling** (Rust, same workspace) — development-only tooling that renders the template,
    lints skills, and runs the test suites below. Not shipped to generated projects.
 
@@ -258,9 +297,9 @@ A TopHat project is not a software package and has no single project language.
   covers interpreters (Python, R, Julia), command-line tools, and GPU runtime libraries.
 - Copier offers a multi-select of languages to preinstall. A Python interpreter is always installed
   because Snakemake runs on it, but Python is infrastructure, not a language users are expected to
-  write: a project may be, for example, pure Julia apart from its Snakefiles.
-- A tool may bring its own locked environment, pinned with the tool's version. A stage runs in the
-  environment pinned for it, and that lock's hash is part of the stage's cache key.
+  write: Snakefiles are generated, so a project may be, for example, pure Julia.
+- Each stage runs in a named pixi environment, and that environment's hash is part of the stage key.
+  A tool may bring its own locked environment, pinned with the tool's version.
 
 ### Tools
 
@@ -290,16 +329,17 @@ launcher.
 
 ### Language, dependencies, and distribution of TopHat's own code
 
-- The CLI and tooling are written in Rust (edition 2021). The Snakemake helper is Python.
+- The CLI and tooling are written in Rust (edition 2021).
 - Dependencies are kept small and well established. Avoid heavy frameworks or dependencies for small
   tasks.
 - The `tophat` binary is released as static Linux binaries (GitHub releases with checksums). The
   container image downloads the version pinned by the template and verifies its checksum; `copier
   update` changes the pin. Generated projects do not need a Rust toolchain.
-- The Snakemake helper is a small file placed into the project by the template and updated by
-  `copier update`; it is not a separately installed package.
-- `tophat` is needed only inside the container. External stages on clusters depend only on POSIX
-  shell and standard hashing utilities.
+- `tophat` is needed only inside the container, where Snakemake runs and calls it. External stages
+  on clusters depend only on POSIX shell and standard hashing utilities.
+- Snakemake runs each job in its own process, so commands that generated rules call may run
+  concurrently; files they share are written atomically through per-process temporary files and
+  left untouched when unchanged.
 - Every provenance record stores the `tophat` version that produced it, and released versions are
   kept available indefinitely so old projects can rebuild their environments.
 - The `PROJECT.md` / `STUDY.md` structure, provenance record format, and stage-key derivation are a
@@ -360,14 +400,18 @@ Testing establishes that TopHat itself works:
    questions, checking that the study documents and pipelines the agent produces pass `tophat check`
    and that the agent does not invent endpoints or edit frozen sections.
 
-Unit and integration tests for the CLI and helper sit alongside these.
+Unit and integration tests for the CLI sit alongside these, one test per Gherkin scenario of each
+requirements file. Tests that need real Snakemake run only when it is available, so the CI image must
+provide Snakemake and pixi for the end-to-end tests to count as a gate.
 
 ## Open Questions
 
-- Exact ID formats for questions, studies and datasets.
 - Exact set and names of `th-` skills and how plan, build, QC and reporting are split between them.
-- Dataset version numbering (sequential vs. content-derived) and how data roots are configured per
-  machine without committing machine-specific paths.
+- The detailed design of tool stages (the tool cache and tool environments) and external stages; the
+  stage configuration reserves `tool:` and `external:` for them.
+- Whether scenario tests run as part of the pipeline (e.g. a generated check stage before the
+  summary) or separately.
+- Object-store data roots (e.g. `s3://`), which are not supported yet.
 - How a declared dataset can later be upgraded to verified (e.g. a study that re-derives it from raw
   data and shows matching hashes).
 - Retention: how users are warned before deleting data that a pinned dataset version still needs.
