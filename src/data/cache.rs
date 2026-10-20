@@ -7,7 +7,7 @@ use std::time::UNIX_EPOCH;
 
 use serde_json::{json, Value};
 
-use crate::fsutil::write_atomic;
+use crate::fsutil::write_atomic_unique;
 
 /// Path of the hash cache, relative to the project root.
 pub const CACHE_FILE: &str = ".tophat/cache/hashes.json";
@@ -101,6 +101,7 @@ impl HashCache {
         if let Some(parent) = self.path.parent() {
             let _ = fs::create_dir_all(parent);
         }
-        let _ = write_atomic(&self.path, &text);
+        // Concurrent seals may save at once; each uses its own temporary file.
+        let _ = write_atomic_unique(&self.path, &text);
     }
 }

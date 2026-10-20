@@ -36,7 +36,18 @@ from pathlib import Path
 _rules = Path(workflow.basedir).parents[1] / ".tophat" / "generated" / "<study>.smk"
 subprocess.run(["tophat", "pipeline", "rules", "<study>", "--output", str(_rules)], check=True)
 include: str(_rules)
+
+
+rule tophat_default:
+    default_target: True
+    input: _TOPHAT_DEFAULT_INPUTS
+    run:
+        _tophat_default()
 ```
+
+Snakemake never takes its default target from an included file, so the stub defines it. The
+generated rules define `_TOPHAT_DEFAULT_INPUTS` and `_tophat_default` so that the default does what
+the `summary` target does (or, for a draft study, what the `trial` target does).
 
 `tophat study new` writes the stub, and `tophat pipeline stub <study>` rewrites it. The directory
 `.tophat/generated/` is git-ignored.
@@ -59,13 +70,14 @@ file missing or of the wrong size. The output is deterministic for a given proje
   upstream outputs are inputs whose modification times do not trigger re-runs, and nothing else
   that Snakemake tracks enters the rule.
 - A rule's inputs are the `provenance.json` of each `stage:` input (for a fan-out upstream, its
-  stage-level record) and, for each upstream stage with `qc: true`, its passing QC file (see
-  *QC Gates*).
+  stage-level record).
 - A rule's action, in order:
-  1. Empty the output directory (create it if absent), removing any partial results of a failed run.
+  1. For each upstream stage with `qc: true`, check its verdict for the upstream key (see
+     *QC Gates*); stop with an error if it is missing or `fail`.
+  2. Empty the output directory (create it if absent), removing any partial results of a failed run.
   2. Run the stage's `run` command, with placeholders substituted, from the study directory in its
      pixi environment (`pixi run --frozen -e <env>`).
-  3. Run `tophat stage seal` with the study, stage, key and variant.
+  4. Run `tophat stage seal` with the study, stage, key and variant.
 - The rule's `threads` are the stage's `threads`.
 
 ### Fan-out <!-- rq-a44c3b76 -->
@@ -109,9 +121,12 @@ A stage with `qc: true` needs a human verdict before any stage that consumes it 
   Looked at energy distributions for all 200 items; two outliers explained by ...
   ```
 
-- Until the file exists, the generated rule that would produce it fails with a message telling the
-  human to run `tophat stage qc <study> <stage> --variant <variant>`, so Snakemake stops before the
-  downstream stages.
+- Verdict files are not Snakemake inputs (a regenerated upstream output would otherwise force a
+  rule to "produce" a verdict that only a human can give). Instead, each job that consumes a gated
+  stage checks the verdict before doing anything else.
+- Until the file exists, that check fails with a message telling the human to run
+  `tophat stage qc <study> <stage> --variant <variant>`, so Snakemake stops before the downstream
+  stages run any command.
 - When the verdict is `fail`, every downstream job fails immediately with a message naming the QC
   file; nothing downstream runs.
 - A QC verdict belongs to one key. A new key (any change upstream or to the stage) needs a new
@@ -242,7 +257,7 @@ Feature: Snakemake pipelines, QC gates and summaries
     When the rules are generated
     Then the output of the "prepare" rule is "<results root>/x-vs-docking/prepare/<key>/provenance.json"
     And the "analyse" rule for "base" has the stage-level record of "score" (base key) as input
-    And it has "studies/x-vs-docking/qc/score/<score base key>.md" as input
+    And it checks the verdict "studies/x-vs-docking/qc/score/<score base key>.md" before running
 
   @rq-9c43f967
   Scenario: STUDY.md is never a rule input

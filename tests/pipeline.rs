@@ -117,6 +117,10 @@ impl Env {
         );
         env.write("studies/x-vs-docking/config/base.yaml", BASE);
         env.write(
+            "studies/x-vs-docking/Snakefile",
+            &tophat::pipeline::stub("x-vs-docking"),
+        );
+        env.write(
             "studies/x-vs-docking/scripts/prepare.jl",
             "println(\"prepare\")\n",
         );

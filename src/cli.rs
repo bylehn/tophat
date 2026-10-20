@@ -29,6 +29,7 @@ Commands:
   study preregister <ID>                         Pre-register a draft (interactive, by a human)
   study report <ID>                              Copy SUMMARY.md results into STUDY.md
   study supersede <OLD-ID> --by <NEW-ID>         Mark a study as replaced by another
+  study summarize <ID>                           Write SUMMARY.md from sealed result stages
   question stamp                                 Assign IDs to new questions in PROJECT.md
   data add <NAME> --root <R> --path <P> --source <TEXT> [--date D] [--license L] [--visibility V]
                                                  Register raw data as the next dataset version
@@ -38,6 +39,10 @@ Commands:
                                                  Publish a sealed stage output as a dataset
   data verify [<NAME>[@v<N>]]                    Re-hash datasets and compare to manifests
   pipeline keys <STUDY> [--variant V] [--json]   Show stage keys and sealed state
+  pipeline rules <STUDY> --output <FILE>         Generate the study's Snakemake rules
+  pipeline stub <STUDY>                          Write the study's Snakefile stub
+  stage qc <STUDY> <STAGE> [--variant V]         Record a QC verdict (interactive, by a human)
+  stage qc-status <STUDY> <STAGE> --key <K>      Exit 0 if the verdict is pass
   stage seal <STUDY> <STAGE> --key <K> [--variant V] [--item I] [--trial]
                                                  Record provenance for a finished stage
   data retire <NAME>@v<N> --reason <TEXT>        Mark a dataset version as defective
@@ -177,6 +182,7 @@ enum StudyCommand {
         old: String,
         new: String,
     },
+    Summarize(String),
 }
 
 fn parse_study_args(args: &[String]) -> Result<StudyCommand, String> {
@@ -213,6 +219,9 @@ fn parse_study_args(args: &[String]) -> Result<StudyCommand, String> {
             parse_options(rest, &[])?.0,
         )?)),
         "report" => Ok(StudyCommand::Report(one_id(parse_options(rest, &[])?.0)?)),
+        "summarize" => Ok(StudyCommand::Summarize(one_id(
+            parse_options(rest, &[])?.0,
+        )?)),
         "supersede" => {
             let (positionals, options) = parse_options(rest, &["by"])?;
             let old = one_id(positionals)?;
@@ -240,6 +249,21 @@ fn run_study_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
             return EXIT_UNABLE;
         }
     };
+    if let StudyCommand::Summarize(id) = &command {
+        return match pipeline::summarize(&root, id)
+            .and_then(|summary| pipeline::write_summary(&root, &summary))
+        {
+            Ok(written) => {
+                let verb = if written { "Wrote" } else { "Unchanged:" };
+                let _ = writeln!(io.out, "{verb} studies/{id}/SUMMARY.md");
+                EXIT_OK
+            }
+            Err(e) => {
+                let _ = writeln!(io.err, "tophat study summarize: {e}");
+                EXIT_FAILED
+            }
+        };
+    }
     let result: Result<(), StudyError> = match &command {
         StudyCommand::New {
             id,
@@ -264,6 +288,7 @@ fn run_study_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
         StudyCommand::Supersede { old, new } => study::supersede(&root, old, new).map(|()| {
             let _ = writeln!(io.out, "Study `{old}` is now superseded by `{new}`.");
         }),
+        StudyCommand::Summarize(_) => unreachable!("handled above"),
     };
     match result {
         Ok(()) => EXIT_OK,
@@ -462,16 +487,22 @@ fn run_pipeline_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i3
         let _ = writeln!(io.err, "tophat pipeline: {message}\n\n{USAGE}");
         EXIT_UNABLE
     };
-    if args.first().map(String::as_str) != Some("keys") {
-        return usage(io, "expected `keys`");
-    }
-    let (json, rest) = take_flag(&args[1..], "--json");
-    let (positionals, options) = match parse_options(&rest, &["variant"]) {
+    let Some((sub, rest)) = args.split_first() else {
+        return usage(io, "expected `keys`, `rules` or `stub`");
+    };
+    let (json, rest) = take_flag(rest, "--json");
+    let known: &[&str] = match sub.as_str() {
+        "keys" => &["variant"],
+        "rules" => &["output"],
+        "stub" => &[],
+        other => return usage(io, &format!("unknown pipeline subcommand `{other}`")),
+    };
+    let (positionals, options) = match parse_options(&rest, known) {
         Ok(parsed) => parsed,
         Err(m) => return usage(io, &m),
     };
     let [study] = positionals.as_slice() else {
-        return usage(io, "`tophat pipeline keys` takes one study ID");
+        return usage(io, &format!("`tophat pipeline {sub}` takes one study ID"));
     };
     let root = match find_project_root(cwd) {
         Ok(root) => root,
@@ -480,37 +511,74 @@ fn run_pipeline_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i3
             return EXIT_UNABLE;
         }
     };
-    match pipeline::key_status(&root, study, option(&options, "variant").unwrap_or("base")) {
-        Ok(stages) => {
-            if json {
-                let value: Vec<_> = stages
-                    .iter()
-                    .map(|s| {
-                        serde_json::json!({
-                            "stage": s.stage, "key": s.key,
-                            "output": s.output.as_ref().map(|p| p.display().to_string()),
-                            "status": s.status,
+    let result: Result<(), pipeline::PipelineError> = match sub.as_str() {
+        "keys" => pipeline::key_status(&root, study, option(&options, "variant").unwrap_or("base"))
+            .map(|stages| {
+                if json {
+                    let value: Vec<_> = stages
+                        .iter()
+                        .map(|s| {
+                            serde_json::json!({
+                                "stage": s.stage, "key": s.key,
+                                "output": s.output.as_ref().map(|p| p.display().to_string()),
+                                "status": s.status,
+                            })
                         })
-                    })
-                    .collect();
-                let _ = writeln!(
-                    io.out,
-                    "{}",
-                    serde_json::to_string_pretty(&value).expect("serializes")
-                );
-            } else {
-                for s in &stages {
-                    let output = s
-                        .output
-                        .as_ref()
-                        .map_or_else(|| "-".to_string(), |p| p.display().to_string());
-                    let _ = writeln!(io.out, "{}  {}  {}  {}", s.stage, s.key, s.status, output);
+                        .collect();
+                    let _ = writeln!(
+                        io.out,
+                        "{}",
+                        serde_json::to_string_pretty(&value).expect("serializes")
+                    );
+                } else {
+                    for s in &stages {
+                        let output = s
+                            .output
+                            .as_ref()
+                            .map_or_else(|| "-".to_string(), |p| p.display().to_string());
+                        let _ =
+                            writeln!(io.out, "{}  {}  {}  {}", s.stage, s.key, s.status, output);
+                    }
                 }
-            }
-            EXIT_OK
+            }),
+        "rules" => {
+            let Some(output) = option(&options, "output") else {
+                return usage(io, "--output is required");
+            };
+            let output = cwd.join(output);
+            pipeline::generate_rules(&root, study).and_then(|text| {
+                // Snakemake re-reads the Snakefile in every job process, so this runs concurrently;
+                // an unchanged file is left alone, and writes use a per-process temporary file.
+                if std::fs::read_to_string(&output).is_ok_and(|old| old == text) {
+                    return Ok(());
+                }
+                if let Some(parent) = output.parent() {
+                    std::fs::create_dir_all(parent)
+                        .map_err(|e| pipeline::PipelineError::Io(e.to_string()))?;
+                }
+                crate::fsutil::write_atomic_unique(&output, &text)
+                    .map_err(|e| pipeline::PipelineError::Io(e.to_string()))
+            })
         }
+        _ => {
+            let path = root.join(pipeline::snakefile_path(study));
+            if !path.parent().is_some_and(Path::is_dir) {
+                Err(pipeline::PipelineError::Study(format!(
+                    "study `{study}` does not exist"
+                )))
+            } else {
+                crate::fsutil::write_atomic(&path, &pipeline::stub(study))
+                    .map_err(|e| pipeline::PipelineError::Io(e.to_string()))
+                    .map(|()| {
+                        let _ = writeln!(io.out, "Wrote {}", pipeline::snakefile_path(study));
+                    })
+            }
+        }
+    };
+    match result {
+        Ok(()) => EXIT_OK,
         Err(e) => {
-            let _ = writeln!(io.err, "tophat pipeline keys: {e}");
+            let _ = writeln!(io.err, "tophat pipeline {sub}: {e}");
             EXIT_FAILED
         }
     }
@@ -521,19 +589,25 @@ fn run_stage_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
         let _ = writeln!(io.err, "tophat stage: {message}\n\n{USAGE}");
         EXIT_UNABLE
     };
-    if args.first().map(String::as_str) != Some("seal") {
-        return usage(io, "expected `seal`");
-    }
-    let (trial, rest) = take_flag(&args[1..], "--trial");
-    let (positionals, options) = match parse_options(&rest, &["key", "variant", "item"]) {
+    let Some((sub, rest)) = args.split_first() else {
+        return usage(io, "expected `seal`, `begin`, `qc` or `qc-status`");
+    };
+    let (trial, rest) = take_flag(rest, "--trial");
+    let known: &[&str] = match sub.as_str() {
+        "seal" | "begin" => &["key", "variant", "item"],
+        "qc" => &["variant"],
+        "qc-status" => &["key"],
+        other => return usage(io, &format!("unknown stage subcommand `{other}`")),
+    };
+    let (positionals, options) = match parse_options(&rest, known) {
         Ok(parsed) => parsed,
         Err(m) => return usage(io, &m),
     };
     let [study, stage] = positionals.as_slice() else {
-        return usage(io, "`tophat stage seal` takes a study ID and a stage name");
-    };
-    let Some(key) = option(&options, "key") else {
-        return usage(io, "--key is required");
+        return usage(
+            io,
+            &format!("`tophat stage {sub}` takes a study ID and a stage name"),
+        );
     };
     let root = match find_project_root(cwd) {
         Ok(root) => root,
@@ -542,22 +616,75 @@ fn run_stage_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
             return EXIT_UNABLE;
         }
     };
-    let request = pipeline::SealRequest {
-        study: study.clone(),
-        stage: stage.clone(),
-        key: key.to_string(),
-        variant: option(&options, "variant").map(str::to_string),
-        item: option(&options, "item").map(str::to_string),
-        trial,
+    let fail = |io: &mut Streams<'_>, e: &dyn std::fmt::Display| {
+        let _ = writeln!(io.err, "tophat stage {sub}: {e}");
+        EXIT_FAILED
     };
-    match pipeline::seal(&root, &request) {
-        Ok(path) => {
-            let _ = writeln!(io.out, "Sealed {}", path.display());
-            EXIT_OK
+    match sub.as_str() {
+        "qc" => {
+            let today = chrono::Local::now().date_naive();
+            let variant = option(&options, "variant").unwrap_or("base").to_string();
+            let mut console = Console {
+                interactive: io.interactive,
+                input: &mut *io.input,
+                out: &mut *io.out,
+            };
+            match pipeline::qc(&root, study, stage, &variant, today, &mut console) {
+                Ok(_) => EXIT_OK,
+                Err(e) => fail(io, &e),
+            }
         }
-        Err(e) => {
-            let _ = writeln!(io.err, "tophat stage seal: {e}");
-            EXIT_FAILED
+        "qc-status" => {
+            let Some(key) = option(&options, "key") else {
+                return usage(io, "--key is required");
+            };
+            match pipeline::qc_status(&root, study, stage, key) {
+                Ok(pipeline::Verdict::Pass) => {
+                    let _ = writeln!(io.out, "pass");
+                    EXIT_OK
+                }
+                Ok(pipeline::Verdict::Fail) => {
+                    let _ = writeln!(io.out, "fail");
+                    EXIT_FAILED
+                }
+                Err(message) => {
+                    let _ = writeln!(io.out, "{message}");
+                    EXIT_UNABLE
+                }
+            }
+        }
+        _ => {
+            let Some(key) = option(&options, "key") else {
+                return usage(io, "--key is required");
+            };
+            let request = pipeline::SealRequest {
+                study: study.clone(),
+                stage: stage.clone(),
+                key: key.to_string(),
+                variant: option(&options, "variant").map(str::to_string),
+                item: option(&options, "item").map(str::to_string),
+                trial,
+            };
+            if sub == "begin" {
+                match pipeline::begin(&root, &request) {
+                    Ok(job) => {
+                        let value = serde_json::json!({
+                            "run": job.run, "env": job.env, "cwd": job.cwd.display().to_string(),
+                        });
+                        let _ = writeln!(io.out, "{value}");
+                        EXIT_OK
+                    }
+                    Err(e) => fail(io, &e),
+                }
+            } else {
+                match pipeline::seal(&root, &request) {
+                    Ok(path) => {
+                        let _ = writeln!(io.out, "Sealed {}", path.display());
+                        EXIT_OK
+                    }
+                    Err(e) => fail(io, &e),
+                }
+            }
         }
     }
 }

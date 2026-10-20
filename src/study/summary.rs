@@ -32,6 +32,8 @@ pub struct Summary {
     pub dirty_line: u32,
     pub generated: String,
     pub tophat_version: String,
+    /// `<variant>/<stage>` → the stage key each result line was read from, when recorded.
+    pub keys: Option<std::collections::BTreeMap<String, String>>,
     pub results: Vec<ResultLine>,
 }
 
@@ -67,6 +69,7 @@ pub(super) fn parse_summary_text(text: &str) -> Result<Summary, String> {
     let mut dirty = None;
     let mut generated = None;
     let mut tophat_version = None;
+    let mut keys = None;
     for (key, value) in &loaded.entries {
         match key.as_str() {
             "study" => study = Some(loaded.scalar(key, value)?),
@@ -76,6 +79,25 @@ pub(super) fn parse_summary_text(text: &str) -> Result<Summary, String> {
             "dirty" => match value {
                 Yaml::Boolean(b) => dirty = Some(*b),
                 _ => return Err("field `dirty` must be `true` or `false`".into()),
+            },
+            "keys" => match value {
+                Yaml::Hash(hash) => {
+                    let mut map = std::collections::BTreeMap::new();
+                    for (k, v) in hash {
+                        match (k, v) {
+                            (Yaml::String(k), Yaml::String(v)) => {
+                                map.insert(k.clone(), v.clone());
+                            }
+                            _ => {
+                                return Err(
+                                    "field `keys` must map `<variant>/<stage>` to keys".into()
+                                )
+                            }
+                        }
+                    }
+                    keys = Some(map);
+                }
+                _ => return Err("field `keys` must be a mapping".into()),
             },
             _ => {}
         }
@@ -121,6 +143,7 @@ pub(super) fn parse_summary_text(text: &str) -> Result<Summary, String> {
         dirty_line: loaded.line_of("dirty", 1),
         generated,
         tophat_version,
+        keys,
         results,
     })
 }

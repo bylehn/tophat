@@ -2,9 +2,12 @@
 //! `rqm/pipeline/provenance.md`.
 
 mod config;
+mod generate;
 mod keys;
 mod provenance;
+mod qc;
 mod rules;
+mod summary;
 
 use std::fmt;
 
@@ -12,15 +15,18 @@ pub use config::{
     config_path, load_pipeline, parse_template, PipelineConfig, StageConfig, StageInput,
     TemplatePart,
 };
+pub use generate::{generate_rules, snakefile_path, stub, variant_target};
 pub use keys::{
     compute_keys, items_of, output_dir, params_file, render_run, shell_quote, stage_key,
     stage_key_text, CodeFile, KeyContext, RunPaths, StageKeys,
 };
 pub use provenance::{
-    cleanliness, is_valid_item_name, key_status, platform, seal, Cleanliness, ItemSummary,
-    KeyStatus, OutputFile, ProvenanceRecord, SealRequest, RECORD_FILE,
+    begin, cleanliness, is_valid_item_name, key_status, platform, seal, BegunJob, Cleanliness,
+    ItemSummary, KeyStatus, OutputFile, ProvenanceRecord, SealRequest, RECORD_FILE,
 };
+pub use qc::{parse_verdict, qc, qc_status, verdict_path, Verdict, VerdictFile};
 pub use rules::pipeline_rules;
+pub use summary::{render_summary, stale_entries, summarize, write_summary};
 
 pub(crate) use provenance::ResolvedStage;
 
@@ -43,6 +49,18 @@ pub enum PipelineError {
     BadResult(String),
     ItemsUnsealed(Vec<String>),
     UnconfiguredRoot(String),
+    /// Fan-out item names that are duplicated or malformed.
+    BadItems(Vec<String>),
+    /// A required output has not been sealed under its current key.
+    NotSealed(String),
+    /// A QC command was refused.
+    Qc(String),
+    /// A command that needs a human was run without an interactive terminal.
+    NotInteractive(String),
+    /// A dataset input cannot be used.
+    Data(String),
+    /// `STUDY.md` is missing or cannot be used.
+    Study(String),
     Io(String),
 }
 
@@ -75,6 +93,16 @@ impl fmt::Display for PipelineError {
                  .tophat/roots.local.yaml",
                 r.to_ascii_uppercase()
             ),
+            PipelineError::BadItems(items) => write!(
+                f,
+                "fan-out items with duplicate or invalid names: {}",
+                items.join(", ")
+            ),
+            PipelineError::NotSealed(m) => write!(f, "not sealed: {m}"),
+            PipelineError::Qc(m) => write!(f, "{m}"),
+            PipelineError::NotInteractive(m) => write!(f, "{m}"),
+            PipelineError::Data(m) => write!(f, "{m}"),
+            PipelineError::Study(m) => write!(f, "{m}"),
             PipelineError::Io(m) => write!(f, "{m}"),
         }
     }

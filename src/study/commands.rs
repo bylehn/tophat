@@ -158,8 +158,11 @@ pub fn new_study(
         fs::create_dir(dir.join("tests"))?;
         fs::write(
             dir.join("config/base.yaml"),
-            format!("# Base pipeline configuration for study {id}.\n"),
+            format!(
+                "# Pipeline stages of study {id}; see rqm/pipeline/provenance.md for the fields.\nstages: []\n"
+            ),
         )?;
+        fs::write(dir.join("Snakefile"), crate::pipeline::stub(id))?;
         fs::write(dir.join(STUDY_FILE), template(id, question, visibility))
     };
     if let Err(e) = populate() {
@@ -284,6 +287,22 @@ pub fn report(root: &Path, id: &str) -> Result<(), StudyError> {
         )));
     }
 
+    if let Some(keys) = &summary.keys {
+        match crate::pipeline::stale_entries(root, id, keys) {
+            Ok(stale) if stale.is_empty() => {}
+            Ok(stale) => {
+                return Err(StudyError::Summary(format!(
+                    "the summary is stale: {} no longer match the configuration; run the pipeline again",
+                    stale.join(", ")
+                )))
+            }
+            Err(e) => {
+                return Err(StudyError::Summary(format!(
+                    "cannot check whether the summary is current: {e}"
+                )))
+            }
+        }
+    }
     let unreported = crate::data::unreported_dependencies(&Project::new(root), study);
     if !unreported.is_empty() {
         let refs: Vec<String> = unreported.iter().map(|r| r.to_string()).collect();

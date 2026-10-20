@@ -252,7 +252,12 @@
   "rq-0c5735ed": {
     "decl": "Scenario: Existing verdicts are not overwritten",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Existing verdicts are not overwritten",
     "type": "scenario"
   },
@@ -363,7 +368,12 @@
     "decl": "## Running a Study",
     "file": "pipeline/snakemake",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Running a Study",
     "type": "section"
   },
@@ -444,7 +454,12 @@
   "rq-167d5ad5": {
     "decl": "Scenario: End-to-end run produces sealed outputs and a summary",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "End-to-end run produces sealed outputs and a summary",
     "type": "scenario"
   },
@@ -547,7 +562,12 @@
   "rq-1a269752": {
     "decl": "Scenario: Generation fails on an invalid configuration",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Generation fails on an invalid configuration",
     "type": "scenario"
   },
@@ -555,7 +575,16 @@
     "decl": "## Summaries",
     "file": "pipeline/snakemake",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/summary.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Summaries",
     "type": "section"
   },
@@ -602,7 +631,12 @@
   "rq-1b09b7f5": {
     "decl": "Scenario: A failed item is retried alone",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A failed item is retried alone",
     "type": "scenario"
   },
@@ -625,7 +659,12 @@
   "rq-1d07e2ec": {
     "decl": "Scenario: Duplicate item names fail the gather job",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Duplicate item names fail the gather job",
     "type": "scenario"
   },
@@ -780,7 +819,12 @@
   "rq-23fa4a9a": {
     "decl": "- `tophat study summarize <study>`",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -838,7 +882,12 @@
   "rq-262c5552": {
     "decl": "Scenario: Summary goes stale when the code changes",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Summary goes stale when the code changes",
     "type": "scenario"
   },
@@ -927,7 +976,12 @@
   "rq-2c0af82b": {
     "decl": "Scenario: QC file for a stage without a gate",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "QC file for a stage without a gate",
     "type": "scenario"
   },
@@ -1019,7 +1073,12 @@
   "rq-3123c559": {
     "decl": "Scenario: Stub can be restored",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Stub can be restored",
     "type": "scenario"
   },
@@ -1204,7 +1263,12 @@
   "rq-3c19a18d": {
     "decl": "- `stub(study: &str) -> String` — the exact `Snakefile` stub text.",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/generate.rs",
+        "kind": "code"
+      }
+    ],
     "title": "stub",
     "type": "api-item"
   },
@@ -1375,7 +1439,12 @@
   "rq-46470647": {
     "decl": "Scenario: Edited Snakefile is rejected",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Edited Snakefile is rejected",
     "type": "scenario"
   },
@@ -1466,7 +1535,12 @@
   "rq-4d7646da": {
     "decl": "Scenario: Unrecognised verdict aborts",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Unrecognised verdict aborts",
     "type": "scenario"
   },
@@ -1574,7 +1648,12 @@
   "rq-543d641b": {
     "decl": "Scenario: Fan-out over a dataset",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Fan-out over a dataset",
     "type": "scenario"
   },
@@ -1663,7 +1742,12 @@
     "decl": "## Generated Rules",
     "file": "pipeline/snakemake",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/generate.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Generated Rules",
     "type": "section"
   },
@@ -1678,7 +1762,16 @@
     "decl": "### One job per key",
     "file": "pipeline/snakemake",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/generate.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "One job per key",
     "type": "section"
   },
@@ -1738,7 +1831,12 @@
   "rq-59f7b61a": {
     "decl": "Scenario: Changing a parameter re-runs only what depends on it",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Changing a parameter re-runs only what depends on it",
     "type": "scenario"
   },
@@ -1935,7 +2033,12 @@
   "rq-6315ba95": {
     "decl": "Scenario: QC refused for a stage without a gate",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "QC refused for a stage without a gate",
     "type": "scenario"
   },
@@ -1966,7 +2069,12 @@
   "rq-654fa516": {
     "decl": "- `tophat pipeline rules <study> --output <file>`",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -2104,7 +2212,16 @@
   "rq-6c24fee9": {
     "decl": "- `tophat stage qc <study> <stage> [--variant <variant>]`",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/qc.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -2351,7 +2468,12 @@
   "rq-79e78b37": {
     "decl": "Scenario: Record a passing verdict interactively",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Record a passing verdict interactively",
     "type": "scenario"
   },
@@ -2367,7 +2489,16 @@
     "decl": "## Check Rules (`pipeline` family, execution)",
     "file": "pipeline/snakemake",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Check Rules (`pipeline` family, execution)",
     "type": "section"
   },
@@ -2514,7 +2645,12 @@
   "rq-809df566": {
     "decl": "Scenario: Upstream of a fan-out is a checkpoint",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Upstream of a fan-out is a checkpoint",
     "type": "scenario"
   },
@@ -2557,7 +2693,12 @@
   "rq-83c71c3c": {
     "decl": "Scenario: QC refused without an interactive terminal",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "QC refused without an interactive terminal",
     "type": "scenario"
   },
@@ -2629,7 +2770,16 @@
   "rq-872c3d40": {
     "decl": "- `tophat stage qc-status <study> <stage> --key <key>`",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/qc.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -2694,7 +2844,12 @@
   "rq-8a9e97ed": {
     "decl": "Scenario: Partial output of a failed run is discarded",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Partial output of a failed run is discarded",
     "type": "scenario"
   },
@@ -2757,7 +2912,12 @@
   "rq-90b7b2f4": {
     "decl": "Scenario: A second run does nothing",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A second run does nothing",
     "type": "scenario"
   },
@@ -2824,7 +2984,12 @@
   "rq-933f4cf3": {
     "decl": "Scenario: QC refused for an unsealed output",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "QC refused for an unsealed output",
     "type": "scenario"
   },
@@ -2863,7 +3028,12 @@
   "rq-960f50c6": {
     "decl": "Scenario: Summary is dirty when an upstream record is unclean",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Summary is dirty when an upstream record is unclean",
     "type": "scenario"
   },
@@ -2946,7 +3116,12 @@
   "rq-9acfe92b": {
     "decl": "Scenario: Report refuses a stale summary",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Report refuses a stale summary",
     "type": "scenario"
   },
@@ -2997,7 +3172,12 @@
   "rq-9c43f967": {
     "decl": "Scenario: STUDY.md is never a rule input",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "STUDY.md is never a rule input",
     "type": "scenario"
   },
@@ -3073,7 +3253,12 @@
   "rq-9f3b24de": {
     "decl": "Scenario: Summary is dirty when one fan-out item record is unclean",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Summary is dirty when one fan-out item record is unclean",
     "type": "scenario"
   },
@@ -3128,7 +3313,12 @@
   "rq-a029874e": {
     "decl": "Scenario: Stale summary in a draft is only a warning",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Stale summary in a draft is only a warning",
     "type": "scenario"
   },
@@ -3181,7 +3371,12 @@
   "rq-a27155bc": {
     "decl": "Scenario: Generation fails when the results root is unconfigured",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Generation fails when the results root is unconfigured",
     "type": "scenario"
   },
@@ -3256,7 +3451,16 @@
     "decl": "### Fan-out",
     "file": "pipeline/snakemake",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/generate.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Fan-out",
     "type": "section"
   },
@@ -3448,7 +3652,16 @@
   "rq-aa6553ad": {
     "decl": "- `generate_rules(root: &Path, study: &str) -> Result<String, PipelineError>` — the rules file text.",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/generate.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "generate_rules",
     "type": "api-item"
   },
@@ -3623,7 +3836,12 @@
   "rq-b4eb6e53": {
     "decl": "Scenario: New studies get the stub",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "New studies get the stub",
     "type": "scenario"
   },
@@ -3699,7 +3917,16 @@
   "rq-b9512459": {
     "decl": "- `summarize(root: &Path, study: &str) -> Result<Summary, PipelineError>` — computes the summary",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/summary.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "summarize",
     "type": "api-item"
   },
@@ -3825,7 +4052,16 @@
     "decl": "### Summary rule",
     "file": "pipeline/snakemake",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/generate.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Summary rule",
     "type": "section"
   },
@@ -3844,7 +4080,12 @@
   "rq-bf30c589": {
     "decl": "Scenario: Invalid QC file",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Invalid QC file",
     "type": "scenario"
   },
@@ -3982,21 +4223,36 @@
   "rq-c698a75a": {
     "decl": "Scenario: Missing Snakefile for a study with stages",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Missing Snakefile for a study with stages",
     "type": "scenario"
   },
   "rq-c705fcd3": {
     "decl": "Scenario: Missing verdict stops the pipeline before downstream stages",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Missing verdict stops the pipeline before downstream stages",
     "type": "scenario"
   },
   "rq-c7d50a4a": {
     "decl": "- `tophat pipeline stub <study>`",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -4362,7 +4618,12 @@
   "rq-d66af500": {
     "decl": "Scenario: Rule outputs and inputs follow the keys",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Rule outputs and inputs follow the keys",
     "type": "scenario"
   },
@@ -4388,7 +4649,12 @@
   "rq-d77701f7": {
     "decl": "Scenario: Generated rules are deterministic",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Generated rules are deterministic",
     "type": "scenario"
   },
@@ -4431,14 +4697,24 @@
   "rq-d953c801": {
     "decl": "Scenario: Summarize refuses a study without result stages",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Summarize refuses a study without result stages",
     "type": "scenario"
   },
   "rq-d9fd0437": {
     "decl": "Scenario: Summarize sealed results",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Summarize sealed results",
     "type": "scenario"
   },
@@ -4485,7 +4761,12 @@
   "rq-db3f2ac8": {
     "decl": "Scenario: Items are the upstream output files",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Items are the upstream output files",
     "type": "scenario"
   },
@@ -4528,7 +4809,12 @@
   "rq-dbe124d9": {
     "decl": "Scenario: Generation fails on a retired dataset",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Generation fails on a retired dataset",
     "type": "scenario"
   },
@@ -4536,7 +4822,16 @@
     "decl": "## QC Gates",
     "file": "pipeline/snakemake",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/qc.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "QC Gates",
     "type": "section"
   },
@@ -4618,7 +4913,12 @@
   "rq-df68d9f7": {
     "decl": "Scenario: Summarize refuses missing outputs",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Summarize refuses missing outputs",
     "type": "scenario"
   },
@@ -4795,7 +5095,12 @@
   "rq-e88cc29b": {
     "decl": "Scenario: Failing verdict blocks downstream stages",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Failing verdict blocks downstream stages",
     "type": "scenario"
   },
@@ -4913,6 +5218,10 @@
     "refs": [
       {
         "file": "src/study/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/snakemake.rs",
         "kind": "code"
       },
       {
@@ -5174,7 +5483,12 @@
   "rq-f9fd06bf": {
     "decl": "Scenario: Shared keys produce one job",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Shared keys produce one job",
     "type": "scenario"
   },
@@ -5182,7 +5496,16 @@
     "decl": "## The Snakefile Stub",
     "file": "pipeline/snakemake",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/generate.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The Snakefile Stub",
     "type": "section"
   },

@@ -3,9 +3,14 @@
 use std::collections::BTreeSet;
 
 use super::config::{config_path, load_base, load_variant, ConfigProblem};
+use super::generate::{snakefile_path, stub};
 use super::keys::KeyContext;
+use super::qc::qc_file_problems;
+use super::summary::stale_entries;
 use crate::check::{Diagnostic, Project, Severity};
-use crate::study::STUDIES_DIR;
+use crate::study::{
+    parse_study_text, parse_summary, Status, STUDIES_DIR, STUDY_FILE, SUMMARY_FILE,
+};
 
 fn diagnostic(rule: &'static str, problem: ConfigProblem, hint: &str) -> Diagnostic {
     Diagnostic {
@@ -35,6 +40,9 @@ pub fn pipeline_rules(project: &Project) -> Vec<Diagnostic> {
         };
         if base.is_empty() && problems.is_empty() {
             continue;
+        }
+        if !base.is_empty() {
+            check_execution(project, &study, &base, &mut out);
         }
 
         let variants: Vec<String> = project
@@ -98,4 +106,102 @@ pub fn pipeline_rules(project: &Project) -> Vec<Diagnostic> {
         }
     }
     out
+}
+
+fn error(
+    rule: &'static str,
+    severity: Severity,
+    path: String,
+    line: Option<u32>,
+    message: String,
+    hint: &str,
+) -> Diagnostic {
+    Diagnostic {
+        rule,
+        severity,
+        path,
+        line,
+        message,
+        hint: Some(hint.to_string()),
+    }
+}
+
+// rq-7b0b2ae8
+/// The execution rules: the Snakefile stub, QC verdict files, and summary staleness.
+fn check_execution(
+    project: &Project,
+    study: &str,
+    base: &[super::config::StageConfig],
+    out: &mut Vec<Diagnostic>,
+) {
+    let snakefile = snakefile_path(study);
+    match project.read_to_string(&snakefile) {
+        Err(_) => out.push(error(
+            "pipeline.snakefile-missing",
+            Severity::Error,
+            snakefile,
+            None,
+            "The study has stages but no Snakefile".into(),
+            &format!("Run `tophat pipeline stub {study}`"),
+        )),
+        Ok(text) if text != stub(study) => out.push(error(
+            "pipeline.snakefile-modified",
+            Severity::Error,
+            snakefile,
+            None,
+            "The Snakefile differs from the generated stub; rules come from config/ only".into(),
+            &format!("Run `tophat pipeline stub {study}` and express changes in config/"),
+        )),
+        Ok(_) => {}
+    }
+
+    let all: Vec<String> = base.iter().map(|s| s.name.clone()).collect();
+    let gated: Vec<String> = base
+        .iter()
+        .filter(|s| s.qc)
+        .map(|s| s.name.clone())
+        .collect();
+    for (path, message) in qc_file_problems(project.root(), study, &all, &gated) {
+        out.push(error(
+            "pipeline.qc-invalid",
+            Severity::Error,
+            path,
+            None,
+            format!("Invalid QC verdict file: {message}"),
+            "Verdicts are written by `tophat stage qc`",
+        ));
+    }
+
+    let summary_path = format!("{STUDIES_DIR}/{study}/{SUMMARY_FILE}");
+    let Ok(summary) = parse_summary(&project.root().join(&summary_path)) else {
+        return;
+    };
+    let Some(keys) = summary.keys else { return };
+    let Ok(stale) = stale_entries(project.root(), study, &keys) else {
+        return;
+    };
+    if stale.is_empty() {
+        return;
+    }
+    let study_file = format!("{STUDIES_DIR}/{study}/{STUDY_FILE}");
+    let status = project
+        .read_to_string(&study_file)
+        .ok()
+        .and_then(|t| parse_study_text(study, &study_file, &t).ok())
+        .and_then(|s| s.status());
+    let severity = match status {
+        Some(Status::Preregistered | Status::Reported) => Severity::Error,
+        _ => Severity::Warning,
+    };
+    out.push(error(
+        "pipeline.summary-stale",
+        severity,
+        summary_path,
+        None,
+        format!(
+            "SUMMARY.md was produced under keys that no longer match the configuration: {}",
+            stale.join(", ")
+        ),
+        &format!("Run `tophat run {study}` to bring the results up to date"),
+    ));
 }
