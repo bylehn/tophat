@@ -325,17 +325,17 @@ fn escaped_braces_are_allowed() {
 }
 
 #[test] // rq-eda3d443 rq-081e737a
-fn reserved_tool_key() {
+fn a_stage_cannot_be_both_a_tool_stage_and_an_external_stage() {
     let env = Env::new();
     env.edit(
         "studies/x-vs-docking/config/base.yaml",
         "    env: chem\n",
-        "    env: chem\n    tool: method-x@a1b2c3d\n",
+        "    env: chem\n    tool: method-x@a1b2c3d\n    external: {}\n",
     );
     let ds = env.diagnostics();
-    let found = with_rule(&ds, "pipeline.config-invalid");
-    assert_eq!(found.len(), 1);
-    assert!(found[0].message.contains("not yet supported"));
+    assert!(with_rule(&ds, "pipeline.config-invalid")
+        .iter()
+        .any(|d| d.message.contains("`tool`") && d.message.contains("`external`")));
 }
 
 #[test] // rq-a5ab4b78 rq-081e737a

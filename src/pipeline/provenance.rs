@@ -264,6 +264,24 @@ pub(crate) fn determining_files(
             files.push(f.to_string());
         }
     }
+    // A tool stage also depends on the tool declarations, the lock, and a project-supplied
+    // environment. The tool's own code is fixed by its commit.
+    if let Ok(Some(tool)) = ctx.tool_info(stage) {
+        for f in [crate::tools::TOOLS_FILE, crate::tools::LOCK_FILE] {
+            if ctx.root().join(f).is_file() {
+                files.push(f.to_string());
+            }
+        }
+        // Only a project-supplied environment counts; the tool's own is fixed by its commit.
+        let supplied = ctx.root().join("envs").join(&tool.pin.name);
+        for env_file in [&tool.manifest, &tool.lock] {
+            if let Ok(rel) = env_file.strip_prefix(ctx.root()) {
+                if env_file.starts_with(&supplied) {
+                    files.push(rel.to_string_lossy().replace('\\', "/"));
+                }
+            }
+        }
+    }
     files
 }
 
@@ -303,9 +321,19 @@ pub(crate) struct ResolvedStage {
 
 impl ResolvedStage {
     pub fn load(root: &Path, study: &str, variant: &str) -> Result<ResolvedStage, PipelineError> {
+        Self::load_until(root, study, variant, None)
+    }
+
+    /// Like [`ResolvedStage::load`], computing keys only up to and including `last`.
+    pub fn load_until(
+        root: &Path,
+        study: &str,
+        variant: &str,
+        last: Option<&str>,
+    ) -> Result<ResolvedStage, PipelineError> {
         let config = load_pipeline(root, study, variant)?;
         let ctx = KeyContext::new(root);
-        let keys = compute_keys(&config, &ctx)?;
+        let keys = super::keys::compute_keys_until(&config, &ctx, last)?;
         let roots = load_roots(root).map_err(|e| PipelineError::Io(e.to_string()))?;
         Ok(ResolvedStage {
             config,
@@ -408,11 +436,17 @@ impl ResolvedStage {
             Some((name, _)) => stage_dir.join("items").join(name),
             None => stage_dir.clone(),
         };
+        let tool = self
+            .ctx
+            .tool_info(stage)
+            .map_err(PipelineError::Io)?
+            .map(|t| t.checkout);
         Ok(RunPaths {
             out,
             inputs,
             item,
             params_file: params_file(&stage_dir),
+            tool,
         })
     }
 }
@@ -443,7 +477,7 @@ pub struct SealRequest {
 /// cleanliness and writes `provenance.json`. Returns the record's path.
 pub fn seal(root: &Path, request: &SealRequest) -> Result<PathBuf, PipelineError> {
     let variant = request.variant.as_deref().unwrap_or("base");
-    let resolved = ResolvedStage::load(root, &request.study, variant)?;
+    let resolved = ResolvedStage::load_until(root, &request.study, variant, Some(&request.stage))?;
     let stage = resolved.stage(&request.stage)?;
     let actual = resolved.key(&stage.name).to_string();
     if actual != request.key {
@@ -571,6 +605,12 @@ pub fn seal(root: &Path, request: &SealRequest) -> Result<PathBuf, PipelineError
         "commit": cleanliness.commit,
         "host": host(),
         "platform": platform(),
+        "tool": resolved.ctx.tool_info(stage).ok().flatten().map(|t| {
+            let url = crate::tools::declared_tools(root)
+                .ok()
+                .and_then(|d| d.get(&t.pin.name).cloned());
+            json!({"name": t.pin.name, "commit": t.commit, "url": url})
+        }),
         "trial": request.trial,
         "sealed": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
     });
@@ -601,13 +641,15 @@ pub struct BegunJob {
     pub env: String,
     /// The directory to run in: the study directory.
     pub cwd: PathBuf,
+    /// The environment's `pixi.toml` for a tool stage; `None` for the project environment.
+    pub manifest: Option<PathBuf>,
 }
 
 /// Prepares a stage job: verifies the key, empties the job's output directory (the item directory
 /// for a fan-out item), writes the parameters file, and returns the command to run.
 pub fn begin(root: &Path, request: &SealRequest) -> Result<BegunJob, PipelineError> {
     let variant = request.variant.as_deref().unwrap_or("base");
-    let resolved = ResolvedStage::load(root, &request.study, variant)?;
+    let resolved = ResolvedStage::load_until(root, &request.study, variant, Some(&request.stage))?;
     let stage = resolved.stage(&request.stage)?;
     let actual = resolved.key(&stage.name).to_string();
     if actual != request.key {
@@ -640,10 +682,16 @@ pub fn begin(root: &Path, request: &SealRequest) -> Result<BegunJob, PipelineErr
     if fs::read_to_string(&paths.params_file).ok().as_deref() != Some(params.as_str()) {
         crate::fsutil::write_atomic_unique(&paths.params_file, &params).map_err(io)?;
     }
+    let manifest = resolved
+        .ctx
+        .tool_info(stage)
+        .map_err(PipelineError::Io)?
+        .map(|t| t.manifest);
     Ok(BegunJob {
         run,
         env: stage.env.clone(),
         cwd: root.join(STUDIES_DIR).join(&request.study),
+        manifest,
     })
 }
 

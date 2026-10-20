@@ -12,4 +12,5 @@ pub mod pipeline;
 pub mod question;
 mod report;
 pub mod study;
+pub mod tools;
 pub mod workflow;

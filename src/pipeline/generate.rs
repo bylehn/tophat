@@ -136,7 +136,9 @@ def _tophat_job(stage, key, variant, item=None, trial=False, qc=()):
         ).stdout
     )
     _tophat_subprocess.run(
-        ["pixi", "run", "--frozen", "-e", begun["env"], "--", "sh", "-c", begun["run"]],
+        ["pixi", "run", "--frozen"]
+        + (["--manifest-path", begun["manifest"]] if begun.get("manifest") else [])
+        + ["-e", begun["env"], "--", "sh", "-c", begun["run"]],
         cwd=begun["cwd"],
         check=True,
     )

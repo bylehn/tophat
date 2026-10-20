@@ -32,6 +32,8 @@ pub struct StageConfig {
     /// The parameters as a JSON object (keys sorted).
     pub params: Map<String, Value>,
     pub env: String,
+    /// The tool pin as written (`<tool>@<commit>`), for a tool stage.
+    pub tool: Option<String>,
     pub threads: u32,
     pub foreach: Option<String>,
     /// Whether the stage declares `qc: skip`, exempting it from its default QC gate.
@@ -168,7 +170,7 @@ fn yaml_to_json(value: &Yaml) -> Result<Value, String> {
     })
 }
 
-const STAGE_KEYS: [&str; 11] = [
+const STAGE_KEYS: [&str; 12] = [
     "name",
     "run",
     "code",
@@ -180,6 +182,7 @@ const STAGE_KEYS: [&str; 11] = [
     "qc",
     "qc_reason",
     "result",
+    "tool",
 ];
 
 /// The fields given for one stage in one file, before merging.
@@ -196,6 +199,7 @@ struct StageFields {
     qc_skip: Option<bool>,
     qc_reason: Option<String>,
     result: Option<String>,
+    tool: Option<String>,
     line: Option<u32>,
 }
 
@@ -293,6 +297,14 @@ fn parse_file(
             .name
             .clone()
             .unwrap_or_else(|| format!("#{}", index + 1));
+        if hash.contains_key(&Yaml::String("tool".into()))
+            && hash.contains_key(&Yaml::String("external".into()))
+        {
+            problems.push(problem(
+                at,
+                format!("stage `{label}`: a stage cannot have both `tool` and `external`"),
+            ));
+        }
         for (key, value) in hash {
             let Yaml::String(key) = key else {
                 problems.push(problem(at, format!("stage `{label}`: keys must be text")));
@@ -382,10 +394,10 @@ fn parse_file(
                     Yaml::String(s) => fields.result = Some(s),
                     _ => problems.push(bad("a file name")),
                 },
-                "tool" => problems.push(problem(
-                    at,
-                    format!("stage `{label}`: tool stages (`tool:`) are not yet supported"),
-                )),
+                "tool" => match value {
+                    Yaml::String(s) => fields.tool = Some(s),
+                    _ => problems.push(bad("a pin `<tool>@<commit>`")),
+                },
                 "external" => problems.push(problem(
                     at,
                     format!("stage `{label}`: external stages (`external:`) are not yet supported"),
@@ -470,6 +482,7 @@ fn build_stage(
         foreach: fields.foreach.clone(),
         qc_skip: fields.qc_skip.unwrap_or(false),
         qc_reason: fields.qc_reason.clone(),
+        tool: fields.tool.clone(),
         result: fields.result.clone(),
         file: file.to_string(),
         line: fields.line,
@@ -539,6 +552,7 @@ fn validate(
                     };
                     let valid = match p.as_str() {
                         "out" | "params_file" | "threads" => true,
+                        "tool" => stage.tool.is_some(),
                         "item" | "item_name" => stage.foreach.is_some(),
                         _ => {
                             if let Some(input) = p.strip_prefix("in.") {
@@ -643,6 +657,9 @@ fn merge_variant(
         if let Some(reason) = fields.qc_reason {
             stage.qc_reason = Some(reason);
         }
+        if let Some(tool) = fields.tool {
+            stage.tool = Some(tool);
+        }
         if let Some(result) = fields.result {
             stage.result = Some(result);
         }
@@ -731,6 +748,16 @@ pub fn load_pipeline(
             config_path(study, variant)
         ))),
     }
+}
+
+/// Loads a study's pipeline for a variant, ignoring configuration problems (they are reported by
+/// `tophat check`). `None` when the configuration cannot be read at all.
+pub fn load_variant_lenient(
+    project: &Project,
+    study: &str,
+    variant: &str,
+) -> Option<PipelineConfig> {
+    load_variant(project, study, variant, &mut Vec::new())
 }
 
 #[cfg(test)]
