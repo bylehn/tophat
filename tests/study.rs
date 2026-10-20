@@ -301,7 +301,13 @@ fn create_a_new_study() {
     for name in GOVERNED_SECTIONS {
         assert!(study.section(name).is_some(), "missing ## {name}");
     }
-    assert!(p.file("studies/x-vs-docking/config/base.yaml").is_file());
+    assert!(p
+        .read("studies/x-vs-docking/config/base.yaml")
+        .contains("stages: []"));
+    assert_eq!(
+        p.read("studies/x-vs-docking/Snakefile"),
+        tophat::pipeline::stub("x-vs-docking")
+    );
     assert!(p.file("studies/x-vs-docking/tests").is_dir());
     assert_clean(&diagnostics(&p));
 }

@@ -352,7 +352,22 @@ impl ResolvedStage {
             trial,
         )
         .ok_or_else(|| PipelineError::Io(format!("input `{foreach}` is unavailable")))?;
-        items_of(&dir).map_err(|e| PipelineError::Io(format!("{}: {e}", dir.display())))
+        let items =
+            items_of(&dir).map_err(|e| PipelineError::Io(format!("{}: {e}", dir.display())))?;
+        let mut bad: Vec<String> = items
+            .iter()
+            .enumerate()
+            .filter(|(i, (name, _))| {
+                !is_valid_item_name(name) || items[..*i].iter().any(|(other, _)| other == name)
+            })
+            .map(|(_, (name, _))| name.clone())
+            .collect();
+        bad.dedup();
+        if bad.is_empty() {
+            Ok(items)
+        } else {
+            Err(PipelineError::BadItems(bad))
+        }
     }
 
     /// The paths a stage's command is substituted with.
@@ -575,6 +590,61 @@ pub fn seal(root: &Path, request: &SealRequest) -> Result<PathBuf, PipelineError
     }
     cache.save();
     Ok(record_path)
+}
+
+/// What a generated rule needs to run a stage job.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BegunJob {
+    /// The command with placeholders substituted.
+    pub run: String,
+    /// The pixi environment.
+    pub env: String,
+    /// The directory to run in: the study directory.
+    pub cwd: PathBuf,
+}
+
+/// Prepares a stage job: verifies the key, empties the job's output directory (the item directory
+/// for a fan-out item), writes the parameters file, and returns the command to run.
+pub fn begin(root: &Path, request: &SealRequest) -> Result<BegunJob, PipelineError> {
+    let variant = request.variant.as_deref().unwrap_or("base");
+    let resolved = ResolvedStage::load(root, &request.study, variant)?;
+    let stage = resolved.stage(&request.stage)?;
+    let actual = resolved.key(&stage.name).to_string();
+    if actual != request.key {
+        return Err(PipelineError::KeyMismatch {
+            expected: request.key.clone(),
+            actual,
+        });
+    }
+    if stage.foreach.is_some() != request.item.is_some() {
+        return Err(PipelineError::Config {
+            path: stage.file.clone(),
+            line: stage.line,
+            message: format!(
+                "stage `{}`: --item is required exactly for fan-out stages",
+                stage.name
+            ),
+        });
+    }
+    let paths = resolved.run_paths(stage, request.item.as_deref(), request.trial)?;
+    let run = render_run(stage, &paths).map_err(PipelineError::Io)?;
+    let io = |e: std::io::Error| PipelineError::Io(e.to_string());
+    if paths.out.exists() {
+        fs::remove_dir_all(&paths.out).map_err(io)?;
+    }
+    fs::create_dir_all(&paths.out).map_err(io)?;
+    let params = serde_json::to_string_pretty(&Value::Object(stage.params.clone()))
+        .expect("JSON values always serialize");
+    // Parallel item jobs of one stage share this file; leave it alone when unchanged.
+    let params = params + "\n";
+    if fs::read_to_string(&paths.params_file).ok().as_deref() != Some(params.as_str()) {
+        crate::fsutil::write_atomic_unique(&paths.params_file, &params).map_err(io)?;
+    }
+    Ok(BegunJob {
+        run,
+        env: stage.env.clone(),
+        cwd: root.join(STUDIES_DIR).join(&request.study),
+    })
 }
 
 /// One stage in `tophat pipeline keys`.
