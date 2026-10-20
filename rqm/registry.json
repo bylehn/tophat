@@ -1,4 +1,41 @@
 {
+  "rq-003d3d0f": {
+    "decl": "Scenario: Missing environment",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Missing environment",
+    "type": "scenario"
+  },
+  "rq-007499c3": {
+    "decl": "Scenario: Manifest file name disagrees with its contents",
+    "file": "data",
+    "refs": [],
+    "title": "Manifest file name disagrees with its contents",
+    "type": "scenario"
+  },
+  "rq-01092d90": {
+    "decl": "### Types",
+    "file": "pipeline/provenance",
+    "level": 3,
+    "refs": [],
+    "title": "Types",
+    "type": "section"
+  },
+  "rq-011facdf": {
+    "decl": "### Manifests",
+    "file": "data",
+    "level": 3,
+    "refs": [],
+    "title": "Manifests",
+    "type": "section"
+  },
+  "rq-018e0aed": {
+    "decl": "Scenario: Project line",
+    "file": "workflow",
+    "refs": [],
+    "title": "Project line",
+    "type": "scenario"
+  },
   "rq-01b7434d": {
     "decl": "Scenario: Citing an answered sub-question",
     "file": "question-tree",
@@ -10,6 +47,28 @@
     ],
     "title": "Citing an answered sub-question",
     "type": "scenario"
+  },
+  "rq-01f47f40": {
+    "decl": "## Datasets",
+    "file": "data",
+    "level": 2,
+    "refs": [],
+    "title": "Datasets",
+    "type": "section"
+  },
+  "rq-02e65d51": {
+    "decl": "- `study_status(root: &Path, studies: &[String]) -> Result<Vec<StudyStatus>, StudyError>` — the",
+    "file": "workflow",
+    "refs": [],
+    "title": "study_status",
+    "type": "api-item"
+  },
+  "rq-03cab891": {
+    "decl": "# Feature: Snakemake Pipelines, QC Gates and Summaries",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Feature: Snakemake Pipelines, QC Gates and Summaries",
+    "type": "file"
   },
   "rq-04595081": {
     "decl": "### Scenarios",
@@ -30,6 +89,45 @@
       }
     ],
     "title": "Scenarios",
+    "type": "section"
+  },
+  "rq-04d15195": {
+    "decl": "## Gherkin Scenarios",
+    "file": "pipeline/snakemake",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
+  },
+  "rq-04f01464": {
+    "decl": "Scenario: Output directory is named by the key",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Output directory is named by the key",
+    "type": "scenario"
+  },
+  "rq-079894b1": {
+    "decl": "### Commands",
+    "file": "workflow",
+    "level": 3,
+    "refs": [],
+    "title": "Commands",
+    "type": "section"
+  },
+  "rq-07a0e0ea": {
+    "decl": "## Feature API",
+    "file": "workflow",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
+  "rq-081e737a": {
+    "decl": "### Stage fields",
+    "file": "pipeline/provenance",
+    "level": 3,
+    "refs": [],
+    "title": "Stage fields",
     "type": "section"
   },
   "rq-08c7718c": {
@@ -74,6 +172,29 @@
     "title": "SUMMARY.md Format",
     "type": "section"
   },
+  "rq-0a389452": {
+    "decl": "Scenario: Newer version available for a draft",
+    "file": "data",
+    "refs": [],
+    "title": "Newer version available for a draft",
+    "type": "scenario"
+  },
+  "rq-0a8079d6": {
+    "decl": "## Feature API",
+    "file": "pipeline/snakemake",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
+  "rq-0b009184": {
+    "decl": "## Gherkin Scenarios",
+    "file": "workflow",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
+  },
   "rq-0bdbef43": {
     "decl": "Scenario: A warning does not fail the check by default",
     "file": "check",
@@ -84,6 +205,20 @@
       }
     ],
     "title": "A warning does not fail the check by default",
+    "type": "scenario"
+  },
+  "rq-0c5735ed": {
+    "decl": "Scenario: Existing verdicts are not overwritten",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Existing verdicts are not overwritten",
+    "type": "scenario"
+  },
+  "rq-0ca6fca2": {
+    "decl": "Scenario: An amendment accepts the unreported dependency",
+    "file": "data",
+    "refs": [],
+    "title": "An amendment accepts the unreported dependency",
     "type": "scenario"
   },
   "rq-0d2a06e5": {
@@ -97,6 +232,14 @@
     ],
     "title": "Missing governed section",
     "type": "scenario"
+  },
+  "rq-0d5e77fe": {
+    "decl": "## Trial Runs",
+    "file": "workflow",
+    "level": 2,
+    "refs": [],
+    "title": "Trial Runs",
+    "type": "section"
   },
   "rq-0e435215": {
     "decl": "Scenario: Answered question without an answer",
@@ -126,12 +269,26 @@
     "title": "parse_project",
     "type": "api-item"
   },
+  "rq-0f8bd6f3": {
+    "decl": "- `DatasetRef` — a parsed `<name>@v<n>`: `name: String`, `version: u32`.",
+    "file": "data",
+    "refs": [],
+    "title": "DatasetRef",
+    "type": "api-item"
+  },
   "rq-10af2996": {
     "decl": "# Feature: Project Integrity Check (`tophat check`)",
     "file": "check",
     "refs": [],
     "title": "Feature: Project Integrity Check (`tophat check`)",
     "type": "file"
+  },
+  "rq-11940cec": {
+    "decl": "Scenario: Keys command with an unconfigured results root",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Keys command with an unconfigured results root",
+    "type": "scenario"
   },
   "rq-11b56000": {
     "decl": "Scenario: Human output separates legacy items",
@@ -143,6 +300,21 @@
       }
     ],
     "title": "Human output separates legacy items",
+    "type": "scenario"
+  },
+  "rq-1339368c": {
+    "decl": "## Running a Study",
+    "file": "pipeline/snakemake",
+    "level": 2,
+    "refs": [],
+    "title": "Running a Study",
+    "type": "section"
+  },
+  "rq-13a88566": {
+    "decl": "Scenario: Reported study whose question is still open",
+    "file": "workflow",
+    "refs": [],
+    "title": "Reported study whose question is still open",
     "type": "scenario"
   },
   "rq-13aae895": {
@@ -167,6 +339,13 @@
       }
     ],
     "title": "Citing a question that does not exist",
+    "type": "scenario"
+  },
+  "rq-14542671": {
+    "decl": "Scenario: Failed QC",
+    "file": "workflow",
+    "refs": [],
+    "title": "Failed QC",
     "type": "scenario"
   },
   "rq-148e9ae7": {
@@ -204,6 +383,27 @@
     ],
     "title": "tophat",
     "type": "api-item"
+  },
+  "rq-167d5ad5": {
+    "decl": "Scenario: End-to-end run produces sealed outputs and a summary",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "End-to-end run produces sealed outputs and a summary",
+    "type": "scenario"
+  },
+  "rq-168e854a": {
+    "decl": "# Feature: Status and Run",
+    "file": "workflow",
+    "refs": [],
+    "title": "Feature: Status and Run",
+    "type": "file"
+  },
+  "rq-1690899a": {
+    "decl": "Scenario: Hand-edited content hash is detected",
+    "file": "data",
+    "refs": [],
+    "title": "Hand-edited content hash is detected",
+    "type": "scenario"
   },
   "rq-170877ff": {
     "decl": "Scenario: Scoped check still resolves cross-references project-wide",
@@ -258,6 +458,13 @@
     "title": "Untested scenario in a reported study is an error",
     "type": "scenario"
   },
+  "rq-19e53a7b": {
+    "decl": "Scenario: Unknown placeholder",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Unknown placeholder",
+    "type": "scenario"
+  },
   "rq-1a1c0293": {
     "decl": "Scenario: First question is not a level-two heading",
     "file": "question-tree",
@@ -270,6 +477,28 @@
     "title": "First question is not a level-two heading",
     "type": "scenario"
   },
+  "rq-1a269752": {
+    "decl": "Scenario: Generation fails on an invalid configuration",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Generation fails on an invalid configuration",
+    "type": "scenario"
+  },
+  "rq-1a4b027f": {
+    "decl": "## Summaries",
+    "file": "pipeline/snakemake",
+    "level": 2,
+    "refs": [],
+    "title": "Summaries",
+    "type": "section"
+  },
+  "rq-1a97b91b": {
+    "decl": "- `tophat data lineage <target> [--json]`",
+    "file": "data",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
   "rq-1aa65ab4": {
     "decl": "Scenario: Superseded-by target does not exist",
     "file": "study/format",
@@ -280,6 +509,20 @@
       }
     ],
     "title": "Superseded-by target does not exist",
+    "type": "scenario"
+  },
+  "rq-1abe7472": {
+    "decl": "Scenario: Publishing a dirty output fails",
+    "file": "data",
+    "refs": [],
+    "title": "Publishing a dirty output fails",
+    "type": "scenario"
+  },
+  "rq-1b09b7f5": {
+    "decl": "Scenario: A failed item is retried alone",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "A failed item is retried alone",
     "type": "scenario"
   },
   "rq-1bce095c": {
@@ -297,6 +540,13 @@
     ],
     "title": "tophat",
     "type": "api-item"
+  },
+  "rq-1d07e2ec": {
+    "decl": "Scenario: Duplicate item names fail the gather job",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Duplicate item names fail the gather job",
+    "type": "scenario"
   },
   "rq-1dd3778a": {
     "decl": "Scenario: Commands write atomically",
@@ -322,6 +572,13 @@
     "title": "Headings in code fences are not questions",
     "type": "scenario"
   },
+  "rq-1eaa34af": {
+    "decl": "Scenario: Lineage stops at declared data",
+    "file": "data",
+    "refs": [],
+    "title": "Lineage stops at declared data",
+    "type": "scenario"
+  },
   "rq-1f183c28": {
     "decl": "Scenario: Parent is the nearest shallower question",
     "file": "question-tree",
@@ -332,6 +589,13 @@
       }
     ],
     "title": "Parent is the nearest shallower question",
+    "type": "scenario"
+  },
+  "rq-205358e8": {
+    "decl": "Scenario: Publishing an output modified after sealing fails",
+    "file": "data",
+    "refs": [],
+    "title": "Publishing an output modified after sealing fails",
     "type": "scenario"
   },
   "rq-214c0020": {
@@ -346,6 +610,35 @@
     "title": "Malformed amendment",
     "type": "scenario"
   },
+  "rq-21dcc0c2": {
+    "decl": "Scenario: Parameter order does not matter",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Parameter order does not matter",
+    "type": "scenario"
+  },
+  "rq-228b4cbc": {
+    "decl": "Scenario: A reported study cannot rest on unreported work",
+    "file": "data",
+    "refs": [],
+    "title": "A reported study cannot rest on unreported work",
+    "type": "scenario"
+  },
+  "rq-22c3d944": {
+    "decl": "## Check Rules (`pipeline` family, configuration)",
+    "file": "pipeline/provenance",
+    "level": 2,
+    "refs": [],
+    "title": "Check Rules (`pipeline` family, configuration)",
+    "type": "section"
+  },
+  "rq-23b73104": {
+    "decl": "- `tophat data used-by <name>[@v<n>] [--json]`",
+    "file": "data",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
   "rq-23b830b6": {
     "decl": "Scenario: Check runs from the project root",
     "file": "check",
@@ -357,6 +650,20 @@
     ],
     "title": "Check runs from the project root",
     "type": "scenario"
+  },
+  "rq-23d4abbf": {
+    "decl": "Scenario: Trial run of a draft",
+    "file": "workflow",
+    "refs": [],
+    "title": "Trial run of a draft",
+    "type": "scenario"
+  },
+  "rq-23fa4a9a": {
+    "decl": "- `tophat study summarize <study>`",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
   },
   "rq-2431d4ff": {
     "decl": "## Check Rules (`study` family)",
@@ -371,6 +678,20 @@
     "title": "Check Rules (`study` family)",
     "type": "section"
   },
+  "rq-2446b713": {
+    "decl": "Scenario: Fresh clone without a hash cache",
+    "file": "data",
+    "refs": [],
+    "title": "Fresh clone without a hash cache",
+    "type": "scenario"
+  },
+  "rq-24702b2d": {
+    "decl": "Scenario: Default cores",
+    "file": "workflow",
+    "refs": [],
+    "title": "Default cores",
+    "type": "scenario"
+  },
   "rq-24fdff0d": {
     "decl": "Scenario: Stamp leaves duplicated IDs for the user",
     "file": "question-tree",
@@ -383,6 +704,48 @@
     "title": "Stamp leaves duplicated IDs for the user",
     "type": "scenario"
   },
+  "rq-256e64ad": {
+    "decl": "Scenario: Direct Snakemake on a draft only offers trial targets",
+    "file": "workflow",
+    "refs": [],
+    "title": "Direct Snakemake on a draft only offers trial targets",
+    "type": "scenario"
+  },
+  "rq-262c5552": {
+    "decl": "Scenario: Summary goes stale when the code changes",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Summary goes stale when the code changes",
+    "type": "scenario"
+  },
+  "rq-2960fd26": {
+    "decl": "- `load_roots(root: &Path) -> Result<Roots, DataError>` — reads the declared roots and resolves",
+    "file": "data",
+    "refs": [],
+    "title": "load_roots",
+    "type": "api-item"
+  },
+  "rq-297a1f84": {
+    "decl": "- `PipelineError` — error type of the pipeline commands, with at minimum:",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "PipelineError",
+    "type": "api-item"
+  },
+  "rq-29ee60f1": {
+    "decl": "Scenario: Outside a git repository records are unclean",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Outside a git repository records are unclean",
+    "type": "scenario"
+  },
+  "rq-2a741327": {
+    "decl": "Scenario: Trial outputs are separate and unreportable",
+    "file": "workflow",
+    "refs": [],
+    "title": "Trial outputs are separate and unreportable",
+    "type": "scenario"
+  },
   "rq-2b3be8cc": {
     "decl": "## Assumptions",
     "file": "question-tree",
@@ -390,6 +753,13 @@
     "refs": [],
     "title": "Assumptions",
     "type": "section"
+  },
+  "rq-2b6e16c6": {
+    "decl": "Scenario: Retrospective study without a pipeline",
+    "file": "workflow",
+    "refs": [],
+    "title": "Retrospective study without a pipeline",
+    "type": "scenario"
   },
   "rq-2b94ea79": {
     "decl": "Scenario: Invalid scenario tag",
@@ -401,6 +771,20 @@
       }
     ],
     "title": "Invalid scenario tag",
+    "type": "scenario"
+  },
+  "rq-2ba558eb": {
+    "decl": "Scenario: Version gap",
+    "file": "data",
+    "refs": [],
+    "title": "Version gap",
+    "type": "scenario"
+  },
+  "rq-2c0af82b": {
+    "decl": "Scenario: QC file for a stage without a gate",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "QC file for a stage without a gate",
     "type": "scenario"
   },
   "rq-2c9834f8": {
@@ -442,6 +826,57 @@
     "title": "Whitespace and line-ending changes do not alter the fingerprint",
     "type": "scenario"
   },
+  "rq-2e2aead6": {
+    "decl": "Scenario: Changed file size",
+    "file": "data",
+    "refs": [],
+    "title": "Changed file size",
+    "type": "scenario"
+  },
+  "rq-2e3b70f6": {
+    "decl": "Scenario: Warnings do not block a run",
+    "file": "workflow",
+    "refs": [],
+    "title": "Warnings do not block a run",
+    "type": "scenario"
+  },
+  "rq-2ec453d8": {
+    "decl": "Scenario: A complete draft waits for the human to pre-register",
+    "file": "workflow",
+    "refs": [],
+    "title": "A complete draft waits for the human to pre-register",
+    "type": "scenario"
+  },
+  "rq-2f3eea8e": {
+    "decl": "## Stage Configuration",
+    "file": "pipeline/provenance",
+    "level": 2,
+    "refs": [],
+    "title": "Stage Configuration",
+    "type": "section"
+  },
+  "rq-2f5e3dcb": {
+    "decl": "Scenario: Stage-level seal of a fan-out stage requires all items",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Stage-level seal of a fan-out stage requires all items",
+    "type": "scenario"
+  },
+  "rq-3123c559": {
+    "decl": "Scenario: Stub can be restored",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Stub can be restored",
+    "type": "scenario"
+  },
+  "rq-3301d594": {
+    "decl": "## Verification",
+    "file": "data",
+    "level": 2,
+    "refs": [],
+    "title": "Verification",
+    "type": "section"
+  },
   "rq-330e2712": {
     "decl": "Scenario: Report refuses a dirty summary",
     "file": "study/format",
@@ -453,6 +888,29 @@
     ],
     "title": "Report refuses a dirty summary",
     "type": "scenario"
+  },
+  "rq-33c3cc6a": {
+    "decl": "- `tophat data verify [<name>[@v<n>]]`",
+    "file": "data",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-3460a0ee": {
+    "decl": "## Gherkin Scenarios",
+    "file": "data",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
+  },
+  "rq-3573382c": {
+    "decl": "## Assumptions",
+    "file": "workflow",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
   },
   "rq-35e01b00": {
     "decl": "### Exit codes",
@@ -489,6 +947,13 @@
     "refs": [],
     "title": "Feature: Question Tree",
     "type": "file"
+  },
+  "rq-383b2154": {
+    "decl": "Scenario: Uncommitted code makes the record unclean",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Uncommitted code makes the record unclean",
+    "type": "scenario"
   },
   "rq-384cc812": {
     "decl": "Scenario: Citing a draft study",
@@ -539,6 +1004,28 @@
     "title": "Retrospective study can be reported from a summary",
     "type": "scenario"
   },
+  "rq-3ac5de89": {
+    "decl": "### Environment hash",
+    "file": "pipeline/provenance",
+    "level": 3,
+    "refs": [],
+    "title": "Environment hash",
+    "type": "section"
+  },
+  "rq-3b86c7d4": {
+    "decl": "Scenario: Keys command reports sealed and missing outputs",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Keys command reports sealed and missing outputs",
+    "type": "scenario"
+  },
+  "rq-3c19a18d": {
+    "decl": "- `stub(study: &str) -> String` — the exact `Snakefile` stub text.",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "stub",
+    "type": "api-item"
+  },
   "rq-3cc4a23d": {
     "decl": "Scenario: Untested scenario in a preregistered study warns",
     "file": "study/format",
@@ -549,6 +1036,21 @@
       }
     ],
     "title": "Untested scenario in a preregistered study warns",
+    "type": "scenario"
+  },
+  "rq-3d588765": {
+    "decl": "## Assumptions",
+    "file": "pipeline/provenance",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
+  },
+  "rq-3d60791d": {
+    "decl": "Scenario: pixi not available",
+    "file": "workflow",
+    "refs": [],
+    "title": "pixi not available",
     "type": "scenario"
   },
   "rq-3e058fe4": {
@@ -570,6 +1072,13 @@
     "refs": [],
     "title": "Feature API",
     "type": "section"
+  },
+  "rq-3fd889d8": {
+    "decl": "Scenario: Variant cannot add stages",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Variant cannot add stages",
+    "type": "scenario"
   },
   "rq-4151372b": {
     "decl": "Scenario: Legacy items never fail the check, even in strict mode",
@@ -607,6 +1116,20 @@
     "title": "Open question needs neither answer nor evidence",
     "type": "scenario"
   },
+  "rq-43b7a9e6": {
+    "decl": "Scenario: Variant overrides merge into the base stage",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Variant overrides merge into the base stage",
+    "type": "scenario"
+  },
+  "rq-43c471b8": {
+    "decl": "Scenario: Verify a matching dataset",
+    "file": "data",
+    "refs": [],
+    "title": "Verify a matching dataset",
+    "type": "scenario"
+  },
   "rq-44727473": {
     "decl": "### Title and preamble",
     "file": "question-tree",
@@ -620,6 +1143,13 @@
     "title": "Title and preamble",
     "type": "section"
   },
+  "rq-44c48945": {
+    "decl": "Scenario: Adding an empty directory fails",
+    "file": "data",
+    "refs": [],
+    "title": "Adding an empty directory fails",
+    "type": "scenario"
+  },
   "rq-451aca52": {
     "decl": "Scenario: Scope path outside the project",
     "file": "check",
@@ -630,6 +1160,21 @@
       }
     ],
     "title": "Scope path outside the project",
+    "type": "scenario"
+  },
+  "rq-45fb5dee": {
+    "decl": "### Types",
+    "file": "data",
+    "level": 3,
+    "refs": [],
+    "title": "Types",
+    "type": "section"
+  },
+  "rq-46470647": {
+    "decl": "Scenario: Edited Snakefile is rejected",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Edited Snakefile is rejected",
     "type": "scenario"
   },
   "rq-46e1add4": {
@@ -656,6 +1201,50 @@
     "title": "Unlisted variant config",
     "type": "scenario"
   },
+  "rq-49765877": {
+    "decl": "Scenario: Environment variable overrides the local roots file",
+    "file": "data",
+    "refs": [],
+    "title": "Environment variable overrides the local roots file",
+    "type": "scenario"
+  },
+  "rq-4aa0232e": {
+    "decl": "## Stage Keys",
+    "file": "pipeline/provenance",
+    "level": 2,
+    "refs": [],
+    "title": "Stage Keys",
+    "type": "section"
+  },
+  "rq-4b2809d2": {
+    "decl": "Scenario: Stages left to run",
+    "file": "workflow",
+    "refs": [],
+    "title": "Stages left to run",
+    "type": "scenario"
+  },
+  "rq-4c85d6f4": {
+    "decl": "### Kinds",
+    "file": "data",
+    "level": 3,
+    "refs": [],
+    "title": "Kinds",
+    "type": "section"
+  },
+  "rq-4d4f5fd4": {
+    "decl": "Scenario: Errors in another study do not block this one",
+    "file": "workflow",
+    "refs": [],
+    "title": "Errors in another study do not block this one",
+    "type": "scenario"
+  },
+  "rq-4d7646da": {
+    "decl": "Scenario: Unrecognised verdict aborts",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Unrecognised verdict aborts",
+    "type": "scenario"
+  },
   "rq-4d76640c": {
     "decl": "Scenario: Citing an open sub-question",
     "file": "question-tree",
@@ -676,6 +1265,13 @@
     "title": "Feature API",
     "type": "section"
   },
+  "rq-4fc6c2a5": {
+    "decl": "- `tophat data publish <study> --stage <stage> [--variant <variant>] --as <name>`",
+    "file": "data",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
   "rq-503474ab": {
     "decl": "Scenario: Citing a question that is not a descendant",
     "file": "question-tree",
@@ -686,6 +1282,13 @@
       }
     ],
     "title": "Citing a question that is not a descendant",
+    "type": "scenario"
+  },
+  "rq-510dffe3": {
+    "decl": "Scenario: Publishing an unsealed output fails",
+    "file": "data",
+    "refs": [],
+    "title": "Publishing an unsealed output fails",
     "type": "scenario"
   },
   "rq-520893f5": {
@@ -712,6 +1315,21 @@
     "title": "Create a new study",
     "type": "scenario"
   },
+  "rq-533606d2": {
+    "decl": "## Provenance Records",
+    "file": "pipeline/provenance",
+    "level": 2,
+    "refs": [],
+    "title": "Provenance Records",
+    "type": "section"
+  },
+  "rq-543d641b": {
+    "decl": "Scenario: Fan-out over a dataset",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Fan-out over a dataset",
+    "type": "scenario"
+  },
   "rq-544bf01b": {
     "decl": "Scenario: Citing a malformed identifier",
     "file": "question-tree",
@@ -736,6 +1354,21 @@
     "title": "Pre-registration refused without an interactive terminal",
     "type": "scenario"
   },
+  "rq-5512a963": {
+    "decl": "## Producer Maturity and Visibility",
+    "file": "data",
+    "level": 2,
+    "refs": [],
+    "title": "Producer Maturity and Visibility",
+    "type": "section"
+  },
+  "rq-55bef4eb": {
+    "decl": "- `pipeline_rules(project: &Project) -> Vec<Diagnostic>` — the `pipeline` rule family registered",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "pipeline_rules",
+    "type": "api-item"
+  },
   "rq-55f9341a": {
     "decl": "Scenario: Returning to a shallower level is allowed",
     "file": "question-tree",
@@ -754,6 +1387,29 @@
     "level": 3,
     "refs": [],
     "title": "Types",
+    "type": "section"
+  },
+  "rq-56d46fa3": {
+    "decl": "## Generated Rules",
+    "file": "pipeline/snakemake",
+    "level": 2,
+    "refs": [],
+    "title": "Generated Rules",
+    "type": "section"
+  },
+  "rq-5737320e": {
+    "decl": "# Feature: Data Roots, Datasets and Lineage",
+    "file": "data",
+    "refs": [],
+    "title": "Feature: Data Roots, Datasets and Lineage",
+    "type": "file"
+  },
+  "rq-5782f3d0": {
+    "decl": "### One job per key",
+    "file": "pipeline/snakemake",
+    "level": 3,
+    "refs": [],
+    "title": "One job per key",
     "type": "section"
   },
   "rq-580c8189": {
@@ -780,6 +1436,58 @@
     "title": "Summary line with an unlisted variant",
     "type": "scenario"
   },
+  "rq-597bb615": {
+    "decl": "### Full verification",
+    "file": "data",
+    "level": 3,
+    "refs": [],
+    "title": "Full verification",
+    "type": "section"
+  },
+  "rq-59d28b94": {
+    "decl": "Scenario: Key text follows the specified construction",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Key text follows the specified construction",
+    "type": "scenario"
+  },
+  "rq-59f7b61a": {
+    "decl": "Scenario: Changing a parameter re-runs only what depends on it",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Changing a parameter re-runs only what depends on it",
+    "type": "scenario"
+  },
+  "rq-5a59811a": {
+    "decl": "Scenario: Check errors come first",
+    "file": "workflow",
+    "refs": [],
+    "title": "Check errors come first",
+    "type": "scenario"
+  },
+  "rq-5b6f6e50": {
+    "decl": "## Check Rules (`data` family)",
+    "file": "data",
+    "level": 2,
+    "refs": [],
+    "title": "Check Rules (`data` family)",
+    "type": "section"
+  },
+  "rq-5cc877ea": {
+    "decl": "### Types",
+    "file": "workflow",
+    "level": 3,
+    "refs": [],
+    "title": "Types",
+    "type": "section"
+  },
+  "rq-5cd91e7d": {
+    "decl": "- `StageInput` — `Stage(String)` or `Dataset(DatasetRef)`.",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "StageInput",
+    "type": "api-item"
+  },
   "rq-5d07156c": {
     "decl": "- `tophat question tree [--json]`",
     "file": "question-tree",
@@ -796,6 +1504,20 @@
     "title": "tophat",
     "type": "api-item"
   },
+  "rq-5dee52f5": {
+    "decl": "Scenario: Public study consuming private data",
+    "file": "data",
+    "refs": [],
+    "title": "Public study consuming private data",
+    "type": "scenario"
+  },
+  "rq-5e257285": {
+    "decl": "Scenario: Stopped at a QC gate",
+    "file": "workflow",
+    "refs": [],
+    "title": "Stopped at a QC gate",
+    "type": "scenario"
+  },
   "rq-5e9d0d62": {
     "decl": "- `Status` — enum `Draft`, `Preregistered`, `Reported`, `Superseded`, `Retrospective`.",
     "file": "study/format",
@@ -807,6 +1529,14 @@
     ],
     "title": "Status",
     "type": "api-item"
+  },
+  "rq-5ea916b5": {
+    "decl": "### Functions",
+    "file": "pipeline/snakemake",
+    "level": 3,
+    "refs": [],
+    "title": "Functions",
+    "type": "section"
   },
   "rq-5ef3ab11": {
     "decl": "Scenario: A project without PROJECT.md has an empty tree",
@@ -844,6 +1574,13 @@
     "title": "Duplicate question IDs",
     "type": "scenario"
   },
+  "rq-6101fec0": {
+    "decl": "Scenario: Missing code file",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Missing code file",
+    "type": "scenario"
+  },
   "rq-6106e112": {
     "decl": "Scenario: Stamp ignores headings in code fences",
     "file": "question-tree",
@@ -854,6 +1591,13 @@
       }
     ],
     "title": "Stamp ignores headings in code fences",
+    "type": "scenario"
+  },
+  "rq-622fce95": {
+    "decl": "Scenario: Adding again creates the next version",
+    "file": "data",
+    "refs": [],
+    "title": "Adding again creates the next version",
     "type": "scenario"
   },
   "rq-6236fe4c": {
@@ -867,6 +1611,20 @@
     ],
     "title": "run_check",
     "type": "api-item"
+  },
+  "rq-62e72400": {
+    "decl": "Scenario: Reported study that is cited is done",
+    "file": "workflow",
+    "refs": [],
+    "title": "Reported study that is cited is done",
+    "type": "scenario"
+  },
+  "rq-6315ba95": {
+    "decl": "Scenario: QC refused for a stage without a gate",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "QC refused for a stage without a gate",
+    "type": "scenario"
   },
   "rq-647102ae": {
     "decl": "Scenario: Retrospective study cannot carry a pre-registration block",
@@ -892,6 +1650,27 @@
     "title": "Pre-registration refused for a non-draft study",
     "type": "scenario"
   },
+  "rq-654fa516": {
+    "decl": "- `tophat pipeline rules <study> --output <file>`",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-672050d2": {
+    "decl": "Scenario: Seal refuses an empty output",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Seal refuses an empty output",
+    "type": "scenario"
+  },
+  "rq-6733b7c0": {
+    "decl": "- `tophat status [<study>...] [--json]`",
+    "file": "workflow",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
   "rq-6764653f": {
     "decl": "- `Summary` — a parsed `SUMMARY.md`: study ID, commit, dirty flag, generated timestamp, tophat",
     "file": "study/format",
@@ -915,6 +1694,21 @@
     ],
     "title": "Duplicate scenario numbers",
     "type": "scenario"
+  },
+  "rq-682322e9": {
+    "decl": "Scenario: JSON status for agents",
+    "file": "workflow",
+    "refs": [],
+    "title": "JSON status for agents",
+    "type": "scenario"
+  },
+  "rq-6891672b": {
+    "decl": "### Placeholders",
+    "file": "pipeline/provenance",
+    "level": 3,
+    "refs": [],
+    "title": "Placeholders",
+    "type": "section"
   },
   "rq-68a6dd72": {
     "decl": "Scenario: Output is deterministic",
@@ -944,6 +1738,13 @@
     "title": "Amendment dated before pre-registration",
     "type": "scenario"
   },
+  "rq-6a6e86ca": {
+    "decl": "Scenario: Untracked config makes the record unclean",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Untracked config makes the record unclean",
+    "type": "scenario"
+  },
   "rq-6a843b0a": {
     "decl": "Scenario: Test reference in a Julia file counts as a test",
     "file": "study/format",
@@ -954,6 +1755,56 @@
       }
     ],
     "title": "Test reference in a Julia file counts as a test",
+    "type": "scenario"
+  },
+  "rq-6c036885": {
+    "decl": "Scenario: Lineage through an unconfigured root",
+    "file": "data",
+    "refs": [],
+    "title": "Lineage through an unconfigured root",
+    "type": "scenario"
+  },
+  "rq-6c24fee9": {
+    "decl": "- `tophat stage qc <study> <stage> [--variant <variant>]`",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-6ceae812": {
+    "decl": "- `NextAction` — `row: u8`, `who: Who` (`You`, `Anyone`, `Nobody`), `text: String`,",
+    "file": "workflow",
+    "refs": [],
+    "title": "NextAction",
+    "type": "api-item"
+  },
+  "rq-6d9d6c2d": {
+    "decl": "Scenario: Updating the environment changes keys of stages using it",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Updating the environment changes keys of stages using it",
+    "type": "scenario"
+  },
+  "rq-6dc26c5f": {
+    "decl": "## Feature API",
+    "file": "data",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
+  "rq-6e13314c": {
+    "decl": "Scenario: Unknown variant",
+    "file": "workflow",
+    "refs": [],
+    "title": "Unknown variant",
+    "type": "scenario"
+  },
+  "rq-6e632e7d": {
+    "decl": "Scenario: Unknown study",
+    "file": "workflow",
+    "refs": [],
+    "title": "Unknown study",
     "type": "scenario"
   },
   "rq-6ef37d58": {
@@ -968,6 +1819,27 @@
     "title": "Study names a question when PROJECT.md is missing",
     "type": "scenario"
   },
+  "rq-6f389d0b": {
+    "decl": "- `hash_file(path: &Path) -> io::Result<(u64, String)>` — size and SHA-256 of a file, streamed.",
+    "file": "data",
+    "refs": [],
+    "title": "hash_file",
+    "type": "api-item"
+  },
+  "rq-6f38a675": {
+    "decl": "Scenario: Changing a script changes its key and every downstream key",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Changing a script changes its key and every downstream key",
+    "type": "scenario"
+  },
+  "rq-701626f2": {
+    "decl": "Scenario: Adding a directory with a symbolic link fails",
+    "file": "data",
+    "refs": [],
+    "title": "Adding a directory with a symbolic link fails",
+    "type": "scenario"
+  },
   "rq-70b0f2e4": {
     "decl": "Scenario: Amendment dated in the future",
     "file": "study/format",
@@ -979,6 +1851,28 @@
     ],
     "title": "Amendment dated in the future",
     "type": "scenario"
+  },
+  "rq-719acfdc": {
+    "decl": "- `tophat stage seal <study> <stage> --key <key> [--variant <variant>] [--item <item name>] [--trial]`",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-71bac1e4": {
+    "decl": "Scenario: Adding from an unconfigured root fails",
+    "file": "data",
+    "refs": [],
+    "title": "Adding from an unconfigured root fails",
+    "type": "scenario"
+  },
+  "rq-731766dd": {
+    "decl": "### Hash cache",
+    "file": "data",
+    "level": 3,
+    "refs": [],
+    "title": "Hash cache",
+    "type": "section"
   },
   "rq-74adaff3": {
     "decl": "Scenario: A warning fails the check in strict mode",
@@ -1042,6 +1936,14 @@
     "title": "Question body",
     "type": "section"
   },
+  "rq-78e4b035": {
+    "decl": "### Commands",
+    "file": "data",
+    "level": 3,
+    "refs": [],
+    "title": "Commands",
+    "type": "section"
+  },
   "rq-78ed7708": {
     "decl": "Scenario: Supersede a reported study",
     "file": "study/format",
@@ -1054,12 +1956,49 @@
     "title": "Supersede a reported study",
     "type": "scenario"
   },
+  "rq-79aca0da": {
+    "decl": "Scenario: Valid manifests pass",
+    "file": "data",
+    "refs": [],
+    "title": "Valid manifests pass",
+    "type": "scenario"
+  },
+  "rq-79e78b37": {
+    "decl": "Scenario: Record a passing verdict interactively",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Record a passing verdict interactively",
+    "type": "scenario"
+  },
   "rq-7aba8e5c": {
     "decl": "## Out of Scope",
     "file": "question-tree",
     "level": 2,
     "refs": [],
     "title": "Out of Scope",
+    "type": "section"
+  },
+  "rq-7b0b2ae8": {
+    "decl": "## Check Rules (`pipeline` family, execution)",
+    "file": "pipeline/snakemake",
+    "level": 2,
+    "refs": [],
+    "title": "Check Rules (`pipeline` family, execution)",
+    "type": "section"
+  },
+  "rq-7b3ae395": {
+    "decl": "Scenario: Unparseable study",
+    "file": "workflow",
+    "refs": [],
+    "title": "Unparseable study",
+    "type": "scenario"
+  },
+  "rq-7babf9d1": {
+    "decl": "### Functions",
+    "file": "data",
+    "level": 3,
+    "refs": [],
+    "title": "Functions",
     "type": "section"
   },
   "rq-7bc95d75": {
@@ -1098,6 +2037,20 @@
     "title": "Tree does not validate",
     "type": "scenario"
   },
+  "rq-7d7e180b": {
+    "decl": "Scenario: Lineage of a published dataset reaches raw data",
+    "file": "data",
+    "refs": [],
+    "title": "Lineage of a published dataset reaches raw data",
+    "type": "scenario"
+  },
+  "rq-7d9f7e52": {
+    "decl": "Scenario: Same-size modification is flagged by the cache",
+    "file": "data",
+    "refs": [],
+    "title": "Same-size modification is flagged by the cache",
+    "type": "scenario"
+  },
   "rq-7eba13df": {
     "decl": "Scenario: Stamp without PROJECT.md",
     "file": "question-tree",
@@ -1109,6 +2062,14 @@
     ],
     "title": "Stamp without PROJECT.md",
     "type": "scenario"
+  },
+  "rq-7ec07143": {
+    "decl": "### Locating roots on a machine",
+    "file": "data",
+    "level": 3,
+    "refs": [],
+    "title": "Locating roots on a machine",
+    "type": "section"
   },
   "rq-7effa48d": {
     "decl": "Scenario: Directory without STUDY.md",
@@ -1146,6 +2107,21 @@
     "title": "Study",
     "type": "api-item"
   },
+  "rq-809df566": {
+    "decl": "Scenario: Upstream of a fan-out is a checkpoint",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Upstream of a fan-out is a checkpoint",
+    "type": "scenario"
+  },
+  "rq-80f63e5c": {
+    "decl": "## Gherkin Scenarios",
+    "file": "pipeline/provenance",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
+  },
   "rq-8148f10b": {
     "decl": "### Question headings",
     "file": "question-tree",
@@ -1165,6 +2141,28 @@
       }
     ],
     "title": "Question headings",
+    "type": "section"
+  },
+  "rq-82ac8f57": {
+    "decl": "Scenario: Dirty summary means commit and run again",
+    "file": "workflow",
+    "refs": [],
+    "title": "Dirty summary means commit and run again",
+    "type": "scenario"
+  },
+  "rq-83c71c3c": {
+    "decl": "Scenario: QC refused without an interactive terminal",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "QC refused without an interactive terminal",
+    "type": "scenario"
+  },
+  "rq-84e20fdc": {
+    "decl": "### Fast check",
+    "file": "data",
+    "level": 3,
+    "refs": [],
+    "title": "Fast check",
     "type": "section"
   },
   "rq-84ef0512": {
@@ -1191,6 +2189,13 @@
     "title": "Superseded study keeps its frozen-section check",
     "type": "scenario"
   },
+  "rq-85aa702f": {
+    "decl": "Scenario: A new dataset version changes the key",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "A new dataset version changes the key",
+    "type": "scenario"
+  },
   "rq-86db826d": {
     "decl": "Scenario: Missing status line",
     "file": "question-tree",
@@ -1203,6 +2208,20 @@
     "title": "Missing status line",
     "type": "scenario"
   },
+  "rq-872c3d40": {
+    "decl": "- `tophat stage qc-status <study> <stage> --key <key>`",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-872d0d8b": {
+    "decl": "Scenario: Adding a path that escapes the root fails",
+    "file": "data",
+    "refs": [],
+    "title": "Adding a path that escapes the root fails",
+    "type": "scenario"
+  },
   "rq-87476c9b": {
     "decl": "## Out of Scope",
     "file": "study/format",
@@ -1210,6 +2229,13 @@
     "refs": [],
     "title": "Out of Scope",
     "type": "section"
+  },
+  "rq-88716093": {
+    "decl": "Scenario: Add a raw dataset",
+    "file": "data",
+    "refs": [],
+    "title": "Add a raw dataset",
+    "type": "scenario"
   },
   "rq-8889d0ed": {
     "decl": "Scenario: Check runs from a subdirectory of the project",
@@ -1221,6 +2247,34 @@
       }
     ],
     "title": "Check runs from a subdirectory of the project",
+    "type": "scenario"
+  },
+  "rq-88a10bea": {
+    "decl": "Scenario: --draft on a preregistered study is refused",
+    "file": "workflow",
+    "refs": [],
+    "title": "--draft on a preregistered study is refused",
+    "type": "scenario"
+  },
+  "rq-8a1808bb": {
+    "decl": "Scenario: Status is read-only",
+    "file": "workflow",
+    "refs": [],
+    "title": "Status is read-only",
+    "type": "scenario"
+  },
+  "rq-8a9e97ed": {
+    "decl": "Scenario: Partial output of a failed run is discarded",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Partial output of a failed run is discarded",
+    "type": "scenario"
+  },
+  "rq-8ccc06c7": {
+    "decl": "Scenario: Used-by lists consumers",
+    "file": "data",
+    "refs": [],
+    "title": "Used-by lists consumers",
     "type": "scenario"
   },
   "rq-8d5c3082": {
@@ -1235,6 +2289,13 @@
     "title": "Invalid YAML front matter",
     "type": "scenario"
   },
+  "rq-8d671e50": {
+    "decl": "Scenario: Input referencing a later stage",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Input referencing a later stage",
+    "type": "scenario"
+  },
   "rq-8da81b81": {
     "decl": "- `parse_summary(path: &Path) -> Result<Summary, StudyError>` — parses a `SUMMARY.md`.",
     "file": "study/format",
@@ -1246,6 +2307,21 @@
     ],
     "title": "parse_summary",
     "type": "api-item"
+  },
+  "rq-9057ff4f": {
+    "decl": "### Commands",
+    "file": "pipeline/provenance",
+    "level": 3,
+    "refs": [],
+    "title": "Commands",
+    "type": "section"
+  },
+  "rq-90b7b2f4": {
+    "decl": "Scenario: A second run does nothing",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "A second run does nothing",
+    "type": "scenario"
   },
   "rq-91713e05": {
     "decl": "Scenario: Study with a malformed question field is left to the study rules",
@@ -1307,6 +2383,13 @@
     "title": "Pre-registration refused when the draft is not ready",
     "type": "scenario"
   },
+  "rq-933f4cf3": {
+    "decl": "Scenario: QC refused for an unsealed output",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "QC refused for an unsealed output",
+    "type": "scenario"
+  },
   "rq-940d0a4b": {
     "decl": "Scenario: Stamp assigns IDs and status lines",
     "file": "question-tree",
@@ -1319,6 +2402,28 @@
     "title": "Stamp assigns IDs and status lines",
     "type": "scenario"
   },
+  "rq-956cc0ad": {
+    "decl": "## Next Action",
+    "file": "workflow",
+    "level": 2,
+    "refs": [],
+    "title": "Next Action",
+    "type": "section"
+  },
+  "rq-95cf00a8": {
+    "decl": "Scenario: Missing data file",
+    "file": "data",
+    "refs": [],
+    "title": "Missing data file",
+    "type": "scenario"
+  },
+  "rq-960f50c6": {
+    "decl": "Scenario: Summary is dirty when an upstream record is unclean",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Summary is dirty when an upstream record is unclean",
+    "type": "scenario"
+  },
   "rq-96dcd148": {
     "decl": "### Types",
     "file": "check",
@@ -1326,6 +2431,42 @@
     "refs": [],
     "title": "Types",
     "type": "section"
+  },
+  "rq-96ee56c2": {
+    "decl": "Scenario: Seal a fan-out item and the stage",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Seal a fan-out item and the stage",
+    "type": "scenario"
+  },
+  "rq-973f9875": {
+    "decl": "Scenario: Verify reports extra files",
+    "file": "data",
+    "refs": [],
+    "title": "Verify reports extra files",
+    "type": "scenario"
+  },
+  "rq-985dbe20": {
+    "decl": "## Data Roots",
+    "file": "data",
+    "level": 2,
+    "refs": [],
+    "title": "Data Roots",
+    "type": "section"
+  },
+  "rq-98b54f50": {
+    "decl": "Scenario: Retire a dataset version",
+    "file": "data",
+    "refs": [],
+    "title": "Retire a dataset version",
+    "type": "scenario"
+  },
+  "rq-9950b389": {
+    "decl": "- `StageConfig` — one stage after variant merging: name, run, code, inputs, params, env, threads,",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "StageConfig",
+    "type": "api-item"
   },
   "rq-9a610110": {
     "decl": "Scenario: Extra sections are allowed",
@@ -1337,6 +2478,13 @@
       }
     ],
     "title": "Extra sections are allowed",
+    "type": "scenario"
+  },
+  "rq-9acfe92b": {
+    "decl": "Scenario: Report refuses a stale summary",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Report refuses a stale summary",
     "type": "scenario"
   },
   "rq-9b44b88f": {
@@ -1364,6 +2512,13 @@
     "title": "Rule identifiers",
     "type": "section"
   },
+  "rq-9bb38d37": {
+    "decl": "Scenario: Waiting for a QC verdict",
+    "file": "workflow",
+    "refs": [],
+    "title": "Waiting for a QC verdict",
+    "type": "scenario"
+  },
   "rq-9bca6bbf": {
     "decl": "Scenario: Check does not modify the working tree",
     "file": "check",
@@ -1374,6 +2529,13 @@
       }
     ],
     "title": "Check does not modify the working tree",
+    "type": "scenario"
+  },
+  "rq-9c43f967": {
+    "decl": "Scenario: STUDY.md is never a rule input",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "STUDY.md is never a rule input",
     "type": "scenario"
   },
   "rq-9c53f79c": {
@@ -1428,6 +2590,21 @@
     "title": "tophat",
     "type": "api-item"
   },
+  "rq-9f3a6366": {
+    "decl": "### Clean",
+    "file": "pipeline/provenance",
+    "level": 3,
+    "refs": [],
+    "title": "Clean",
+    "type": "section"
+  },
+  "rq-9f3b24de": {
+    "decl": "Scenario: Summary is dirty when one fan-out item record is unclean",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Summary is dirty when one fan-out item record is unclean",
+    "type": "scenario"
+  },
   "rq-9f4d2081": {
     "decl": "Scenario: Citing a superseded study",
     "file": "question-tree",
@@ -1438,6 +2615,34 @@
       }
     ],
     "title": "Citing a superseded study",
+    "type": "scenario"
+  },
+  "rq-9f5b536b": {
+    "decl": "Scenario: Variants with identical stage settings share a key",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Variants with identical stage settings share a key",
+    "type": "scenario"
+  },
+  "rq-9f8a5a5e": {
+    "decl": "- `ProvenanceRecord` — a parsed `provenance.json`.",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "ProvenanceRecord",
+    "type": "api-item"
+  },
+  "rq-9fa80dbe": {
+    "decl": "Scenario: Seal refuses when the configuration changed during the run",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Seal refuses when the configuration changed during the run",
+    "type": "scenario"
+  },
+  "rq-a029874e": {
+    "decl": "Scenario: Stale summary in a draft is only a warning",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Stale summary in a draft is only a warning",
     "type": "scenario"
   },
   "rq-a046955d": {
@@ -1469,6 +2674,29 @@
     "title": "Study Links",
     "type": "section"
   },
+  "rq-a17aa884": {
+    "decl": "### Variants",
+    "file": "pipeline/provenance",
+    "level": 3,
+    "refs": [],
+    "title": "Variants",
+    "type": "section"
+  },
+  "rq-a27155bc": {
+    "decl": "Scenario: Generation fails when the results root is unconfigured",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Generation fails when the results root is unconfigured",
+    "type": "scenario"
+  },
+  "rq-a2a20f9a": {
+    "decl": "### Functions",
+    "file": "pipeline/provenance",
+    "level": 3,
+    "refs": [],
+    "title": "Functions",
+    "type": "section"
+  },
   "rq-a32e7ed9": {
     "decl": "Scenario: Amendment on a draft",
     "file": "study/format",
@@ -1479,6 +2707,13 @@
       }
     ],
     "title": "Amendment on a draft",
+    "type": "scenario"
+  },
+  "rq-a3466977": {
+    "decl": "Scenario: Run one variant",
+    "file": "workflow",
+    "refs": [],
+    "title": "Run one variant",
     "type": "scenario"
   },
   "rq-a3b4939d": {
@@ -1514,6 +2749,21 @@
     "title": "Editing a frozen section is detected",
     "type": "scenario"
   },
+  "rq-a3f2b786": {
+    "decl": "Scenario: A fresh draft needs its plan written",
+    "file": "workflow",
+    "refs": [],
+    "title": "A fresh draft needs its plan written",
+    "type": "scenario"
+  },
+  "rq-a44c3b76": {
+    "decl": "### Fan-out",
+    "file": "pipeline/snakemake",
+    "level": 3,
+    "refs": [],
+    "title": "Fan-out",
+    "type": "section"
+  },
   "rq-a4669866": {
     "decl": "Scenario: Skipped heading level",
     "file": "question-tree",
@@ -1525,6 +2775,50 @@
     ],
     "title": "Skipped heading level",
     "type": "scenario"
+  },
+  "rq-a54ab3d8": {
+    "decl": "Scenario: Seal checks the result file",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Seal checks the result file",
+    "type": "scenario"
+  },
+  "rq-a56c1f8f": {
+    "decl": "### Output location",
+    "file": "pipeline/provenance",
+    "level": 3,
+    "refs": [],
+    "title": "Output location",
+    "type": "section"
+  },
+  "rq-a5ab4b78": {
+    "decl": "Scenario: Fan-out stage cannot declare a result",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Fan-out stage cannot declare a result",
+    "type": "scenario"
+  },
+  "rq-a5fd6b70": {
+    "decl": "Scenario: A study without stages has no pipeline",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "A study without stages has no pipeline",
+    "type": "scenario"
+  },
+  "rq-a7314db6": {
+    "decl": "## Out of Scope",
+    "file": "workflow",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
+    "type": "section"
+  },
+  "rq-a7709a28": {
+    "decl": "- `tophat data retire <name>@v<n> --reason <text>`",
+    "file": "data",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
   },
   "rq-a79ad3ba": {
     "decl": "Scenario: Headings inside code fences are not sections",
@@ -1586,6 +2880,13 @@
     "title": "Stamp preserves unrelated content",
     "type": "scenario"
   },
+  "rq-a9d102bf": {
+    "decl": "Scenario: Extra Snakemake arguments are passed through",
+    "file": "workflow",
+    "refs": [],
+    "title": "Extra Snakemake arguments are passed through",
+    "type": "scenario"
+  },
   "rq-a9de1b5b": {
     "decl": "Scenario: Supersede refuses a draft",
     "file": "study/format",
@@ -1614,6 +2915,13 @@
     ],
     "title": "Scenario Test References",
     "type": "section"
+  },
+  "rq-aa6553ad": {
+    "decl": "- `generate_rules(root: &Path, study: &str) -> Result<String, PipelineError>` — the rules file text.",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "generate_rules",
+    "type": "api-item"
   },
   "rq-abbd00cd": {
     "decl": "### Project discovery",
@@ -1644,6 +2952,13 @@
     "title": "Supersedes entry without a matching forward link",
     "type": "scenario"
   },
+  "rq-adfff14c": {
+    "decl": "- `parse_manifest(text: &str) -> Result<Manifest, String>` — parses and validates a manifest.",
+    "file": "data",
+    "refs": [],
+    "title": "parse_manifest",
+    "type": "api-item"
+  },
   "rq-af111715": {
     "decl": "Scenario: Gaps in scenario numbers are allowed",
     "file": "study/format",
@@ -1655,6 +2970,13 @@
     ],
     "title": "Gaps in scenario numbers are allowed",
     "type": "scenario"
+  },
+  "rq-af5ed3df": {
+    "decl": "- `tophat data add <name> --root <root> --path <path> --source <text> [--date <YYYY-MM-DD>] [--license <text>] [--visibility public|private]`",
+    "file": "data",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
   },
   "rq-b01ceeeb": {
     "decl": "- `parse_study(dir: &Path) -> Result<Study, StudyError>` — parses `STUDY.md` in a study directory.",
@@ -1680,6 +3002,35 @@
     "title": "An error fails the check",
     "type": "scenario"
   },
+  "rq-b1a89dcb": {
+    "decl": "Scenario: Stale summary means run again",
+    "file": "workflow",
+    "refs": [],
+    "title": "Stale summary means run again",
+    "type": "scenario"
+  },
+  "rq-b1f6d54f": {
+    "decl": "### Study scope",
+    "file": "workflow",
+    "level": 3,
+    "refs": [],
+    "title": "Study scope",
+    "type": "section"
+  },
+  "rq-b2eccf77": {
+    "decl": "- `data_rules(project: &Project) -> Vec<Diagnostic>` — the `data` rule family registered in",
+    "file": "data",
+    "refs": [],
+    "title": "data_rules",
+    "type": "api-item"
+  },
+  "rq-b2fecc6c": {
+    "decl": "- `Manifest` — a parsed manifest: name, version, kind, visibility, root, path, created, origin,",
+    "file": "data",
+    "refs": [],
+    "title": "Manifest",
+    "type": "api-item"
+  },
   "rq-b358b21a": {
     "decl": "Scenario: Empty evidence list",
     "file": "question-tree",
@@ -1692,12 +3043,56 @@
     "title": "Empty evidence list",
     "type": "scenario"
   },
+  "rq-b418ac06": {
+    "decl": "Scenario: Unconfigured root is a warning, not an error",
+    "file": "data",
+    "refs": [],
+    "title": "Unconfigured root is a warning, not an error",
+    "type": "scenario"
+  },
+  "rq-b4d5c830": {
+    "decl": "## Assumptions",
+    "file": "pipeline/snakemake",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
+  },
+  "rq-b4eb6e53": {
+    "decl": "Scenario: New studies get the stub",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "New studies get the stub",
+    "type": "scenario"
+  },
   "rq-b620446f": {
     "decl": "## Behaviour",
     "file": "check",
     "level": 2,
     "refs": [],
     "title": "Behaviour",
+    "type": "section"
+  },
+  "rq-b6cac057": {
+    "decl": "Scenario: Relative local location is rejected",
+    "file": "data",
+    "refs": [],
+    "title": "Relative local location is rejected",
+    "type": "scenario"
+  },
+  "rq-b6d6ddcc": {
+    "decl": "Scenario: Verify skips unconfigured roots",
+    "file": "data",
+    "refs": [],
+    "title": "Verify skips unconfigured roots",
+    "type": "scenario"
+  },
+  "rq-b70e5d89": {
+    "decl": "## Out of Scope",
+    "file": "data",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
     "type": "section"
   },
   "rq-b757d2fc": {
@@ -1728,6 +3123,13 @@
     ],
     "title": "Orphan test reference in a draft warns",
     "type": "scenario"
+  },
+  "rq-b9512459": {
+    "decl": "- `summarize(root: &Path, study: &str) -> Result<Summary, PipelineError>` — computes the summary",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "summarize",
+    "type": "api-item"
   },
   "rq-ba118d75": {
     "decl": "## PROJECT.md Format",
@@ -1770,6 +3172,35 @@
     "title": "Reject a malformed question ID",
     "type": "scenario"
   },
+  "rq-bb4108e3": {
+    "decl": "### Files",
+    "file": "pipeline/provenance",
+    "level": 3,
+    "refs": [],
+    "title": "Files",
+    "type": "section"
+  },
+  "rq-bb98136e": {
+    "decl": "- `Roots` — declared root names and their resolved locations on this machine.",
+    "file": "data",
+    "refs": [],
+    "title": "Roots",
+    "type": "api-item"
+  },
+  "rq-bbe1941a": {
+    "decl": "Scenario: A valid configuration has no pipeline diagnostics",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "A valid configuration has no pipeline diagnostics",
+    "type": "scenario"
+  },
+  "rq-bc2ad0ff": {
+    "decl": "Scenario: Missing roots file declares only results",
+    "file": "data",
+    "refs": [],
+    "title": "Missing roots file declares only results",
+    "type": "scenario"
+  },
   "rq-bcb83d0a": {
     "decl": "- `tophat study preregister <study-id>`",
     "file": "study/format",
@@ -1786,6 +3217,21 @@
     "title": "tophat",
     "type": "api-item"
   },
+  "rq-bd19d141": {
+    "decl": "- `DataError` — error type of the data commands, with at minimum:",
+    "file": "data",
+    "refs": [],
+    "title": "DataError",
+    "type": "api-item"
+  },
+  "rq-bdfef246": {
+    "decl": "### Summary rule",
+    "file": "pipeline/snakemake",
+    "level": 3,
+    "refs": [],
+    "title": "Summary rule",
+    "type": "section"
+  },
   "rq-be41ffc1": {
     "decl": "Scenario: Result in a preregistered study",
     "file": "study/format",
@@ -1797,6 +3243,28 @@
     ],
     "title": "Result in a preregistered study",
     "type": "scenario"
+  },
+  "rq-bf30c589": {
+    "decl": "Scenario: Invalid QC file",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Invalid QC file",
+    "type": "scenario"
+  },
+  "rq-bf93285a": {
+    "decl": "- `next_action(root: &Path, study: &str) -> Result<NextAction, StudyError>` — evaluates the",
+    "file": "workflow",
+    "refs": [],
+    "title": "next_action",
+    "type": "api-item"
+  },
+  "rq-c0a68ab3": {
+    "decl": "## Out of Scope",
+    "file": "pipeline/snakemake",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
+    "type": "section"
   },
   "rq-c112cac7": {
     "decl": "## Gherkin Scenarios",
@@ -1818,6 +3286,20 @@
     "title": "Unstamped question heading",
     "type": "scenario"
   },
+  "rq-c25e83b5": {
+    "decl": "Scenario: Referencing a retired version is an error",
+    "file": "data",
+    "refs": [],
+    "title": "Referencing a retired version is an error",
+    "type": "scenario"
+  },
+  "rq-c3395d20": {
+    "decl": "Scenario: Retiring twice fails",
+    "file": "data",
+    "refs": [],
+    "title": "Retiring twice fails",
+    "type": "scenario"
+  },
   "rq-c35dd468": {
     "decl": "## Feature API",
     "file": "check",
@@ -1825,6 +3307,13 @@
     "refs": [],
     "title": "Feature API",
     "type": "section"
+  },
+  "rq-c3a5cbef": {
+    "decl": "Scenario: Code outside the project",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Code outside the project",
+    "type": "scenario"
   },
   "rq-c5416f0d": {
     "decl": "## Assumptions",
@@ -1878,6 +3367,27 @@
     "title": "STUDY.md Format",
     "type": "section"
   },
+  "rq-c698a75a": {
+    "decl": "Scenario: Missing Snakefile for a study with stages",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Missing Snakefile for a study with stages",
+    "type": "scenario"
+  },
+  "rq-c705fcd3": {
+    "decl": "Scenario: Missing verdict stops the pipeline before downstream stages",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Missing verdict stops the pipeline before downstream stages",
+    "type": "scenario"
+  },
+  "rq-c7d50a4a": {
+    "decl": "- `tophat pipeline stub <study>`",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
   "rq-c7e4a9d5": {
     "decl": "Scenario: Citing a study that is only pre-registered",
     "file": "question-tree",
@@ -1901,6 +3411,27 @@
     ],
     "title": "CheckError",
     "type": "api-item"
+  },
+  "rq-c85070d7": {
+    "decl": "Scenario: Changes elsewhere do not make a record unclean",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Changes elsewhere do not make a record unclean",
+    "type": "scenario"
+  },
+  "rq-c8637010": {
+    "decl": "- `tophat pipeline keys <study> [--variant <variant>] [--json]`",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-c8940b0d": {
+    "decl": "Scenario: Run a preregistered study",
+    "file": "workflow",
+    "refs": [],
+    "title": "Run a preregistered study",
+    "type": "scenario"
   },
   "rq-c985c1d6": {
     "decl": "Scenario: Retrospective study with a pipeline uses strict results",
@@ -1926,6 +3457,13 @@
     "title": "Editing a non-frozen section is allowed",
     "type": "scenario"
   },
+  "rq-cbd35529": {
+    "decl": "- `PipelineConfig` — the stages of a study for one variant.",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "PipelineConfig",
+    "type": "api-item"
+  },
   "rq-cc797bfb": {
     "decl": "- `question_rules(project: &Project) -> Vec<Diagnostic>` — the `question` rule family registered",
     "file": "question-tree",
@@ -1942,6 +3480,13 @@
     "title": "question_rules",
     "type": "api-item"
   },
+  "rq-ccaa4e30": {
+    "decl": "Scenario: Escaped braces are allowed",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Escaped braces are allowed",
+    "type": "scenario"
+  },
   "rq-cd497e41": {
     "decl": "Scenario: Duplicated governed section",
     "file": "study/format",
@@ -1954,6 +3499,20 @@
     "title": "Duplicated governed section",
     "type": "scenario"
   },
+  "rq-cdc39471": {
+    "decl": "- `tophat run <study> [--variant <variant>] [--cores <n>] [--draft] [-- <snakemake args>...]`",
+    "file": "workflow",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-cde76c0f": {
+    "decl": "Scenario: Unconfigured results root",
+    "file": "workflow",
+    "refs": [],
+    "title": "Unconfigured results root",
+    "type": "scenario"
+  },
   "rq-ce0bc1c8": {
     "decl": "Scenario: Report refuses a missing summary",
     "file": "study/format",
@@ -1964,6 +3523,13 @@
       }
     ],
     "title": "Report refuses a missing summary",
+    "type": "scenario"
+  },
+  "rq-ce1e3132": {
+    "decl": "Scenario: Declare data of unknown history",
+    "file": "data",
+    "refs": [],
+    "title": "Declare data of unknown history",
     "type": "scenario"
   },
   "rq-ce7c6815": {
@@ -2048,6 +3614,20 @@
     "title": "Citing a reported study about a descendant question",
     "type": "scenario"
   },
+  "rq-d14816cc": {
+    "decl": "Scenario: Superseded study is refused",
+    "file": "workflow",
+    "refs": [],
+    "title": "Superseded study is refused",
+    "type": "scenario"
+  },
+  "rq-d17bfed2": {
+    "decl": "Scenario: Study without stages",
+    "file": "workflow",
+    "refs": [],
+    "title": "Study without stages",
+    "type": "scenario"
+  },
   "rq-d19b87ac": {
     "decl": "Scenario: Stamp leaves malformed IDs for the user",
     "file": "question-tree",
@@ -2058,6 +3638,21 @@
       }
     ],
     "title": "Stamp leaves malformed IDs for the user",
+    "type": "scenario"
+  },
+  "rq-d1d175cd": {
+    "decl": "## Out of Scope",
+    "file": "pipeline/provenance",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
+    "type": "section"
+  },
+  "rq-d1d30204": {
+    "decl": "Scenario: Snakemake's exit code is returned",
+    "file": "workflow",
+    "refs": [],
+    "title": "Snakemake's exit code is returned",
     "type": "scenario"
   },
   "rq-d4227e28": {
@@ -2104,6 +3699,13 @@
     "title": "Functions",
     "type": "section"
   },
+  "rq-d511d6c8": {
+    "decl": "- `StudyStatus` — the per-study part of `tophat status`: ID, status, question, per-variant",
+    "file": "workflow",
+    "refs": [],
+    "title": "StudyStatus",
+    "type": "api-item"
+  },
   "rq-d6677222": {
     "decl": "Scenario: Hand-edited result is detected",
     "file": "study/format",
@@ -2116,6 +3718,49 @@
     "title": "Hand-edited result is detected",
     "type": "scenario"
   },
+  "rq-d66af500": {
+    "decl": "Scenario: Rule outputs and inputs follow the keys",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Rule outputs and inputs follow the keys",
+    "type": "scenario"
+  },
+  "rq-d682f5a4": {
+    "decl": "Scenario: Report refuses while depending on unreported work",
+    "file": "data",
+    "refs": [],
+    "title": "Report refuses while depending on unreported work",
+    "type": "scenario"
+  },
+  "rq-d76deef1": {
+    "decl": "Scenario: Draft refused without --draft",
+    "file": "workflow",
+    "refs": [],
+    "title": "Draft refused without --draft",
+    "type": "scenario"
+  },
+  "rq-d77701f7": {
+    "decl": "Scenario: Generated rules are deterministic",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Generated rules are deterministic",
+    "type": "scenario"
+  },
+  "rq-d7fc4287": {
+    "decl": "### Commands",
+    "file": "pipeline/snakemake",
+    "level": 3,
+    "refs": [],
+    "title": "Commands",
+    "type": "section"
+  },
+  "rq-d89c8a6b": {
+    "decl": "- `tophat data declare <name> --root <root> --path <path> --statement <text> [--visibility public|private]`",
+    "file": "data",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
   "rq-d94a6490": {
     "decl": "- `Project` — a read-only view of the project used by rule families: the project root and accessors",
     "file": "check",
@@ -2126,6 +3771,27 @@
       }
     ],
     "title": "Project",
+    "type": "api-item"
+  },
+  "rq-d953c801": {
+    "decl": "Scenario: Summarize refuses a study without result stages",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Summarize refuses a study without result stages",
+    "type": "scenario"
+  },
+  "rq-d9fd0437": {
+    "decl": "Scenario: Summarize sealed results",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Summarize sealed results",
+    "type": "scenario"
+  },
+  "rq-da8648ca": {
+    "decl": "- `content_hash(files: &[(String, String)]) -> String` — the `content_hash` of `(path, sha256)`",
+    "file": "data",
+    "refs": [],
+    "title": "content_hash",
     "type": "api-item"
   },
   "rq-dacbc76e": {
@@ -2156,6 +3822,13 @@
     "title": "Citing a retrospective study is flagged as legacy",
     "type": "scenario"
   },
+  "rq-db3f2ac8": {
+    "decl": "Scenario: Items are the upstream output files",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Items are the upstream output files",
+    "type": "scenario"
+  },
   "rq-dba2a6b7": {
     "decl": "- `StudyError` — error type returned by parsing and by the study commands, with at minimum:",
     "file": "study/format",
@@ -2167,6 +3840,35 @@
     ],
     "title": "StudyError",
     "type": "api-item"
+  },
+  "rq-dbb8600d": {
+    "decl": "Scenario: Publish a clean stage output",
+    "file": "data",
+    "refs": [],
+    "title": "Publish a clean stage output",
+    "type": "scenario"
+  },
+  "rq-dbcd9057": {
+    "decl": "Scenario: Referencing an unknown version is an error",
+    "file": "data",
+    "refs": [],
+    "title": "Referencing an unknown version is an error",
+    "type": "scenario"
+  },
+  "rq-dbe124d9": {
+    "decl": "Scenario: Generation fails on a retired dataset",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Generation fails on a retired dataset",
+    "type": "scenario"
+  },
+  "rq-dc1e521d": {
+    "decl": "## QC Gates",
+    "file": "pipeline/snakemake",
+    "level": 2,
+    "refs": [],
+    "title": "QC Gates",
+    "type": "section"
   },
   "rq-dc4c3c26": {
     "decl": "Scenario: Stamp adds a missing status line to a stamped question",
@@ -2216,12 +3918,48 @@
     "title": "Missing back-link",
     "type": "scenario"
   },
+  "rq-de005c10": {
+    "decl": "# Feature: Stage Configuration, Keys and Provenance",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Feature: Stage Configuration, Keys and Provenance",
+    "type": "file"
+  },
   "rq-de80fc6b": {
     "decl": "## Out of Scope",
     "file": "check",
     "level": 2,
     "refs": [],
     "title": "Out of Scope",
+    "type": "section"
+  },
+  "rq-de9819a0": {
+    "decl": "Scenario: Seal a completed stage",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Seal a completed stage",
+    "type": "scenario"
+  },
+  "rq-df68d9f7": {
+    "decl": "Scenario: Summarize refuses missing outputs",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Summarize refuses missing outputs",
+    "type": "scenario"
+  },
+  "rq-dffba6fd": {
+    "decl": "Scenario: Superseded study",
+    "file": "workflow",
+    "refs": [],
+    "title": "Superseded study",
+    "type": "scenario"
+  },
+  "rq-e09ced9c": {
+    "decl": "### Functions",
+    "file": "workflow",
+    "level": 3,
+    "refs": [],
+    "title": "Functions",
     "type": "section"
   },
   "rq-e10b269c": {
@@ -2231,6 +3969,35 @@
     "refs": [],
     "title": "Functions",
     "type": "section"
+  },
+  "rq-e23a3422": {
+    "decl": "Scenario: A code directory is hashed file by file",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "A code directory is hashed file by file",
+    "type": "scenario"
+  },
+  "rq-e35a8bdd": {
+    "decl": "Scenario: Changing a parameter changes only that stage and downstream",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Changing a parameter changes only that stage and downstream",
+    "type": "scenario"
+  },
+  "rq-e4355ed1": {
+    "decl": "### Declaring roots",
+    "file": "data",
+    "level": 3,
+    "refs": [],
+    "title": "Declaring roots",
+    "type": "section"
+  },
+  "rq-e4c5a373": {
+    "decl": "Scenario: Consuming declared data is flagged as legacy",
+    "file": "data",
+    "refs": [],
+    "title": "Consuming declared data is flagged as legacy",
+    "type": "scenario"
   },
   "rq-e54fa7fd": {
     "decl": "### Rule evaluation",
@@ -2278,6 +4045,13 @@
     "title": "Variants and Configuration",
     "type": "section"
   },
+  "rq-e6252079": {
+    "decl": "- `stage_key(text: &str) -> String` — `sk-` and the first 16 hex characters of the text's SHA-256.",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "stage_key",
+    "type": "api-item"
+  },
   "rq-e746f1bb": {
     "decl": "## Gherkin Scenarios",
     "file": "question-tree",
@@ -2310,6 +4084,13 @@
     "title": "Re-reporting refreshes the result",
     "type": "scenario"
   },
+  "rq-e88cc29b": {
+    "decl": "Scenario: Failing verdict blocks downstream stages",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Failing verdict blocks downstream stages",
+    "type": "scenario"
+  },
   "rq-e895c8ff": {
     "decl": "Scenario: Citing a study about an unrelated question",
     "file": "question-tree",
@@ -2321,6 +4102,14 @@
     ],
     "title": "Citing a study about an unrelated question",
     "type": "scenario"
+  },
+  "rq-e95264a8": {
+    "decl": "## Assumptions",
+    "file": "data",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
   },
   "rq-e956ef6a": {
     "decl": "- `Question` — a question parsed from `PROJECT.md`:",
@@ -2379,6 +4168,20 @@
     "title": "Pre-registration block on a draft",
     "type": "scenario"
   },
+  "rq-eab2ab92": {
+    "decl": "- `DatasetKind` — enum `Raw`, `Declared`, `Published`.",
+    "file": "data",
+    "refs": [],
+    "title": "DatasetKind",
+    "type": "api-item"
+  },
+  "rq-eb7be7fe": {
+    "decl": "Scenario: Trial run of one variant",
+    "file": "workflow",
+    "refs": [],
+    "title": "Trial run of one variant",
+    "type": "scenario"
+  },
   "rq-ec84dc2b": {
     "decl": "Scenario: Valid amendment",
     "file": "study/format",
@@ -2406,6 +4209,27 @@
     ],
     "title": "tophat",
     "type": "api-item"
+  },
+  "rq-eda3d443": {
+    "decl": "Scenario: Reserved tool key",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Reserved tool key",
+    "type": "scenario"
+  },
+  "rq-ee88aae5": {
+    "decl": "Scenario: Errors in a referenced dataset block the study",
+    "file": "workflow",
+    "refs": [],
+    "title": "Errors in a referenced dataset block the study",
+    "type": "scenario"
+  },
+  "rq-eebf1864": {
+    "decl": "Scenario: Preregistered study without stages",
+    "file": "workflow",
+    "refs": [],
+    "title": "Preregistered study without stages",
+    "type": "scenario"
   },
   "rq-ef3d43f8": {
     "decl": "- `stamp(root: &Path) -> Result<Vec<(String, String)>, QuestionError>` — performs",
@@ -2438,6 +4262,28 @@
       }
     ],
     "title": "Evidence",
+    "type": "section"
+  },
+  "rq-f0049ad3": {
+    "decl": "Scenario: Ready to report",
+    "file": "workflow",
+    "refs": [],
+    "title": "Ready to report",
+    "type": "scenario"
+  },
+  "rq-f19caed4": {
+    "decl": "Scenario: Reported study pinned to an older version is not warned",
+    "file": "data",
+    "refs": [],
+    "title": "Reported study pinned to an older version is not warned",
+    "type": "scenario"
+  },
+  "rq-f1d5b29a": {
+    "decl": "### Referencing datasets",
+    "file": "data",
+    "level": 3,
+    "refs": [],
+    "title": "Referencing datasets",
     "type": "section"
   },
   "rq-f2135c24": {
@@ -2480,6 +4326,13 @@
     ],
     "title": "Unknown front-matter field",
     "type": "scenario"
+  },
+  "rq-f40ffa2b": {
+    "decl": "- `stage_key_text(config: &PipelineConfig, stage: &str, ctx: &KeyContext) -> Result<String, PipelineError>`",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "stage_key_text",
+    "type": "api-item"
   },
   "rq-f448ed00": {
     "decl": "- `QuestionStatus` — enum `Open`, `Answered`, `Dropped`.",
@@ -2545,6 +4398,13 @@
     "title": "Mixed citations are each checked",
     "type": "scenario"
   },
+  "rq-f8dfe570": {
+    "decl": "- `load_pipeline(root: &Path, study: &str, variant: &str) -> Result<PipelineConfig, PipelineError>`",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "load_pipeline",
+    "type": "api-item"
+  },
   "rq-f94476f9": {
     "decl": "Scenario: JSON omits absent optional fields",
     "file": "check",
@@ -2556,6 +4416,21 @@
     ],
     "title": "JSON omits absent optional fields",
     "type": "scenario"
+  },
+  "rq-f9fd06bf": {
+    "decl": "Scenario: Shared keys produce one job",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Shared keys produce one job",
+    "type": "scenario"
+  },
+  "rq-fbc524b4": {
+    "decl": "## The Snakefile Stub",
+    "file": "pipeline/snakemake",
+    "level": 2,
+    "refs": [],
+    "title": "The Snakefile Stub",
+    "type": "section"
   },
   "rq-fbdc50b4": {
     "decl": "## Gherkin Scenarios",
@@ -2571,6 +4446,14 @@
     "level": 2,
     "refs": [],
     "title": "Study Layout",
+    "type": "section"
+  },
+  "rq-fc3ff911": {
+    "decl": "## Feature API",
+    "file": "pipeline/provenance",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
     "type": "section"
   },
   "rq-fd01ec6f": {
@@ -2601,6 +4484,13 @@
     ],
     "title": "Amendments",
     "type": "section"
+  },
+  "rq-fd9f1a7c": {
+    "decl": "Scenario: Check errors are refused",
+    "file": "workflow",
+    "refs": [],
+    "title": "Check errors are refused",
+    "type": "scenario"
   },
   "rq-fdb74980": {
     "decl": "- `Severity` — enum with variants `Error`, `Warning`, `Legacy`.",
@@ -2636,6 +4526,13 @@
       }
     ],
     "title": "Study names a question that does not exist",
+    "type": "scenario"
+  },
+  "rq-fed9f56b": {
+    "decl": "Scenario: Consuming unreported work while still in draft warns",
+    "file": "data",
+    "refs": [],
+    "title": "Consuming unreported work while still in draft warns",
     "type": "scenario"
   }
 }
