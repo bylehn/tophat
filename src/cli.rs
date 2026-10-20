@@ -9,6 +9,7 @@ use crate::pipeline;
 use crate::question::{self, QuestionError};
 use crate::report::{render_human, render_json};
 use crate::study::{self, Console, StudyError};
+use crate::workflow::{self, RunOptions};
 use std::io::{BufRead, Write};
 use std::path::{Path, PathBuf};
 
@@ -23,6 +24,9 @@ const USAGE: &str = "\
 Usage: tophat <command> [options]
 
 Commands:
+  status [<STUDY>...] [--json]                   Show each study's state and next action
+  run <STUDY> [--variant V] [--cores N] [--draft] [-- SNAKEMAKE-ARGS...]
+                                                 Run a study's pipeline
   check [--json] [--strict] [PATH...]            Check project integrity
   study new <ID> --question <Q-ID> [--visibility public|private]
                                                  Create a draft study
@@ -689,6 +693,104 @@ fn run_stage_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
     }
 }
 
+fn run_status_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
+    let (json, studies) = take_flag(args, "--json");
+    if let Some(flag) = studies.iter().find(|a| a.starts_with('-')) {
+        let _ = writeln!(io.err, "tophat status: unknown option `{flag}`\n\n{USAGE}");
+        return EXIT_UNABLE;
+    }
+    let root = match find_project_root(cwd) {
+        Ok(root) => root,
+        Err(e) => {
+            let _ = writeln!(io.err, "tophat status: {e}");
+            return EXIT_UNABLE;
+        }
+    };
+    let result = workflow::project_summary(&root)
+        .and_then(|project| workflow::study_status(&root, &studies).map(|s| (project, s)));
+    match result {
+        Ok((project, statuses)) => {
+            let text = if json {
+                format!(
+                    "{}\n",
+                    serde_json::to_string_pretty(&workflow::status_json(&project, &statuses))
+                        .expect("serializes")
+                )
+            } else {
+                workflow::render_status(&project, &statuses)
+            };
+            let _ = io.out.write_all(text.as_bytes());
+            EXIT_OK
+        }
+        Err(e) => {
+            let _ = writeln!(io.err, "tophat status: {e}");
+            EXIT_FAILED
+        }
+    }
+}
+
+fn run_run_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
+    let usage = |io: &mut Streams<'_>, message: &str| {
+        let _ = writeln!(io.err, "tophat run: {message}\n\n{USAGE}");
+        EXIT_UNABLE
+    };
+    let (ours, snakemake_args) = match args.iter().position(|a| a == "--") {
+        Some(i) => (&args[..i], args[i + 1..].to_vec()),
+        None => (args, Vec::new()),
+    };
+    let (draft, rest) = take_flag(ours, "--draft");
+    let (positionals, options) = match parse_options(&rest, &["variant", "cores"]) {
+        Ok(parsed) => parsed,
+        Err(m) => return usage(io, &m),
+    };
+    let [study] = positionals.as_slice() else {
+        return usage(io, "`tophat run` takes one study ID");
+    };
+    let cores = match option(&options, "cores").map(str::parse::<usize>) {
+        None => None,
+        Some(Ok(n)) if n > 0 => Some(n),
+        Some(_) => return usage(io, "--cores must be a positive whole number"),
+    };
+    let root = match find_project_root(cwd) {
+        Ok(root) => root,
+        Err(e) => {
+            let _ = writeln!(io.err, "tophat run: {e}");
+            return EXIT_UNABLE;
+        }
+    };
+    let options = RunOptions {
+        variant: option(&options, "variant").map(str::to_string),
+        cores,
+        draft,
+        snakemake_args,
+    };
+    let pixi_args = match workflow::run_command(&root, study, &options) {
+        Ok(a) => a,
+        Err(workflow::Refusal(message)) => {
+            let _ = writeln!(io.err, "tophat run: {message}");
+            return EXIT_FAILED;
+        }
+    };
+    if draft {
+        let _ = writeln!(
+            io.out,
+            "Trial run of draft study `{study}`: outputs are kept under .trial/ and can never be reported."
+        );
+    }
+    let _ = io.out.flush();
+    let Some(code) = workflow::run_pixi(&root, &pixi_args) else {
+        let _ = writeln!(
+            io.err,
+            "tophat run: pixi could not be started; is it installed and on PATH?"
+        );
+        return EXIT_UNABLE;
+    };
+    if let Ok(next) = workflow::next_action(&root, study) {
+        let _ = writeln!(io.out, "\n{}", next.line());
+    }
+    code
+}
+
 fn run_question_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
     let usage_error = |io: &mut Streams<'_>, message: &str| {
         let _ = writeln!(io.err, "tophat question: {message}\n\n{USAGE}");
@@ -750,6 +852,8 @@ fn run_question_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i3
 pub fn run(args: &[String], cwd: &Path, families: &[RuleFamily], io: &mut Streams<'_>) -> i32 {
     match args.first().map(String::as_str) {
         Some("check") => run_check_command(&args[1..], cwd, families, io),
+        Some("status") => run_status_command(&args[1..], cwd, io),
+        Some("run") => run_run_command(&args[1..], cwd, io),
         Some("study") => run_study_command(&args[1..], cwd, io),
         Some("question") => run_question_command(&args[1..], cwd, io),
         Some("data") => run_data_command(&args[1..], cwd, io),

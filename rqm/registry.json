@@ -55,7 +55,12 @@
   "rq-018e0aed": {
     "decl": "Scenario: Project line",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Project line",
     "type": "scenario"
   },
@@ -82,7 +87,16 @@
   "rq-02e65d51": {
     "decl": "- `study_status(root: &Path, studies: &[String]) -> Result<Vec<StudyStatus>, StudyError>` — the",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/workflow.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "study_status",
     "type": "api-item"
   },
@@ -289,7 +303,12 @@
     "decl": "## Trial Runs",
     "file": "workflow",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Trial Runs",
     "type": "section"
   },
@@ -380,7 +399,12 @@
   "rq-13a88566": {
     "decl": "Scenario: Reported study whose question is still open",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Reported study whose question is still open",
     "type": "scenario"
   },
@@ -411,7 +435,12 @@
   "rq-14542671": {
     "decl": "Scenario: Failed QC",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Failed QC",
     "type": "scenario"
   },
@@ -812,7 +841,12 @@
   "rq-23d4abbf": {
     "decl": "Scenario: Trial run of a draft",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Trial run of a draft",
     "type": "scenario"
   },
@@ -856,7 +890,12 @@
   "rq-24702b2d": {
     "decl": "Scenario: Default cores",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Default cores",
     "type": "scenario"
   },
@@ -875,7 +914,12 @@
   "rq-256e64ad": {
     "decl": "Scenario: Direct Snakemake on a draft only offers trial targets",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Direct Snakemake on a draft only offers trial targets",
     "type": "scenario"
   },
@@ -930,7 +974,12 @@
   "rq-2a741327": {
     "decl": "Scenario: Trial outputs are separate and unreportable",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Trial outputs are separate and unreportable",
     "type": "scenario"
   },
@@ -945,7 +994,12 @@
   "rq-2b6e16c6": {
     "decl": "Scenario: Retrospective study without a pipeline",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Retrospective study without a pipeline",
     "type": "scenario"
   },
@@ -1039,14 +1093,24 @@
   "rq-2e3b70f6": {
     "decl": "Scenario: Warnings do not block a run",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Warnings do not block a run",
     "type": "scenario"
   },
   "rq-2ec453d8": {
     "decl": "Scenario: A complete draft waits for the human to pre-register",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A complete draft waits for the human to pre-register",
     "type": "scenario"
   },
@@ -1295,7 +1359,12 @@
   "rq-3d60791d": {
     "decl": "Scenario: pixi not available",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "pixi not available",
     "type": "scenario"
   },
@@ -1504,7 +1573,12 @@
   "rq-4b2809d2": {
     "decl": "Scenario: Stages left to run",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Stages left to run",
     "type": "scenario"
   },
@@ -1528,7 +1602,12 @@
   "rq-4d4f5fd4": {
     "decl": "Scenario: Errors in another study do not block this one",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Errors in another study do not block this one",
     "type": "scenario"
   },
@@ -1843,7 +1922,12 @@
   "rq-5a59811a": {
     "decl": "Scenario: Check errors come first",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Check errors come first",
     "type": "scenario"
   },
@@ -1915,7 +1999,12 @@
   "rq-5e257285": {
     "decl": "Scenario: Stopped at a QC gate",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Stopped at a QC gate",
     "type": "scenario"
   },
@@ -2026,7 +2115,12 @@
   "rq-62e72400": {
     "decl": "Scenario: Reported study that is cited is done",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Reported study that is cited is done",
     "type": "scenario"
   },
@@ -2093,7 +2187,16 @@
   "rq-6733b7c0": {
     "decl": "- `tophat status [<study>...] [--json]`",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/workflow.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -2124,7 +2227,12 @@
   "rq-682322e9": {
     "decl": "Scenario: JSON status for agents",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "JSON status for agents",
     "type": "scenario"
   },
@@ -2228,7 +2336,12 @@
   "rq-6ceae812": {
     "decl": "- `NextAction` — `row: u8`, `who: Who` (`You`, `Anyone`, `Nobody`), `text: String`,",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "NextAction",
     "type": "api-item"
   },
@@ -2255,14 +2368,24 @@
   "rq-6e13314c": {
     "decl": "Scenario: Unknown variant",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Unknown variant",
     "type": "scenario"
   },
   "rq-6e632e7d": {
     "decl": "Scenario: Unknown study",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Unknown study",
     "type": "scenario"
   },
@@ -2505,7 +2628,12 @@
   "rq-7b3ae395": {
     "decl": "Scenario: Unparseable study",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Unparseable study",
     "type": "scenario"
   },
@@ -2686,7 +2814,12 @@
   "rq-82ac8f57": {
     "decl": "Scenario: Dirty summary means commit and run again",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Dirty summary means commit and run again",
     "type": "scenario"
   },
@@ -2830,14 +2963,24 @@
   "rq-88a10bea": {
     "decl": "Scenario: --draft on a preregistered study is refused",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "--draft on a preregistered study is refused",
     "type": "scenario"
   },
   "rq-8a1808bb": {
     "decl": "Scenario: Status is read-only",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Status is read-only",
     "type": "scenario"
   },
@@ -3009,7 +3152,16 @@
     "decl": "## Next Action",
     "file": "workflow",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/workflow.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Next Action",
     "type": "section"
   },
@@ -3153,7 +3305,12 @@
   "rq-9bb38d37": {
     "decl": "Scenario: Waiting for a QC verdict",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Waiting for a QC verdict",
     "type": "scenario"
   },
@@ -3403,7 +3560,12 @@
   "rq-a3466977": {
     "decl": "Scenario: Run one variant",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Run one variant",
     "type": "scenario"
   },
@@ -3443,7 +3605,12 @@
   "rq-a3f2b786": {
     "decl": "Scenario: A fresh draft needs its plan written",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A fresh draft needs its plan written",
     "type": "scenario"
   },
@@ -3616,7 +3783,12 @@
   "rq-a9d102bf": {
     "decl": "Scenario: Extra Snakemake arguments are passed through",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Extra Snakemake arguments are passed through",
     "type": "scenario"
   },
@@ -3761,7 +3933,12 @@
   "rq-b1a89dcb": {
     "decl": "Scenario: Stale summary means run again",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Stale summary means run again",
     "type": "scenario"
   },
@@ -3769,7 +3946,16 @@
     "decl": "### Study scope",
     "file": "workflow",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/workflow.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Study scope",
     "type": "section"
   },
@@ -4092,7 +4278,16 @@
   "rq-bf93285a": {
     "decl": "- `next_action(root: &Path, study: &str) -> Result<NextAction, StudyError>` — evaluates the",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/workflow.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "next_action",
     "type": "api-item"
   },
@@ -4311,7 +4506,12 @@
   "rq-c8940b0d": {
     "decl": "Scenario: Run a preregistered study",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Run a preregistered study",
     "type": "scenario"
   },
@@ -4394,14 +4594,28 @@
   "rq-cdc39471": {
     "decl": "- `tophat run <study> [--variant <variant>] [--cores <n>] [--draft] [-- <snakemake args>...]`",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/workflow.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
   "rq-cde76c0f": {
     "decl": "Scenario: Unconfigured results root",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Unconfigured results root",
     "type": "scenario"
   },
@@ -4514,14 +4728,24 @@
   "rq-d14816cc": {
     "decl": "Scenario: Superseded study is refused",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Superseded study is refused",
     "type": "scenario"
   },
   "rq-d17bfed2": {
     "decl": "Scenario: Study without stages",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Study without stages",
     "type": "scenario"
   },
@@ -4548,7 +4772,12 @@
   "rq-d1d30204": {
     "decl": "Scenario: Snakemake's exit code is returned",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Snakemake's exit code is returned",
     "type": "scenario"
   },
@@ -4599,7 +4828,12 @@
   "rq-d511d6c8": {
     "decl": "- `StudyStatus` — the per-study part of `tophat status`: ID, status, question, per-variant",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "StudyStatus",
     "type": "api-item"
   },
@@ -4642,7 +4876,12 @@
   "rq-d76deef1": {
     "decl": "Scenario: Draft refused without --draft",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Draft refused without --draft",
     "type": "scenario"
   },
@@ -4925,7 +5164,12 @@
   "rq-dffba6fd": {
     "decl": "Scenario: Superseded study",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Superseded study",
     "type": "scenario"
   },
@@ -5196,7 +5440,12 @@
   "rq-eb7be7fe": {
     "decl": "Scenario: Trial run of one variant",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Trial run of one variant",
     "type": "scenario"
   },
@@ -5247,14 +5496,24 @@
   "rq-ee88aae5": {
     "decl": "Scenario: Errors in a referenced dataset block the study",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Errors in a referenced dataset block the study",
     "type": "scenario"
   },
   "rq-eebf1864": {
     "decl": "Scenario: Preregistered study without stages",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Preregistered study without stages",
     "type": "scenario"
   },
@@ -5294,7 +5553,12 @@
   "rq-f0049ad3": {
     "decl": "Scenario: Ready to report",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Ready to report",
     "type": "scenario"
   },
@@ -5565,7 +5829,12 @@
   "rq-fd9f1a7c": {
     "decl": "Scenario: Check errors are refused",
     "file": "workflow",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Check errors are refused",
     "type": "scenario"
   },
