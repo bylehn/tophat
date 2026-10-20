@@ -48,7 +48,9 @@ has the next action of row 2.
 
 The errors that block a study (row 2, and `tophat run`) are the `error` diagnostics of
 `tophat check` whose path is under `studies/<study>/`, under `datasets/<name>/` for a dataset one of
-the study's stages references, or is `.tophat/roots.yaml` or `.tophat/roots.local.yaml`.
+the study's stages references, or is `.tophat/roots.yaml` or `.tophat/roots.local.yaml`, except
+`pipeline.summary-stale`: running the pipeline is what resolves a stale summary (row 9), so it never
+blocks a run.
 
 ## Feature API <!-- rq-07a0e0ea -->
 
