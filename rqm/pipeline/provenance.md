@@ -27,6 +27,8 @@ stages:
     inputs:
       raw: dataset:benchmark-set@v2
     params: {cutoff: 2.0}
+    qc: skip
+    qc_reason: Copies the input structures unchanged; checked by scenario S2
   - name: score
     run: python scripts/score.py {item} {out} --level {params.level}
     code: [scripts/score.py, scripts/common/]
@@ -36,7 +38,6 @@ stages:
     params: {level: b3lyp}
     env: chem
     threads: 4
-    qc: true
   - name: analyse
     run: Rscript scripts/analyse.R {in.scores} {out}
     code: [scripts/analyse.R]
@@ -55,11 +56,14 @@ stages:
 | `env` | no | pixi environment name; default `default` |
 | `threads` | no | Positive integer passed to Snakemake; default 1 |
 | `foreach` | no | Name of an input; run the stage once per item of that input (see `rqm/pipeline/snakemake.md`) |
-| `qc` | no | `true` if downstream stages require a human QC verdict on this stage's output |
+| `qc` | no | `skip` to exempt the stage from the QC gate it has by default (see `rqm/pipeline/snakemake.md`); no other value is allowed |
+| `qc_reason` | with `qc: skip` | Why the stage's output needs no human verdict; required with `qc: skip` and not allowed without it |
 | `result` | no | File, relative to the output directory, whose single line is the stage's result line |
 
 - `stage:` inputs name a stage that appears **earlier** in the list, so the pipeline has no cycles.
 - `foreach` and `result` are not allowed on the same stage.
+- `qc` and `qc_reason` only decide whether the stage is gated; which stages are gated is specified
+  in `rqm/pipeline/snakemake.md`.
 - `tool` and `external` are reserved keys for tool stages and external stages, specified separately;
   until then they are configuration errors.
 - Unknown keys are configuration errors.
@@ -105,7 +109,7 @@ A stage key is `sk-` followed by the first 16 lowercase hex characters of the SH
 9. One line per input, sorted by input name: `input <name> stage <upstream key>` or
    `input <name> dataset <name>@v<n> <content_hash>`
 
-The study ID, variant name and QC flag are not part of the key, so two variants with identical
+The study ID, variant name and QC settings (`qc`, `qc_reason`) are not part of the key, so two variants with identical
 effective settings for a stage share one output.
 
 ### Environment hash <!-- rq-3ac5de89 -->
@@ -194,7 +198,8 @@ untracked or have uncommitted changes. Outside a git repository, or when `git` i
 ### Types <!-- rq-01092d90 -->
 
 - `StageConfig` — one stage after variant merging: name, run, code, inputs, params, env, threads, <!-- rq-9950b389 -->
-  foreach, qc, result, and the 1-based line of the stage in its configuration file.
+  foreach, qc (whether it is `skip`), qc_reason, result, and the 1-based line of the stage in its
+  configuration file.
 - `StageInput` — `Stage(String)` or `Dataset(DatasetRef)`. <!-- rq-5cd91e7d -->
 - `PipelineConfig` — the stages of a study for one variant. <!-- rq-cbd35529 -->
 - `ProvenanceRecord` — a parsed `provenance.json`. <!-- rq-9f8a5a5e -->
@@ -223,7 +228,8 @@ A study with no `stages` (or an empty list) has no pipeline and no `pipeline` di
 
 | Rule | Severity | Condition |
 |---|---|---|
-| `pipeline.config-invalid` | error | A configuration file cannot be parsed, a stage is malformed (missing `name` or `run`, unknown or reserved key, duplicate name, bad `threads`, unknown placeholder, `foreach` naming no input, `foreach` with `result`), an input references a later or unknown stage, or a variant names an unknown stage or adds stages |
+| `pipeline.config-invalid` | error | A configuration file cannot be parsed, a stage is malformed (missing `name` or `run`, unknown or reserved key, duplicate name, bad `threads`, unknown placeholder, `foreach` naming no input, `foreach` with `result`, `qc` other than `skip`, `qc_reason` without `qc: skip`), an input references a later or unknown stage, or a variant names an unknown stage or adds stages |
+| `pipeline.qc-reason-missing` | error | A stage declares `qc: skip` without a non-empty `qc_reason` |
 | `pipeline.code-missing` | error | A `code` entry does not exist or lies outside the project |
 | `pipeline.env-missing` | error | `pixi.lock` is missing or lacks the stage's environment |
 
@@ -249,7 +255,7 @@ Feature: Stage configuration, keys and provenance
   Background:
     Given a TopHat project in a git repository with a pixi.lock containing environments "default" and "chem"
     And root "results" is configured
-    And study "x-vs-docking" has the stages "prepare", "score" (fan-out, qc) and "analyse" (result) from this specification
+    And study "x-vs-docking" has the stages "prepare" (qc: skip), "score" (fan-out) and "analyse" (result) from this specification
     And all its files are committed
 
   # --- Configuration ---
@@ -313,6 +319,24 @@ Feature: Stage configuration, keys and provenance
     When "tophat check" is run
     Then an error "pipeline.env-missing" is reported
 
+  @rq-180689f2
+  Scenario: Skipping a QC gate needs a reason
+    Given stage "prepare" has "qc: skip" and no "qc_reason"
+    When "tophat check" is run
+    Then an error "pipeline.qc-reason-missing" is reported at stage "prepare"
+
+  @rq-2a51782f
+  Scenario: The old opt-in form is rejected
+    Given stage "score" has "qc: true"
+    When "tophat check" is run
+    Then an error "pipeline.config-invalid" is reported whose message names "qc: skip"
+
+  @rq-fd086402
+  Scenario: A reason without a skip is rejected
+    Given stage "score" has "qc_reason: not needed" and no "qc" field
+    When "tophat check" is run
+    Then an error "pipeline.config-invalid" is reported
+
   # --- Variants ---
 
   @rq-43b7a9e6
@@ -375,6 +399,12 @@ Feature: Stage configuration, keys and provenance
     Given stage "score" lists code "scripts/common/"
     When a file inside "scripts/common/" is edited
     Then the key of "score" changes
+
+  @rq-9e24cb69
+  Scenario: QC settings do not change keys
+    Given the keys of all stages are recorded
+    When "qc: skip" and its reason are removed from stage "prepare"
+    Then the keys of all stages are unchanged
 
   @rq-6d9d6c2d
   Scenario: Updating the environment changes keys of stages using it

@@ -535,6 +535,13 @@
     "title": "Stamped heading without text",
     "type": "scenario"
   },
+  "rq-180689f2": {
+    "decl": "Scenario: Skipping a QC gate needs a reason",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "Skipping a QC gate needs a reason",
+    "type": "scenario"
+  },
   "rq-192a5ff9": {
     "decl": "### Severities",
     "file": "check",
@@ -969,6 +976,20 @@
       }
     ],
     "title": "Outside a git repository records are unclean",
+    "type": "scenario"
+  },
+  "rq-29ef4225": {
+    "decl": "Scenario: Stages are gated by default",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Stages are gated by default",
+    "type": "scenario"
+  },
+  "rq-2a51782f": {
+    "decl": "Scenario: The old opt-in form is rejected",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "The old opt-in form is rejected",
     "type": "scenario"
   },
   "rq-2a741327": {
@@ -2556,6 +2577,13 @@
     "title": "Question body",
     "type": "section"
   },
+  "rq-78b231e3": {
+    "decl": "Scenario: A stage that nothing consumes is never gated",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "A stage that nothing consumes is never gated",
+    "type": "scenario"
+  },
   "rq-78e4b035": {
     "decl": "### Commands",
     "file": "data",
@@ -3372,6 +3400,13 @@
       }
     ],
     "title": "Dropped question without a reason",
+    "type": "scenario"
+  },
+  "rq-9e24cb69": {
+    "decl": "Scenario: QC settings do not change keys",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "QC settings do not change keys",
     "type": "scenario"
   },
   "rq-9f2c5cd1": {
@@ -5807,6 +5842,13 @@
       }
     ],
     "title": "Citing a study that does not exist",
+    "type": "scenario"
+  },
+  "rq-fd086402": {
+    "decl": "Scenario: A reason without a skip is rejected",
+    "file": "pipeline/provenance",
+    "refs": [],
+    "title": "A reason without a skip is rejected",
     "type": "scenario"
   },
   "rq-fd31255d": {

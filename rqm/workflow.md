@@ -33,7 +33,7 @@ actions only a human may take; `anyone` marks actions a human or an agent may ta
 | 4 | Status is `draft` | Pre-register: `tophat study preregister <study>` | you |
 | 5 | The study has no stages | Add stages to `config/base.yaml` | anyone |
 | 6 | The `results` root is unconfigured | Configure the `results` data root | anyone |
-| 7 | A stage with `qc: true` is sealed for a variant's current key, has no verdict, and a stage consuming it has no sealed output | Give a QC verdict: `tophat stage qc <study> <stage> --variant <variant>` | you |
+| 7 | A gated stage (see `rqm/pipeline/snakemake.md`) is sealed for a variant's current key, has no verdict, and a stage consuming it has no sealed output | Give a QC verdict: `tophat stage qc <study> <stage> --variant <variant>` | you |
 | 8 | A QC verdict for a current key is `fail` | Fix the cause of the failed QC of `<stage>` (`<variant>`); the next run uses a new key | anyone |
 | 9 | Some stage of some listed variant has no sealed output for its current key, or `SUMMARY.md` is missing or stale | Run the pipeline: `tophat run <study>` | anyone |
 | 10 | `SUMMARY.md` is dirty | Commit the code listed as unclean, then `tophat run <study>` | anyone |
@@ -185,7 +185,7 @@ Feature: Status and run
 
   @rq-9bb38d37
   Scenario: Waiting for a QC verdict
-    Given preregistered study "x-vs-docking" has stages "score" (qc) and "analyse"
+    Given preregistered study "x-vs-docking" has stages "score" (gated) and "analyse"
     And "score" is sealed for variant "pbe" with no verdict and "analyse" is not sealed for "pbe"
     When "tophat status x-vs-docking" is run
     Then the next action is "(you)" "tophat stage qc x-vs-docking score --variant pbe"
@@ -388,7 +388,7 @@ Feature: Status and run
   @rq-2a741327
   Scenario: Trial outputs are separate and unreportable
     Given Snakemake is available
-    And draft study "x-vs-docking" has stages including one with "qc: true" and one with "result"
+    And draft study "x-vs-docking" has stages including a gated one and one with "result"
     When "tophat run x-vs-docking --draft" is run
     Then every stage is sealed under "<results root>/x-vs-docking/.trial/"
     And every provenance record has "trial": true
