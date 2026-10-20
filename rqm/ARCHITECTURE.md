@@ -124,36 +124,42 @@ decide what to do next.
 ### External stages and clusters
 
 The typical pattern is: prepare locally, run heavy compute on a cluster, analyze locally. An external
-stage splits a study's pipeline across machines without breaking provenance.
+stage splits a study's pipeline across machines without breaking provenance, while **the human does
+every step that touches the cluster**. TopHat's job is to make that easy and safe.
 
-1. **Export.** When the pipeline reaches an external stage, `tophat` writes a job bundle: the input
-   files with their hashes, parameters, the stage key, the list of expected outputs, and a generated
-   job script (e.g. for SLURM). The pipeline then stops and prints the short, readable commands the
-   human runs to transfer the bundle and submit the job.
-2. **Run.** The job runs on the cluster with the cluster's own software (e.g. an optimized MD engine
-   with MPI), not inside the TopHat container. At the end, the generated job script writes a
-   **receipt**: the stage key it was given, the execution environment as reported by the job (host,
-   loaded modules, software versions, GPUs, start and end times, exit status), and content hashes of
-   every output. The receipt is produced with plain POSIX shell and standard hashing utilities, so
-   nothing needs to be installed on the cluster.
-3. **Ingest.** Back in the project, `tophat` checks that the receipt's stage key matches the expected
-   one (inputs and parameters did not change since export) and that the returned outputs match the
-   receipt's hashes. Mismatches, such as stale outputs, the wrong directory copied back, or inputs
-   edited after export, fail the stage. On success the outputs become stage outputs with provenance
-   and proceed to their QC gate and downstream stages.
+1. **Job folder.** When the pipeline reaches an external stage, `tophat` writes a self-contained job
+   folder named after the study, stage and key: copies of every input with their hashes, the study
+   scripts the command uses, the parameters, a ready `sbatch` script, and a README with the steps.
+   The pipeline then stops and shows the same steps.
+2. **Run.** The human copies the folder to the cluster, may adjust the `#SBATCH` lines (time,
+   partition, account), and submits it. The job runs with the cluster's own software (e.g. an
+   optimized MD engine with MPI), not inside the TopHat container. It first verifies its inputs, and
+   at the end writes a **receipt**: the stage key, a hash of the job script without its `#SBATCH`
+   lines, the execution environment as reported by the job (host, job ID, loaded modules, start and
+   end times, exit status), and content hashes of every output. The job script is plain POSIX shell
+   using standard hashing utilities, so nothing needs to be installed on the cluster.
+3. **Return and ingest.** The human copies the folder back to where it came from, leaving large files
+   on the cluster. `tophat run` then ingests it: the receipt's key and script hash must match what
+   `tophat` generated (only `#SBATCH` lines may have changed), the job must have succeeded, and every
+   returned file must match its hash. Any mismatch (stale outputs, the wrong folder copied back, an
+   edited command) fails the stage. On success the outputs become stage outputs with provenance and
+   proceed to their QC gate and downstream stages.
 
-Provenance for an external stage is explicit about its limits: inputs, parameters and outputs are
-**verified** by hash, while what ran on the cluster is **reported** by the receipt, because the
-cluster environment is outside TopHat's control. Provenance records label such stages as executed
-externally.
+Provenance for an external stage is explicit about its limits: inputs, parameters, the command and
+the outputs are **verified** by hash, while what ran on the cluster is **reported** by the receipt,
+because the cluster environment is outside TopHat's control. Provenance records label such stages as
+executed externally.
 
-Large outputs (e.g. trajectories) need not return to the local machine. The cluster's storage is
-configured as a data root, outputs there are recorded by the hashes in the receipt (computed on the
-cluster), and a reduction step at the end of the job produces the smaller files that are transferred
-back for local analysis. Lineage runs through the reduced files to the full outputs that remain on
-the cluster.
+Large outputs (e.g. trajectories) need not return. A stage lists glob patterns of files to keep on
+the cluster; the copy-back step excludes them, and they are recorded by the hashes in the receipt
+(computed on the cluster). Any reduction (e.g. extracting energies) is simply part of the job's
+command. Lineage runs through the returned files to the record that lists the kept ones.
 
-TopHat never transfers data or submits jobs itself; the human runs the printed commands.
+The project holds **no connection details**: no host names, remote paths or credentials. The steps
+use placeholders the human fills in. Personal batch-system defaults (account, partition, QoS) live
+in a per-machine, git-ignored file and are merged into each job script; they and a stage's resource
+options are not part of the stage key, because the resources a job is given do not change what it
+computes. SLURM is the supported batch system.
 
 ### Data and provenance
 
@@ -241,6 +247,7 @@ rejected or presented as verified.
 
 - Executing or scheduling compute itself; Snakemake runs pipelines and external stages run where the
   human runs them.
+- Connecting to remote machines, transferring data, or submitting jobs on the human's behalf.
 - Workflow engines other than Snakemake as first-class integrations.
 - Storing, versioning, or transferring data.
 - Calling LLM APIs or running an agent loop; the user's coding agent is the LLM runtime.
@@ -284,6 +291,12 @@ holds with no LLM involved.
 Decisions that belong to the scientist — the question, primary endpoint, decision rule, thresholds,
 pre-registration, QC verdicts — are always elicited from the human and never invented by the agent.
 
+**No remote access.** Neither `tophat` nor an agent ever connects to a remote machine, transfers data
+to or from one, or submits jobs. The project stores no connection details, the development container
+holds no SSH keys or cluster credentials, and skills never run transfer or submission commands; they
+prepare everything and hand those steps to the human. The only network access `tophat` performs is
+fetching pinned tool code, and only when the human runs `tophat tools sync`.
+
 Skills operate in explicit modes, following the study skill pattern: a **plan** mode that writes only
 the study document, and a **build** mode that implements the pipeline from a pre-registered study
 and never edits its frozen sections.
@@ -308,16 +321,21 @@ A TopHat project is not a software package and has no single project language.
 
 ### Tools
 
-Tools are separate repositories with their own requirements, tests and release process. A study
-pins `tool@commit` for every stage the tool computes.
+Tools are separate repositories with their own requirements, tests and release process. Tools are
+declared once per project (name and git URL), and a stage pins a tool commit as `tool@commit`; a
+short commit prefix is allowed, and the full commit it resolved to is recorded in a committed lock
+file, so a pin never moves and keys always use the full commit. Branches and tags are not pins.
 
-`tophat` manages a git-ignored tool cache: it checks out each pinned `name@commit` into its own
-directory, so different variants can use different versions of the same tool side by side. A tool's
-environment is its own pixi lockfile at that commit; for a tool without one, the project supplies a
-committed lockfile for it. The tool commit and the environment lock hash are part of the stage key.
-Git submodules are not used, because they allow only one version of a tool at a time. Data shipped inside a tool repository is read from the pinned checkout so the commit fixes
-the input. Studies never live inside tool repositories, and tool code is never changed from within a
-study; it goes through the tool's own process.
+`tophat` manages a git-ignored tool cache: one pristine checkout per pinned commit, so different
+variants can use different versions of the same tool side by side. Fetching happens only through an
+explicit `tophat tools sync`; runs never touch the network and refuse with a clear message when a
+pinned commit is not cached, and a modified checkout is refused. A tool's environment is its own
+pixi lockfile at that commit; for a tool without one, the project supplies a committed lockfile for
+it. The tool commit and the environment lock hash are part of the stage key. Git submodules are not
+used, because they allow only one version of a tool at a time. Data shipped inside a tool repository
+is read from the pinned checkout so the commit fixes the input. Studies never live inside tool
+repositories, and tool code is never changed from within a study; it goes through the tool's own
+process.
 
 ### Container and execution environment
 
@@ -393,9 +411,10 @@ Testing establishes that TopHat itself works:
 3. **End-to-end example study** (required CI gate) — a small toy study, with scripts in several
    preinstalled languages, an external stage and a QC gate, is run end-to-end with Snakemake in a
    generated project. The external stage's job script is executed outside the container with only
-   POSIX tools available, and the export–receipt–ingest cycle is exercised including stale and
-   mismatched returns. The test verifies the outputs, provenance, cache-key behaviour (a changed tool
-   version re-runs exactly the downstream stages) and summary.
+   POSIX tools available, and the job-folder round trip (write, run, copy back, ingest) is exercised
+   including stale returns, mismatched outputs and edited job scripts. The test verifies the
+   outputs, provenance, cache-key behaviour (a changed tool version re-runs exactly the downstream
+   stages) and summary.
 4. **Adoption tests** (required CI gate) — the template is applied in place to fixture repositories
    representing typical existing projects (scripts and notebooks, conda or Julia environments,
    existing Snakemake or Make pipelines, processed data). The tests verify that no user file is
@@ -412,8 +431,6 @@ provide Snakemake and pixi for the end-to-end tests to count as a gate.
 ## Open Questions
 
 - Exact set and names of `th-` skills and how plan, build, QC and reporting are split between them.
-- The detailed design of tool stages (the tool cache and tool environments) and external stages; the
-  stage configuration reserves `tool:` and `external:` for them.
 - Whether scenario tests run as part of the pipeline (e.g. a generated check stage before the
   summary) or separately.
 - Object-store data roots (e.g. `s3://`), which are not supported yet.
