@@ -34,7 +34,10 @@ pub struct StageConfig {
     pub env: String,
     pub threads: u32,
     pub foreach: Option<String>,
-    pub qc: bool,
+    /// Whether the stage declares `qc: skip`, exempting it from its default QC gate.
+    pub qc_skip: bool,
+    /// Why the stage needs no QC verdict (with `qc: skip`).
+    pub qc_reason: Option<String>,
     pub result: Option<String>,
     /// Project-relative path of the file that defines the stage.
     pub file: String,
@@ -54,6 +57,19 @@ pub struct PipelineConfig {
 impl PipelineConfig {
     pub fn stage(&self, name: &str) -> Option<&StageConfig> {
         self.stages.iter().find(|s| s.name == name)
+    }
+
+    // rq-dc1e521d
+    /// Whether a stage is gated: another stage consumes it (as a `stage:` input, including as a
+    /// fan-out source) and it does not declare `qc: skip`.
+    pub fn is_gated(&self, name: &str) -> bool {
+        self.stage(name).is_some_and(|s| !s.qc_skip)
+            && self.stages.iter().any(|consumer| {
+                consumer
+                    .inputs
+                    .values()
+                    .any(|i| matches!(i, StageInput::Stage(s) if s == name))
+            })
     }
 }
 
@@ -152,8 +168,18 @@ fn yaml_to_json(value: &Yaml) -> Result<Value, String> {
     })
 }
 
-const STAGE_KEYS: [&str; 10] = [
-    "name", "run", "code", "inputs", "params", "env", "threads", "foreach", "qc", "result",
+const STAGE_KEYS: [&str; 11] = [
+    "name",
+    "run",
+    "code",
+    "inputs",
+    "params",
+    "env",
+    "threads",
+    "foreach",
+    "qc",
+    "qc_reason",
+    "result",
 ];
 
 /// The fields given for one stage in one file, before merging.
@@ -167,7 +193,8 @@ struct StageFields {
     env: Option<String>,
     threads: Option<u32>,
     foreach: Option<String>,
-    qc: Option<bool>,
+    qc_skip: Option<bool>,
+    qc_reason: Option<String>,
     result: Option<String>,
     line: Option<u32>,
 }
@@ -338,8 +365,18 @@ fn parse_file(
                     _ => problems.push(bad("an input name")),
                 },
                 "qc" => match value {
-                    Yaml::Boolean(b) => fields.qc = Some(b),
-                    _ => problems.push(bad("true or false")),
+                    Yaml::String(s) if s == "skip" => fields.qc_skip = Some(true),
+                    _ => problems.push(problem(
+                        at,
+                        format!(
+                            "stage `{label}`: stages consumed by other stages are gated by default; \
+                             the only `qc` setting is `qc: skip` (with a `qc_reason`)"
+                        ),
+                    )),
+                },
+                "qc_reason" => match value {
+                    Yaml::String(s) => fields.qc_reason = Some(s),
+                    _ => problems.push(bad("text")),
                 },
                 "result" => match value {
                     Yaml::String(s) => fields.result = Some(s),
@@ -431,7 +468,8 @@ fn build_stage(
         env,
         threads: fields.threads.unwrap_or(1),
         foreach: fields.foreach.clone(),
-        qc: fields.qc.unwrap_or(false),
+        qc_skip: fields.qc_skip.unwrap_or(false),
+        qc_reason: fields.qc_reason.clone(),
         result: fields.result.clone(),
         file: file.to_string(),
         line: fields.line,
@@ -471,6 +509,12 @@ fn validate(
                     )));
                 }
             }
+        }
+        if stage.qc_reason.is_some() && !stage.qc_skip {
+            problems.push(problem(format!(
+                "stage `{}`: `qc_reason` is only allowed with `qc: skip`",
+                stage.name
+            )));
         }
         if let Some(f) = &stage.foreach {
             if !stage.inputs.contains_key(f) {
@@ -593,8 +637,11 @@ fn merge_variant(
         if let Some(foreach) = fields.foreach {
             stage.foreach = Some(foreach);
         }
-        if let Some(qc) = fields.qc {
-            stage.qc = qc;
+        if let Some(skip) = fields.qc_skip {
+            stage.qc_skip = skip;
+        }
+        if let Some(reason) = fields.qc_reason {
+            stage.qc_reason = Some(reason);
         }
         if let Some(result) = fields.result {
             stage.result = Some(result);

@@ -28,6 +28,8 @@ const BASE: &str = "stages:
     inputs:
       raw: dataset:benchmark-set@v2
     params: {cutoff: 2.0}
+    qc: skip
+    qc_reason: Copies the input structures unchanged; checked by scenario S2
   - name: score
     run: python scripts/score.py {item} {out} --level {params.level}
     code: [scripts/score.py, scripts/common/]
@@ -37,7 +39,6 @@ const BASE: &str = "stages:
     params: {level: b3lyp, grid: fine}
     env: chem
     threads: 4
-    qc: true
   - name: analyse
     run: Rscript scripts/analyse.R {in.scores} {out}
     code: [scripts/analyse.R]
@@ -342,8 +343,8 @@ fn fan_out_stage_cannot_declare_a_result() {
     let env = Env::new();
     env.edit(
         "studies/x-vs-docking/config/base.yaml",
-        "    qc: true\n",
-        "    qc: true\n    result: r.txt\n",
+        "    threads: 4\n",
+        "    threads: 4\n    result: r.txt\n",
     );
     assert_eq!(
         with_rule(&env.diagnostics(), "pipeline.config-invalid").len(),
@@ -391,6 +392,52 @@ fn missing_environment() {
     let found = with_rule(&ds, "pipeline.env-missing");
     assert_eq!(found.len(), 1);
     assert!(found[0].message.contains("gpu"));
+}
+
+#[test] // rq-180689f2 rq-22c3d944
+fn skipping_a_qc_gate_needs_a_reason() {
+    let env = Env::new();
+    env.edit(
+        "studies/x-vs-docking/config/base.yaml",
+        "    qc_reason: Copies the input structures unchanged; checked by scenario S2\n",
+        "",
+    );
+    let ds = env.diagnostics();
+    let found = with_rule(&ds, "pipeline.qc-reason-missing");
+    assert_eq!(found.len(), 1, "{ds:#?}");
+    assert_eq!(found[0].line, Some(2));
+}
+
+#[test] // rq-2a51782f rq-081e737a
+fn the_old_opt_in_form_is_rejected() {
+    let env = Env::new();
+    env.edit(
+        "studies/x-vs-docking/config/base.yaml",
+        "    threads: 4\n",
+        "    threads: 4\n    qc: true\n",
+    );
+    let ds = env.diagnostics();
+    let found = with_rule(&ds, "pipeline.config-invalid");
+    assert_eq!(found.len(), 1);
+    assert!(
+        found[0].message.contains("qc: skip"),
+        "{}",
+        found[0].message
+    );
+}
+
+#[test] // rq-fd086402 rq-081e737a
+fn a_reason_without_a_skip_is_rejected() {
+    let env = Env::new();
+    env.edit(
+        "studies/x-vs-docking/config/base.yaml",
+        "    threads: 4\n",
+        "    threads: 4\n    qc_reason: not needed\n",
+    );
+    let ds = env.diagnostics();
+    let found = with_rule(&ds, "pipeline.config-invalid");
+    assert_eq!(found.len(), 1);
+    assert!(found[0].message.contains("qc_reason"));
 }
 
 // --- Variants ---------------------------------------------------------------------------------
@@ -551,6 +598,18 @@ fn a_code_directory_is_hashed_file_by_file() {
     let after = env.keys("base");
     assert_ne!(before["score"], after["score"]);
     assert_eq!(before["prepare"], after["prepare"]);
+}
+
+#[test] // rq-9e24cb69 rq-4aa0232e
+fn qc_settings_do_not_change_keys() {
+    let env = Env::new();
+    let before = env.keys("base");
+    env.edit(
+        "studies/x-vs-docking/config/base.yaml",
+        "    qc: skip\n    qc_reason: Copies the input structures unchanged; checked by scenario S2\n",
+        "",
+    );
+    assert_eq!(before, env.keys("base"));
 }
 
 #[test] // rq-6d9d6c2d rq-3ac5de89

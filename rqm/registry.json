@@ -538,7 +538,12 @@
   "rq-180689f2": {
     "decl": "Scenario: Skipping a QC gate needs a reason",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Skipping a QC gate needs a reason",
     "type": "scenario"
   },
@@ -981,14 +986,24 @@
   "rq-29ef4225": {
     "decl": "Scenario: Stages are gated by default",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Stages are gated by default",
     "type": "scenario"
   },
   "rq-2a51782f": {
     "decl": "Scenario: The old opt-in form is rejected",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The old opt-in form is rejected",
     "type": "scenario"
   },
@@ -2580,7 +2595,12 @@
   "rq-78b231e3": {
     "decl": "Scenario: A stage that nothing consumes is never gated",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A stage that nothing consumes is never gated",
     "type": "scenario"
   },
@@ -3405,7 +3425,12 @@
   "rq-9e24cb69": {
     "decl": "Scenario: QC settings do not change keys",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "QC settings do not change keys",
     "type": "scenario"
   },
@@ -5098,6 +5123,10 @@
     "level": 2,
     "refs": [
       {
+        "file": "src/pipeline/config.rs",
+        "kind": "code"
+      },
+      {
         "file": "src/pipeline/qc.rs",
         "kind": "code"
       },
@@ -5847,7 +5876,12 @@
   "rq-fd086402": {
     "decl": "Scenario: A reason without a skip is rejected",
     "file": "pipeline/provenance",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A reason without a skip is rejected",
     "type": "scenario"
   },

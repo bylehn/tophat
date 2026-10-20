@@ -77,6 +77,27 @@ pub fn pipeline_rules(project: &Project) -> Vec<Diagnostic> {
         }
         let mut reported = BTreeSet::new();
         for stage in stages {
+            let reason_missing = stage
+                .qc_reason
+                .as_deref()
+                .is_none_or(|r| r.trim().is_empty());
+            if stage.qc_skip
+                && reason_missing
+                && reported.insert((stage.file.clone(), stage.name.clone(), "qc"))
+            {
+                out.push(diagnostic(
+                    "pipeline.qc-reason-missing",
+                    ConfigProblem {
+                        file: stage.file.clone(),
+                        line: stage.line,
+                        message: format!(
+                            "stage `{}` declares `qc: skip` without a `qc_reason`",
+                            stage.name
+                        ),
+                    },
+                    "Write why this stage's output needs no human verdict in `qc_reason`",
+                ));
+            }
             if let Err(message) = ctx.code_files(&study, stage) {
                 if reported.insert((stage.file.clone(), stage.name.clone(), "code")) {
                     out.push(diagnostic(
@@ -156,10 +177,27 @@ fn check_execution(
     }
 
     let all: Vec<String> = base.iter().map(|s| s.name.clone()).collect();
-    let gated: Vec<String> = base
+    // A verdict file is valid for a stage that is gated in at least one variant.
+    let mut configs = vec![super::config::PipelineConfig {
+        study: study.to_string(),
+        variant: "base".into(),
+        stages: base.to_vec(),
+    }];
+    for variant in project
+        .list_dir(&format!("{STUDIES_DIR}/{study}/config"))
+        .unwrap_or_default()
         .iter()
-        .filter(|s| s.qc)
-        .map(|s| s.name.clone())
+        .filter_map(|f| f.strip_suffix(".yaml"))
+        .filter(|v| *v != "base")
+    {
+        if let Some(config) = load_variant(project, study, variant, &mut Vec::new()) {
+            configs.push(config);
+        }
+    }
+    let gated: Vec<String> = all
+        .iter()
+        .filter(|name| configs.iter().any(|c| c.is_gated(name)))
+        .cloned()
         .collect();
     for (path, message) in qc_file_problems(project.root(), study, &all, &gated) {
         out.push(error(
