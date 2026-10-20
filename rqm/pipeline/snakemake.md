@@ -72,8 +72,8 @@ file missing or of the wrong size. The output is deterministic for a given proje
 - A rule's inputs are the `provenance.json` of each `stage:` input (for a fan-out upstream, its
   stage-level record).
 - A rule's action, in order:
-  1. For each upstream stage with `qc: true`, check its verdict for the upstream key (see
-     *QC Gates*); stop with an error if it is missing or `fail`.
+  1. For each gated upstream stage, check its verdict for the upstream key (see *QC Gates*); stop
+     with an error if it is missing or `fail`.
   2. Empty the output directory (create it if absent), removing any partial results of a failed run.
   2. Run the stage's `run` command, with placeholders substituted, from the study directory in its
      pixi environment (`pixi run --frozen -e <env>`).
@@ -106,7 +106,13 @@ rule.
 
 ## QC Gates <!-- rq-dc1e521d -->
 
-A stage with `qc: true` needs a human verdict before any stage that consumes it runs.
+A stage is **gated** in a variant when another stage of that variant consumes it (as a `stage:`
+input, including as a fan-out source) and it does not declare `qc: skip`. A gated stage needs a human
+verdict on its output before any stage that consumes it runs, so nothing reaches a later stage
+without a human having looked at it. A stage that nothing consumes (such as a final result stage) is
+never gated. Exempting a stage requires `qc: skip` with a written `qc_reason` (see
+`rqm/pipeline/provenance.md`), which keeps every exception visible in the committed
+configuration.
 
 - The verdict is the committed file `studies/<study>/qc/<stage>/<key>.md`:
 
@@ -159,8 +165,8 @@ A stage with `qc: true` needs a human verdict before any stage that consumes it 
 - `tophat stage qc <study> <stage> [--variant <variant>]` <!-- rq-6c24fee9 -->
   - Requires standard input and standard output to be interactive terminals, like
     `tophat study preregister`; the verdict is a human decision.
-  - Requires the stage to have `qc: true` and a sealed non-trial output for the variant's (default
-    `base`) current key, and no existing verdict file for that key.
+  - Requires the stage to be gated in the variant (default `base`), a sealed non-trial output for
+    the variant's current key, and no existing verdict file for that key.
   - Prints a summary of the output (key, number of files, total size, number of items, whether the
     record is clean, and the output directory), then asks the user to type `pass` or `fail` and a
     one-line note. Any other verdict text aborts without changes.
@@ -186,7 +192,7 @@ A stage with `qc: true` needs a human verdict before any stage that consumes it 
 |---|---|---|
 | `pipeline.snakefile-missing` | error | A study with stages has no `Snakefile` |
 | `pipeline.snakefile-modified` | error | A study's `Snakefile` differs from the stub |
-| `pipeline.qc-invalid` | error | A file under `qc/` is not `qc/<stage>/<key>.md`, cannot be parsed, has a `stage` or `key` disagreeing with its path, a `verdict` other than `pass` or `fail`, or names a stage without `qc: true` |
+| `pipeline.qc-invalid` | error | A file under `qc/` is not `qc/<stage>/<key>.md`, cannot be parsed, has a `stage` or `key` disagreeing with its path, a `verdict` other than `pass` or `fail`, or names a stage that is not gated in any variant |
 | `pipeline.summary-stale` | warning in `draft`; error in `preregistered` and `reported` | `SUMMARY.md` has `keys` and an entry differs from the current key of that variant and stage, or names a result stage or variant that no longer exists |
 
 ## Assumptions <!-- rq-b4d5c830 -->
@@ -209,7 +215,8 @@ Feature: Snakemake pipelines, QC gates and summaries
   Background:
     Given a TopHat project in a git repository with root "results" configured
     And study "x-vs-docking" lists variants ["base", "pbe"]
-    And it has the stages "prepare", "score" (fan-out over prepare's outputs, qc) and "analyse" (result) from rqm/pipeline/provenance.md
+    And it has the stages "prepare" (qc: skip, with a reason), "score" (fan-out over prepare's outputs) and "analyse" (result) from rqm/pipeline/provenance.md
+    And so "score" is gated, and "prepare" and "analyse" are not
     And variant "pbe" changes only the params of "score"
     And all its files are committed
 
@@ -352,6 +359,19 @@ Feature: Snakemake pipelines, QC gates and summaries
     And no checkpoint is needed for it
 
   # --- QC gates ---
+
+  @rq-29ef4225
+  Scenario: Stages are gated by default
+    Given "qc: skip" and its reason are removed from stage "prepare"
+    When the rules are generated
+    Then the "score" item jobs check the verdict of "prepare" before running
+    And the "analyse" jobs check the verdict of "score" before running
+
+  @rq-78b231e3
+  Scenario: A stage that nothing consumes is never gated
+    When the rules are generated
+    Then no job checks a verdict for "analyse"
+    And "tophat stage qc x-vs-docking analyse" run interactively fails explaining that "analyse" has no QC gate
 
   @rq-c705fcd3
   Scenario: Missing verdict stops the pipeline before downstream stages
