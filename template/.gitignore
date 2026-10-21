@@ -1,0 +1,3 @@
+# Working directories that tools create at the project root.
+/.snakemake/
+/.pixi/

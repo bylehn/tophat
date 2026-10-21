@@ -1,0 +1,7 @@
+# TopHat-managed: machine-local state, never committed
+/roots.local.yaml
+/slurm.local.yaml
+/cache/
+/tools/
+/generated/
+/state/

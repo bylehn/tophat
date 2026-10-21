@@ -35,7 +35,7 @@ the CLI reads (`PROJECT.md`, `.tophat/roots.yaml`, studies, datasets) are specif
 | `author_name` | text | — | Non-empty |
 | `author_email` | text | — | Contains `@` |
 | `languages` | multi-select: `julia` | none | — |
-| `agents` | multi-select: `claude-code`, `codex`, `opencode` | `claude-code` | At least one |
+| `agents` | multi-select: `claude-code` (and the agents of `rqm/template/agents.md`) | `claude-code` | At least one |
 | `gpu` | choice: `auto`, `on`, `off` | `auto` | — |
 
 - Python is always installed, because Snakemake runs on it; `languages` lists what is added beyond
@@ -148,8 +148,8 @@ project root: `/.snakemake/` and `/.pixi/`.
 
 ### Environment <!-- rq-260d84c9 -->
 
-`pixi.toml` declares one workspace named after `project_slug`, the `conda-forge` channel, the
-platforms `linux-64` and `linux-aarch64` (the dev container's platforms), and a `default`
+`pixi.toml` declares one workspace named after `project_slug`, the channels `conda-forge` and
+`bioconda` (in that order; Snakemake is published on bioconda), the platforms `linux-64` and `linux-aarch64` (the dev container's platforms), and a `default`
 environment with:
 
 - `python` and `snakemake-minimal`, at the versions the template pins;
@@ -177,6 +177,9 @@ sha256:
 - The binary for a target is `<url>/tophat-<target>`; its SHA-256 must equal the listed hash, or it
   is not used.
 - Template tooling fills in `version`, `url` and the hashes when a template version is released.
+- Before the first release the file holds only `version: unreleased`: there is no binary to download,
+  the launcher requires a development binary (see `rqm/template/container.md`), and CI fails saying
+  that no `tophat` release is pinned.
 
 ### Pre-commit hook <!-- rq-a35593b1 -->
 
@@ -200,7 +203,8 @@ Git runs it once `core.hooksPath` points at `.tophat/managed/hooks`; the launche
 
 1. Checks out the repository.
 2. Reads `.tophat/managed/tophat-release.yaml`, downloads `tophat-x86_64-unknown-linux-musl`, and
-   verifies its SHA-256; a mismatch fails the job before anything runs.
+   verifies its SHA-256; a mismatch fails the job before anything runs, and so does
+   `version: unreleased`, with a message that no `tophat` release is pinned.
 3. Runs `tophat check`. The job fails exactly when the check exits non-zero.
 
 The job needs no container, pixi or Snakemake: `tophat check` reads only committed files. Data roots
@@ -321,8 +325,16 @@ Feature: Generated project skeleton
 
   @rq-f2b4f4cc
   Scenario: The release pin is complete
+    Given the template's release pin has been written by "cargo xtask release-pin"
     When the template is rendered with default answers
     Then .tophat/managed/tophat-release.yaml has a version, a url, and a 64-character lowercase hex sha256 for x86_64-unknown-linux-musl and aarch64-unknown-linux-musl
+
+  @rq-99f3ccdf
+  Scenario: An unreleased pin says so
+    Given the template's release pin is "version: unreleased"
+    When the template is rendered with default answers
+    Then .tophat/managed/tophat-release.yaml holds "version: unreleased" and no url or sha256
+    And the CI workflow's download step fails saying no tophat release is pinned
 
   # --- Hook and CI ---
 

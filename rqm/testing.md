@@ -18,6 +18,8 @@ definitions, and the CI workflows. The commands that run the suites are specifie
 - Tests that need Snakemake read its path from `TOPHAT_TEST_SNAKEMAKE`. Without it they print a skip
   notice and pass, except when `TOPHAT_REQUIRE_SNAKEMAKE=1` is set, in which case they fail, so a CI
   job meant to run them cannot pass without running them.
+- Tests that render the template read `copier` from `PATH`. Without it they skip in the same way,
+  except when `TOPHAT_REQUIRE_COPIER=1` is set.
 - The job runs `cargo fmt --all --check`, `cargo clippy --all-targets -- -D warnings` and
   `cargo test` on Linux, macOS and Windows; a second job on Linux installs Snakemake and
   runs the Snakemake-backed tests with both variables set.
@@ -208,6 +210,7 @@ checks:
 |---|---|---|
 | `cli` | Linux, macOS, Windows | fmt, clippy, `cargo test`, coverage |
 | `snakemake` | Linux | `cargo test` with Snakemake installed and `TOPHAT_REQUIRE_SNAKEMAKE=1` |
+| `template` | Linux | the template-rendering tests with Copier installed and `TOPHAT_REQUIRE_COPIER=1` |
 | `traceability` | Linux | `cargo xtask scenarios`, `cargo xtask lock --check` |
 | `render` | Linux, with Podman | `cargo xtask render-test` |
 | `conformance` | Linux | `cargo xtask conformance` |

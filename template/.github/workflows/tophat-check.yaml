@@ -1,0 +1,40 @@
+# TopHat-managed: `tophat check` as a required gate. `copier update` changes this file.
+name: tophat check
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the pinned tophat
+        run: |
+          set -eu
+          pin=.tophat/managed/tophat-release.yaml
+          version=$(sed -n 's/^version: *//p' "$pin")
+          if [ "$version" = unreleased ]; then
+            echo "::error::No tophat release is pinned in $pin (version: unreleased), so the check cannot run in CI yet."
+            exit 1
+          fi
+          target=x86_64-unknown-linux-musl
+          url=$(sed -n 's/^url: *//p' "$pin")
+          expected=$(sed -n "s/^  $target: *//p" "$pin")
+          mkdir -p "$RUNNER_TEMP/tophat-bin"
+          curl -fsSL -o "$RUNNER_TEMP/tophat-bin/tophat" "$url/tophat-$target"
+          actual=$(sha256sum "$RUNNER_TEMP/tophat-bin/tophat" | cut -d' ' -f1)
+          if [ -z "$expected" ] || [ "$actual" != "$expected" ]; then
+            echo "::error::tophat-$target has SHA-256 $actual, but $pin pins ${expected:-no hash}."
+            exit 1
+          fi
+          chmod +x "$RUNNER_TEMP/tophat-bin/tophat"
+          echo "$RUNNER_TEMP/tophat-bin" >> "$GITHUB_PATH"
+
+      - name: tophat check
+        run: tophat check

@@ -27,20 +27,17 @@ container that holds no credentials in `rqm/template/container.md`; skill evals 
   examples/median-vs-mean/          managed   the worked example study
 .tophat/user/
   skills/th-<name>/local.md         project   project extensions, one per skill
-AGENTS.md                           project   agent entry point (Codex, OpenCode, others)
+AGENTS.md                           project   agent entry point for every agent
 CLAUDE.md                           project   agent entry point for Claude Code
 .claude/skills/th-<name>/SKILL.md   managed   Claude Code adapter
 .claude/settings.json               managed   Claude Code permissions
-.agents/skills/th-<name>/SKILL.md   managed   Codex adapter
-.codex/rules/tophat.rules           managed   Codex command rules
-.opencode/skills/th-<name>/SKILL.md managed   OpenCode adapter
-opencode.json                       managed   OpenCode permissions
 ```
 
 - Adapter and permission files are written only for the agents selected by the `agents` Copier
   question; `CLAUDE.md` only when `claude-code` is selected.
 - Managed paths outside `.tophat/managed/` are listed in `.tophat/managed/ownership-exceptions`.
-  `.claude/settings.json` and `opencode.json` are JSON and therefore marker-exempt.
+  `.claude/settings.json` is JSON and therefore marker-exempt.
+- The adapters and permission files of Codex and OpenCode are specified in `rqm/template/agents.md`.
 
 ## Canonical Skills <!-- rq-25d62c0c -->
 
@@ -67,8 +64,7 @@ the canonical skill) followed by:
 - one instruction: read `.tophat/managed/skills/th-<name>/SKILL.md` completely and follow it as the
   authoritative workflow;
 - at most a few lines mapping agent-neutral wording to the agent's own mechanism: how to ask the
-  human (Claude Code's question tool, OpenCode's question tool, Codex's structured user input or a
-  concise textual question) and how other skills are invoked (`/th-study`, `$th-study`).
+  human (Claude Code's question tool) and how other skills are invoked (`/th-study`).
 
 Adapters contain no workflow of their own, so a skill behaves the same under every agent.
 
@@ -119,8 +115,6 @@ Each selected agent's managed permission file:
 | Agent | File | Mechanism |
 |---|---|---|
 | Claude Code | `.claude/settings.json` | `permissions.deny` and `permissions.allow` entries `Bash(<command>:*)` |
-| Codex | `.codex/rules/tophat.rules` | `prefix_rule` entries with `decision = "forbidden"` or `"allow"` |
-| OpenCode | `opencode.json` | `permission.bash` entries `"<command> *": "deny"` or `"allow"` |
 
 Deny lists match command prefixes and can be evaded by wrapping a command; they are a backstop to
 the hard rules, the CLI's refusal to run interactive commands without a terminal, and a container
@@ -307,13 +301,12 @@ never placed in `studies/` by the template.
 
 ## Assumptions <!-- rq-3f55f3e1 -->
 
-- Codex reads project command rules from `.codex/rules/` in a trusted project, and OpenCode and
-  Claude Code read their project configuration from the paths above.
+- Claude Code reads its project configuration from the paths above.
 - The agent runs inside the dev container, where `tophat`, pixi and Snakemake are on `PATH`.
 
 ## Out of Scope <!-- rq-2b4964eb -->
 
-- Skills for agents other than Claude Code, Codex and OpenCode.
+- Agents other than Claude Code; Codex and OpenCode are specified in `rqm/template/agents.md`.
 - Skills that run or schedule compute themselves, or that interact with batch systems.
 - Notebook tooling in `exploration/` beyond the rule that it is never cited.
 - Verifying in `tophat check` that skills or adapters are unmodified.
@@ -324,7 +317,7 @@ never placed in `studies/` by the template.
 Feature: Agent skills (render and lint)
 
   Background:
-    Given the template is rendered with default answers and agents ["claude-code", "codex", "opencode"]
+    Given the template is rendered with default answers
 
   @rq-42fba780
   Scenario: Every skill has a canonical text and a local extension
@@ -333,14 +326,8 @@ Feature: Agent skills (render and lint)
 
   @rq-2b638c5b
   Scenario: Adapters are written for every selected agent
-    Then .claude/skills, .agents/skills and .opencode/skills each contain an adapter SKILL.md for each of the seven skills
+    Then .claude/skills contains an adapter SKILL.md for each of the seven skills
     And the skill lint reports no "skill.adapter-missing"
-
-  @rq-3ca62dea
-  Scenario: No adapters for unselected agents
-    When the template is rendered with agents ["codex"]
-    Then .agents/skills/th-study/SKILL.md exists
-    And no .claude/ or .opencode/ directory, CLAUDE.md or opencode.json exists
 
   @rq-ec2d3828
   Scenario: Adapters only point at the canonical skill
@@ -388,12 +375,10 @@ Feature: Agent skills (render and lint)
   @rq-ed65c3a5
   Scenario: Remote access and human-only commands are denied
     Then .claude/settings.json denies Bash(ssh:*), Bash(scp:*), Bash(sftp:*), Bash(rsync:*), Bash(sbatch:*), Bash(srun:*), Bash(salloc:*), Bash(git commit:*), Bash(git push:*), Bash(tophat study preregister:*), Bash(tophat stage qc:*) and Bash(tophat tools sync:*)
-    And .codex/rules/tophat.rules forbids the same command prefixes
-    And opencode.json denies the same command prefixes
 
   @rq-9d45bd87
   Scenario: Read-only tophat commands need no approval
-    Then .claude/settings.json, .codex/rules/tophat.rules and opencode.json allow tophat status, tophat check, tophat question tree, tophat pipeline keys, tophat tools list, tophat data lineage, tophat data used-by and tophat stage instructions
+    Then .claude/settings.json allows tophat status, tophat check, tophat question tree, tophat pipeline keys, tophat tools list, tophat data lineage, tophat data used-by and tophat stage instructions
 
   @rq-2de196ad
   Scenario: The QC status command is not caught by the QC deny rule

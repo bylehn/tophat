@@ -1,0 +1,3 @@
+# TopHat-managed: the tophat release this project uses. `copier update` changes it.
+# No release is pinned yet: the dev container needs a development binary (TOPHAT_DEV_BINARY).
+version: unreleased

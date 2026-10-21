@@ -1,0 +1,3 @@
+# Data roots of this project. Locations are per machine: see .tophat/roots.local.yaml.
+roots:
+  results: {}

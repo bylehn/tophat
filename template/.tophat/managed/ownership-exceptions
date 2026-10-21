@@ -1,0 +1,5 @@
+# TopHat-managed: managed files whose paths a tool mandates, outside .tophat/managed/.
+# `copier update` changes every file listed here; edits to them are not preserved.
+.copier-answers.yml
+.tophat/.gitignore
+.github/workflows/tophat-check.yaml

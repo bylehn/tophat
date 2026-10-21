@@ -99,6 +99,33 @@ jobs:
           TOPHAT_REQUIRE_SNAKEMAKE: "1"
         run: cargo test --no-fail-fast --test snakemake --test external --test workflow
 
+  template:
+    # Renders the project template with the real Copier (rqm/template/project.md). With
+    # TOPHAT_REQUIRE_COPIER=1 the tests fail instead of skipping when Copier is missing.
+    name: Template rendering
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Copier
+        run: pip install 'copier>=9,<10'
+
+      - name: Run the tests
+        env:
+          TOPHAT_REQUIRE_COPIER: "1"
+        run: cargo test --test template
+
   traceability:
     # Every Gherkin scenario in rqm/ is referenced by a test, except those of files listed in
     # xtask/pending.txt (rqm/tooling.md).

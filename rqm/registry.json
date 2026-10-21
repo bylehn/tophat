@@ -23,6 +23,13 @@
     "title": "Manifest file name disagrees with its contents",
     "type": "scenario"
   },
+  "rq-007bd449": {
+    "decl": "Scenario: Claude Code is installed in the image",
+    "file": "template/container",
+    "refs": [],
+    "title": "Claude Code is installed in the image",
+    "type": "scenario"
+  },
   "rq-01092d90": {
     "decl": "### Types",
     "file": "pipeline/provenance",
@@ -89,6 +96,14 @@
     "level": 2,
     "refs": [],
     "title": "Datasets",
+    "type": "section"
+  },
+  "rq-027991e8": {
+    "decl": "## Out of Scope",
+    "file": "template/agents",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
     "type": "section"
   },
   "rq-02e65d51": {
@@ -217,7 +232,12 @@
   "rq-05e3b95c": {
     "decl": "Scenario: The hook reports check errors without blocking",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The hook reports check errors without blocking",
     "type": "scenario"
   },
@@ -492,7 +512,12 @@
     "decl": "### Ignore rules",
     "file": "template/project",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Ignore rules",
     "type": "section"
   },
@@ -536,12 +561,12 @@
     "title": "DatasetRef",
     "type": "api-item"
   },
-  "rq-1031bf35": {
-    "decl": "## Apptainer",
-    "file": "template/container",
+  "rq-101734fd": {
+    "decl": "## Assumptions",
+    "file": "template/agents",
     "level": 2,
     "refs": [],
-    "title": "Apptainer",
+    "title": "Assumptions",
     "type": "section"
   },
   "rq-10af2996": {
@@ -699,7 +724,12 @@
   "rq-14a1f043": {
     "decl": "Scenario: The lock is the template's pre-solved lock",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The lock is the template's pre-solved lock",
     "type": "scenario"
   },
@@ -744,6 +774,21 @@
     "file": "template/container",
     "refs": [],
     "title": "A missing root location stops the launch",
+    "type": "scenario"
+  },
+  "rq-16024bf5": {
+    "decl": "## Assumptions",
+    "file": "template/apptainer",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
+  },
+  "rq-1652b11e": {
+    "decl": "Scenario: Adapters are written for every selected agent",
+    "file": "template/agents",
+    "refs": [],
+    "title": "Adapters are written for every selected agent",
     "type": "scenario"
   },
   "rq-167d5ad5": {
@@ -869,17 +914,14 @@
   "rq-195607b5": {
     "decl": "Scenario: A malformed slug is rejected",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A malformed slug is rejected",
     "type": "scenario"
-  },
-  "rq-19750015": {
-    "decl": "## GPU",
-    "file": "template/container",
-    "level": 2,
-    "refs": [],
-    "title": "GPU",
-    "type": "section"
   },
   "rq-19e53a7b": {
     "decl": "Scenario: Unknown placeholder",
@@ -1092,7 +1134,12 @@
   "rq-1ec0c367": {
     "decl": "Scenario: A new project passes the check",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A new project passes the check",
     "type": "scenario"
   },
@@ -1401,7 +1448,12 @@
     "decl": "### Environment",
     "file": "template/project",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Environment",
     "type": "section"
   },
@@ -1420,7 +1472,12 @@
   "rq-26afc755": {
     "decl": "Scenario: The hook is skipped without tophat or a container runtime",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The hook is skipped without tophat or a container runtime",
     "type": "scenario"
   },
@@ -1739,7 +1796,7 @@
   },
   "rq-31265ce2": {
     "decl": "Scenario: An NVIDIA GPU is passed through",
-    "file": "template/container",
+    "file": "template/gpu",
     "refs": [],
     "title": "An NVIDIA GPU is passed through",
     "type": "scenario"
@@ -1914,9 +1971,9 @@
     "type": "section"
   },
   "rq-380bb3d9": {
-    "decl": "### Setting",
-    "file": "template/container",
-    "level": 3,
+    "decl": "## Setting",
+    "file": "template/gpu",
+    "level": 2,
     "refs": [],
     "title": "Setting",
     "type": "section"
@@ -1996,7 +2053,7 @@
   },
   "rq-3a78943e": {
     "decl": "Scenario: An invalid GPU setting is refused",
-    "file": "template/container",
+    "file": "template/gpu",
     "refs": [],
     "title": "An invalid GPU setting is refused",
     "type": "scenario"
@@ -2087,7 +2144,7 @@
   },
   "rq-3ca62dea": {
     "decl": "Scenario: No adapters for unselected agents",
-    "file": "template/skills",
+    "file": "template/agents",
     "refs": [],
     "title": "No adapters for unselected agents",
     "type": "scenario"
@@ -2159,6 +2216,14 @@
     ],
     "title": "Study ID does not match directory",
     "type": "scenario"
+  },
+  "rq-3eed2202": {
+    "decl": "## Out of Scope",
+    "file": "template/gpu",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
+    "type": "section"
   },
   "rq-3f18bffc": {
     "decl": "Scenario: Large inputs are copied with a warning",
@@ -2381,13 +2446,18 @@
   "rq-46aa2f57": {
     "decl": "Scenario: Copying into an existing repository overwrites no user file",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Copying into an existing repository overwrites no user file",
     "type": "scenario"
   },
   "rq-46b1f245": {
     "decl": "Scenario: No GPU falls back to CPU",
-    "file": "template/container",
+    "file": "template/gpu",
     "refs": [],
     "title": "No GPU falls back to CPU",
     "type": "scenario"
@@ -2407,9 +2477,22 @@
   "rq-47e127bc": {
     "decl": "Scenario: The hook uses the container on the host",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The hook uses the container on the host",
     "type": "scenario"
+  },
+  "rq-47e4462c": {
+    "decl": "## Files",
+    "file": "template/agents",
+    "level": 2,
+    "refs": [],
+    "title": "Files",
+    "type": "section"
   },
   "rq-4838d3a2": {
     "decl": "Scenario: Unlisted variant config",
@@ -2451,6 +2534,14 @@
     "title": "Files",
     "type": "section"
   },
+  "rq-48bc7333": {
+    "decl": "## Launcher",
+    "file": "template/apptainer",
+    "level": 2,
+    "refs": [],
+    "title": "Launcher",
+    "type": "section"
+  },
   "rq-49765877": {
     "decl": "Scenario: Environment variable overrides the local roots file",
     "file": "data",
@@ -2462,6 +2553,14 @@
     ],
     "title": "Environment variable overrides the local roots file",
     "type": "scenario"
+  },
+  "rq-49a7a910": {
+    "decl": "## Gherkin Scenarios",
+    "file": "template/apptainer",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
   },
   "rq-4a032ea7": {
     "decl": "## Skill Lint Rules",
@@ -2475,7 +2574,12 @@
     "decl": "## Initial State",
     "file": "template/project",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Initial State",
     "type": "section"
   },
@@ -2558,9 +2662,9 @@
     "type": "section"
   },
   "rq-4cf7a956": {
-    "decl": "### Passthrough",
-    "file": "template/container",
-    "level": 3,
+    "decl": "## Passthrough",
+    "file": "template/gpu",
+    "level": 2,
     "refs": [],
     "title": "Passthrough",
     "type": "section"
@@ -2570,6 +2674,13 @@
     "file": "template/container",
     "refs": [],
     "title": "Feature: Dev Container and Launcher",
+    "type": "file"
+  },
+  "rq-4d42c729": {
+    "decl": "# Feature: GPU Passthrough",
+    "file": "template/gpu",
+    "refs": [],
+    "title": "Feature: GPU Passthrough",
     "type": "file"
   },
   "rq-4d4f5fd4": {
@@ -2611,7 +2722,12 @@
   "rq-4da71d7f": {
     "decl": "Scenario: Machine-local state is ignored",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Machine-local state is ignored",
     "type": "scenario"
   },
@@ -2657,6 +2773,14 @@
     ],
     "title": "A recorded resolution never changes",
     "type": "scenario"
+  },
+  "rq-4f95e12e": {
+    "decl": "## Export and Run",
+    "file": "template/apptainer",
+    "level": 2,
+    "refs": [],
+    "title": "Export and Run",
+    "type": "section"
   },
   "rq-4fc6c2a5": {
     "decl": "- `tophat data publish <study> --stage <stage> [--variant <variant>] --as <name>`",
@@ -2930,14 +3054,14 @@
   },
   "rq-55cac2c5": {
     "decl": "Scenario: Apptainer runs isolated from the host",
-    "file": "template/container",
+    "file": "template/apptainer",
     "refs": [],
     "title": "Apptainer runs isolated from the host",
     "type": "scenario"
   },
   "rq-55e2e7f7": {
     "decl": "Scenario: An image of another project is refused",
-    "file": "template/container",
+    "file": "template/apptainer",
     "refs": [],
     "title": "An image of another project is refused",
     "type": "scenario"
@@ -2966,7 +3090,12 @@
     "decl": "### The tophat release",
     "file": "template/project",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The tophat release",
     "type": "section"
   },
@@ -3204,7 +3333,12 @@
   "rq-5c6c0574": {
     "decl": "Scenario: PROJECT.md starts with an empty question tree",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "PROJECT.md starts with an empty question tree",
     "type": "scenario"
   },
@@ -3240,6 +3374,13 @@
     "title": "The pipeline stops at an external stage and resumes after the return",
     "type": "scenario"
   },
+  "rq-5cf97dd8": {
+    "decl": "Scenario: Apptainer GPU options",
+    "file": "template/apptainer",
+    "refs": [],
+    "title": "Apptainer GPU options",
+    "type": "scenario"
+  },
   "rq-5d07156c": {
     "decl": "- `tophat question tree [--json]`",
     "file": "question-tree",
@@ -3266,7 +3407,7 @@
   },
   "rq-5dc40f24": {
     "decl": "Scenario: An NVIDIA GPU without CDI falls back with instructions",
-    "file": "template/container",
+    "file": "template/gpu",
     "refs": [],
     "title": "An NVIDIA GPU without CDI falls back with instructions",
     "type": "scenario"
@@ -3309,6 +3450,13 @@
     "refs": [],
     "title": "Functions",
     "type": "section"
+  },
+  "rq-5e71ddd6": {
+    "decl": "# Feature: Apptainer",
+    "file": "template/apptainer",
+    "refs": [],
+    "title": "Feature: Apptainer",
+    "type": "file"
   },
   "rq-5e9d0d62": {
     "decl": "- `Status` — enum `Draft`, `Preregistered`, `Reported`, `Superseded`, `Retrospective`.",
@@ -3466,6 +3614,14 @@
     ],
     "title": "QC refused for a stage without a gate",
     "type": "scenario"
+  },
+  "rq-6467b79d": {
+    "decl": "## Permissions",
+    "file": "template/agents",
+    "level": 2,
+    "refs": [],
+    "title": "Permissions",
+    "type": "section"
   },
   "rq-647102ae": {
     "decl": "Scenario: Retrospective study cannot carry a pre-registration block",
@@ -3848,7 +4004,12 @@
   "rq-6fd1f551": {
     "decl": "Scenario: A new project has nothing to do but ask the question",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A new project has nothing to do but ask the question",
     "type": "scenario"
   },
@@ -3972,7 +4133,12 @@
     "decl": "### CI",
     "file": "template/project",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "CI",
     "type": "section"
   },
@@ -3996,7 +4162,12 @@
   "rq-74365fac": {
     "decl": "Scenario: Managed files carry the marker",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Managed files carry the marker",
     "type": "scenario"
   },
@@ -4025,6 +4196,14 @@
     "refs": [],
     "title": "Feature: External (Cluster) Stages",
     "type": "file"
+  },
+  "rq-75960728": {
+    "decl": "## Files",
+    "file": "template/gpu",
+    "level": 2,
+    "refs": [],
+    "title": "Files",
+    "type": "section"
   },
   "rq-765490e4": {
     "decl": "Scenario: Supersede refuses a missing replacement",
@@ -4087,6 +4266,14 @@
     ],
     "title": "An unknown commit fails sync for that pin only",
     "type": "scenario"
+  },
+  "rq-7801e56b": {
+    "decl": "## Files",
+    "file": "template/apptainer",
+    "level": 2,
+    "refs": [],
+    "title": "Files",
+    "type": "section"
   },
   "rq-78b231e3": {
     "decl": "Scenario: A stage that nothing consumes is never gated",
@@ -4338,6 +4525,13 @@
     "title": "Generation refuses an uncached tool",
     "type": "scenario"
   },
+  "rq-7fb69dfd": {
+    "decl": "Scenario: GPU detection from simulated hosts",
+    "file": "template/gpu",
+    "refs": [],
+    "title": "GPU detection from simulated hosts",
+    "type": "scenario"
+  },
   "rq-7fcedcf8": {
     "decl": "Scenario: Create a private study",
     "file": "study/format",
@@ -4462,7 +4656,12 @@
   "rq-83643799": {
     "decl": "Scenario: Generation runs no commands",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Generation runs no commands",
     "type": "scenario"
   },
@@ -4618,7 +4817,12 @@
   "rq-87749f65": {
     "decl": "Scenario: Julia is added when selected",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Julia is added when selected",
     "type": "scenario"
   },
@@ -4769,7 +4973,12 @@
   "rq-911c9187": {
     "decl": "Scenario: The slug is derived from the project name",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The slug is derived from the project name",
     "type": "scenario"
   },
@@ -4900,7 +5109,7 @@
   },
   "rq-96018e0c": {
     "decl": "Scenario: GPU on without a GPU refuses to launch",
-    "file": "template/container",
+    "file": "template/gpu",
     "refs": [],
     "title": "GPU on without a GPU refuses to launch",
     "type": "scenario"
@@ -4987,7 +5196,7 @@
   },
   "rq-98385f5d": {
     "decl": "Scenario: The host variable overrides the project default",
-    "file": "template/container",
+    "file": "template/gpu",
     "refs": [],
     "title": "The host variable overrides the project default",
     "type": "scenario"
@@ -5028,9 +5237,26 @@
     "decl": "## Copier Questions",
     "file": "template/project",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Copier Questions",
     "type": "section"
+  },
+  "rq-99f3ccdf": {
+    "decl": "Scenario: An unreleased pin says so",
+    "file": "template/project",
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "An unreleased pin says so",
+    "type": "scenario"
   },
   "rq-9a610110": {
     "decl": "Scenario: Extra sections are allowed",
@@ -5158,6 +5384,13 @@
     "title": "Pre-register a ready draft interactively",
     "type": "scenario"
   },
+  "rq-9c7772af": {
+    "decl": "Scenario: An unreleased pin needs a development binary",
+    "file": "template/container",
+    "refs": [],
+    "title": "An unreleased pin needs a development binary",
+    "type": "scenario"
+  },
   "rq-9cadbb01": {
     "decl": "Scenario: Citing a reported study about this question",
     "file": "question-tree",
@@ -5195,6 +5428,14 @@
     "level": 3,
     "refs": [],
     "title": "Commands",
+    "type": "section"
+  },
+  "rq-9dc8c249": {
+    "decl": "## Out of Scope",
+    "file": "template/apptainer",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
     "type": "section"
   },
   "rq-9e24cb69": {
@@ -5293,6 +5534,13 @@
       }
     ],
     "title": "Summary is dirty when one fan-out item record is unclean",
+    "type": "scenario"
+  },
+  "rq-9f3d3812": {
+    "decl": "Scenario: A development binary replaces the release",
+    "file": "template/container",
+    "refs": [],
+    "title": "A development binary replaces the release",
     "type": "scenario"
   },
   "rq-9f4d2081": {
@@ -5486,7 +5734,12 @@
     "decl": "### Pre-commit hook",
     "file": "template/project",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Pre-commit hook",
     "type": "section"
   },
@@ -5579,6 +5832,13 @@
     "title": "Skipped heading level",
     "type": "scenario"
   },
+  "rq-a4edf228": {
+    "decl": "Scenario: Remote access and human-only commands are denied for every agent",
+    "file": "template/agents",
+    "refs": [],
+    "title": "Remote access and human-only commands are denied for every agent",
+    "type": "scenario"
+  },
   "rq-a54ab3d8": {
     "decl": "Scenario: Seal checks the result file",
     "file": "pipeline/provenance",
@@ -5631,6 +5891,13 @@
     ],
     "title": "A study without stages has no pipeline",
     "type": "scenario"
+  },
+  "rq-a70e0d9d": {
+    "decl": "# Feature: Codex and OpenCode",
+    "file": "template/agents",
+    "refs": [],
+    "title": "Feature: Codex and OpenCode",
+    "type": "file"
   },
   "rq-a7314db6": {
     "decl": "## Out of Scope",
@@ -5867,7 +6134,7 @@
   },
   "rq-abe5670e": {
     "decl": "Scenario: An AMD GPU is passed through",
-    "file": "template/container",
+    "file": "template/gpu",
     "refs": [],
     "title": "An AMD GPU is passed through",
     "type": "scenario"
@@ -5893,6 +6160,14 @@
     "level": 3,
     "refs": [],
     "title": "th-run",
+    "type": "section"
+  },
+  "rq-ad167d22": {
+    "decl": "## Image",
+    "file": "template/agents",
+    "level": 2,
+    "refs": [],
+    "title": "Image",
     "type": "section"
   },
   "rq-ad4f64d8": {
@@ -6148,6 +6423,14 @@
     "title": "Unconfigured root is a warning, not an error",
     "type": "scenario"
   },
+  "rq-b41ea1c5": {
+    "decl": "## Assumptions",
+    "file": "template/gpu",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
+  },
   "rq-b4296d6d": {
     "decl": "### `cargo xtask lint-skills`",
     "file": "tooling",
@@ -6281,6 +6564,14 @@
     "title": "summarize",
     "type": "api-item"
   },
+  "rq-b9b84d13": {
+    "decl": "## Copier Question",
+    "file": "template/agents",
+    "level": 2,
+    "refs": [],
+    "title": "Copier Question",
+    "type": "section"
+  },
   "rq-ba118d75": {
     "decl": "## PROJECT.md Format",
     "file": "question-tree",
@@ -6387,6 +6678,13 @@
     "title": "tophat",
     "type": "api-item"
   },
+  "rq-bcd5b8bd": {
+    "decl": "Scenario: A missing development binary is refused",
+    "file": "template/container",
+    "refs": [],
+    "title": "A missing development binary is refused",
+    "type": "scenario"
+  },
   "rq-bd19d141": {
     "decl": "- `DataError` — error type of the data commands, with at minimum:",
     "file": "data",
@@ -6475,6 +6773,14 @@
     ],
     "title": "Branch names are not pins",
     "type": "scenario"
+  },
+  "rq-bf79b510": {
+    "decl": "## Gherkin Scenarios",
+    "file": "template/agents",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
   },
   "rq-bf93285a": {
     "decl": "- `next_action(root: &Path, study: &str) -> Result<NextAction, StudyError>` — evaluates the",
@@ -6742,7 +7048,7 @@
   },
   "rq-c8022e42": {
     "decl": "Scenario: A missing image names its expected path",
-    "file": "template/container",
+    "file": "template/apptainer",
     "refs": [],
     "title": "A missing image names its expected path",
     "type": "scenario"
@@ -6833,7 +7139,12 @@
   "rq-cae7fbe8": {
     "decl": "Scenario: Every project-owned file is skipped on update",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Every project-owned file is skipped on update",
     "type": "scenario"
   },
@@ -6841,7 +7152,12 @@
     "decl": "## Ownership",
     "file": "template/project",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Ownership",
     "type": "section"
   },
@@ -6883,7 +7199,12 @@
     "decl": "### Data roots",
     "file": "template/project",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Data roots",
     "type": "section"
   },
@@ -7133,7 +7454,12 @@
   "rq-d0e11fee": {
     "decl": "Scenario: A new project has the skeleton files and no studies or datasets",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A new project has the skeleton files and no studies or datasets",
     "type": "scenario"
   },
@@ -7196,7 +7522,12 @@
   "rq-d1fe5c84": {
     "decl": "Scenario: The results root is declared but not located",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The results root is declared but not located",
     "type": "scenario"
   },
@@ -7238,6 +7569,13 @@
       }
     ],
     "title": "Missing variant config",
+    "type": "scenario"
+  },
+  "rq-d4406141": {
+    "decl": "Scenario: The container check runs before every prompt",
+    "file": "template/agents",
+    "refs": [],
+    "title": "The container check runs before every prompt",
     "type": "scenario"
   },
   "rq-d47ba6b9": {
@@ -7283,7 +7621,12 @@
   "rq-d4c74a32": {
     "decl": "Scenario: CI verifies the binary before running the check",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "CI verifies the binary before running the check",
     "type": "scenario"
   },
@@ -7565,7 +7908,12 @@
   "rq-db2ca072": {
     "decl": "Scenario: At least one agent is required",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "At least one agent is required",
     "type": "scenario"
   },
@@ -7890,9 +8238,9 @@
     "type": "scenario"
   },
   "rq-e363eed4": {
-    "decl": "### Detection",
-    "file": "template/container",
-    "level": 3,
+    "decl": "## Detection",
+    "file": "template/gpu",
+    "level": 2,
     "refs": [],
     "title": "Detection",
     "type": "section"
@@ -8000,7 +8348,12 @@
     "decl": "### PROJECT.md",
     "file": "template/project",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "PROJECT.md",
     "type": "section"
   },
@@ -8022,7 +8375,12 @@
   "rq-e7220b72": {
     "decl": "Scenario: Updating keeps project-owned files and stage keys",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Updating keeps project-owned files and stage keys",
     "type": "scenario"
   },
@@ -8085,7 +8443,12 @@
   "rq-e9156963": {
     "decl": "Scenario: Python and Snakemake are always installed",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Python and Snakemake are always installed",
     "type": "scenario"
   },
@@ -8283,7 +8646,7 @@
   },
   "rq-ef1935b3": {
     "decl": "Scenario: Export writes the image atomically",
-    "file": "template/container",
+    "file": "template/apptainer",
     "refs": [],
     "title": "Export writes the image atomically",
     "type": "scenario"
@@ -8476,7 +8839,7 @@
   },
   "rq-f419a09b": {
     "decl": "Scenario: Only selected agents are installed",
-    "file": "template/container",
+    "file": "template/agents",
     "refs": [],
     "title": "Only selected agents are installed",
     "type": "scenario"
@@ -8510,7 +8873,12 @@
   "rq-f57dc6fa": {
     "decl": "Scenario: A study can be added to a new project",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A study can be added to a new project",
     "type": "scenario"
   },
@@ -8572,7 +8940,7 @@
   },
   "rq-f6dc88ee": {
     "decl": "Scenario: GPU off passes nothing through",
-    "file": "template/container",
+    "file": "template/gpu",
     "refs": [],
     "title": "GPU off passes nothing through",
     "type": "scenario"
@@ -8673,6 +9041,14 @@
     "title": "Running a Tool Stage",
     "type": "section"
   },
+  "rq-f9b0c4db": {
+    "decl": "## Gherkin Scenarios",
+    "file": "template/gpu",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
+  },
   "rq-f9c4d1f4": {
     "decl": "Scenario: Invalid SLURM defaults",
     "file": "pipeline/external",
@@ -8749,7 +9125,12 @@
     "decl": "## Generated Project Layout",
     "file": "template/project",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Generated Project Layout",
     "type": "section"
   },
