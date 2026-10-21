@@ -38,3 +38,23 @@ pub fn snakemake() -> Option<OsString> {
         Err(message) => panic!("{message}"),
     }
 }
+
+/// Whether a Copier-backed test runs: `copier` must be on `PATH`. Without it the test prints a
+/// skip notice and passes, unless `TOPHAT_REQUIRE_COPIER=1`, in which case it panics, so a CI job
+/// meant to run these tests cannot pass without running them.
+pub fn copier() -> bool {
+    let found = std::process::Command::new("copier")
+        .arg("--version")
+        .output()
+        .is_ok_and(|o| o.status.success());
+    match (found, std::env::var_os("TOPHAT_REQUIRE_COPIER")) {
+        (true, _) => true,
+        (false, Some(flag)) if flag == "1" => {
+            panic!("Copier is required (TOPHAT_REQUIRE_COPIER=1) but `copier` is not on PATH")
+        }
+        (false, _) => {
+            eprintln!("skipped: install Copier 9 (`copier` on PATH) to run this test");
+            false
+        }
+    }
+}

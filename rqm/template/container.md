@@ -3,16 +3,16 @@
 All work in a TopHat project happens inside a dev container: the agent, pixi, Snakemake and the
 `tophat` CLI all run there, never on the host. The project's launcher, `th.sh`, builds the
 container image with Podman, starts an interactive session with the workspace and the project's
-data roots mounted, passes a GPU through when the host has a usable one, and gives the container no
-credentials of the human's: no SSH keys, no agent sockets, no git or cloud credentials. On a cluster,
-where Podman is usually unavailable, the same image runs under Apptainer after being exported on a
-build host.
+data roots mounted, and gives the container no credentials of the human's: no SSH keys, no agent
+sockets, no git or cloud credentials, and no git identity.
 
 This file specifies the launcher and its options, the image, the session (mounts, environment,
-pixi, git hooks), GPU detection and passthrough, the Apptainer path, and the check that keeps agents
-from running on the host. File ownership (managed vs project-owned) follows
-`rqm/template/project.md`; the agent configuration files that register the container check are
-specified in `rqm/template/skills.md`; data roots in `rqm/data.md`.
+pixi, git hooks), run options, and the check that keeps agents from running on the host. GPU
+passthrough is specified in `rqm/template/gpu.md` and running the image under Apptainer in
+`rqm/template/apptainer.md`; both extend the launcher described here. File ownership (managed vs
+project-owned) follows `rqm/template/project.md`; the agent configuration files that register the
+container check are specified in `rqm/template/skills.md` and `rqm/template/agents.md`; data roots
+in `rqm/data.md`.
 
 ## Files <!-- rq-48a62199 -->
 
@@ -21,7 +21,6 @@ th.sh                                     managed   adapter: exec .tophat/manage
 .tophat/project-id                        project   the project's UUID, created on first launch
 .tophat/managed/
   launch/th.sh                            managed   the launcher
-  launch/gpu-detect.sh                    managed   GPU detection
   launch/run-options.sh                   managed   run-options validation
   launch/enter.sh                         managed   session start inside the container
   container/Containerfile                 managed   the base image
@@ -30,14 +29,11 @@ th.sh                                     managed   adapter: exec .tophat/manage
   hooks/check-container.sh                managed   refuses agent prompts outside a container
 .tophat/user/
   container/Containerfile                 project   project additions to the image
-  container/gpu                           project   the project's GPU default: auto, on or off
   podman/run-options                      project   extra `podman run` options
-  apptainer/run-options                   project   extra `apptainer exec` options
-.tophat/state/                            ignored   machine-local launcher state (exported images)
+.tophat/state/                            ignored   machine-local launcher state
 ```
 
 - `th.sh` at the project root is listed in `.tophat/managed/ownership-exceptions`.
-- `.tophat/user/container/gpu` is written once from the `gpu` Copier answer.
 - `.tophat/state/` is git-ignored (see the ignore rules in `rqm/template/project.md`).
 
 ## Launcher <!-- rq-71727623 -->
@@ -48,10 +44,8 @@ machine, or in WSL2 on Windows.
 | Invocation | Effect |
 |---|---|
 | `th.sh` | Builds the image if needed, sets up git hooks, and starts an interactive session |
-| `th.sh --export-sif` | Builds the image and exports it to `.tophat/state/apptainer/tophat-<project-id>.sif` |
-| `th.sh --run-sif` | Starts an interactive session from the exported image under Apptainer (no build) |
 | `th.sh --check` | Runs `tophat check` in a throwaway container with the project mounted read-only, and exits with its exit code |
-| `th.sh --dry-run [--run-sif]` | Prints, one per line, the container commands it would run, and runs none |
+| `th.sh --dry-run` | Prints, one per line, the container commands it would run, and runs none |
 
 - Unknown options are refused with the usage text, before anything runs.
 - Every refusal names its cause and exits non-zero before any container starts.
@@ -68,7 +62,11 @@ The image is built in three layers, all for the host's architecture (`linux-64` 
 1. **Base** (`.tophat/managed/container/Containerfile`): `ubuntu:24.04` with `bash`, `git`,
    `ca-certificates`, `curl`; pixi and Copier at the versions in `versions.yaml`; and the `tophat`
    binary from `.tophat/managed/tophat-release.yaml` for the image's architecture. The build
-   downloads the binary, compares its SHA-256 with the pinned hash, and fails on a mismatch. The
+   downloads the binary, compares its SHA-256 with the pinned hash, and fails on a mismatch. When
+   `TOPHAT_DEV_BINARY` is set on the host to a Linux `tophat` binary (for example one built from the
+   TopHat repository), the launcher copies it into the build context and the image uses it instead,
+   downloading nothing; this is the only way to build an image while the pin is
+   `version: unreleased`, which otherwise refuses the launch. The
    image's system git configuration sets `user.useConfigOnly = true` and no identity, so git
    refuses to commit in the container (see *Commits happen on the host*). Programs
    live under an image-owned home, `/opt/tophat/home`, readable by any user, so the image works
@@ -96,7 +94,6 @@ The session runs `podman run --rm -it` with exactly these mounts and variables:
 | volume `tophat-<project-id>-pixi-cache` at the pixi cache directory | package cache across sessions |
 | volume `tophat-<project-id>-<agent>` at each selected agent's configuration home | the agent's own login and session state |
 | `TOPHAT_ROOT_<NAME>` | passed through when set on the host (see `rqm/data.md`) |
-| GPU options | see *GPU* |
 | `.tophat/user/podman/run-options` | appended last, so the project's options win |
 
 Nothing else from the host enters the container. In particular the session never mounts `~/.ssh`,
@@ -109,7 +106,8 @@ The session's command is `.tophat/managed/launch/enter.sh`, which:
 
 1. runs `pixi install --frozen`; on failure it prints pixi's error and a line saying that
    `pixi.toml` and `pixi.lock` disagree or a package could not be fetched, and continues;
-2. prints `tophat status`;
+2. prints `tophat status`, preceded, for a development binary, by a line saying that this session
+   runs a development build of `tophat` and its version;
 3. replaces itself with an interactive `bash` in which `pixi`, `tophat` and, through
    `pixi run`, Snakemake are available.
 
@@ -120,7 +118,7 @@ The launcher asks `tophat` where the data roots are, so it reads `.tophat/roots.
 
 - After building, it runs `tophat data roots` in a throwaway container from the new image, with the
   workspace mounted read-only and the host's `TOPHAT_ROOT_<NAME>` variables passed in (see
-  `rqm/data.md`). Under `--run-sif` it runs the same command from the exported image.
+  `rqm/data.md`).
 - When that command fails (invalid roots files), the launch is refused with its message.
 - Each configured location is bound read-write at the identical path inside the container, so a
   path in a manifest, provenance record or job folder means the same file on the host and in the
@@ -145,64 +143,9 @@ when `core.hooksPath` is unset. When it is set to anything else, the launcher le
 and prints that the TopHat pre-commit hook is not active and that the existing hook can call
 `.tophat/managed/hooks/pre-commit`. Outside a git repository it does nothing.
 
-## GPU <!-- rq-19750015 -->
-
-### Setting <!-- rq-380bb3d9 -->
-
-The GPU setting is `TOPHAT_GPU` when set on the host, otherwise the content of
-`.tophat/user/container/gpu`, otherwise `auto`. Any value other than `auto`, `on` or `off` is
-refused.
-
-### Detection <!-- rq-e363eed4 -->
-
-`.tophat/managed/launch/gpu-detect.sh` prints one word, from files under a system root (`/` by
-default, or the directory given as its first argument, so tests can simulate hosts):
-
-| Output | Condition |
-|---|---|
-| `nvidia` | `dev/nvidiactl` exists and a CDI specification for `nvidia.com/gpu` exists in `etc/cdi/` or `var/run/cdi/` |
-| `nvidia-no-cdi` | `dev/nvidiactl` exists without such a specification |
-| `amd` | `dev/kfd` exists and `dev/dri/` holds a `renderD*` node |
-| `none` | otherwise |
-
-NVIDIA is reported when both vendors are present. Under Apptainer, `nvidia-no-cdi` counts as
-`nvidia`, because `--nv` needs no CDI specification.
-
-### Passthrough <!-- rq-4cf7a956 -->
-
-| Detected | Podman options | Apptainer options |
-|---|---|---|
-| `nvidia` | `--device nvidia.com/gpu=all` | `--nv` |
-| `amd` | `--device /dev/kfd --device /dev/dri --group-add keep-groups` | `--rocm` |
-
-- `auto`: passes the detected GPU through. With `none`, it starts on CPU and prints one line saying
-  no usable GPU was found; with `nvidia-no-cdi` under Podman, it starts on CPU and prints that the
-  NVIDIA GPU needs a CDI specification (`sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml`).
-- `on`: like `auto`, but refuses to launch when no GPU can be passed through, with the same
-  explanation.
-- `off`: passes nothing through.
-- On macOS no GPU can be passed through, so `auto` starts on CPU with the message and `on` refuses.
-- The host supplies the driver; GPU runtime libraries come from the pixi environment.
-
-## Apptainer <!-- rq-1031bf35 -->
-
-- `th.sh --export-sif` builds the image as usual, saves it as an OCI archive, and converts it with
-  `apptainer build` to `.tophat/state/apptainer/tophat-<project-id>.sif`, writing to a temporary file
-  and renaming it when complete. Apptainer must be on the build host's `PATH`. The image carries the
-  label `org.tophat.project-id`.
-- The human copies the `.sif` file to the same path in the project's checkout on the cluster.
-  TopHat never copies it.
-- `th.sh --run-sif` builds nothing. It refuses when the image is missing (naming the expected path
-  and how to export one) or when its `org.tophat.project-id` label differs from
-  `.tophat/project-id`. It runs `apptainer exec --containall --no-home --cleanenv --writable-tmpfs`,
-  binding the workspace at `/work`, the data roots at their own paths, and per-agent directories
-  under `.tophat/state/apptainer/agents/` (created with mode `0700`) at the agents' configuration
-  homes, followed by the GPU options and `.tophat/user/apptainer/run-options`, and runs
-  `env HOME=/opt/tophat/home .tophat/managed/launch/enter.sh`.
-
 ## Run Options <!-- rq-2b0ca72f -->
 
-`.tophat/user/podman/run-options` and `.tophat/user/apptainer/run-options` hold one option per line;
+`.tophat/user/podman/run-options` holds one option per line;
 blank lines and `#` comments are ignored. A line containing whitespace, or not starting with `-`, is
 refused with the file name and line number before any container starts. The options are appended
 after the launcher's own, so a runtime that takes the last occurrence of an option takes the
@@ -219,17 +162,14 @@ to work.
 
 ## Assumptions <!-- rq-14cdc44c -->
 
-- Podman 4.4 or later on the build host; Apptainer 1.2 or later on execution hosts.
+- Podman 4.4 or later on the host.
 - On macOS, data root locations are inside directories the Podman machine shares (by default
   `/Users`).
-- NVIDIA hosts use the NVIDIA Container Toolkit for CDI specifications; AMD hosts expose `/dev/kfd`
-  and `/dev/dri` to the user.
 
 ## Out of Scope <!-- rq-656aa36b -->
 
 - Native Windows launchers (`.bat`, PowerShell); Windows is supported through WSL2.
 - Docker as the container runtime.
-- Building images on a cluster, and transferring exported images.
 - Forwarding credentials into the container for any command.
 - Multi-node or MPI execution inside the container; cluster compute uses external stages.
 
@@ -275,12 +215,31 @@ Feature: Dev container and launcher
     Then the build fails naming the checksum mismatch
     And the previous image is unchanged
 
-  @rq-f419a09b
-  Scenario: Only selected agents are installed
-    Given the project was rendered with agents ["codex"]
+  @rq-9f3d3812
+  Scenario: A development binary replaces the release
+    Given TOPHAT_DEV_BINARY is set to a tophat binary built from the TopHat repository
     When the image is built
-    Then "codex --version" succeeds in the image
-    And "claude" and "opencode" are not on PATH in the image
+    Then nothing is downloaded for tophat
+    And "tophat --version" in the image prints that binary's version
+    And the session start says it runs a development build
+
+  @rq-9c7772af
+  Scenario: An unreleased pin needs a development binary
+    Given .tophat/managed/tophat-release.yaml holds "version: unreleased"
+    And TOPHAT_DEV_BINARY is unset
+    When "th.sh --dry-run" is run
+    Then it exits non-zero saying no tophat release is pinned and naming TOPHAT_DEV_BINARY
+
+  @rq-bcd5b8bd
+  Scenario: A missing development binary is refused
+    Given TOPHAT_DEV_BINARY is set to a path that does not exist
+    When "th.sh --dry-run" is run
+    Then it exits non-zero naming that path
+
+  @rq-007bd449
+  Scenario: Claude Code is installed in the image
+    When the image is built
+    Then "claude --version" succeeds in the image
 
   # --- Session ---
 
@@ -381,115 +340,6 @@ Feature: Dev container and launcher
     When "th.sh --dry-run" is run
     Then core.hooksPath is ".husky"
     And the launcher prints that the TopHat pre-commit hook is not active
-
-  # --- GPU detection ---
-
-  Scenario Outline: GPU detection from a simulated host
-    Given a system root containing <files>
-    When gpu-detect.sh is run on it
-    Then it prints "<result>"
-
-    Examples:
-      | files                                                         | result        |
-      | dev/nvidiactl, etc/cdi/nvidia.yaml naming nvidia.com/gpu      | nvidia        |
-      | dev/nvidiactl, var/run/cdi/nvidia.json naming nvidia.com/gpu  | nvidia        |
-      | dev/nvidiactl                                                 | nvidia-no-cdi |
-      | dev/kfd, dev/dri/renderD128                                   | amd           |
-      | dev/kfd                                                       | none          |
-      | dev/nvidiactl, etc/cdi/nvidia.yaml, dev/kfd, dev/dri/renderD128 | nvidia      |
-      | nothing                                                       | none          |
-
-  # --- GPU passthrough ---
-
-  @rq-31265ce2
-  Scenario: An NVIDIA GPU is passed through
-    Given the GPU setting is "auto" and detection prints "nvidia"
-    When "th.sh --dry-run" is run
-    Then the podman run command contains "--device nvidia.com/gpu=all"
-
-  @rq-abe5670e
-  Scenario: An AMD GPU is passed through
-    Given the GPU setting is "auto" and detection prints "amd"
-    When "th.sh --dry-run" is run
-    Then the podman run command contains "--device /dev/kfd", "--device /dev/dri" and "--group-add keep-groups"
-
-  @rq-46b1f245
-  Scenario: No GPU falls back to CPU
-    Given the GPU setting is "auto" and detection prints "none"
-    When "th.sh --dry-run" is run
-    Then the podman run command has no GPU options
-    And the launcher prints that no usable GPU was found and the session runs on CPU
-
-  @rq-5dc40f24
-  Scenario: An NVIDIA GPU without CDI falls back with instructions
-    Given the GPU setting is "auto" and detection prints "nvidia-no-cdi"
-    When "th.sh --dry-run" is run
-    Then the podman run command has no GPU options
-    And the launcher prints "nvidia-ctk cdi generate"
-
-  @rq-96018e0c
-  Scenario: GPU on without a GPU refuses to launch
-    Given the GPU setting is "on" and detection prints "none"
-    When "th.sh --dry-run" is run
-    Then it exits non-zero saying no usable GPU was found
-
-  @rq-f6dc88ee
-  Scenario: GPU off passes nothing through
-    Given the GPU setting is "off" and detection prints "nvidia"
-    When "th.sh --dry-run" is run
-    Then the podman run command has no GPU options
-
-  @rq-98385f5d
-  Scenario: The host variable overrides the project default
-    Given .tophat/user/container/gpu contains "on" and TOPHAT_GPU is "off"
-    And detection prints "none"
-    When "th.sh --dry-run" is run
-    Then the launch is not refused and the podman run command has no GPU options
-
-  @rq-3a78943e
-  Scenario: An invalid GPU setting is refused
-    Given TOPHAT_GPU is "maybe"
-    When "th.sh --dry-run" is run
-    Then it exits non-zero naming the allowed values auto, on and off
-
-  Scenario Outline: Apptainer GPU options
-    Given an exported image for this project and the GPU setting "auto"
-    And detection prints "<detected>"
-    When "th.sh --dry-run --run-sif" is run
-    Then the apptainer command contains "<option>"
-
-    Examples:
-      | detected      | option |
-      | nvidia        | --nv   |
-      | nvidia-no-cdi | --nv   |
-      | amd           | --rocm |
-
-  # --- Apptainer ---
-
-  @rq-ef1935b3
-  Scenario: Export writes the image atomically
-    When "th.sh --export-sif" is run and the conversion fails
-    Then no file exists at .tophat/state/apptainer/tophat-<project-id>.sif
-
-  @rq-55e2e7f7
-  Scenario: An image of another project is refused
-    Given .tophat/state/apptainer/tophat-<project-id>.sif is labelled with another project ID
-    When "th.sh --run-sif" is run
-    Then it exits non-zero naming both project IDs
-
-  @rq-c8022e42
-  Scenario: A missing image names its expected path
-    Given no exported image exists
-    When "th.sh --run-sif" is run
-    Then it exits non-zero naming .tophat/state/apptainer/tophat-<project-id>.sif and "th.sh --export-sif"
-
-  @rq-55cac2c5
-  Scenario: Apptainer runs isolated from the host
-    Given an exported image for this project
-    When "th.sh --dry-run --run-sif" is run
-    Then the apptainer command contains "--containall", "--no-home" and "--cleanenv"
-    And binds the project root at /work and the configured data roots at their own paths
-    And binds no host home directory
 
   # --- Container check ---
 
