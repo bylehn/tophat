@@ -1,0 +1,32 @@
+# Pipeline stages of study median-vs-mean. Variants override fields in config/<variant>.yaml.
+stages:
+  - name: generate
+    run: python scripts/generate.py --out {out} --signals {params.signals} --length {params.length} --noise {params.noise} --seed {params.seed}
+    code: [scripts/generate.py]
+    params: {signals: 30, length: 200, noise: gaussian, seed: 1}
+    qc: skip
+    qc_reason: Deterministic synthetic signals, checked by scenario S2
+  - name: filter
+    run: sh scripts/filter.sh {in.signals} {out} {params.width}
+    code: [scripts/filter.sh]
+    inputs: {signals: stage:generate}
+    params: {width: 5}
+    external:
+      slurm:
+        - --time=00:10:00
+  - name: score
+{%- if 'julia' in languages %}
+    run: julia scripts/score.jl {item} {out}
+    code: [scripts/score.jl]
+{%- else %}
+    run: python scripts/score.py {item} {out}
+    code: [scripts/score.py]
+{%- endif %}
+    inputs: {filtered: stage:filter}
+    foreach: filtered
+  - name: analyse
+    run: python scripts/analyse.py {in.scores} {out} --resamples {params.resamples} --seed {params.seed}
+    code: [scripts/analyse.py]
+    inputs: {scores: stage:score}
+    params: {resamples: 2000, seed: 1}
+    result: result.txt

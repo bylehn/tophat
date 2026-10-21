@@ -1,0 +1,26 @@
+# Computes the RMSE of the mean and median filters against the clean signal, for one filtered
+# signal (stage `score`). Writes <out>/rmse.tsv with the columns mean_rmse and median_rmse.
+using Printf
+
+function main(path, out)
+    clean = Float64[]
+    mean_filtered = Float64[]
+    median_filtered = Float64[]
+    for (i, line) in enumerate(eachline(path))
+        i == 1 && continue
+        c, m, d = parse.(Float64, split(line, '\t'))
+        push!(clean, c)
+        push!(mean_filtered, m)
+        push!(median_filtered, d)
+    end
+    isempty(clean) && error("$path holds no samples")
+    rmse(values) = sqrt(sum((values .- clean) .^ 2) / length(clean))
+    mkpath(out)
+    open(joinpath(out, "rmse.tsv"), "w") do io
+        println(io, "mean_rmse\tmedian_rmse")
+        @printf(io, "%.6f\t%.6f\n", rmse(mean_filtered), rmse(median_filtered))
+    end
+end
+
+length(ARGS) == 2 || error("usage: julia score.jl <filtered signal> <out dir>")
+main(ARGS[1], ARGS[2])

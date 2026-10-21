@@ -1,0 +1,32 @@
+"""Computes the RMSE of the mean and median filters against the clean signal, for one filtered
+signal (stage `score`). Writes <out>/rmse.tsv with the columns mean_rmse and median_rmse."""
+
+import math
+import sys
+from pathlib import Path
+
+
+def rmse(values, clean):
+    return math.sqrt(sum((v - c) ** 2 for v, c in zip(values, clean)) / len(clean))
+
+
+def main():
+    if len(sys.argv) != 3:
+        raise SystemExit("usage: score.py <filtered signal> <out dir>")
+    path, out = Path(sys.argv[1]), Path(sys.argv[2])
+    clean, mean, median = [], [], []
+    for line in path.read_text().splitlines()[1:]:
+        c, m, d = (float(x) for x in line.split("\t"))
+        clean.append(c)
+        mean.append(m)
+        median.append(d)
+    if not clean:
+        raise SystemExit(f"{path} holds no samples")
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "rmse.tsv").write_text(
+        f"mean_rmse\tmedian_rmse\n{rmse(mean, clean):.6f}\t{rmse(median, clean):.6f}\n"
+    )
+
+
+if __name__ == "__main__":
+    main()
