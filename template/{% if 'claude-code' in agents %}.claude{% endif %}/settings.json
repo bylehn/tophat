@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tophat status:*)",
+      "Bash(tophat check:*)",
+      "Bash(tophat question tree:*)",
+      "Bash(tophat pipeline keys:*)",
+      "Bash(tophat tools list:*)",
+      "Bash(tophat data lineage:*)",
+      "Bash(tophat data used-by:*)",
+      "Bash(tophat stage instructions:*)"
+    ],
+    "deny": [
+      "Bash(ssh:*)",
+      "Bash(scp:*)",
+      "Bash(sftp:*)",
+      "Bash(rsync:*)",
+      "Bash(sbatch:*)",
+      "Bash(srun:*)",
+      "Bash(salloc:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(tophat study preregister:*)",
+      "Bash(tophat stage qc:*)",
+      "Bash(tophat tools sync:*)"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".tophat/managed/hooks/check-container.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

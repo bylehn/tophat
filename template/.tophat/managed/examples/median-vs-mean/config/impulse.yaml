@@ -1,0 +1,4 @@
+# Variant `impulse`: impulse noise instead of Gaussian noise; everything else as in base.yaml.
+stages:
+  - name: generate
+    params: {noise: impulse}

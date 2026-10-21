@@ -1,0 +1,11 @@
+---
+name: th-question
+description: Write, stamp, answer or drop questions in the project's question tree (PROJECT.md). Use when the project has no overarching question yet, when the human wants to add or refine questions, or when a reported study can answer an open question. Not for planning the study that answers a question; use th-study for that.
+---
+
+<!-- TopHat-managed adapter. The canonical skill lives under .tophat/managed/skills/. -->
+
+Read `.tophat/managed/skills/th-question/SKILL.md` completely and follow it as the authoritative workflow.
+
+When it says to ask the human, use the AskUserQuestion tool for a choice between options, and ask in
+plain text otherwise. Other TopHat skills are invoked as `/th-<name>`, for example `/th-study`.
