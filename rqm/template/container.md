@@ -25,7 +25,7 @@ th.sh                                     managed   adapter: exec .tophat/manage
   launch/enter.sh                         managed   session start inside the container
   container/Containerfile                 managed   the base image
   container/Agent.Containerfile           managed   the agent layer
-  container/versions.yaml                 managed   pinned pixi, Copier and agent versions
+  container/versions.yaml                 managed   pinned pixi (with checksums), Copier and agent versions
   hooks/check-container.sh                managed   refuses agent prompts outside a container
 .tophat/user/
   container/Containerfile                 project   project additions to the image
@@ -33,7 +33,11 @@ th.sh                                     managed   adapter: exec .tophat/manage
 .tophat/state/                            ignored   machine-local launcher state
 ```
 
-- `th.sh` at the project root is listed in `.tophat/managed/ownership-exceptions`.
+- `th.sh` at the project root changes to the project root and runs `.tophat/managed/launch/th.sh`;
+  it is listed in `.tophat/managed/ownership-exceptions`.
+- `.tophat/user/container/Containerfile` and `.tophat/user/podman/run-options` are project-owned
+  (written once, in `_skip_if_exists`); the run-options file starts with only comments.
+- The launcher assembles each build in `.tophat/state/build/`.
 - `.tophat/state/` is git-ignored (see the ignore rules in `rqm/template/project.md`).
 
 ## Launcher <!-- rq-71727623 -->
@@ -44,8 +48,14 @@ machine, or in WSL2 on Windows.
 | Invocation | Effect |
 |---|---|
 | `th.sh` | Builds the image if needed, sets up git hooks, and starts an interactive session |
-| `th.sh --check` | Runs `tophat check` in a throwaway container with the project mounted read-only, and exits with its exit code |
-| `th.sh --dry-run` | Prints, one per line, the container commands it would run, and runs none |
+| `th.sh --check` | Runs `tophat check` in a throwaway container with the project mounted read-only, and exits with its exit code; builds the image only when none exists |
+| `th.sh --dry-run` | Builds nothing and starts no session: prints, one per line, the build and session commands it would run |
+
+- `--dry-run` still does what the session's commands depend on and what a launch always does: it
+  creates the project ID, sets the hook path, and runs the read-only `tophat data roots` query (see
+  *Data roots*) from the image of an earlier launch. Without such an image it refuses, saying to
+  launch once first.
+- Printed commands quote only the words that need it.
 
 - Unknown options are refused with the usage text, before anything runs.
 - Every refusal names its cause and exits non-zero before any container starts.
@@ -60,13 +70,15 @@ The image is built in three layers, all for the host's architecture (`linux-64` 
 `linux-aarch64`):
 
 1. **Base** (`.tophat/managed/container/Containerfile`): `ubuntu:24.04` with `bash`, `git`,
-   `ca-certificates`, `curl`; pixi and Copier at the versions in `versions.yaml`; and the `tophat`
+   `ca-certificates`, `curl` and `pipx`; pixi at the version in `versions.yaml`, whose archive's
+   SHA-256 must match the one listed there for the architecture; Copier at its version; and the `tophat`
    binary from `.tophat/managed/tophat-release.yaml` for the image's architecture. The build
    downloads the binary, compares its SHA-256 with the pinned hash, and fails on a mismatch. When
    `TOPHAT_DEV_BINARY` is set on the host to a Linux `tophat` binary (for example one built from the
    TopHat repository), the launcher copies it into the build context and the image uses it instead,
    downloading nothing; this is the only way to build an image while the pin is
-   `version: unreleased`, which otherwise refuses the launch. The
+   `version: unreleased`, which otherwise refuses the launch. An image with a development binary sets
+   `TOPHAT_DEV_BUILD=1` in its environment. The
    image's system git configuration sets `user.useConfigOnly = true` and no identity, so git
    refuses to commit in the container (see *Commits happen on the host*). Programs
    live under an image-owned home, `/opt/tophat/home`, readable by any user, so the image works
@@ -104,12 +116,14 @@ the agents and `tophat tools sync` (public repositories only, see `rqm/pipeline/
 
 The session's command is `.tophat/managed/launch/enter.sh`, which:
 
-1. runs `pixi install --frozen`; on failure it prints pixi's error and a line saying that
+1. runs `pixi install --locked`, which installs exactly the committed lock and refuses a lock that
+   does not satisfy `pixi.toml`; on failure it prints pixi's error and a line saying that
    `pixi.toml` and `pixi.lock` disagree or a package could not be fetched, and continues;
-2. prints `tophat status`, preceded, for a development binary, by a line saying that this session
+2. prints `tophat status`, preceded, when `TOPHAT_DEV_BUILD=1`, by a line saying that this session
    runs a development build of `tophat` and its version;
-3. replaces itself with an interactive `bash` in which `pixi`, `tophat` and, through
-   `pixi run`, Snakemake are available.
+3. replaces itself with the command given as its arguments or, without arguments (as in a session),
+   with an interactive `bash` in which `pixi`, `tophat` and, through `pixi run`, Snakemake are
+   available.
 
 ### Data roots <!-- rq-fa54ed44 -->
 
@@ -155,7 +169,8 @@ project's.
 
 `.tophat/managed/hooks/check-container.sh` exits 0 inside a container (Podman's
 `/run/.containerenv` or `container=podman`, Apptainer's `APPTAINER_CONTAINER` or `/.singularity.d`,
-a container cgroup, or an overlay root filesystem). Outside one it prints, as JSON, a block decision
+a container cgroup, or an overlay root filesystem). The files are looked up under a system root, `/`
+by default or the directory given as its first argument, so tests can simulate hosts. Outside one it prints, as JSON, a block decision
 whose reason says to start the session with `th.sh`, and exits 2. The agent configuration files
 (see `rqm/template/skills.md`) run it before every prompt, so an agent started on the host refuses
 to work.
@@ -200,6 +215,12 @@ Feature: Dev container and launcher
   Scenario: Unknown options are refused
     When "th.sh --frobnicate" is run
     Then it prints the usage text and exits non-zero
+
+  @rq-18896042
+  Scenario: A dry run needs an image from an earlier launch
+    Given no image of this project exists
+    When "th.sh --dry-run" is run
+    Then it exits non-zero saying to launch once first
 
   # --- Image ---
 
@@ -304,7 +325,7 @@ Feature: Dev container and launcher
   @rq-e9865354
   Scenario: The environment is installed when the session starts
     Given the container starts with enter.sh
-    Then "pixi install --frozen" runs before the interactive shell
+    Then "pixi install --locked" runs before the interactive shell
     And "tophat status" is printed
 
   @rq-7478e01d
@@ -345,13 +366,13 @@ Feature: Dev container and launcher
 
   @rq-c65f79e0
   Scenario: Prompts are allowed inside the container
-    Given /run/.containerenv exists
+    Given a system root with run/.containerenv
     When check-container.sh runs
     Then it exits 0
 
   @rq-36a97588
   Scenario: Prompts are refused on the host
-    Given none of the container markers is present
+    Given a system root with none of the container markers, and no container variables set
     When check-container.sh runs
     Then it prints a JSON block decision naming "th.sh"
     And it exits 2

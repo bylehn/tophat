@@ -25,9 +25,20 @@ const BACKGROUND: [(&str, &str); 4] = [
     ("author_email", "a@example.org"),
 ];
 
-/// The project files every render has.
-const SKELETON: [&str; 13] = [
+/// The project files every render has: the skeleton of rqm/template/project.md and the launcher
+/// files of rqm/template/container.md.
+const SKELETON: [&str; 23] = [
     ".copier-answers.yml",
+    "th.sh",
+    ".tophat/managed/launch/th.sh",
+    ".tophat/managed/launch/run-options.sh",
+    ".tophat/managed/launch/enter.sh",
+    ".tophat/managed/container/Containerfile",
+    ".tophat/managed/container/Agent.Containerfile",
+    ".tophat/managed/container/versions.yaml",
+    ".tophat/managed/hooks/check-container.sh",
+    ".tophat/user/container/Containerfile",
+    ".tophat/user/podman/run-options",
     "PROJECT.md",
     "README.md",
     "pixi.toml",

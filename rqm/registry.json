@@ -26,7 +26,12 @@
   "rq-007bd449": {
     "decl": "Scenario: Claude Code is installed in the image",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Claude Code is installed in the image",
     "type": "scenario"
   },
@@ -772,7 +777,12 @@
   "rq-1537c938": {
     "decl": "Scenario: A missing root location stops the launch",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A missing root location stops the launch",
     "type": "scenario"
   },
@@ -880,6 +890,18 @@
       }
     ],
     "title": "Skipping a QC gate needs a reason",
+    "type": "scenario"
+  },
+  "rq-18896042": {
+    "decl": "Scenario: A dry run needs an image from an earlier launch",
+    "file": "template/container",
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A dry run needs an image from an earlier launch",
     "type": "scenario"
   },
   "rq-192a5ff9": {
@@ -1059,7 +1081,12 @@
   "rq-1cc9f489": {
     "decl": "Scenario: The session mounts only the workspace, roots and its own volumes",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The session mounts only the workspace, roots and its own volumes",
     "type": "scenario"
   },
@@ -1067,7 +1094,12 @@
     "decl": "## Container Check",
     "file": "template/container",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Container Check",
     "type": "section"
   },
@@ -1254,7 +1286,12 @@
   "rq-22ab7a81": {
     "decl": "Scenario: The project ID is created once",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The project ID is created once",
     "type": "scenario"
   },
@@ -1577,7 +1614,12 @@
     "decl": "## Run Options",
     "file": "template/container",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Run Options",
     "type": "section"
   },
@@ -1758,7 +1800,12 @@
   "rq-2f11c7ec": {
     "decl": "Scenario: The hook path is set when unset",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The hook path is set when unset",
     "type": "scenario"
   },
@@ -1937,7 +1984,12 @@
   "rq-36a97588": {
     "decl": "Scenario: Prompts are refused on the host",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Prompts are refused on the host",
     "type": "scenario"
   },
@@ -2138,7 +2190,12 @@
   "rq-3c33f183": {
     "decl": "Scenario: Project run options are appended and validated",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Project run options are appended and validated",
     "type": "scenario"
   },
@@ -3293,7 +3350,12 @@
   "rq-5b3d8f35": {
     "decl": "Scenario: Unknown options are refused",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Unknown options are refused",
     "type": "scenario"
   },
@@ -3326,7 +3388,12 @@
     "decl": "## Image",
     "file": "template/container",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Image",
     "type": "section"
   },
@@ -3427,7 +3494,12 @@
   "rq-5df9545e": {
     "decl": "Scenario: An invalid run option is refused",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An invalid run option is refused",
     "type": "scenario"
   },
@@ -3501,14 +3573,24 @@
     "decl": "## Session",
     "file": "template/container",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Session",
     "type": "section"
   },
   "rq-6026766d": {
     "decl": "Scenario: The host's git identity does not enter the container",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The host's git identity does not enter the container",
     "type": "scenario"
   },
@@ -4078,7 +4160,12 @@
     "decl": "## Launcher",
     "file": "template/container",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Launcher",
     "type": "section"
   },
@@ -4174,7 +4261,12 @@
   "rq-7478e01d": {
     "decl": "Scenario: A stale lock does not prevent the session",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A stale lock does not prevent the session",
     "type": "scenario"
   },
@@ -4425,7 +4517,12 @@
   "rq-7d26723f": {
     "decl": "Scenario: Every YAML form tophat accepts is understood",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Every YAML form tophat accepts is understood",
     "type": "scenario"
   },
@@ -4613,7 +4710,12 @@
     "decl": "### Git hooks",
     "file": "template/container",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Git hooks",
     "type": "section"
   },
@@ -5387,7 +5489,12 @@
   "rq-9c7772af": {
     "decl": "Scenario: An unreleased pin needs a development binary",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An unreleased pin needs a development binary",
     "type": "scenario"
   },
@@ -5539,7 +5646,12 @@
   "rq-9f3d3812": {
     "decl": "Scenario: A development binary replaces the release",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A development binary replaces the release",
     "type": "scenario"
   },
@@ -5571,7 +5683,12 @@
     "decl": "### Commits happen on the host",
     "file": "template/container",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Commits happen on the host",
     "type": "section"
   },
@@ -6111,7 +6228,12 @@
   "rq-aba117e6": {
     "decl": "Scenario: Invalid roots files stop the launch",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Invalid roots files stop the launch",
     "type": "scenario"
   },
@@ -6395,7 +6517,12 @@
   "rq-b3ee805a": {
     "decl": "Scenario: The check runs in a throwaway container",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The check runs in a throwaway container",
     "type": "scenario"
   },
@@ -6681,7 +6808,12 @@
   "rq-bcd5b8bd": {
     "decl": "Scenario: A missing development binary is refused",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A missing development binary is refused",
     "type": "scenario"
   },
@@ -6978,7 +7110,12 @@
   "rq-c65f79e0": {
     "decl": "Scenario: Prompts are allowed inside the container",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Prompts are allowed inside the container",
     "type": "scenario"
   },
@@ -8122,14 +8259,24 @@
   "rq-df0c42b9": {
     "decl": "Scenario: Git refuses to commit inside the container",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Git refuses to commit inside the container",
     "type": "scenario"
   },
   "rq-df2a2b0e": {
     "decl": "Scenario: A malformed project ID is refused",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A malformed project ID is refused",
     "type": "scenario"
   },
@@ -8475,7 +8622,12 @@
   "rq-e9865354": {
     "decl": "Scenario: The environment is installed when the session starts",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The environment is installed when the session starts",
     "type": "scenario"
   },
@@ -8515,7 +8667,12 @@
   "rq-ea93a50d": {
     "decl": "Scenario: A commit made on the host is seen in the container",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A commit made on the host is seen in the container",
     "type": "scenario"
   },
@@ -8859,7 +9016,12 @@
   "rq-f503e56e": {
     "decl": "Scenario: An existing hook path is left alone",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An existing hook path is left alone",
     "type": "scenario"
   },
@@ -9020,7 +9182,12 @@
   "rq-f9a0d3e0": {
     "decl": "Scenario: Root variables are bound and passed through",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Root variables are bound and passed through",
     "type": "scenario"
   },
@@ -9077,7 +9244,12 @@
     "decl": "### Data roots",
     "file": "template/container",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Data roots",
     "type": "section"
   },

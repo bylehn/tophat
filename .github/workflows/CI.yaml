@@ -124,7 +124,37 @@ jobs:
       - name: Run the tests
         env:
           TOPHAT_REQUIRE_COPIER: "1"
-        run: cargo test --test template
+        run: cargo test --test template --test launcher
+
+  image:
+    # Builds the real dev container image with Podman and runs the image scenarios of
+    # rqm/template/container.md (TOPHAT_TEST_PODMAN=1).
+    name: Dev container image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Copier
+        run: pip install 'copier>=9,<10'
+
+      - name: Build and test the image
+        env:
+          TOPHAT_REQUIRE_COPIER: "1"
+          TOPHAT_TEST_PODMAN: "1"
+        run: |
+          podman --version
+          cargo test --test launcher -- --test-threads=1
 
   traceability:
     # Every Gherkin scenario in rqm/ is referenced by a test, except those of files listed in
