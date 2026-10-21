@@ -19,7 +19,7 @@ definitions, and the CI workflows. The commands that run the suites are specifie
   notice and pass, except when `TOPHAT_REQUIRE_SNAKEMAKE=1` is set, in which case they fail, so a CI
   job meant to run them cannot pass without running them.
 - The job runs `cargo fmt --all --check`, `cargo clippy --all-targets -- -D warnings` and
-  `cargo test` on Linux, macOS and Windows; a second job on Linux installs Snakemake with pixi and
+  `cargo test` on Linux, macOS and Windows; a second job on Linux installs Snakemake and
   runs the Snakemake-backed tests with both variables set.
 
 ## Traceability <!-- rq-5b01ac93 -->

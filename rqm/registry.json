@@ -1123,7 +1123,12 @@
   "rq-20c233fd": {
     "decl": "Scenario: Snakemake tests skip locally without Snakemake",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Snakemake tests skip locally without Snakemake",
     "type": "scenario"
   },
@@ -1131,7 +1136,12 @@
     "decl": "## CLI Tests",
     "file": "testing",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "CLI Tests",
     "type": "section"
   },
@@ -5807,6 +5817,13 @@
     "title": "Eval definitions",
     "type": "section"
   },
+  "rq-aae2e08f": {
+    "decl": "Scenario: A fully referenced pending file is stale",
+    "file": "tooling",
+    "refs": [],
+    "title": "A fully referenced pending file is stale",
+    "type": "scenario"
+  },
   "rq-ab9a813f": {
     "decl": "### The tools lock",
     "file": "pipeline/tools",
@@ -6028,6 +6045,13 @@
     "title": "Stale summary means run again",
     "type": "scenario"
   },
+  "rq-b1aa1cec": {
+    "decl": "Scenario: A pending entry must exist",
+    "file": "tooling",
+    "refs": [],
+    "title": "A pending entry must exist",
+    "type": "scenario"
+  },
   "rq-b1f6d54f": {
     "decl": "### Study scope",
     "file": "workflow",
@@ -6163,7 +6187,12 @@
   "rq-b55aac3a": {
     "decl": "Scenario: Snakemake tests cannot silently pass in CI",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Snakemake tests cannot silently pass in CI",
     "type": "scenario"
   },
@@ -6870,6 +6899,13 @@
     "title": "PipelineConfig",
     "type": "api-item"
   },
+  "rq-cc74f676": {
+    "decl": "Scenario: Scenarios of pending files need no reference",
+    "file": "tooling",
+    "refs": [],
+    "title": "Scenarios of pending files need no reference",
+    "type": "scenario"
+  },
   "rq-cc797bfb": {
     "decl": "- `question_rules(project: &Project) -> Vec<Diagnostic>` — the `question` rule family registered",
     "file": "question-tree",
@@ -7317,6 +7353,13 @@
       }
     ],
     "title": "Report refuses while depending on unreported work",
+    "type": "scenario"
+  },
+  "rq-d7684c14": {
+    "decl": "Scenario: Only tests count as references",
+    "file": "tooling",
+    "refs": [],
+    "title": "Only tests count as references",
     "type": "scenario"
   },
   "rq-d76deef1": {

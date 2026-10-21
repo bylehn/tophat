@@ -4,6 +4,8 @@
 //! pass trivially (printing a notice) when it is unset. A fake `pixi` on `PATH` runs the stage
 //! commands directly.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::fs;
 use std::io::Cursor;
@@ -274,9 +276,9 @@ impl Env {
         );
     }
 
-    /// Runs real Snakemake, or returns `None` when `TOPHAT_TEST_SNAKEMAKE` is unset.
+    /// Runs real Snakemake, or returns `None` when the test is skipped (see `common::snakemake`).
     fn snakemake(&self, extra_env: &[(&str, &Path)]) -> Option<(bool, String)> {
-        let snakemake = std::env::var_os("TOPHAT_TEST_SNAKEMAKE")?;
+        let snakemake = common::snakemake()?;
         let bin = self.base.join("bin");
         #[cfg(unix)]
         {
@@ -316,10 +318,6 @@ impl Drop for Env {
     }
 }
 
-fn skipped() {
-    eprintln!("skipped: set TOPHAT_TEST_SNAKEMAKE to a Snakemake executable to run this test");
-}
-
 /// Stage jobs that ran, from Snakemake's "Job stats" (target rules excluded).
 fn stage_jobs(log: &str) -> BTreeMap<String, u32> {
     let mut jobs = BTreeMap::new();
@@ -353,6 +351,33 @@ fn with_rule<'a>(ds: &'a [Diagnostic], rule: &str) -> Vec<&'a Diagnostic> {
 
 fn hex(key: &str) -> &str {
     key.trim_start_matches("sk-")
+}
+
+// --- Running the Snakemake-backed tests -----------------------------------------------------
+
+#[test] // rq-b55aac3a rq-20e3189f
+fn snakemake_tests_cannot_silently_pass_in_ci() {
+    let result = common::snakemake_from(None, Some("1".into()));
+    assert!(
+        result
+            .as_ref()
+            .is_err_and(|m| m.contains("Snakemake is required")),
+        "{result:?}"
+    );
+    // With Snakemake given, the requirement is met.
+    assert_eq!(
+        common::snakemake_from(Some("/usr/bin/snakemake".into()), Some("1".into())),
+        Ok(Some("/usr/bin/snakemake".into()))
+    );
+}
+
+#[test] // rq-20c233fd rq-20e3189f
+fn snakemake_tests_skip_locally_without_snakemake() {
+    assert_eq!(common::snakemake_from(None, None), Ok(None));
+    assert_eq!(
+        common::snakemake_from(Some("".into()), Some("0".into())),
+        Ok(None)
+    );
 }
 
 // --- Stub -------------------------------------------------------------------------------------
@@ -553,7 +578,7 @@ fn end_to_end_run_produces_sealed_outputs_and_a_summary() {
     env.verdict("pbe", "pass");
     env.commit();
     let Some((ok, log)) = env.snakemake(&[]) else {
-        return skipped();
+        return;
     };
     assert!(ok, "{log}");
     for variant in ["base", "pbe"] {
@@ -580,7 +605,7 @@ fn a_second_run_does_nothing() {
     env.verdict("pbe", "pass");
     env.commit();
     let Some((ok, log)) = env.snakemake(&[]) else {
-        return skipped();
+        return;
     };
     assert!(ok, "{log}");
     let summary = env.read("studies/x-vs-docking/SUMMARY.md");
@@ -597,7 +622,7 @@ fn changing_a_parameter_re_runs_only_what_depends_on_it() {
     env.verdict("pbe", "pass");
     env.commit();
     let Some((ok, log)) = env.snakemake(&[]) else {
-        return skipped();
+        return;
     };
     assert!(ok, "{log}");
     let old_pbe = env.keys("pbe");
@@ -648,7 +673,7 @@ fn a_failed_item_is_retried_alone() {
     let marker = env.base.join("fail-item");
     fs::write(&marker, "").unwrap();
     let Some((ok, log)) = env.snakemake(&[("TOPHAT_TEST_FAIL_ITEM", &marker)]) else {
-        return skipped();
+        return;
     };
     assert!(!ok);
     let base = env.keys("base");
@@ -683,7 +708,7 @@ fn partial_output_of_a_failed_run_is_discarded() {
     let marker = env.base.join("fail-prepare");
     fs::write(&marker, "").unwrap();
     let Some((ok, _)) = env.snakemake(&[("TOPHAT_TEST_FAIL_PREPARE", &marker)]) else {
-        return skipped();
+        return;
     };
     assert!(!ok);
     let dir = env.out_dir("prepare", &env.keys("base")["prepare"]);
@@ -810,7 +835,7 @@ fn a_stage_that_nothing_consumes_is_never_gated() {
 fn missing_verdict_stops_the_pipeline_before_downstream_stages() {
     let env = Env::new();
     let Some((ok, log)) = env.snakemake(&[]) else {
-        return skipped();
+        return;
     };
     assert!(!ok);
     assert!(
@@ -937,7 +962,7 @@ fn failing_verdict_blocks_downstream_stages() {
     env.verdict("pbe", "pass");
     env.commit();
     let Some((ok, log)) = env.snakemake(&[]) else {
-        return skipped();
+        return;
     };
     assert!(!ok);
     let key = env.keys("base")["score"].clone();

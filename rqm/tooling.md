@@ -102,10 +102,25 @@ skill evals of `rqm/testing.md`.
 
 ### `cargo xtask scenarios` <!-- rq-04882df1 -->
 
-`cargo xtask scenarios` checks Gherkin traceability across the repository: every scenario ID
-(`@rq-…`) in `rqm/` is referenced by at least one test, conformance case, render check, adoption
-fixture or eval definition, and every such reference names an existing scenario. Prints the
-unreferenced and the dangling IDs; exits 1 when there is either.
+`cargo xtask scenarios` checks Gherkin traceability across the repository.
+
+- A **scenario** is a Gherkin scenario in a requirements file under `rqm/`: its ID is the
+  `@rq-<8 hex>` tag on the line before `Scenario:` or `Scenario Outline:`.
+- A **reference** is an `rq-<8 hex>` token in a test: in any file under `tests/`, `xtask/` or
+  `evals/`, or on a `src/` line that also holds `#[test]`.
+- Every scenario of a requirements file that is not pending has at least one reference, and every
+  `rq-` token in the repository outside `rqm/`, `target/` and hidden directories (including source
+  comments) names an ID declared in `rqm/`. Hidden directories are skipped because they hold tool
+  configuration, such as riprap's skills, whose examples use made-up IDs.
+- **Pending files.** `xtask/pending.txt` lists the requirements files that are specified but not
+  implemented yet, one repository-relative path per line (blank lines and `#` comments ignored).
+  Their scenarios need no reference. A listed path that does not exist, and a listed file all of
+  whose scenarios are referenced, are errors, so the list shrinks as files are implemented and
+  never goes stale.
+- Prints one line per problem (`unreferenced <id> <file>: <scenario title>`,
+  `dangling <id> <path>:<line>`, `missing-pending <path>`, `stale-pending <path>`), then a summary
+  of how many scenarios are referenced and how many are pending. Exits 1 when there is a
+  problem.
 
 ## Assumptions <!-- rq-6fd600ee -->
 
@@ -197,4 +212,30 @@ Feature: Template tooling
     Given a test annotated with a scenario ID that no requirements file declares
     When "cargo xtask scenarios" is run
     Then it prints that ID and exits 1
+
+  @rq-cc74f676
+  Scenario: Scenarios of pending files need no reference
+    Given xtask/pending.txt lists rqm/template/project.md
+    And none of that file's scenarios is referenced
+    When "cargo xtask scenarios" is run
+    Then it reports none of them and exits 0
+    And its summary counts them as pending
+
+  @rq-aae2e08f
+  Scenario: A fully referenced pending file is stale
+    Given xtask/pending.txt lists a requirements file all of whose scenarios are referenced
+    When "cargo xtask scenarios" is run
+    Then it prints "stale-pending" with that path and exits 1
+
+  @rq-b1aa1cec
+  Scenario: A pending entry must exist
+    Given xtask/pending.txt lists rqm/nonexistent.md
+    When "cargo xtask scenarios" is run
+    Then it prints "missing-pending rqm/nonexistent.md" and exits 1
+
+  @rq-d7684c14
+  Scenario: Only tests count as references
+    Given a scenario ID that appears only in a src/ comment that is not on a #[test] line
+    When "cargo xtask scenarios" is run
+    Then it prints "unreferenced" with that ID and exits 1
 ```

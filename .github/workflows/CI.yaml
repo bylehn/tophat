@@ -50,7 +50,7 @@ jobs:
         run: cargo fmt --all --check
 
       - name: Lint with clippy
-        run: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets -- -D warnings
 
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
@@ -67,3 +67,51 @@ jobs:
           files: lcov.info
           flags: unittests
           name: codecov-${{ matrix.os }}
+
+  snakemake:
+    # The Snakemake-backed tests (pipelines, QC gates, trial runs, external stages). With
+    # TOPHAT_REQUIRE_SNAKEMAKE=1 they fail instead of skipping, so this job cannot pass without
+    # running them (rqm/testing.md).
+    name: Snakemake-backed tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Snakemake
+        run: |
+          python -m venv "$RUNNER_TEMP/snakemake"
+          "$RUNNER_TEMP/snakemake/bin/pip" install 'snakemake>=8,<10'
+          echo "TOPHAT_TEST_SNAKEMAKE=$RUNNER_TEMP/snakemake/bin/snakemake" >> "$GITHUB_ENV"
+
+      - name: Run the tests
+        env:
+          TOPHAT_REQUIRE_SNAKEMAKE: "1"
+        run: cargo test --no-fail-fast --test snakemake --test external --test workflow
+
+  traceability:
+    # Every Gherkin scenario in rqm/ is referenced by a test, except those of files listed in
+    # xtask/pending.txt (rqm/tooling.md).
+    name: Scenario traceability
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check scenario references
+        run: cargo xtask scenarios
