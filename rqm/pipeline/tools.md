@@ -16,12 +16,15 @@ tools:
   method-x:
     url: https://github.com/example/method-x.git
   docking-wrapper:
-    url: git@gitlab.example.org:group/docking-wrapper.git
+    url: https://gitlab.example.org/group/docking-wrapper.git
 ```
 
 - Tool names match the study ID pattern and are 3 to 64 characters.
-- `url` is any location `git clone` accepts. Fetching uses the user's own git configuration and
-  credentials; TopHat stores no credentials.
+- `url` is a repository that can be cloned without credentials: an `https://` URL of a public
+  repository, or an absolute path or `file://` URL of a local repository. SSH locations
+  (`ssh://…`, `<user>@<host>:<path>`) and URLs with embedded user information
+  (`https://<user>[:<secret>]@…`) are configuration errors: the dev container holds no credentials
+  (see `rqm/template/container.md`), and TopHat stores none.
 
 ## Pinning a Tool in a Stage <!-- rq-cfae36f4 -->
 
@@ -109,6 +112,11 @@ For a tool stage:
 ### Commands <!-- rq-9d5b8ddf -->
 
 - `tophat tools sync` <!-- rq-052f542d -->
+  - Run by a human: it is the only command through which `tophat` reaches the network, and agents
+    never run it (see `rqm/template/skills.md`).
+  - Runs git with interactive credential prompts disabled, so a repository that needs credentials
+    fails at once for that pin, saying the repository is not publicly reachable, rather than waiting
+    for input.
   - Collects every tool pin in every study's configuration (all variants).
   - For each tool, fetches its repository into the cache's mirror (`.tophat/tools/<name>/.git`) when
     a pinned commit is unknown locally.
@@ -145,7 +153,7 @@ Diagnostics are reported on the configuration file at the stage's line, or on `.
 
 | Rule | Severity | Condition |
 |---|---|---|
-| `pipeline.tools-invalid` | error | `.tophat/tools.yaml` or `.tophat/tools.lock` cannot be parsed, a tool name is malformed, a tool has no `url`, or a lock entry is not a full commit extending its prefix |
+| `pipeline.tools-invalid` | error | `.tophat/tools.yaml` or `.tophat/tools.lock` cannot be parsed, a tool name is malformed, a tool has no `url`, a `url` needs credentials (SSH form or embedded user information), or a lock entry is not a full commit extending its prefix |
 | `pipeline.tool-unknown` | error | A stage pins a tool that `.tophat/tools.yaml` does not declare |
 | `pipeline.tool-pin-invalid` | error | A pin is not `<name>@<7 to 40 lowercase hex characters>` |
 | `pipeline.tool-unlocked` | error | A prefix pin has no entry in `.tophat/tools.lock` |
@@ -155,13 +163,14 @@ Diagnostics are reported on the configuration file at the stage's line, or on `.
 
 ## Assumptions <!-- rq-71385ea7 -->
 
-- `git` is available wherever `tophat tools sync` runs, with network access and credentials for the
-  tool repositories.
+- `git` and network access are available wherever `tophat tools sync` runs: inside the dev container,
+  which holds no credentials.
 - `.tophat/tools/` is git-ignored in every TopHat project; the project template lists it.
 
 ## Out of Scope <!-- rq-6ed3a5ea -->
 
 - Developing a tool from inside a study, or using uncommitted tool changes.
+- Private tool repositories, and any credentials for fetching tools.
 - Tools that are not git repositories.
 - Building or compiling tools; a tool's environment (or a step in its own `pixi.toml`) provides
   whatever it needs.
@@ -222,6 +231,26 @@ Feature: Tool stages
     When "tophat tools sync" is run
     Then the line for "deadbee" ends with "(failed: …)"
     And A is still resolved and cached
+    And the exit code is 1
+
+  @rq-582d60cc
+  Scenario: Locations that need credentials are rejected
+    Given ".tophat/tools.yaml" declares tool "method-x" with url "git@github.com:example/method-x.git"
+    When "tophat check" is run
+    Then an error "pipeline.tools-invalid" naming "method-x" and credentials is reported
+
+  @rq-d4af23a7
+  Scenario: URLs with embedded credentials are rejected
+    Given ".tophat/tools.yaml" declares tool "method-x" with url "https://user:token@github.com/example/method-x.git"
+    When "tophat check" is run
+    Then an error "pipeline.tools-invalid" naming "method-x" is reported
+
+  @rq-940c97c9
+  Scenario: A repository that needs credentials fails sync without prompting
+    Given tool "method-x" is declared with an https url whose server asks for credentials
+    When "tophat tools sync" is run with no terminal input available
+    Then it finishes without waiting for input
+    And its line for "method-x@<pin>" reports "failed:" with a reason saying the repository is not publicly reachable
     And the exit code is 1
 
   @rq-bf589d85

@@ -174,6 +174,11 @@ loading a whole file into memory) and hashes several files in parallel.
 - `tophat data used-by <name>[@v<n>] [--json]` <!-- rq-23b73104 -->
   - Lists every study, variant and stage whose configuration references the dataset (or the given
     version), and every published dataset whose producing stage did.
+- `tophat data roots` <!-- rq-531eebf2 -->
+  - Prints one line per declared root, sorted by name: `<name>`, a tab, and its location on this
+    machine (after `TOPHAT_ROOT_<NAME>` overrides), or `-` when unconfigured. Read-only; used by the
+    launcher to mount the roots into the container (see `rqm/template/container.md`).
+  - Exits 1 with the problem when `.tophat/roots.yaml` or `.tophat/roots.local.yaml` is invalid.
 
 ### Types <!-- rq-45fb5dee -->
 
@@ -270,6 +275,19 @@ Feature: Data roots, datasets and lineage
     Given ".tophat/roots.local.yaml" locates root "raw" at "data/raw"
     When "tophat check" is run
     Then an error "data.roots-invalid" is reported
+
+  @rq-b4146a69
+  Scenario: List the roots and their locations
+    Given TOPHAT_ROOT_RAW is set to "/data/elsewhere"
+    When "tophat data roots" is run
+    Then it prints "raw\t/data/elsewhere" and "results\t<the results directory>", in that order
+    And the exit code is 0
+
+  @rq-f3dab8f0
+  Scenario: Listing invalid roots fails
+    Given ".tophat/roots.local.yaml" locates root "raw" at "data/raw"
+    When "tophat data roots" is run
+    Then the exit code is 1 and the message names ".tophat/roots.local.yaml"
 
   # --- Registering raw and declared data ---
 

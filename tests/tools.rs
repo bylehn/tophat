@@ -537,3 +537,140 @@ fn pins_display_as_written() {
         "method-x@3f9a1c2"
     );
 }
+
+// --- Public repositories only -----------------------------------------------------------------
+
+#[test] // rq-582d60cc rq-da50d924 rq-85215682
+fn locations_that_need_credentials_are_rejected() {
+    let env = Env::new();
+    for url in [
+        "git@github.com:example/method-x.git",
+        "ssh://git@github.com/example/method-x.git",
+    ] {
+        env.write(
+            ".tophat/tools.yaml",
+            &format!("tools:\n  method-x:\n    url: {url}\n"),
+        );
+        let ds = env.diagnostics();
+        let found = with_rule(&ds, "pipeline.tools-invalid");
+        assert_eq!(found.len(), 1, "{url}: {ds:?}");
+        assert_eq!(found[0].severity, Severity::Error);
+        assert_eq!(found[0].path, ".tophat/tools.yaml");
+        assert!(
+            found[0].message.contains("method-x") && found[0].message.contains("credentials"),
+            "{}",
+            found[0].message
+        );
+    }
+}
+
+#[test] // rq-d4af23a7 rq-da50d924 rq-85215682
+fn urls_with_embedded_credentials_are_rejected() {
+    let env = Env::new();
+    env.write(
+        ".tophat/tools.yaml",
+        "tools:\n  method-x:\n    url: https://user:token@github.com/example/method-x.git\n",
+    );
+    let ds = env.diagnostics();
+    let found = with_rule(&ds, "pipeline.tools-invalid");
+    assert_eq!(found.len(), 1, "{ds:?}");
+    assert!(
+        found[0].message.contains("method-x") && found[0].message.contains("credentials"),
+        "{}",
+        found[0].message
+    );
+    // The secret is never repeated.
+    assert!(
+        !found[0].message.contains("token") && !found[0].message.contains("user:"),
+        "{}",
+        found[0].message
+    );
+}
+
+#[test] // rq-da50d924
+fn public_and_local_locations_are_accepted() {
+    use tophat::tools::url_problem;
+    for ok in [
+        "https://github.com/example/method-x.git",
+        "https://gitlab.example.org/group/x.git?ref=1",
+        "/srv/git/method-x.git",
+        "file:///srv/git/method-x.git",
+    ] {
+        assert_eq!(url_problem(ok), None, "{ok}");
+    }
+    for bad in [
+        "http://example.org/x.git",
+        "git://example.org/x.git",
+        "relative/path",
+        "host:path/x.git",
+        "https://token@github.com/x.git",
+    ] {
+        assert!(url_problem(bad).is_some(), "{bad}");
+    }
+}
+
+#[test] // rq-940c97c9 rq-052f542d
+fn a_repository_that_needs_credentials_fails_sync_without_prompting() {
+    use std::io::{Read, Write};
+    use std::net::TcpListener;
+    use std::time::{Duration, Instant};
+
+    let env = Env::new();
+    // A server that asks every request for credentials.
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = listener.local_addr().unwrap().port();
+    std::thread::spawn(move || {
+        for stream in listener.incoming() {
+            let Ok(mut stream) = stream else { continue };
+            let mut buf = [0u8; 4096];
+            let _ = stream.read(&mut buf);
+            let _ = stream.write_all(
+                b"HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"tools\"\r\n\
+                  Content-Length: 0\r\nConnection: close\r\n\r\n",
+            );
+        }
+    });
+    env.write(
+        ".tophat/tools.yaml",
+        "tools:\n  method-x:\n    url: https://tools.example.invalid/method-x.git\n",
+    );
+    // git rewrites the declared public URL to the local server.
+    let mut child = Command::new(env!("CARGO_BIN_EXE_tophat"))
+        .args(["tools", "sync"])
+        .current_dir(env.root())
+        .env("GIT_CONFIG_COUNT", "1")
+        .env(
+            "GIT_CONFIG_KEY_0",
+            format!("url.http://127.0.0.1:{port}/.insteadOf"),
+        )
+        .env("GIT_CONFIG_VALUE_0", "https://tools.example.invalid/")
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+    let deadline = Instant::now() + Duration::from_secs(60);
+    let status = loop {
+        if let Some(status) = child.try_wait().unwrap() {
+            break status;
+        }
+        if Instant::now() > deadline {
+            let _ = child.kill();
+            panic!("tophat tools sync waited for input");
+        }
+        std::thread::sleep(Duration::from_millis(50));
+    };
+    let mut out = String::new();
+    child
+        .stdout
+        .take()
+        .unwrap()
+        .read_to_string(&mut out)
+        .unwrap();
+    assert_eq!(status.code(), Some(1));
+    let line = out.lines().next().unwrap_or_default();
+    assert!(
+        line.starts_with(&format!("method-x@{} -> ? (failed:", &env.a[..7])),
+        "{out}"
+    );
+    assert!(line.contains("not publicly reachable"), "{out}");
+}

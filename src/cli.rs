@@ -46,6 +46,7 @@ Commands:
   data publish <STUDY> --stage <S> [--variant V] --as <NAME>
                                                  Publish a sealed stage output as a dataset
   data verify [<NAME>[@v<N>]]                    Re-hash datasets and compare to manifests
+  data roots                                     List data roots and their locations here
   pipeline keys <STUDY> [--variant V] [--json]   Show stage keys and sealed state
   pipeline rules <STUDY> --output <FILE>         Generate the study's Snakemake rules
   pipeline stub <STUDY>                          Write the study's Snakefile stub
@@ -333,7 +334,7 @@ fn run_data_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
         "add" => &["root", "path", "source", "date", "license", "visibility"],
         "declare" => &["root", "path", "statement", "visibility"],
         "retire" => &["reason"],
-        "verify" | "lineage" | "used-by" => &[],
+        "verify" | "lineage" | "used-by" | "roots" => &[],
         "publish" => &["stage", "variant", "as"],
         other => return usage(io, &format!("unknown data subcommand `{other}`")),
     };
@@ -392,6 +393,16 @@ fn run_data_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
             };
             registered.map(|r| {
                 let _ = writeln!(io.out, "{r}");
+                EXIT_OK
+            })
+        }
+        // rq-531eebf2
+        "roots" => {
+            if !positionals.is_empty() {
+                return usage(io, "`tophat data roots` takes no arguments");
+            }
+            data::load_roots(&root).map(|roots| {
+                let _ = io.out.write_all(data::render_roots(&roots).as_bytes());
                 EXIT_OK
             })
         }
