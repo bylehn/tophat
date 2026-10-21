@@ -1,0 +1,5 @@
+# Project additions to the dev container image. This file belongs to the project: `copier update`
+# never changes it. Add system packages here; language environments belong in pixi.toml.
+ARG TOPHAT_AGENT_IMAGE
+FROM ${TOPHAT_AGENT_IMAGE}
+# RUN apt-get update && apt-get install -y --no-install-recommends graphviz && rm -rf /var/lib/apt/lists/*

@@ -1,0 +1,7 @@
+# TopHat-managed: the versions of the programs in the dev container image.
+# `copier update` changes them; the pixi archives must match these SHA-256 hashes.
+pixi_version: 0.82.1
+pixi_sha256_x86_64: 7ac72af79c50653bfcfddb2473b6e9eff2654affe0057d19fe21b0d8556a7fe2
+pixi_sha256_aarch64: 6f4c4a101b84b15f33440f39fe5889afb1b77a4e88f02962248240cdcab56966
+copier_version: 9.19.1
+claude_version: 2.1.301

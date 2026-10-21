@@ -1,0 +1,56 @@
+# TopHat-managed: the base layer of the dev container image (see .tophat/managed/launch/th.sh).
+FROM docker.io/library/ubuntu:24.04
+
+ARG PIXI_VERSION
+ARG PIXI_SHA256
+ARG PIXI_ARCH
+ARG COPIER_VERSION
+ARG TOPHAT_DEV_BUILD=0
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Programs live under an image-owned home that any user can read, so the image works as root
+# (Podman) and as the invoking user.
+ENV HOME=/opt/tophat/home
+ENV PATH=/opt/tophat/bin:/opt/tophat/home/.local/bin:$PATH
+ENV PIXI_CACHE_DIR=/opt/tophat/cache/pixi
+ENV TOPHAT_DEV_BUILD=$TOPHAT_DEV_BUILD
+RUN mkdir -p /opt/tophat/bin /opt/tophat/home /opt/tophat/cache/pixi && \
+    chmod 1777 /opt/tophat/home /opt/tophat/cache /opt/tophat/cache/pixi
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends bash ca-certificates curl git pipx && \
+    rm -rf /var/lib/apt/lists/*
+
+# Git reads the repository but never commits here: there is no identity, and none is invented.
+RUN git config --system user.useConfigOnly true && \
+    git config --system --add safe.directory /work
+
+RUN set -eu; \
+    curl -fsSL -o /tmp/pixi.tar.gz \
+      "https://github.com/prefix-dev/pixi/releases/download/v${PIXI_VERSION}/pixi-${PIXI_ARCH}-unknown-linux-musl.tar.gz"; \
+    echo "${PIXI_SHA256}  /tmp/pixi.tar.gz" | sha256sum -c - || \
+      { echo "pixi ${PIXI_VERSION}: checksum mismatch" >&2; exit 1; }; \
+    tar -xzf /tmp/pixi.tar.gz -C /opt/tophat/bin pixi; \
+    rm /tmp/pixi.tar.gz; \
+    pixi --version
+
+RUN PIPX_HOME=/opt/tophat/pipx PIPX_BIN_DIR=/opt/tophat/bin pipx install "copier==${COPIER_VERSION}"
+
+# tophat: a development binary from the build context, or the pinned release, verified.
+COPY tophat-source/ /tmp/tophat-source/
+RUN set -eu; \
+    if [ -f /tmp/tophat-source/tophat ]; then \
+      install -m 0755 /tmp/tophat-source/tophat /opt/tophat/bin/tophat; \
+    else \
+      . /tmp/tophat-source/release.env; \
+      curl -fsSL -o /tmp/tophat "$TOPHAT_URL"; \
+      echo "$TOPHAT_SHA256  /tmp/tophat" | sha256sum -c - || \
+        { echo "tophat: checksum mismatch for $TOPHAT_URL" >&2; exit 1; }; \
+      install -m 0755 /tmp/tophat /opt/tophat/bin/tophat; \
+      rm /tmp/tophat; \
+    fi; \
+    rm -rf /tmp/tophat-source; \
+    tophat --version
+
+RUN chmod -R a+rX /opt/tophat

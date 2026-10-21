@@ -3,3 +3,4 @@
 .copier-answers.yml
 .tophat/.gitignore
 .github/workflows/tophat-check.yaml
+th.sh

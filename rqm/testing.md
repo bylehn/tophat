@@ -210,7 +210,8 @@ checks:
 |---|---|---|
 | `cli` | Linux, macOS, Windows | fmt, clippy, `cargo test`, coverage |
 | `snakemake` | Linux | `cargo test` with Snakemake installed and `TOPHAT_REQUIRE_SNAKEMAKE=1` |
-| `template` | Linux | the template-rendering tests with Copier installed and `TOPHAT_REQUIRE_COPIER=1` |
+| `template` | Linux | the template-rendering and launcher tests with Copier installed and `TOPHAT_REQUIRE_COPIER=1` |
+| `image` | Linux, with Podman | the launcher's image scenarios against a real image (`TOPHAT_TEST_PODMAN=1`) |
 | `traceability` | Linux | `cargo xtask scenarios`, `cargo xtask lock --check` |
 | `render` | Linux, with Podman | `cargo xtask render-test` |
 | `conformance` | Linux | `cargo xtask conformance` |
