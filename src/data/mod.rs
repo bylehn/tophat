@@ -24,7 +24,7 @@ pub use manifest::{
     Origin, ProducedBy, Retired,
 };
 pub use refs::{study_dataset_refs, unreported_dependencies, ConfigRef};
-pub use roots::{load_roots, load_roots_with, Roots};
+pub use roots::{load_roots, load_roots_with, render_roots, Roots};
 pub use rules::{data_rules, data_rules_with};
 
 pub(crate) use manifest::is_safe_relative_path;

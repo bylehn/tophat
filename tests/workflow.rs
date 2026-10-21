@@ -546,7 +546,7 @@ fn tools_not_fetched_on_this_machine() {
         &format!("{config}  - name: extra\n    tool: method-x@{commit}\n    run: sh {{tool}}/tool.sh > {{out}}/x\n"),
     );
     let next = env.next();
-    assert_eq!(next.row, 7, "{next:?}");
+    assert_eq!((next.row, next.who), (7, Who::You), "{next:?}");
     assert_eq!(next.command.as_deref(), Some("tophat tools sync"));
     let (code, _, err) = env.tophat(&["run", "x-vs-docking"], &[]);
     assert_eq!(code, 1);

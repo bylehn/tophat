@@ -121,6 +121,39 @@ impl fmt::Display for ToolsError {
 impl std::error::Error for ToolsError {}
 
 // rq-da50d924
+/// Why a tool `url` cannot be fetched without credentials, if it cannot: allowed are an `https://`
+/// URL without user information, an absolute path, and a `file://` URL.
+pub fn url_problem(url: &str) -> Option<String> {
+    let public =
+        "use a public https:// URL, or a local path; the dev container holds no credentials";
+    if let Some(rest) = url.strip_prefix("https://") {
+        let authority = rest.split(['/', '?', '#']).next().unwrap_or(rest);
+        // The user information may hold a secret, so it is never repeated.
+        return authority.rsplit_once('@').map(|(_, host)| {
+            let tail = &rest[authority.len()..];
+            format!(
+                "`https://<redacted>@{host}{tail}` contains user information (credentials); {public}"
+            )
+        });
+    }
+    if url.starts_with("file://") || url.starts_with('/') {
+        return None;
+    }
+    if url.starts_with("ssh://") || url.starts_with("git+ssh://") {
+        return Some(format!("`{url}` needs SSH credentials; {public}"));
+    }
+    // scp-like syntax: `[user@]host:path` with no scheme.
+    if !url.contains("://") && url.split('/').next().is_some_and(|head| head.contains(':')) {
+        return Some(format!(
+            "`{url}` is an SSH location and needs credentials; {public}"
+        ));
+    }
+    Some(format!(
+        "`{url}` is not an https:// URL or a local path; {public}"
+    ))
+}
+
+// rq-da50d924
 /// Reads the declared tools: name → URL.
 pub fn declared_tools(root: &Path) -> Result<BTreeMap<String, String>, ToolsError> {
     let path = root.join(TOOLS_FILE);
@@ -147,6 +180,9 @@ pub fn declared_tools(root: &Path) -> Result<BTreeMap<String, String>, ToolsErro
                 let Some(url) = entry["url"].as_str().filter(|u| !u.trim().is_empty()) else {
                     return Err(invalid(format!("tool `{name}` has no `url`")));
                 };
+                if let Some(problem) = url_problem(url) {
+                    return Err(invalid(format!("tool `{name}`: {problem}")));
+                }
                 out.insert(name.clone(), url.to_string());
             }
         }
@@ -242,13 +278,22 @@ fn mirror_dir(root: &Path, tool: &str) -> PathBuf {
     root.join(CACHE_DIR).join(tool).join(".git")
 }
 
+// rq-052f542d
+/// Runs git without any way to obtain credentials: no terminal prompt, no askpass program and no
+/// credential helper, so a repository that needs credentials fails at once.
 fn git(args: &[&str], dir: Option<&Path>) -> Result<String, String> {
     let mut cmd = Command::new("git");
     if let Some(dir) = dir {
         cmd.arg("-C").arg(dir);
     }
     let out = cmd
+        .env("GIT_TERMINAL_PROMPT", "0")
+        .env("GCM_INTERACTIVE", "never")
+        .env_remove("GIT_ASKPASS")
+        .env_remove("SSH_ASKPASS")
+        .stdin(std::process::Stdio::null())
         .args(["-c", "advice.detachedHead=false"])
+        .args(["-c", "core.askPass=", "-c", "credential.helper="])
         .args(args)
         .output()
         .map_err(|e| format!("cannot run git: {e}"))?;
@@ -388,8 +433,34 @@ fn commits_with_prefix(mirror: &Path, prefix: &str) -> Vec<String> {
         .collect()
 }
 
+/// Explains a failed fetch; a repository asking for credentials is not publicly reachable.
+fn fetch_error(message: String) -> String {
+    let lower = message.to_ascii_lowercase();
+    let asks_credentials = [
+        "terminal prompts disabled",
+        "could not read username",
+        "could not read password",
+        "authentication failed",
+        "authentication required",
+    ]
+    .iter()
+    .any(|m| lower.contains(m));
+    if asks_credentials {
+        format!(
+            "the repository is not publicly reachable (it asks for credentials, and tools are \
+             fetched from public repositories only): {message}"
+        )
+    } else {
+        message
+    }
+}
+
 /// Makes sure the tool's mirror exists and, if `fetch` is set, is up to date.
 fn ensure_mirror(root: &Path, tool: &str, url: &str, fetch: bool) -> Result<bool, String> {
+    ensure_mirror_inner(root, tool, url, fetch).map_err(fetch_error)
+}
+
+fn ensure_mirror_inner(root: &Path, tool: &str, url: &str, fetch: bool) -> Result<bool, String> {
     let mirror = mirror_dir(root, tool);
     if !mirror.is_dir() {
         fs::create_dir_all(mirror.parent().expect("mirror has a parent"))

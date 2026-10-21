@@ -263,6 +263,33 @@ fn relative_local_location_is_rejected() {
     assert_eq!(found[0].path, ".tophat/roots.local.yaml");
 }
 
+#[test] // rq-b4146a69 rq-531eebf2
+fn list_the_roots_and_their_locations() {
+    let env = Env::new();
+    let (code, out, err) = env.tophat(
+        &["data", "roots"],
+        &[("TOPHAT_ROOT_RAW", "/data/elsewhere")],
+    );
+    assert_eq!(code, 0, "{err}");
+    assert_eq!(
+        out,
+        format!(
+            "archer\t-\nraw\t/data/elsewhere\nresults\t{}\n",
+            env.data_dir("results").display()
+        )
+    );
+}
+
+#[test] // rq-f3dab8f0 rq-531eebf2
+fn listing_invalid_roots_fails() {
+    let env = Env::new();
+    env.write(".tophat/roots.local.yaml", "roots:\n  raw: data/raw\n");
+    let (code, out, err) = env.tophat(&["data", "roots"], &[]);
+    assert_eq!(code, 1);
+    assert_eq!(out, "");
+    assert!(err.contains(".tophat/roots.local.yaml"), "{err}");
+}
+
 // --- Registering raw and declared data ---------------------------------------------------------
 
 #[test] // rq-88716093 rq-af5ed3df rq-011facdf

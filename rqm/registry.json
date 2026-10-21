@@ -64,6 +64,13 @@
     "title": "Project line",
     "type": "scenario"
   },
+  "rq-01a6c860": {
+    "decl": "Scenario: Agent entry points read the managed rules",
+    "file": "template/skills",
+    "refs": [],
+    "title": "Agent entry points read the managed rules",
+    "type": "scenario"
+  },
   "rq-01b7434d": {
     "decl": "Scenario: Citing an answered sub-question",
     "file": "question-tree",
@@ -119,6 +126,21 @@
     "title": "Feature: Snakemake Pipelines, QC Gates and Summaries",
     "type": "file"
   },
+  "rq-03d2afb2": {
+    "decl": "### `cargo xtask eval`",
+    "file": "tooling",
+    "level": 3,
+    "refs": [],
+    "title": "`cargo xtask eval`",
+    "type": "section"
+  },
+  "rq-044e98a7": {
+    "decl": "# Feature: Template Tooling",
+    "file": "tooling",
+    "refs": [],
+    "title": "Feature: Template Tooling",
+    "type": "file"
+  },
   "rq-04595081": {
     "decl": "### Scenarios",
     "file": "study/format",
@@ -138,6 +160,14 @@
       }
     ],
     "title": "Scenarios",
+    "type": "section"
+  },
+  "rq-04882df1": {
+    "decl": "### `cargo xtask scenarios`",
+    "file": "tooling",
+    "level": 3,
+    "refs": [],
+    "title": "`cargo xtask scenarios`",
     "type": "section"
   },
   "rq-04d15195": {
@@ -176,6 +206,52 @@
     "title": "tophat",
     "type": "api-item"
   },
+  "rq-05d2bce1": {
+    "decl": "## Skill Evals",
+    "file": "testing",
+    "level": 2,
+    "refs": [],
+    "title": "Skill Evals",
+    "type": "section"
+  },
+  "rq-05e3b95c": {
+    "decl": "Scenario: The hook reports check errors without blocking",
+    "file": "template/project",
+    "refs": [],
+    "title": "The hook reports check errors without blocking",
+    "type": "scenario"
+  },
+  "rq-06209ad3": {
+    "decl": "## Out of Scope",
+    "file": "tooling",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
+    "type": "section"
+  },
+  "rq-067bd77a": {
+    "decl": "Scenario: Replayed commits are reproducible",
+    "file": "testing",
+    "refs": [],
+    "title": "Replayed commits are reproducible",
+    "type": "scenario"
+  },
+  "rq-068b6895": {
+    "decl": "## CI Workflows",
+    "file": "testing",
+    "level": 2,
+    "refs": [],
+    "title": "CI Workflows",
+    "type": "section"
+  },
+  "rq-0694746a": {
+    "decl": "### Hard Rules",
+    "file": "template/skills",
+    "level": 3,
+    "refs": [],
+    "title": "Hard Rules",
+    "type": "section"
+  },
   "rq-079894b1": {
     "decl": "### Commands",
     "file": "workflow",
@@ -191,6 +267,13 @@
     "refs": [],
     "title": "Feature API",
     "type": "section"
+  },
+  "rq-07fe36ca": {
+    "decl": "Scenario: Skills mention only real CLI commands",
+    "file": "template/skills",
+    "refs": [],
+    "title": "Skills mention only real CLI commands",
+    "type": "scenario"
   },
   "rq-081e737a": {
     "decl": "### Stage fields",
@@ -258,6 +341,13 @@
     "title": "sync",
     "type": "api-item"
   },
+  "rq-099a04fb": {
+    "decl": "Scenario: The image holds the pinned tophat",
+    "file": "template/container",
+    "refs": [],
+    "title": "The image holds the pinned tophat",
+    "type": "scenario"
+  },
   "rq-09eda840": {
     "decl": "## SUMMARY.md Format",
     "file": "study/format",
@@ -323,6 +413,13 @@
     "title": "Gherkin Scenarios",
     "type": "section"
   },
+  "rq-0b13dfaf": {
+    "decl": "Scenario: The agent asks for the endpoint instead of inventing it",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The agent asks for the endpoint instead of inventing it",
+    "type": "scenario"
+  },
   "rq-0bdbef43": {
     "decl": "Scenario: A warning does not fail the check by default",
     "file": "check",
@@ -384,6 +481,21 @@
     "title": "Trial Runs",
     "type": "section"
   },
+  "rq-0d8c85a8": {
+    "decl": "# Feature: Test Gates",
+    "file": "testing",
+    "refs": [],
+    "title": "Feature: Test Gates",
+    "type": "file"
+  },
+  "rq-0da9fa10": {
+    "decl": "### Ignore rules",
+    "file": "template/project",
+    "level": 3,
+    "refs": [],
+    "title": "Ignore rules",
+    "type": "section"
+  },
   "rq-0e435215": {
     "decl": "Scenario: Answered question without an answer",
     "file": "question-tree",
@@ -424,6 +536,14 @@
     "title": "DatasetRef",
     "type": "api-item"
   },
+  "rq-1031bf35": {
+    "decl": "## Apptainer",
+    "file": "template/container",
+    "level": 2,
+    "refs": [],
+    "title": "Apptainer",
+    "type": "section"
+  },
   "rq-10af2996": {
     "decl": "# Feature: Project Integrity Check (`tophat check`)",
     "file": "check",
@@ -442,6 +562,14 @@
     ],
     "title": "Receipt",
     "type": "api-item"
+  },
+  "rq-117c41af": {
+    "decl": "## Out of Scope",
+    "file": "testing",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
+    "type": "section"
   },
   "rq-11940cec": {
     "decl": "Scenario: Keys command with an unconfigured results root",
@@ -521,6 +649,13 @@
     "title": "Report refuses a draft",
     "type": "scenario"
   },
+  "rq-13cb4dbd": {
+    "decl": "Scenario: The agent hands fetching tools to the human",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The agent hands fetching tools to the human",
+    "type": "scenario"
+  },
   "rq-13deda96": {
     "decl": "Scenario: Citing a question that does not exist",
     "file": "question-tree",
@@ -561,6 +696,21 @@
     "title": "Functions",
     "type": "section"
   },
+  "rq-14a1f043": {
+    "decl": "Scenario: The lock is the template's pre-solved lock",
+    "file": "template/project",
+    "refs": [],
+    "title": "The lock is the template's pre-solved lock",
+    "type": "scenario"
+  },
+  "rq-14cdc44c": {
+    "decl": "## Assumptions",
+    "file": "template/container",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
+  },
   "rq-14d17a56": {
     "decl": "Scenario: Reported study whose summary became dirty",
     "file": "study/format",
@@ -588,6 +738,13 @@
     ],
     "title": "tophat",
     "type": "api-item"
+  },
+  "rq-1537c938": {
+    "decl": "Scenario: A missing root location stops the launch",
+    "file": "template/container",
+    "refs": [],
+    "title": "A missing root location stops the launch",
+    "type": "scenario"
   },
   "rq-167d5ad5": {
     "decl": "Scenario: End-to-end run produces sealed outputs and a summary",
@@ -708,6 +865,21 @@
     ],
     "title": "Untested scenario in a reported study is an error",
     "type": "scenario"
+  },
+  "rq-195607b5": {
+    "decl": "Scenario: A malformed slug is rejected",
+    "file": "template/project",
+    "refs": [],
+    "title": "A malformed slug is rejected",
+    "type": "scenario"
+  },
+  "rq-19750015": {
+    "decl": "## GPU",
+    "file": "template/container",
+    "level": 2,
+    "refs": [],
+    "title": "GPU",
+    "type": "section"
   },
   "rq-19e53a7b": {
     "decl": "Scenario: Unknown placeholder",
@@ -842,6 +1014,21 @@
     "title": "tophat",
     "type": "api-item"
   },
+  "rq-1cc9f489": {
+    "decl": "Scenario: The session mounts only the workspace, roots and its own volumes",
+    "file": "template/container",
+    "refs": [],
+    "title": "The session mounts only the workspace, roots and its own volumes",
+    "type": "scenario"
+  },
+  "rq-1cf4eaf3": {
+    "decl": "## Container Check",
+    "file": "template/container",
+    "level": 2,
+    "refs": [],
+    "title": "Container Check",
+    "type": "section"
+  },
   "rq-1d07e2ec": {
     "decl": "Scenario: Duplicate item names fail the gather job",
     "file": "pipeline/snakemake",
@@ -902,6 +1089,13 @@
     "title": "Lineage stops at declared data",
     "type": "scenario"
   },
+  "rq-1ec0c367": {
+    "decl": "Scenario: A new project passes the check",
+    "file": "template/project",
+    "refs": [],
+    "title": "A new project passes the check",
+    "type": "scenario"
+  },
   "rq-1f183c28": {
     "decl": "Scenario: Parent is the nearest shallower question",
     "file": "question-tree",
@@ -926,6 +1120,21 @@
     "title": "Publishing an output modified after sealing fails",
     "type": "scenario"
   },
+  "rq-20c233fd": {
+    "decl": "Scenario: Snakemake tests skip locally without Snakemake",
+    "file": "testing",
+    "refs": [],
+    "title": "Snakemake tests skip locally without Snakemake",
+    "type": "scenario"
+  },
+  "rq-20e3189f": {
+    "decl": "## CLI Tests",
+    "file": "testing",
+    "level": 2,
+    "refs": [],
+    "title": "CLI Tests",
+    "type": "section"
+  },
   "rq-214c0020": {
     "decl": "Scenario: Malformed amendment",
     "file": "study/format",
@@ -936,6 +1145,13 @@
       }
     ],
     "title": "Malformed amendment",
+    "type": "scenario"
+  },
+  "rq-21bea60c": {
+    "decl": "Scenario: A binary with the wrong checksum fails the build",
+    "file": "template/container",
+    "refs": [],
+    "title": "A binary with the wrong checksum fails the build",
     "type": "scenario"
   },
   "rq-21dcc0c2": {
@@ -950,6 +1166,22 @@
     "title": "Parameter order does not matter",
     "type": "scenario"
   },
+  "rq-21f52f37": {
+    "decl": "### th-question",
+    "file": "template/skills",
+    "level": 3,
+    "refs": [],
+    "title": "th-question",
+    "type": "section"
+  },
+  "rq-2289dfd0": {
+    "decl": "### th-data",
+    "file": "template/skills",
+    "level": 3,
+    "refs": [],
+    "title": "th-data",
+    "type": "section"
+  },
   "rq-228b4cbc": {
     "decl": "Scenario: A reported study cannot rest on unreported work",
     "file": "data",
@@ -960,6 +1192,13 @@
       }
     ],
     "title": "A reported study cannot rest on unreported work",
+    "type": "scenario"
+  },
+  "rq-22ab7a81": {
+    "decl": "Scenario: The project ID is created once",
+    "file": "template/container",
+    "refs": [],
+    "title": "The project ID is created once",
     "type": "scenario"
   },
   "rq-22c3d944": {
@@ -977,6 +1216,14 @@
       }
     ],
     "title": "Check Rules (`pipeline` family, configuration)",
+    "type": "section"
+  },
+  "rq-22f4fd98": {
+    "decl": "### th-next",
+    "file": "template/skills",
+    "level": 3,
+    "refs": [],
+    "title": "th-next",
     "type": "section"
   },
   "rq-23b73104": {
@@ -1005,6 +1252,13 @@
       }
     ],
     "title": "Check runs from the project root",
+    "type": "scenario"
+  },
+  "rq-23b93182": {
+    "decl": "Scenario: A missing expected diagnostic fails the case",
+    "file": "testing",
+    "refs": [],
+    "title": "A missing expected diagnostic fails the case",
     "type": "scenario"
   },
   "rq-23d21623": {
@@ -1125,6 +1379,22 @@
     "title": "Direct Snakemake on a draft only offers trial targets",
     "type": "scenario"
   },
+  "rq-25d62c0c": {
+    "decl": "## Canonical Skills",
+    "file": "template/skills",
+    "level": 2,
+    "refs": [],
+    "title": "Canonical Skills",
+    "type": "section"
+  },
+  "rq-260d84c9": {
+    "decl": "### Environment",
+    "file": "template/project",
+    "level": 3,
+    "refs": [],
+    "title": "Environment",
+    "type": "section"
+  },
   "rq-262c5552": {
     "decl": "Scenario: Summary goes stale when the code changes",
     "file": "pipeline/snakemake",
@@ -1135,6 +1405,13 @@
       }
     ],
     "title": "Summary goes stale when the code changes",
+    "type": "scenario"
+  },
+  "rq-26afc755": {
+    "decl": "Scenario: The hook is skipped without tophat or a container runtime",
+    "file": "template/project",
+    "refs": [],
+    "title": "The hook is skipped without tophat or a container runtime",
     "type": "scenario"
   },
   "rq-27bb0a4e": {
@@ -1229,6 +1506,14 @@
     "title": "Trial outputs are separate and unreportable",
     "type": "scenario"
   },
+  "rq-2b0ca72f": {
+    "decl": "## Run Options",
+    "file": "template/container",
+    "level": 2,
+    "refs": [],
+    "title": "Run Options",
+    "type": "section"
+  },
   "rq-2b3be8cc": {
     "decl": "## Assumptions",
     "file": "question-tree",
@@ -1236,6 +1521,21 @@
     "refs": [],
     "title": "Assumptions",
     "type": "section"
+  },
+  "rq-2b4964eb": {
+    "decl": "## Out of Scope",
+    "file": "template/skills",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
+    "type": "section"
+  },
+  "rq-2b638c5b": {
+    "decl": "Scenario: Adapters are written for every selected agent",
+    "file": "template/skills",
+    "refs": [],
+    "title": "Adapters are written for every selected agent",
+    "type": "scenario"
   },
   "rq-2b6e16c6": {
     "decl": "Scenario: Retrospective study without a pipeline",
@@ -1297,6 +1597,13 @@
     "title": "Stamp keeps existing IDs and status lines",
     "type": "scenario"
   },
+  "rq-2da2ae3f": {
+    "decl": "Scenario: The example study runs end to end",
+    "file": "testing",
+    "refs": [],
+    "title": "The example study runs end to end",
+    "type": "scenario"
+  },
   "rq-2db7a1dd": {
     "decl": "# Feature: Study Document Format and Lifecycle",
     "file": "study/format",
@@ -1312,6 +1619,13 @@
     "title": "Commands",
     "type": "section"
   },
+  "rq-2de196ad": {
+    "decl": "Scenario: The QC status command is not caught by the QC deny rule",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The QC status command is not caught by the QC deny rule",
+    "type": "scenario"
+  },
   "rq-2e00ed22": {
     "decl": "Scenario: Whitespace and line-ending changes do not alter the fingerprint",
     "file": "study/format",
@@ -1322,6 +1636,13 @@
       }
     ],
     "title": "Whitespace and line-ending changes do not alter the fingerprint",
+    "type": "scenario"
+  },
+  "rq-2e07e31f": {
+    "decl": "Scenario: Skill lint reports findings with their rule",
+    "file": "tooling",
+    "refs": [],
+    "title": "Skill lint reports findings with their rule",
     "type": "scenario"
   },
   "rq-2e2aead6": {
@@ -1360,6 +1681,20 @@
     "title": "A complete draft waits for the human to pre-register",
     "type": "scenario"
   },
+  "rq-2ed82bd1": {
+    "decl": "Scenario: The release pin refuses a version mismatch",
+    "file": "tooling",
+    "refs": [],
+    "title": "The release pin refuses a version mismatch",
+    "type": "scenario"
+  },
+  "rq-2f11c7ec": {
+    "decl": "Scenario: The hook path is set when unset",
+    "file": "template/container",
+    "refs": [],
+    "title": "The hook path is set when unset",
+    "type": "scenario"
+  },
   "rq-2f3eea8e": {
     "decl": "## Stage Configuration",
     "file": "pipeline/provenance",
@@ -1392,6 +1727,13 @@
     "title": "Stub can be restored",
     "type": "scenario"
   },
+  "rq-31265ce2": {
+    "decl": "Scenario: An NVIDIA GPU is passed through",
+    "file": "template/container",
+    "refs": [],
+    "title": "An NVIDIA GPU is passed through",
+    "type": "scenario"
+  },
   "rq-3132a729": {
     "decl": "Scenario: Return steps leave kept files on the cluster",
     "file": "pipeline/external",
@@ -1403,6 +1745,14 @@
     ],
     "title": "Return steps leave kept files on the cluster",
     "type": "scenario"
+  },
+  "rq-32776f33": {
+    "decl": "## Assumptions",
+    "file": "template/project",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
   },
   "rq-3301d594": {
     "decl": "## Verification",
@@ -1465,6 +1815,14 @@
     "title": "Gherkin Scenarios",
     "type": "section"
   },
+  "rq-351008a7": {
+    "decl": "## Render Tests",
+    "file": "testing",
+    "level": 2,
+    "refs": [],
+    "title": "Render Tests",
+    "type": "section"
+  },
   "rq-3573382c": {
     "decl": "## Assumptions",
     "file": "workflow",
@@ -1509,6 +1867,13 @@
     "title": "Feature: Question Tree",
     "type": "file"
   },
+  "rq-36a97588": {
+    "decl": "Scenario: Prompts are refused on the host",
+    "file": "template/container",
+    "refs": [],
+    "title": "Prompts are refused on the host",
+    "type": "scenario"
+  },
   "rq-3727b411": {
     "decl": "Scenario: Any other edit to the job script is refused",
     "file": "pipeline/external",
@@ -1536,6 +1901,14 @@
       }
     ],
     "title": "Keys and Provenance",
+    "type": "section"
+  },
+  "rq-380bb3d9": {
+    "decl": "### Setting",
+    "file": "template/container",
+    "level": 3,
+    "refs": [],
+    "title": "Setting",
     "type": "section"
   },
   "rq-383b2154": {
@@ -1591,6 +1964,13 @@
     "title": "Invalid status value",
     "type": "scenario"
   },
+  "rq-39d23d3d": {
+    "decl": "Scenario: The release pin is written from the binaries",
+    "file": "tooling",
+    "refs": [],
+    "title": "The release pin is written from the binaries",
+    "type": "scenario"
+  },
   "rq-39ebb522": {
     "decl": "### Read-only and offline",
     "file": "check",
@@ -1603,6 +1983,13 @@
     ],
     "title": "Read-only and offline",
     "type": "section"
+  },
+  "rq-3a78943e": {
+    "decl": "Scenario: An invalid GPU setting is refused",
+    "file": "template/container",
+    "refs": [],
+    "title": "An invalid GPU setting is refused",
+    "type": "scenario"
   },
   "rq-3a79a3f7": {
     "decl": "Scenario: Retrospective study can be reported from a summary",
@@ -1681,6 +2068,20 @@
     "title": "ToolsError",
     "type": "api-item"
   },
+  "rq-3c33f183": {
+    "decl": "Scenario: Project run options are appended and validated",
+    "file": "template/container",
+    "refs": [],
+    "title": "Project run options are appended and validated",
+    "type": "scenario"
+  },
+  "rq-3ca62dea": {
+    "decl": "Scenario: No adapters for unselected agents",
+    "file": "template/skills",
+    "refs": [],
+    "title": "No adapters for unselected agents",
+    "type": "scenario"
+  },
   "rq-3cc4a23d": {
     "decl": "Scenario: Untested scenario in a preregistered study warns",
     "file": "study/format",
@@ -1692,6 +2093,14 @@
     ],
     "title": "Untested scenario in a preregistered study warns",
     "type": "scenario"
+  },
+  "rq-3ccce61c": {
+    "decl": "### Required cases",
+    "file": "testing",
+    "level": 3,
+    "refs": [],
+    "title": "Required cases",
+    "type": "section"
   },
   "rq-3d588765": {
     "decl": "## Assumptions",
@@ -1757,6 +2166,14 @@
     "title": "Large inputs are copied with a warning",
     "type": "scenario"
   },
+  "rq-3f55f3e1": {
+    "decl": "## Assumptions",
+    "file": "template/skills",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
+  },
   "rq-3fd30bb8": {
     "decl": "## Feature API",
     "file": "study/format",
@@ -1775,6 +2192,13 @@
       }
     ],
     "title": "Variant cannot add stages",
+    "type": "scenario"
+  },
+  "rq-404d256a": {
+    "decl": "Scenario: The agent hands pre-registration to the human",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The agent hands pre-registration to the human",
     "type": "scenario"
   },
   "rq-4151372b": {
@@ -1813,6 +2237,14 @@
     "title": "Open question needs neither answer nor evidence",
     "type": "scenario"
   },
+  "rq-428f178b": {
+    "decl": "## Worked Example Study",
+    "file": "template/skills",
+    "level": 2,
+    "refs": [],
+    "title": "Worked Example Study",
+    "type": "section"
+  },
   "rq-42c672ac": {
     "decl": "Scenario: An unexpected returned file is refused",
     "file": "pipeline/external",
@@ -1823,6 +2255,13 @@
       }
     ],
     "title": "An unexpected returned file is refused",
+    "type": "scenario"
+  },
+  "rq-42fba780": {
+    "decl": "Scenario: Every skill has a canonical text and a local extension",
+    "file": "template/skills",
+    "refs": [],
+    "title": "Every skill has a canonical text and a local extension",
     "type": "scenario"
   },
   "rq-43b7a9e6": {
@@ -1886,6 +2325,29 @@
     "title": "Scope path outside the project",
     "type": "scenario"
   },
+  "rq-4576cbd8": {
+    "decl": "# Feature: Agent Skills",
+    "file": "template/skills",
+    "refs": [],
+    "title": "Feature: Agent Skills",
+    "type": "file"
+  },
+  "rq-4580d473": {
+    "decl": "### th-tool",
+    "file": "template/skills",
+    "level": 3,
+    "refs": [],
+    "title": "th-tool",
+    "type": "section"
+  },
+  "rq-45cc9712": {
+    "decl": "### exploration/README.md",
+    "file": "template/project",
+    "level": 3,
+    "refs": [],
+    "title": "exploration/README.md",
+    "type": "section"
+  },
   "rq-45fb5dee": {
     "decl": "### Types",
     "file": "data",
@@ -1906,6 +2368,20 @@
     "title": "Edited Snakefile is rejected",
     "type": "scenario"
   },
+  "rq-46aa2f57": {
+    "decl": "Scenario: Copying into an existing repository overwrites no user file",
+    "file": "template/project",
+    "refs": [],
+    "title": "Copying into an existing repository overwrites no user file",
+    "type": "scenario"
+  },
+  "rq-46b1f245": {
+    "decl": "Scenario: No GPU falls back to CPU",
+    "file": "template/container",
+    "refs": [],
+    "title": "No GPU falls back to CPU",
+    "type": "scenario"
+  },
   "rq-46e1add4": {
     "decl": "Scenario: Report copies result lines verbatim",
     "file": "study/format",
@@ -1916,6 +2392,13 @@
       }
     ],
     "title": "Report copies result lines verbatim",
+    "type": "scenario"
+  },
+  "rq-47e127bc": {
+    "decl": "Scenario: The hook uses the container on the host",
+    "file": "template/project",
+    "refs": [],
+    "title": "The hook uses the container on the host",
     "type": "scenario"
   },
   "rq-4838d3a2": {
@@ -1930,6 +2413,14 @@
     "title": "Unlisted variant config",
     "type": "scenario"
   },
+  "rq-485c120f": {
+    "decl": "### README.md",
+    "file": "template/project",
+    "level": 3,
+    "refs": [],
+    "title": "README.md",
+    "type": "section"
+  },
   "rq-4865c985": {
     "decl": "Scenario: Kept files copied back anyway are accepted",
     "file": "pipeline/external",
@@ -1942,6 +2433,14 @@
     "title": "Kept files copied back anyway are accepted",
     "type": "scenario"
   },
+  "rq-48a62199": {
+    "decl": "## Files",
+    "file": "template/container",
+    "level": 2,
+    "refs": [],
+    "title": "Files",
+    "type": "section"
+  },
   "rq-49765877": {
     "decl": "Scenario: Environment variable overrides the local roots file",
     "file": "data",
@@ -1953,6 +2452,22 @@
     ],
     "title": "Environment variable overrides the local roots file",
     "type": "scenario"
+  },
+  "rq-4a032ea7": {
+    "decl": "## Skill Lint Rules",
+    "file": "template/skills",
+    "level": 2,
+    "refs": [],
+    "title": "Skill Lint Rules",
+    "type": "section"
+  },
+  "rq-4a8d3a7d": {
+    "decl": "## Initial State",
+    "file": "template/project",
+    "level": 2,
+    "refs": [],
+    "title": "Initial State",
+    "type": "section"
   },
   "rq-4aa0232e": {
     "decl": "## Stage Keys",
@@ -2000,6 +2515,21 @@
     "title": "Stages left to run",
     "type": "scenario"
   },
+  "rq-4bd6ac72": {
+    "decl": "## Out of Scope",
+    "file": "template/project",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
+    "type": "section"
+  },
+  "rq-4c6f3b16": {
+    "decl": "Scenario: A valid case passes",
+    "file": "testing",
+    "refs": [],
+    "title": "A valid case passes",
+    "type": "scenario"
+  },
   "rq-4c85d6f4": {
     "decl": "### Kinds",
     "file": "data",
@@ -2016,6 +2546,21 @@
     ],
     "title": "Kinds",
     "type": "section"
+  },
+  "rq-4cf7a956": {
+    "decl": "### Passthrough",
+    "file": "template/container",
+    "level": 3,
+    "refs": [],
+    "title": "Passthrough",
+    "type": "section"
+  },
+  "rq-4d2bc439": {
+    "decl": "# Feature: Dev Container and Launcher",
+    "file": "template/container",
+    "refs": [],
+    "title": "Feature: Dev Container and Launcher",
+    "type": "file"
   },
   "rq-4d4f5fd4": {
     "decl": "Scenario: Errors in another study do not block this one",
@@ -2053,6 +2598,13 @@
     "title": "Citing an open sub-question",
     "type": "scenario"
   },
+  "rq-4da71d7f": {
+    "decl": "Scenario: Machine-local state is ignored",
+    "file": "template/project",
+    "refs": [],
+    "title": "Machine-local state is ignored",
+    "type": "scenario"
+  },
   "rq-4e7bac77": {
     "decl": "## Feature API",
     "file": "question-tree",
@@ -2076,6 +2628,13 @@
     ],
     "title": "tophat",
     "type": "api-item"
+  },
+  "rq-4efb6d36": {
+    "decl": "Scenario: The agent reports results only through the CLI",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The agent reports results only through the CLI",
+    "type": "scenario"
   },
   "rq-4f2cf51c": {
     "decl": "Scenario: A recorded resolution never changes",
@@ -2117,6 +2676,14 @@
     "title": "Citing a question that is not a descendant",
     "type": "scenario"
   },
+  "rq-5040a08a": {
+    "decl": "### `cargo xtask render-test`",
+    "file": "tooling",
+    "level": 3,
+    "refs": [],
+    "title": "`cargo xtask render-test`",
+    "type": "section"
+  },
   "rq-510dffe3": {
     "decl": "Scenario: Publishing an unsealed output fails",
     "file": "data",
@@ -2127,6 +2694,13 @@
       }
     ],
     "title": "Publishing an unsealed output fails",
+    "type": "scenario"
+  },
+  "rq-513a430f": {
+    "decl": "Scenario: Commands other than check are compared by exit code and output",
+    "file": "testing",
+    "refs": [],
+    "title": "Commands other than check are compared by exit code and output",
     "type": "scenario"
   },
   "rq-51d60cdc": {
@@ -2208,6 +2782,26 @@
       },
       {
         "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-531eebf2": {
+    "decl": "- `tophat data roots`",
+    "file": "data",
+    "refs": [
+      {
+        "file": "src/cli.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/data/roots.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/data.rs",
         "kind": "code"
       }
     ],
@@ -2300,6 +2894,14 @@
     "title": "Producer Maturity and Visibility",
     "type": "section"
   },
+  "rq-55a71d92": {
+    "decl": "### Case format",
+    "file": "testing",
+    "level": 3,
+    "refs": [],
+    "title": "Case format",
+    "type": "section"
+  },
   "rq-55bef4eb": {
     "decl": "- `pipeline_rules(project: &Project) -> Vec<Diagnostic>` — the `pipeline` rule family registered",
     "file": "pipeline/provenance",
@@ -2315,6 +2917,20 @@
     ],
     "title": "pipeline_rules",
     "type": "api-item"
+  },
+  "rq-55cac2c5": {
+    "decl": "Scenario: Apptainer runs isolated from the host",
+    "file": "template/container",
+    "refs": [],
+    "title": "Apptainer runs isolated from the host",
+    "type": "scenario"
+  },
+  "rq-55e2e7f7": {
+    "decl": "Scenario: An image of another project is refused",
+    "file": "template/container",
+    "refs": [],
+    "title": "An image of another project is refused",
+    "type": "scenario"
   },
   "rq-55f9341a": {
     "decl": "Scenario: Returning to a shallower level is allowed",
@@ -2334,6 +2950,14 @@
     "level": 3,
     "refs": [],
     "title": "Types",
+    "type": "section"
+  },
+  "rq-56d220b5": {
+    "decl": "### The tophat release",
+    "file": "template/project",
+    "level": 3,
+    "refs": [],
+    "title": "The tophat release",
     "type": "section"
   },
   "rq-56d46fa3": {
@@ -2397,6 +3021,25 @@
     "title": "Check outside any TopHat project",
     "type": "scenario"
   },
+  "rq-582d60cc": {
+    "decl": "Scenario: Locations that need credentials are rejected",
+    "file": "pipeline/tools",
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Locations that need credentials are rejected",
+    "type": "scenario"
+  },
+  "rq-58513972": {
+    "decl": "Scenario: Messages are not compared",
+    "file": "testing",
+    "refs": [],
+    "title": "Messages are not compared",
+    "type": "scenario"
+  },
   "rq-588d371f": {
     "decl": "Scenario: Summary line with an unlisted variant",
     "file": "study/format",
@@ -2407,6 +3050,13 @@
       }
     ],
     "title": "Summary line with an unlisted variant",
+    "type": "scenario"
+  },
+  "rq-5958144d": {
+    "decl": "Scenario: Cases newer than the binary are skipped",
+    "file": "testing",
+    "refs": [],
+    "title": "Cases newer than the binary are skipped",
     "type": "scenario"
   },
   "rq-597bb615": {
@@ -2450,6 +3100,13 @@
     "title": "Key text follows the specified construction",
     "type": "scenario"
   },
+  "rq-59f0f637": {
+    "decl": "Scenario: Dangling scenario references are found",
+    "file": "tooling",
+    "refs": [],
+    "title": "Dangling scenario references are found",
+    "type": "scenario"
+  },
   "rq-59f7b61a": {
     "decl": "Scenario: Changing a parameter re-runs only what depends on it",
     "file": "pipeline/snakemake",
@@ -2486,6 +3143,21 @@
     "title": "Undeclared tool",
     "type": "scenario"
   },
+  "rq-5b01ac93": {
+    "decl": "## Traceability",
+    "file": "testing",
+    "level": 2,
+    "refs": [],
+    "title": "Traceability",
+    "type": "section"
+  },
+  "rq-5b3d8f35": {
+    "decl": "Scenario: Unknown options are refused",
+    "file": "template/container",
+    "refs": [],
+    "title": "Unknown options are refused",
+    "type": "scenario"
+  },
   "rq-5b6f6e50": {
     "decl": "## Check Rules (`data` family)",
     "file": "data",
@@ -2502,6 +3174,29 @@
     ],
     "title": "Check Rules (`data` family)",
     "type": "section"
+  },
+  "rq-5be14147": {
+    "decl": "## Assumptions",
+    "file": "testing",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
+  },
+  "rq-5c404476": {
+    "decl": "## Image",
+    "file": "template/container",
+    "level": 2,
+    "refs": [],
+    "title": "Image",
+    "type": "section"
+  },
+  "rq-5c6c0574": {
+    "decl": "Scenario: PROJECT.md starts with an empty question tree",
+    "file": "template/project",
+    "refs": [],
+    "title": "PROJECT.md starts with an empty question tree",
+    "type": "scenario"
   },
   "rq-5cc877ea": {
     "decl": "### Types",
@@ -2551,6 +3246,21 @@
     "title": "tophat",
     "type": "api-item"
   },
+  "rq-5da5a173": {
+    "decl": "### `cargo xtask adoption`",
+    "file": "tooling",
+    "level": 3,
+    "refs": [],
+    "title": "`cargo xtask adoption`",
+    "type": "section"
+  },
+  "rq-5dc40f24": {
+    "decl": "Scenario: An NVIDIA GPU without CDI falls back with instructions",
+    "file": "template/container",
+    "refs": [],
+    "title": "An NVIDIA GPU without CDI falls back with instructions",
+    "type": "scenario"
+  },
   "rq-5dee52f5": {
     "decl": "Scenario: Public study consuming private data",
     "file": "data",
@@ -2561,6 +3271,13 @@
       }
     ],
     "title": "Public study consuming private data",
+    "type": "scenario"
+  },
+  "rq-5df9545e": {
+    "decl": "Scenario: An invalid run option is refused",
+    "file": "template/container",
+    "refs": [],
+    "title": "An invalid run option is refused",
     "type": "scenario"
   },
   "rq-5e257285": {
@@ -2615,6 +3332,28 @@
     "title": "A project without PROJECT.md has an empty tree",
     "type": "scenario"
   },
+  "rq-5fa25ddc": {
+    "decl": "Scenario: A Julia project has Julia in its image",
+    "file": "testing",
+    "refs": [],
+    "title": "A Julia project has Julia in its image",
+    "type": "scenario"
+  },
+  "rq-5fb69e3a": {
+    "decl": "## Session",
+    "file": "template/container",
+    "level": 2,
+    "refs": [],
+    "title": "Session",
+    "type": "section"
+  },
+  "rq-6026766d": {
+    "decl": "Scenario: The host's git identity does not enter the container",
+    "file": "template/container",
+    "refs": [],
+    "title": "The host's git identity does not enter the container",
+    "type": "scenario"
+  },
   "rq-607bbcc0": {
     "decl": "Scenario: Commands preserve unrelated content",
     "file": "study/format",
@@ -2637,6 +3376,13 @@
       }
     ],
     "title": "Duplicate question IDs",
+    "type": "scenario"
+  },
+  "rq-60ea5f24": {
+    "decl": "Scenario: The example's external stage needs only POSIX tools",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The example's external stage needs only POSIX tools",
     "type": "scenario"
   },
   "rq-6101fec0": {
@@ -2759,6 +3505,21 @@
     "title": "tophat",
     "type": "api-item"
   },
+  "rq-656aa36b": {
+    "decl": "## Out of Scope",
+    "file": "template/container",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
+    "type": "section"
+  },
+  "rq-6602ff7a": {
+    "decl": "Scenario: Unreferenced scenarios are found",
+    "file": "tooling",
+    "refs": [],
+    "title": "Unreferenced scenarios are found",
+    "type": "scenario"
+  },
   "rq-672050d2": {
     "decl": "Scenario: Seal refuses an empty output",
     "file": "pipeline/provenance",
@@ -2855,6 +3616,14 @@
     ],
     "title": "Output is deterministic",
     "type": "scenario"
+  },
+  "rq-68df5b63": {
+    "decl": "## Adoption Tests",
+    "file": "testing",
+    "level": 2,
+    "refs": [],
+    "title": "Adoption Tests",
+    "type": "section"
   },
   "rq-68f43997": {
     "decl": "Scenario: Amendment dated before pre-registration",
@@ -2976,6 +3745,13 @@
     "title": "Feature API",
     "type": "section"
   },
+  "rq-6dd4dd02": {
+    "decl": "Scenario: Skill lint passes on a rendered project",
+    "file": "tooling",
+    "refs": [],
+    "title": "Skill lint passes on a rendered project",
+    "type": "scenario"
+  },
   "rq-6e13314c": {
     "decl": "Scenario: Unknown variant",
     "file": "workflow",
@@ -3044,6 +3820,43 @@
     "title": "Changing a script changes its key and every downstream key",
     "type": "scenario"
   },
+  "rq-6fc05e55": {
+    "decl": "### `cargo xtask lock`",
+    "file": "tooling",
+    "level": 3,
+    "refs": [],
+    "title": "`cargo xtask lock`",
+    "type": "section"
+  },
+  "rq-6fcb1f55": {
+    "decl": "Scenario: An eval passes only if every repetition passes",
+    "file": "testing",
+    "refs": [],
+    "title": "An eval passes only if every repetition passes",
+    "type": "scenario"
+  },
+  "rq-6fd1f551": {
+    "decl": "Scenario: A new project has nothing to do but ask the question",
+    "file": "template/project",
+    "refs": [],
+    "title": "A new project has nothing to do but ask the question",
+    "type": "scenario"
+  },
+  "rq-6fd600ee": {
+    "decl": "## Assumptions",
+    "file": "tooling",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
+  },
+  "rq-6ffea465": {
+    "decl": "Scenario: Failing returns write no record",
+    "file": "testing",
+    "refs": [],
+    "title": "Failing returns write no record",
+    "type": "scenario"
+  },
   "rq-701626f2": {
     "decl": "Scenario: Adding a directory with a symbolic link fails",
     "file": "data",
@@ -3074,6 +3887,28 @@
     "level": 2,
     "refs": [],
     "title": "Assumptions",
+    "type": "section"
+  },
+  "rq-714aa142": {
+    "decl": "Scenario: The agent hands QC to the human",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The agent hands QC to the human",
+    "type": "scenario"
+  },
+  "rq-71619977": {
+    "decl": "Scenario: Render from the working tree",
+    "file": "tooling",
+    "refs": [],
+    "title": "Render from the working tree",
+    "type": "scenario"
+  },
+  "rq-71727623": {
+    "decl": "## Launcher",
+    "file": "template/container",
+    "level": 2,
+    "refs": [],
+    "title": "Launcher",
     "type": "section"
   },
   "rq-719acfdc": {
@@ -3116,6 +3951,21 @@
     "title": "The key records the resolved commit",
     "type": "scenario"
   },
+  "rq-7238187f": {
+    "decl": "Scenario: Every behaviour scenario has an eval",
+    "file": "testing",
+    "refs": [],
+    "title": "Every behaviour scenario has an eval",
+    "type": "scenario"
+  },
+  "rq-72b63b68": {
+    "decl": "### CI",
+    "file": "template/project",
+    "level": 3,
+    "refs": [],
+    "title": "CI",
+    "type": "section"
+  },
   "rq-731766dd": {
     "decl": "### Hash cache",
     "file": "data",
@@ -3132,6 +3982,20 @@
     ],
     "title": "Hash cache",
     "type": "section"
+  },
+  "rq-74365fac": {
+    "decl": "Scenario: Managed files carry the marker",
+    "file": "template/project",
+    "refs": [],
+    "title": "Managed files carry the marker",
+    "type": "scenario"
+  },
+  "rq-7478e01d": {
+    "decl": "Scenario: A stale lock does not prevent the session",
+    "file": "template/container",
+    "refs": [],
+    "title": "A stale lock does not prevent the session",
+    "type": "scenario"
   },
   "rq-74adaff3": {
     "decl": "Scenario: A warning fails the check in strict mode",
@@ -3226,6 +4090,13 @@
     "title": "A stage that nothing consumes is never gated",
     "type": "scenario"
   },
+  "rq-78cc426d": {
+    "decl": "Scenario: The example is not part of a new project's studies",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The example is not part of a new project's studies",
+    "type": "scenario"
+  },
   "rq-78e4b035": {
     "decl": "### Commands",
     "file": "data",
@@ -3269,6 +4140,21 @@
     ],
     "title": "Record a passing verdict interactively",
     "type": "scenario"
+  },
+  "rq-7a0bc07d": {
+    "decl": "Scenario: Canonical skills are agent-neutral",
+    "file": "template/skills",
+    "refs": [],
+    "title": "Canonical skills are agent-neutral",
+    "type": "scenario"
+  },
+  "rq-7ab5b8f0": {
+    "decl": "## Gherkin Scenarios",
+    "file": "template/container",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
   },
   "rq-7aba8e5c": {
     "decl": "## Out of Scope",
@@ -3339,6 +4225,13 @@
     "title": "QuestionError",
     "type": "api-item"
   },
+  "rq-7d26723f": {
+    "decl": "Scenario: Every YAML form tophat accepts is understood",
+    "file": "template/container",
+    "refs": [],
+    "title": "Every YAML form tophat accepts is understood",
+    "type": "scenario"
+  },
   "rq-7d741e69": {
     "decl": "Scenario: Tree does not validate",
     "file": "question-tree",
@@ -3373,6 +4266,13 @@
       }
     ],
     "title": "Same-size modification is flagged by the cache",
+    "type": "scenario"
+  },
+  "rq-7e3bca84": {
+    "decl": "Scenario: An unknown CLI command is caught",
+    "file": "template/skills",
+    "refs": [],
+    "title": "An unknown CLI command is caught",
     "type": "scenario"
   },
   "rq-7eba13df": {
@@ -3505,6 +4405,22 @@
     "title": "Question headings",
     "type": "section"
   },
+  "rq-81e54133": {
+    "decl": "### Git hooks",
+    "file": "template/container",
+    "level": 3,
+    "refs": [],
+    "title": "Git hooks",
+    "type": "section"
+  },
+  "rq-81ec264f": {
+    "decl": "## Adapters",
+    "file": "template/skills",
+    "level": 2,
+    "refs": [],
+    "title": "Adapters",
+    "type": "section"
+  },
   "rq-82ac8f57": {
     "decl": "Scenario: Dirty summary means commit and run again",
     "file": "workflow",
@@ -3531,6 +4447,13 @@
       }
     ],
     "title": "Receipts are parsed strictly",
+    "type": "scenario"
+  },
+  "rq-83643799": {
+    "decl": "Scenario: Generation runs no commands",
+    "file": "template/project",
+    "refs": [],
+    "title": "Generation runs no commands",
     "type": "scenario"
   },
   "rq-83c71c3c": {
@@ -3615,6 +4538,13 @@
     "title": "Check Rules (`pipeline` family, tools)",
     "type": "section"
   },
+  "rq-859c4b9b": {
+    "decl": "# Feature: Generated Project Skeleton",
+    "file": "template/project",
+    "refs": [],
+    "title": "Feature: Generated Project Skeleton",
+    "type": "file"
+  },
   "rq-85aa702f": {
     "decl": "Scenario: A new dataset version changes the key",
     "file": "pipeline/provenance",
@@ -3675,6 +4605,13 @@
     "title": "Out of Scope",
     "type": "section"
   },
+  "rq-87749f65": {
+    "decl": "Scenario: Julia is added when selected",
+    "file": "template/project",
+    "refs": [],
+    "title": "Julia is added when selected",
+    "type": "scenario"
+  },
   "rq-88716093": {
     "decl": "Scenario: Add a raw dataset",
     "file": "data",
@@ -3710,6 +4647,14 @@
     ],
     "title": "--draft on a preregistered study is refused",
     "type": "scenario"
+  },
+  "rq-89a79c10": {
+    "decl": "### th-study",
+    "file": "template/skills",
+    "level": 3,
+    "refs": [],
+    "title": "th-study",
+    "type": "section"
   },
   "rq-8a1808bb": {
     "decl": "Scenario: Status is read-only",
@@ -3783,6 +4728,14 @@
     "title": "parse_summary",
     "type": "api-item"
   },
+  "rq-8fd5db8d": {
+    "decl": "### `cargo xtask render`",
+    "file": "tooling",
+    "level": 3,
+    "refs": [],
+    "title": "`cargo xtask render`",
+    "type": "section"
+  },
   "rq-9057ff4f": {
     "decl": "### Commands",
     "file": "pipeline/provenance",
@@ -3801,6 +4754,13 @@
       }
     ],
     "title": "A second run does nothing",
+    "type": "scenario"
+  },
+  "rq-911c9187": {
+    "decl": "Scenario: The slug is derived from the project name",
+    "file": "template/project",
+    "refs": [],
+    "title": "The slug is derived from the project name",
     "type": "scenario"
   },
   "rq-91713e05": {
@@ -3875,6 +4835,18 @@
     "title": "QC refused for an unsealed output",
     "type": "scenario"
   },
+  "rq-940c97c9": {
+    "decl": "Scenario: A repository that needs credentials fails sync without prompting",
+    "file": "pipeline/tools",
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A repository that needs credentials fails sync without prompting",
+    "type": "scenario"
+  },
   "rq-940d0a4b": {
     "decl": "Scenario: Stamp assigns IDs and status lines",
     "file": "question-tree",
@@ -3914,6 +4886,13 @@
       }
     ],
     "title": "Missing data file",
+    "type": "scenario"
+  },
+  "rq-96018e0c": {
+    "decl": "Scenario: GPU on without a GPU refuses to launch",
+    "file": "template/container",
+    "refs": [],
+    "title": "GPU on without a GPU refuses to launch",
     "type": "scenario"
   },
   "rq-960f50c6": {
@@ -3989,6 +4968,20 @@
     "title": "Verify reports extra files",
     "type": "scenario"
   },
+  "rq-97bc377b": {
+    "decl": "Scenario: The required cases are present",
+    "file": "testing",
+    "refs": [],
+    "title": "The required cases are present",
+    "type": "scenario"
+  },
+  "rq-98385f5d": {
+    "decl": "Scenario: The host variable overrides the project default",
+    "file": "template/container",
+    "refs": [],
+    "title": "The host variable overrides the project default",
+    "type": "scenario"
+  },
   "rq-985dbe20": {
     "decl": "## Data Roots",
     "file": "data",
@@ -4020,6 +5013,14 @@
     ],
     "title": "StageConfig",
     "type": "api-item"
+  },
+  "rq-99c9f467": {
+    "decl": "## Copier Questions",
+    "file": "template/project",
+    "level": 2,
+    "refs": [],
+    "title": "Copier Questions",
+    "type": "section"
   },
   "rq-9a610110": {
     "decl": "Scenario: Extra sections are allowed",
@@ -4053,6 +5054,13 @@
     "title": "Report refuses a stale summary",
     "type": "scenario"
   },
+  "rq-9b40e3a8": {
+    "decl": "Scenario: A changed tool pin re-runs exactly the downstream stages",
+    "file": "testing",
+    "refs": [],
+    "title": "A changed tool pin re-runs exactly the downstream stages",
+    "type": "scenario"
+  },
   "rq-9b44b88f": {
     "decl": "- `RULE_FAMILIES: &[fn(&Project) -> Vec<Diagnostic>]` — the static list of rule families. Adding a",
     "file": "check",
@@ -4064,6 +5072,20 @@
     ],
     "title": "RULE_FAMILIES",
     "type": "api-item"
+  },
+  "rq-9b4b5f1e": {
+    "decl": "Scenario: A missing external program is named",
+    "file": "tooling",
+    "refs": [],
+    "title": "A missing external program is named",
+    "type": "scenario"
+  },
+  "rq-9b7fb838": {
+    "decl": "Scenario: Agent-specific wording is caught",
+    "file": "template/skills",
+    "refs": [],
+    "title": "Agent-specific wording is caught",
+    "type": "scenario"
   },
   "rq-9b9f7ee6": {
     "decl": "### Rule identifiers",
@@ -4148,6 +5170,13 @@
       }
     ],
     "title": "Dropped question without a reason",
+    "type": "scenario"
+  },
+  "rq-9d45bd87": {
+    "decl": "Scenario: Read-only tophat commands need no approval",
+    "file": "template/skills",
+    "refs": [],
+    "title": "Read-only tophat commands need no approval",
     "type": "scenario"
   },
   "rq-9d5b8ddf": {
@@ -4279,6 +5308,14 @@
     ],
     "title": "Variants with identical stage settings share a key",
     "type": "scenario"
+  },
+  "rq-9f886d87": {
+    "decl": "### Commits happen on the host",
+    "file": "template/container",
+    "level": 3,
+    "refs": [],
+    "title": "Commits happen on the host",
+    "type": "section"
   },
   "rq-9f8a5a5e": {
     "decl": "- `ProvenanceRecord` — a parsed `provenance.json`.",
@@ -4435,6 +5472,14 @@
     "title": "Run one variant",
     "type": "scenario"
   },
+  "rq-a35593b1": {
+    "decl": "### Pre-commit hook",
+    "file": "template/project",
+    "level": 3,
+    "refs": [],
+    "title": "Pre-commit hook",
+    "type": "section"
+  },
   "rq-a3b4939d": {
     "decl": "### Front Matter",
     "file": "study/format",
@@ -4479,6 +5524,21 @@
     ],
     "title": "A fresh draft needs its plan written",
     "type": "scenario"
+  },
+  "rq-a4160e43": {
+    "decl": "Scenario: The copied example passes the check",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The copied example passes the check",
+    "type": "scenario"
+  },
+  "rq-a4246ba4": {
+    "decl": "## Answer Sets",
+    "file": "tooling",
+    "level": 2,
+    "refs": [],
+    "title": "Answer Sets",
+    "type": "section"
   },
   "rq-a44c3b76": {
     "decl": "### Fan-out",
@@ -4606,6 +5666,13 @@
     "title": "Feature API",
     "type": "section"
   },
+  "rq-a819acba": {
+    "decl": "Scenario: An unexpected diagnostic fails the case",
+    "file": "testing",
+    "refs": [],
+    "title": "An unexpected diagnostic fails the case",
+    "type": "scenario"
+  },
   "rq-a85bdde8": {
     "decl": "Scenario: Invalid status value",
     "file": "question-tree",
@@ -4732,6 +5799,14 @@
     "title": "generate_rules",
     "type": "api-item"
   },
+  "rq-aa97877d": {
+    "decl": "### Eval definitions",
+    "file": "testing",
+    "level": 3,
+    "refs": [],
+    "title": "Eval definitions",
+    "type": "section"
+  },
   "rq-ab9a813f": {
     "decl": "### The tools lock",
     "file": "pipeline/tools",
@@ -4749,6 +5824,13 @@
     "title": "The tools lock",
     "type": "section"
   },
+  "rq-aba117e6": {
+    "decl": "Scenario: Invalid roots files stop the launch",
+    "file": "template/container",
+    "refs": [],
+    "title": "Invalid roots files stop the launch",
+    "type": "scenario"
+  },
   "rq-abbd00cd": {
     "decl": "### Project discovery",
     "file": "check",
@@ -4765,6 +5847,43 @@
     ],
     "title": "Project discovery",
     "type": "section"
+  },
+  "rq-abe5670e": {
+    "decl": "Scenario: An AMD GPU is passed through",
+    "file": "template/container",
+    "refs": [],
+    "title": "An AMD GPU is passed through",
+    "type": "scenario"
+  },
+  "rq-ac4f41eb": {
+    "decl": "Scenario: The release pin refuses a missing target",
+    "file": "tooling",
+    "refs": [],
+    "title": "The release pin refuses a missing target",
+    "type": "scenario"
+  },
+  "rq-acd69936": {
+    "decl": "## Skills",
+    "file": "template/skills",
+    "level": 2,
+    "refs": [],
+    "title": "Skills",
+    "type": "section"
+  },
+  "rq-ad0b00cd": {
+    "decl": "### th-run",
+    "file": "template/skills",
+    "level": 3,
+    "refs": [],
+    "title": "th-run",
+    "type": "section"
+  },
+  "rq-ad4f64d8": {
+    "decl": "Scenario: The agent leaves commits to the human",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The agent leaves commits to the human",
+    "type": "scenario"
   },
   "rq-ada3b70f": {
     "decl": "Scenario: Supersedes entry without a matching forward link",
@@ -4801,6 +5920,14 @@
     ],
     "title": "parse_manifest",
     "type": "api-item"
+  },
+  "rq-aea3767f": {
+    "decl": "## End-to-End Example Study",
+    "file": "testing",
+    "level": 2,
+    "refs": [],
+    "title": "End-to-End Example Study",
+    "type": "section"
   },
   "rq-af111715": {
     "decl": "Scenario: Gaps in scenario numbers are allowed",
@@ -4853,6 +5980,29 @@
     ],
     "title": "parse_study",
     "type": "api-item"
+  },
+  "rq-b0419763": {
+    "decl": "## Local Extensions",
+    "file": "template/skills",
+    "level": 2,
+    "refs": [],
+    "title": "Local Extensions",
+    "type": "section"
+  },
+  "rq-b06148e1": {
+    "decl": "## Conformance Suite",
+    "file": "testing",
+    "level": 2,
+    "refs": [],
+    "title": "Conformance Suite",
+    "type": "section"
+  },
+  "rq-b0f89137": {
+    "decl": "Scenario: Render refuses a non-empty output directory",
+    "file": "tooling",
+    "refs": [],
+    "title": "Render refuses a non-empty output directory",
+    "type": "scenario"
   },
   "rq-b17553a6": {
     "decl": "Scenario: An error fails the check",
@@ -4923,6 +6073,14 @@
     "title": "Manifest",
     "type": "api-item"
   },
+  "rq-b354e7d6": {
+    "decl": "## Gherkin Scenarios",
+    "file": "tooling",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
+  },
   "rq-b358b21a": {
     "decl": "Scenario: Empty evidence list",
     "file": "question-tree",
@@ -4933,6 +6091,25 @@
       }
     ],
     "title": "Empty evidence list",
+    "type": "scenario"
+  },
+  "rq-b3ee805a": {
+    "decl": "Scenario: The check runs in a throwaway container",
+    "file": "template/container",
+    "refs": [],
+    "title": "The check runs in a throwaway container",
+    "type": "scenario"
+  },
+  "rq-b4146a69": {
+    "decl": "Scenario: List the roots and their locations",
+    "file": "data",
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "List the roots and their locations",
     "type": "scenario"
   },
   "rq-b418ac06": {
@@ -4946,6 +6123,14 @@
     ],
     "title": "Unconfigured root is a warning, not an error",
     "type": "scenario"
+  },
+  "rq-b4296d6d": {
+    "decl": "### `cargo xtask lint-skills`",
+    "file": "tooling",
+    "level": 3,
+    "refs": [],
+    "title": "`cargo xtask lint-skills`",
+    "type": "section"
   },
   "rq-b499b7e1": {
     "decl": "### Types",
@@ -4973,6 +6158,13 @@
       }
     ],
     "title": "New studies get the stub",
+    "type": "scenario"
+  },
+  "rq-b55aac3a": {
+    "decl": "Scenario: Snakemake tests cannot silently pass in CI",
+    "file": "testing",
+    "refs": [],
+    "title": "Snakemake tests cannot silently pass in CI",
     "type": "scenario"
   },
   "rq-b620446f": {
@@ -5207,6 +6399,14 @@
     "title": "Summary rule",
     "type": "section"
   },
+  "rq-be3c6abc": {
+    "decl": "### `cargo xtask release-pin`",
+    "file": "tooling",
+    "level": 3,
+    "refs": [],
+    "title": "`cargo xtask release-pin`",
+    "type": "section"
+  },
   "rq-be41ffc1": {
     "decl": "Scenario: Result in a preregistered study",
     "file": "study/format",
@@ -5274,6 +6474,14 @@
     ],
     "title": "The job refuses changed inputs",
     "type": "scenario"
+  },
+  "rq-c092fd66": {
+    "decl": "## Permissions",
+    "file": "template/skills",
+    "level": 2,
+    "refs": [],
+    "title": "Permissions",
+    "type": "section"
   },
   "rq-c0a68ab3": {
     "decl": "## Out of Scope",
@@ -5432,6 +6640,13 @@
     "title": "Retrospective study may have empty decision rule and scenarios",
     "type": "scenario"
   },
+  "rq-c65f79e0": {
+    "decl": "Scenario: Prompts are allowed inside the container",
+    "file": "template/container",
+    "refs": [],
+    "title": "Prompts are allowed inside the container",
+    "type": "scenario"
+  },
   "rq-c66110cf": {
     "decl": "## STUDY.md Format",
     "file": "study/format",
@@ -5494,6 +6709,13 @@
       }
     ],
     "title": "Citing a study that is only pre-registered",
+    "type": "scenario"
+  },
+  "rq-c8022e42": {
+    "decl": "Scenario: A missing image names its expected path",
+    "file": "template/container",
+    "refs": [],
+    "title": "A missing image names its expected path",
     "type": "scenario"
   },
   "rq-c8046ff3": {
@@ -5579,6 +6801,36 @@
     "title": "Feature: Tool Stages",
     "type": "file"
   },
+  "rq-cae7fbe8": {
+    "decl": "Scenario: Every project-owned file is skipped on update",
+    "file": "template/project",
+    "refs": [],
+    "title": "Every project-owned file is skipped on update",
+    "type": "scenario"
+  },
+  "rq-cafa162c": {
+    "decl": "## Ownership",
+    "file": "template/project",
+    "level": 2,
+    "refs": [],
+    "title": "Ownership",
+    "type": "section"
+  },
+  "rq-cb1b6096": {
+    "decl": "## Layout",
+    "file": "template/skills",
+    "level": 2,
+    "refs": [],
+    "title": "Layout",
+    "type": "section"
+  },
+  "rq-cb49acfd": {
+    "decl": "Scenario: Lock check detects a stale pre-solved lock",
+    "file": "tooling",
+    "refs": [],
+    "title": "Lock check detects a stale pre-solved lock",
+    "type": "scenario"
+  },
   "rq-cb65dab4": {
     "decl": "Scenario: Editing a non-frozen section is allowed",
     "file": "study/format",
@@ -5590,6 +6842,21 @@
     ],
     "title": "Editing a non-frozen section is allowed",
     "type": "scenario"
+  },
+  "rq-cb8f92b1": {
+    "decl": "Scenario: A failing render check names the answer set and step",
+    "file": "testing",
+    "refs": [],
+    "title": "A failing render check names the answer set and step",
+    "type": "scenario"
+  },
+  "rq-cba13e20": {
+    "decl": "### Data roots",
+    "file": "template/project",
+    "level": 3,
+    "refs": [],
+    "title": "Data roots",
+    "type": "section"
   },
   "rq-cbd35529": {
     "decl": "- `PipelineConfig` — the stages of a study for one variant.",
@@ -5642,6 +6909,13 @@
     ],
     "title": "resolve_pin",
     "type": "api-item"
+  },
+  "rq-cd345094": {
+    "decl": "Scenario: An unmatched agent question fails the eval",
+    "file": "testing",
+    "refs": [],
+    "title": "An unmatched agent question fails the eval",
+    "type": "scenario"
   },
   "rq-cd497e41": {
     "decl": "Scenario: Duplicated governed section",
@@ -5707,6 +6981,13 @@
     "title": "Declare data of unknown history",
     "type": "scenario"
   },
+  "rq-ce21a33e": {
+    "decl": "Scenario: Local extensions survive updates",
+    "file": "template/skills",
+    "refs": [],
+    "title": "Local extensions survive updates",
+    "type": "scenario"
+  },
   "rq-ce7c6815": {
     "decl": "- `study_rules(project: &Project) -> Vec<Diagnostic>` — the `study` rule family registered in",
     "file": "study/format",
@@ -5739,6 +7020,13 @@
     ],
     "title": "Check Rules (`question` family)",
     "type": "section"
+  },
+  "rq-cf3ebd09": {
+    "decl": "Scenario: Every skill defers to its local extension",
+    "file": "template/skills",
+    "refs": [],
+    "title": "Every skill defers to its local extension",
+    "type": "scenario"
   },
   "rq-cf46eca9": {
     "decl": "### Command",
@@ -5806,6 +7094,13 @@
     "title": "Citing a reported study about a descendant question",
     "type": "scenario"
   },
+  "rq-d0e11fee": {
+    "decl": "Scenario: A new project has the skeleton files and no studies or datasets",
+    "file": "template/project",
+    "refs": [],
+    "title": "A new project has the skeleton files and no studies or datasets",
+    "type": "scenario"
+  },
   "rq-d14816cc": {
     "decl": "Scenario: Superseded study is refused",
     "file": "workflow",
@@ -5860,6 +7155,13 @@
       }
     ],
     "title": "Snakemake's exit code is returned",
+    "type": "scenario"
+  },
+  "rq-d1fe5c84": {
+    "decl": "Scenario: The results root is declared but not located",
+    "file": "template/project",
+    "refs": [],
+    "title": "The results root is declared but not located",
     "type": "scenario"
   },
   "rq-d39d6009": {
@@ -5922,12 +7224,39 @@
     "title": "Types",
     "type": "section"
   },
+  "rq-d4af23a7": {
+    "decl": "Scenario: URLs with embedded credentials are rejected",
+    "file": "pipeline/tools",
+    "refs": [
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "URLs with embedded credentials are rejected",
+    "type": "scenario"
+  },
   "rq-d4c65f91": {
     "decl": "### Functions",
     "file": "question-tree",
     "level": 3,
     "refs": [],
     "title": "Functions",
+    "type": "section"
+  },
+  "rq-d4c74a32": {
+    "decl": "Scenario: CI verifies the binary before running the check",
+    "file": "template/project",
+    "refs": [],
+    "title": "CI verifies the binary before running the check",
+    "type": "scenario"
+  },
+  "rq-d4cc96df": {
+    "decl": "## Gherkin Scenarios",
+    "file": "template/project",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
     "type": "section"
   },
   "rq-d511d6c8": {
@@ -6062,6 +7391,13 @@
     "title": "Connection details are not configuration",
     "type": "scenario"
   },
+  "rq-d8840d37": {
+    "decl": "Scenario: The agent hands the external job to the human",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The agent hands the external job to the human",
+    "type": "scenario"
+  },
   "rq-d89c8a6b": {
     "decl": "- `tophat data declare <name> --root <root> --path <path> --statement <text> [--visibility public|private]`",
     "file": "data",
@@ -6134,6 +7470,10 @@
       {
         "file": "src/tools/mod.rs",
         "kind": "code"
+      },
+      {
+        "file": "tests/tools.rs",
+        "kind": "code"
       }
     ],
     "title": "Declaring Tools",
@@ -6179,6 +7519,13 @@
     "title": "Citing a retrospective study is flagged as legacy",
     "type": "scenario"
   },
+  "rq-db2ca072": {
+    "decl": "Scenario: At least one agent is required",
+    "file": "template/project",
+    "refs": [],
+    "title": "At least one agent is required",
+    "type": "scenario"
+  },
   "rq-db3f2ac8": {
     "decl": "Scenario: Items are the upstream output files",
     "file": "pipeline/snakemake",
@@ -6189,6 +7536,13 @@
       }
     ],
     "title": "Items are the upstream output files",
+    "type": "scenario"
+  },
+  "rq-db5eda37": {
+    "decl": "Scenario: The example uses Julia when selected",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The example uses Julia when selected",
     "type": "scenario"
   },
   "rq-dba2a6b7": {
@@ -6225,6 +7579,13 @@
       }
     ],
     "title": "Referencing an unknown version is an error",
+    "type": "scenario"
+  },
+  "rq-dbd2824b": {
+    "decl": "Scenario: The agent amends instead of editing frozen sections",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The agent amends instead of editing frozen sections",
     "type": "scenario"
   },
   "rq-dbe124d9": {
@@ -6367,6 +7728,20 @@
     "title": "Local stages keep their keys",
     "type": "scenario"
   },
+  "rq-df0c42b9": {
+    "decl": "Scenario: Git refuses to commit inside the container",
+    "file": "template/container",
+    "refs": [],
+    "title": "Git refuses to commit inside the container",
+    "type": "scenario"
+  },
+  "rq-df2a2b0e": {
+    "decl": "Scenario: A malformed project ID is refused",
+    "file": "template/container",
+    "refs": [],
+    "title": "A malformed project ID is refused",
+    "type": "scenario"
+  },
   "rq-df68d9f7": {
     "decl": "Scenario: Summarize refuses missing outputs",
     "file": "pipeline/snakemake",
@@ -6431,6 +7806,14 @@
     "title": "A code directory is hashed file by file",
     "type": "scenario"
   },
+  "rq-e24d98f9": {
+    "decl": "## Gherkin Scenarios",
+    "file": "template/skills",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
+  },
   "rq-e2b68626": {
     "decl": "Scenario: Sync is idempotent",
     "file": "pipeline/tools",
@@ -6443,6 +7826,14 @@
     "title": "Sync is idempotent",
     "type": "scenario"
   },
+  "rq-e2f42b59": {
+    "decl": "## Conventions",
+    "file": "tooling",
+    "level": 2,
+    "refs": [],
+    "title": "Conventions",
+    "type": "section"
+  },
   "rq-e35a8bdd": {
     "decl": "Scenario: Changing a parameter changes only that stage and downstream",
     "file": "pipeline/provenance",
@@ -6454,6 +7845,14 @@
     ],
     "title": "Changing a parameter changes only that stage and downstream",
     "type": "scenario"
+  },
+  "rq-e363eed4": {
+    "decl": "### Detection",
+    "file": "template/container",
+    "level": 3,
+    "refs": [],
+    "title": "Detection",
+    "type": "section"
   },
   "rq-e4355ed1": {
     "decl": "### Declaring roots",
@@ -6513,6 +7912,14 @@
     "title": "Scoped check reports only diagnostics under the given path",
     "type": "scenario"
   },
+  "rq-e5bfbedd": {
+    "decl": "## Agent Instruction Files",
+    "file": "template/skills",
+    "level": 2,
+    "refs": [],
+    "title": "Agent Instruction Files",
+    "type": "section"
+  },
   "rq-e5eda0dd": {
     "decl": "### Variants and Configuration",
     "file": "study/format",
@@ -6545,6 +7952,36 @@
     ],
     "title": "stage_key",
     "type": "api-item"
+  },
+  "rq-e660df68": {
+    "decl": "### PROJECT.md",
+    "file": "template/project",
+    "level": 3,
+    "refs": [],
+    "title": "PROJECT.md",
+    "type": "section"
+  },
+  "rq-e68d06e8": {
+    "decl": "## Template Layout",
+    "file": "template/project",
+    "level": 2,
+    "refs": [],
+    "title": "Template Layout",
+    "type": "section"
+  },
+  "rq-e6ed00d3": {
+    "decl": "Scenario: A release is published only after the gates pass",
+    "file": "testing",
+    "refs": [],
+    "title": "A release is published only after the gates pass",
+    "type": "scenario"
+  },
+  "rq-e7220b72": {
+    "decl": "Scenario: Updating keeps project-owned files and stage keys",
+    "file": "template/project",
+    "refs": [],
+    "title": "Updating keeps project-owned files and stage keys",
+    "type": "scenario"
   },
   "rq-e746f1bb": {
     "decl": "## Gherkin Scenarios",
@@ -6602,6 +8039,13 @@
     "title": "Citing a study about an unrelated question",
     "type": "scenario"
   },
+  "rq-e9156963": {
+    "decl": "Scenario: Python and Snakemake are always installed",
+    "file": "template/project",
+    "refs": [],
+    "title": "Python and Snakemake are always installed",
+    "type": "scenario"
+  },
   "rq-e95264a8": {
     "decl": "## Assumptions",
     "file": "data",
@@ -6621,6 +8065,13 @@
     ],
     "title": "Question",
     "type": "api-item"
+  },
+  "rq-e9865354": {
+    "decl": "Scenario: The environment is installed when the session starts",
+    "file": "template/container",
+    "refs": [],
+    "title": "The environment is installed when the session starts",
+    "type": "scenario"
   },
   "rq-e9d4388a": {
     "decl": "### Body Sections",
@@ -6653,6 +8104,13 @@
       }
     ],
     "title": "Answered question without evidence",
+    "type": "scenario"
+  },
+  "rq-ea93a50d": {
+    "decl": "Scenario: A commit made on the host is seen in the container",
+    "file": "template/container",
+    "refs": [],
+    "title": "A commit made on the host is seen in the container",
     "type": "scenario"
   },
   "rq-ea9c4659": {
@@ -6691,6 +8149,13 @@
     "title": "Trial run of one variant",
     "type": "scenario"
   },
+  "rq-ec2d3828": {
+    "decl": "Scenario: Adapters only point at the canonical skill",
+    "file": "template/skills",
+    "refs": [],
+    "title": "Adapters only point at the canonical skill",
+    "type": "scenario"
+  },
   "rq-ec84dc2b": {
     "decl": "Scenario: Valid amendment",
     "file": "study/format",
@@ -6723,6 +8188,13 @@
     "title": "tophat",
     "type": "api-item"
   },
+  "rq-ed65c3a5": {
+    "decl": "Scenario: Remote access and human-only commands are denied",
+    "file": "template/skills",
+    "refs": [],
+    "title": "Remote access and human-only commands are denied",
+    "type": "scenario"
+  },
   "rq-eda3d443": {
     "decl": "Scenario: A stage cannot be both a tool stage and an external stage",
     "file": "pipeline/provenance",
@@ -6747,6 +8219,13 @@
     "title": "Errors in a referenced dataset block the study",
     "type": "scenario"
   },
+  "rq-eeadb8c2": {
+    "decl": "Scenario: Answers can be overridden",
+    "file": "tooling",
+    "refs": [],
+    "title": "Answers can be overridden",
+    "type": "scenario"
+  },
   "rq-eebf1864": {
     "decl": "Scenario: Preregistered study without stages",
     "file": "workflow",
@@ -6757,6 +8236,13 @@
       }
     ],
     "title": "Preregistered study without stages",
+    "type": "scenario"
+  },
+  "rq-ef1935b3": {
+    "decl": "Scenario: Export writes the image atomically",
+    "file": "template/container",
+    "refs": [],
+    "title": "Export writes the image atomically",
     "type": "scenario"
   },
   "rq-ef3d43f8": {
@@ -6878,6 +8364,13 @@
     "title": "Lifecycle",
     "type": "section"
   },
+  "rq-f2b4f4cc": {
+    "decl": "Scenario: The release pin is complete",
+    "file": "template/project",
+    "refs": [],
+    "title": "The release pin is complete",
+    "type": "scenario"
+  },
   "rq-f2be6f14": {
     "decl": "Scenario: Unknown front-matter field",
     "file": "study/format",
@@ -6902,6 +8395,26 @@
     "title": "External job waiting for the human",
     "type": "scenario"
   },
+  "rq-f3dab8f0": {
+    "decl": "Scenario: Listing invalid roots fails",
+    "file": "data",
+    "refs": [
+      {
+        "file": "tests/data.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Listing invalid roots fails",
+    "type": "scenario"
+  },
+  "rq-f40fa696": {
+    "decl": "## Files",
+    "file": "template/project",
+    "level": 2,
+    "refs": [],
+    "title": "Files",
+    "type": "section"
+  },
   "rq-f40ffa2b": {
     "decl": "- `stage_key_text(config: &PipelineConfig, stage: &str, ctx: &KeyContext) -> Result<String, PipelineError>`",
     "file": "pipeline/provenance",
@@ -6918,6 +8431,13 @@
     "title": "stage_key_text",
     "type": "api-item"
   },
+  "rq-f419a09b": {
+    "decl": "Scenario: Only selected agents are installed",
+    "file": "template/container",
+    "refs": [],
+    "title": "Only selected agents are installed",
+    "type": "scenario"
+  },
   "rq-f448ed00": {
     "decl": "- `QuestionStatus` — enum `Open`, `Answered`, `Dropped`.",
     "file": "question-tree",
@@ -6929,6 +8449,27 @@
     ],
     "title": "QuestionStatus",
     "type": "api-item"
+  },
+  "rq-f503e56e": {
+    "decl": "Scenario: An existing hook path is left alone",
+    "file": "template/container",
+    "refs": [],
+    "title": "An existing hook path is left alone",
+    "type": "scenario"
+  },
+  "rq-f54f3fe1": {
+    "decl": "Scenario: Adoption overwrites no user file",
+    "file": "testing",
+    "refs": [],
+    "title": "Adoption overwrites no user file",
+    "type": "scenario"
+  },
+  "rq-f57dc6fa": {
+    "decl": "Scenario: A study can be added to a new project",
+    "file": "template/project",
+    "refs": [],
+    "title": "A study can be added to a new project",
+    "type": "scenario"
   },
   "rq-f5a0149d": {
     "decl": "- `frozen_fingerprint(study: &Study) -> String` — computes the fingerprint as specified under",
@@ -6948,6 +8489,14 @@
     "level": 2,
     "refs": [],
     "title": "Assumptions",
+    "type": "section"
+  },
+  "rq-f5dee2b3": {
+    "decl": "### `cargo xtask conformance`",
+    "file": "tooling",
+    "level": 3,
+    "refs": [],
+    "title": "`cargo xtask conformance`",
     "type": "section"
   },
   "rq-f678e5d8": {
@@ -6977,6 +8526,13 @@
     ],
     "title": "tophat",
     "type": "api-item"
+  },
+  "rq-f6dc88ee": {
+    "decl": "Scenario: GPU off passes nothing through",
+    "file": "template/container",
+    "refs": [],
+    "title": "GPU off passes nothing through",
+    "type": "scenario"
   },
   "rq-f6dec5d4": {
     "decl": "Scenario: Mixed citations are each checked",
@@ -7042,6 +8598,21 @@
     "title": "JSON omits absent optional fields",
     "type": "scenario"
   },
+  "rq-f9939ba7": {
+    "decl": "## Gherkin Scenarios",
+    "file": "testing",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
+    "type": "section"
+  },
+  "rq-f9a0d3e0": {
+    "decl": "Scenario: Root variables are bound and passed through",
+    "file": "template/container",
+    "refs": [],
+    "title": "Root variables are bound and passed through",
+    "type": "scenario"
+  },
   "rq-f9ae0061": {
     "decl": "## Running a Tool Stage",
     "file": "pipeline/tools",
@@ -7083,6 +8654,21 @@
     "title": "Shared keys produce one job",
     "type": "scenario"
   },
+  "rq-fa54ed44": {
+    "decl": "### Data roots",
+    "file": "template/container",
+    "level": 3,
+    "refs": [],
+    "title": "Data roots",
+    "type": "section"
+  },
+  "rq-fb67f0df": {
+    "decl": "Scenario: Adopted content is labelled legacy",
+    "file": "testing",
+    "refs": [],
+    "title": "Adopted content is labelled legacy",
+    "type": "scenario"
+  },
   "rq-fbc524b4": {
     "decl": "## The Snakefile Stub",
     "file": "pipeline/snakemake",
@@ -7116,6 +8702,14 @@
     "title": "Study Layout",
     "type": "section"
   },
+  "rq-fc2247e5": {
+    "decl": "## Generated Project Layout",
+    "file": "template/project",
+    "level": 2,
+    "refs": [],
+    "title": "Generated Project Layout",
+    "type": "section"
+  },
   "rq-fc3ff911": {
     "decl": "## Feature API",
     "file": "pipeline/provenance",
@@ -7146,6 +8740,13 @@
       }
     ],
     "title": "A reason without a skip is rejected",
+    "type": "scenario"
+  },
+  "rq-fd2bf270": {
+    "decl": "Scenario: Forbidden commands are detected from the transcript",
+    "file": "testing",
+    "refs": [],
+    "title": "Forbidden commands are detected from the transcript",
     "type": "scenario"
   },
   "rq-fd31255d": {
@@ -7245,5 +8846,21 @@
     ],
     "title": "Consuming unreported work while still in draft warns",
     "type": "scenario"
+  },
+  "rq-ff333f71": {
+    "decl": "### th-adopt",
+    "file": "template/skills",
+    "level": 3,
+    "refs": [],
+    "title": "th-adopt",
+    "type": "section"
+  },
+  "rq-ff41b0bc": {
+    "decl": "## Commands",
+    "file": "tooling",
+    "level": 2,
+    "refs": [],
+    "title": "Commands",
+    "type": "section"
   }
 }

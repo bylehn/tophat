@@ -40,6 +40,22 @@ impl Roots {
     }
 }
 
+// rq-531eebf2
+/// The text of `tophat data roots`: one line per declared root, sorted by name, holding the name,
+/// a tab, and the location on this machine or `-` when unconfigured.
+pub fn render_roots(roots: &Roots) -> String {
+    roots
+        .declared
+        .iter()
+        .map(|(name, location)| {
+            let location = location
+                .as_ref()
+                .map_or_else(|| "-".to_string(), |p| p.display().to_string());
+            format!("{name}\t{location}\n")
+        })
+        .collect()
+}
+
 /// The environment-variable suffix for a root: upper-cased, `-` replaced by `_`.
 pub fn env_suffix(name: &str) -> String {
     name.to_ascii_uppercase().replace('-', "_")

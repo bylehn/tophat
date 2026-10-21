@@ -395,7 +395,7 @@ fn evaluate(root: &Path, view: &ProjectView, study_id: &str) -> Result<StudyStat
             let cmd = "tophat tools sync".to_string();
             return Some(NextAction::new(
                 7,
-                Who::Anyone,
+                Who::You,
                 format!("Fetch tools: {cmd}"),
                 Some(cmd),
             ));
