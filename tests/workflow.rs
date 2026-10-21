@@ -3,6 +3,8 @@
 //! `tophat run` is tested through the binary with a fake `pixi` that records its arguments. The
 //! trial-run scenario needs `TOPHAT_TEST_SNAKEMAKE` (see tests/snakemake.rs).
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::fs;
 use std::io::Cursor;
@@ -1014,8 +1016,8 @@ fn pixi_not_available() {
 #[test] // rq-2a741327 rq-0d5e77fe
 fn trial_outputs_are_separate_and_unreportable() {
     let env = Env::draft();
-    let Some(snakemake) = std::env::var_os("TOPHAT_TEST_SNAKEMAKE") else {
-        return eprintln!("skipped: set TOPHAT_TEST_SNAKEMAKE to run this test");
+    let Some(snakemake) = common::snakemake() else {
+        return;
     };
     let bin = env.base.join("bin");
     let real = [("TOPHAT_TEST_REAL_SNAKEMAKE", "1")];

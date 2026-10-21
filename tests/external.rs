@@ -4,6 +4,8 @@
 //! standing in for the cluster. The end-to-end scenario needs `TOPHAT_TEST_SNAKEMAKE` (see
 //! tests/snakemake.rs).
 
+mod common;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -957,8 +959,7 @@ fn the_pipeline_stops_at_an_external_stage_and_resumes_after_the_return() {
     let env = Env::new();
     let rules = tophat::pipeline::generate_rules(&env.root(), "x-vs-docking").unwrap();
     assert!(rules.contains("external=True"), "{rules}");
-    let Some(snakemake) = std::env::var_os("TOPHAT_TEST_SNAKEMAKE") else {
-        eprintln!("skipped: set TOPHAT_TEST_SNAKEMAKE to a Snakemake executable to run this test");
+    let Some(snakemake) = common::snakemake() else {
         return;
     };
     let bin = env.base.join("bin");
