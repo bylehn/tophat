@@ -376,6 +376,7 @@ dependencies = [
  "chrono",
  "serde_json",
  "sha2",
+ "xtask",
  "yaml-rust2",
 ]
 

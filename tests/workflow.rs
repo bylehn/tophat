@@ -44,6 +44,7 @@ const STAGES: &str = "stages:
     code: [scripts/score.sh]
     inputs: {structures: stage:prepare}
     foreach: structures
+    check: Every structure has one score, and scores are finite
     params: {level: b3lyp}
   - name: analyse
     run: sh scripts/analyse.sh {in.scores} {out}
@@ -486,15 +487,37 @@ fn preregistered_study_without_stages() {
     );
 }
 
-#[test] // rq-cde76c0f rq-956cc0ad rq-6733b7c0
-fn unconfigured_results_root() {
+#[test] // rq-cde76c0f rq-956cc0ad
+fn a_configured_results_location_that_does_not_exist() {
+    let env = Env::preregistered();
+    let missing = env.base.join("no-such-results");
+    env.write(
+        ".tophat/roots.local.yaml",
+        &format!(
+            "roots:\n  raw: {}\n  results: {}\n",
+            env.base.join("raw").display(),
+            missing.display()
+        ),
+    );
+    let status = status_of(&env);
+    assert_eq!(status.next.row, 6, "{:?}", status.next);
+    assert!(
+        status.next.text.contains(&missing.display().to_string()),
+        "{:?}",
+        status.next
+    );
+}
+
+#[test] // rq-1bd248f0 rq-956cc0ad rq-6733b7c0
+fn the_default_results_folder_needs_no_configuration() {
     let env = Env::preregistered();
     env.configure(false);
+    assert!(!env.root().join("results").exists());
     let status = status_of(&env);
-    assert_eq!(status.next.row, 6);
+    assert_ne!(status.next.row, 6, "{:?}", status.next);
     let (_, out, _) = env.tophat(&["status", "x-vs-docking"], &[]);
     assert!(
-        out.contains("pipeline: base unavailable, pbe unavailable"),
+        out.contains("pipeline: base 0/3 sealed, pbe 0/3 sealed"),
         "{out}"
     );
 }

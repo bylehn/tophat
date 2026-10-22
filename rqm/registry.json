@@ -79,7 +79,12 @@
   "rq-01a6c860": {
     "decl": "Scenario: Agent entry points read the managed rules",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Agent entry points read the managed rules",
     "type": "scenario"
   },
@@ -273,7 +278,12 @@
     "decl": "### Hard Rules",
     "file": "template/skills",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Hard Rules",
     "type": "section"
   },
@@ -296,7 +306,12 @@
   "rq-07fe36ca": {
     "decl": "Scenario: Skills mention only real CLI commands",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Skills mention only real CLI commands",
     "type": "scenario"
   },
@@ -393,6 +408,26 @@
     ],
     "title": "SUMMARY.md Format",
     "type": "section"
+  },
+  "rq-0a10fc96": {
+    "decl": "Scenario: A gated stage should say what to check",
+    "file": "pipeline/provenance",
+    "refs": [
+      {
+        "file": "src/pipeline/config.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/pipeline/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A gated stage should say what to check",
+    "type": "scenario"
   },
   "rq-0a389452": {
     "decl": "Scenario: Newer version available for a draft",
@@ -526,6 +561,19 @@
     "title": "Ignore rules",
     "type": "section"
   },
+  "rq-0df094cd": {
+    "decl": "### Local tools",
+    "file": "template/container",
+    "level": 3,
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Local tools",
+    "type": "section"
+  },
   "rq-0e435215": {
     "decl": "Scenario: Answered question without an answer",
     "file": "question-tree",
@@ -602,7 +650,7 @@
     "type": "section"
   },
   "rq-11940cec": {
-    "decl": "Scenario: Keys command with an unconfigured results root",
+    "decl": "Scenario: Keys command with the default results root",
     "file": "pipeline/provenance",
     "refs": [
       {
@@ -610,7 +658,7 @@
         "kind": "code"
       }
     ],
-    "title": "Keys command with an unconfigured results root",
+    "title": "Keys command with the default results root",
     "type": "scenario"
   },
   "rq-11b56000": {
@@ -1078,6 +1126,18 @@
     "title": "tophat",
     "type": "api-item"
   },
+  "rq-1bd248f0": {
+    "decl": "Scenario: The default results folder needs no configuration",
+    "file": "workflow",
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The default results folder needs no configuration",
+    "type": "scenario"
+  },
   "rq-1cc9f489": {
     "decl": "Scenario: The session mounts only the workspace, roots and its own volumes",
     "file": "template/container",
@@ -1261,6 +1321,14 @@
     "level": 3,
     "refs": [],
     "title": "th-question",
+    "type": "section"
+  },
+  "rq-226c596c": {
+    "decl": "### GUIDE.md",
+    "file": "template/project",
+    "level": 3,
+    "refs": [],
+    "title": "GUIDE.md",
     "type": "section"
   },
   "rq-2289dfd0": {
@@ -1477,7 +1545,12 @@
     "decl": "## Canonical Skills",
     "file": "template/skills",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Canonical Skills",
     "type": "section"
   },
@@ -1642,7 +1715,12 @@
   "rq-2b638c5b": {
     "decl": "Scenario: Adapters are written for every selected agent",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Adapters are written for every selected agent",
     "type": "scenario"
   },
@@ -1729,10 +1807,15 @@
     "type": "section"
   },
   "rq-2de196ad": {
-    "decl": "Scenario: The QC status command is not caught by the QC deny rule",
+    "decl": "Scenario: The human-only commands are denied with their arguments",
     "file": "template/skills",
-    "refs": [],
-    "title": "The QC status command is not caught by the QC deny rule",
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The human-only commands are denied with their arguments",
     "type": "scenario"
   },
   "rq-2e00ed22": {
@@ -2015,6 +2098,10 @@
         "kind": "code"
       },
       {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      },
+      {
         "file": "tests/tools.rs",
         "kind": "code"
       }
@@ -2081,6 +2168,18 @@
       }
     ],
     "title": "Invalid status value",
+    "type": "scenario"
+  },
+  "rq-38e5cf5f": {
+    "decl": "Scenario: The example says what each gated stage's QC checks",
+    "file": "template/skills",
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The example says what each gated stage's QC checks",
     "type": "scenario"
   },
   "rq-39d23d3d": {
@@ -2373,7 +2472,12 @@
     "decl": "## Worked Example Study",
     "file": "template/skills",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Worked Example Study",
     "type": "section"
   },
@@ -2392,7 +2496,12 @@
   "rq-42fba780": {
     "decl": "Scenario: Every skill has a canonical text and a local extension",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Every skill has a canonical text and a local extension",
     "type": "scenario"
   },
@@ -2623,7 +2732,12 @@
     "decl": "## Skill Lint Rules",
     "file": "template/skills",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Skill Lint Rules",
     "type": "section"
   },
@@ -3621,7 +3735,12 @@
   "rq-60ea5f24": {
     "decl": "Scenario: The example's external stage needs only POSIX tools",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The example's external stage needs only POSIX tools",
     "type": "scenario"
   },
@@ -3647,6 +3766,30 @@
       }
     ],
     "title": "Stamp ignores headings in code fences",
+    "type": "scenario"
+  },
+  "rq-617974f2": {
+    "decl": "Scenario: The check text does not enter the key",
+    "file": "pipeline/provenance",
+    "refs": [
+      {
+        "file": "tests/pipeline.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The check text does not enter the key",
+    "type": "scenario"
+  },
+  "rq-61aa0c3d": {
+    "decl": "Scenario: The results root defaults to the project's results folder",
+    "file": "data",
+    "refs": [
+      {
+        "file": "src/data/roots.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The results root defaults to the project's results folder",
     "type": "scenario"
   },
   "rq-622fce95": {
@@ -3934,7 +4077,7 @@
     "type": "scenario"
   },
   "rq-6c036885": {
-    "decl": "Scenario: Lineage through an unconfigured root",
+    "decl": "Scenario: Lineage through outputs that are not on this machine",
     "file": "data",
     "refs": [
       {
@@ -3942,7 +4085,7 @@
         "kind": "code"
       }
     ],
-    "title": "Lineage through an unconfigured root",
+    "title": "Lineage through outputs that are not on this machine",
     "type": "scenario"
   },
   "rq-6c24fee9": {
@@ -3998,6 +4141,18 @@
     "file": "tooling",
     "refs": [],
     "title": "Skill lint passes on a rendered project",
+    "type": "scenario"
+  },
+  "rq-6de57a60": {
+    "decl": "Scenario: Local tool repositories are mounted read-only",
+    "file": "template/container",
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Local tool repositories are mounted read-only",
     "type": "scenario"
   },
   "rq-6e13314c": {
@@ -4382,7 +4537,12 @@
   "rq-78cc426d": {
     "decl": "Scenario: The example is not part of a new project's studies",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The example is not part of a new project's studies",
     "type": "scenario"
   },
@@ -4433,7 +4593,12 @@
   "rq-7a0bc07d": {
     "decl": "Scenario: Canonical skills are agent-neutral",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Canonical skills are agent-neutral",
     "type": "scenario"
   },
@@ -4565,7 +4730,12 @@
   "rq-7e3bca84": {
     "decl": "Scenario: An unknown CLI command is caught",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An unknown CLI command is caught",
     "type": "scenario"
   },
@@ -4723,7 +4893,12 @@
     "decl": "## Adapters",
     "file": "template/skills",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Adapters",
     "type": "section"
   },
@@ -4964,6 +5139,22 @@
     "title": "--draft on a preregistered study is refused",
     "type": "scenario"
   },
+  "rq-88bd99cd": {
+    "decl": "Scenario: The QC prompt says what to check",
+    "file": "pipeline/snakemake",
+    "refs": [
+      {
+        "file": "src/pipeline/qc.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The QC prompt says what to check",
+    "type": "scenario"
+  },
   "rq-89a79c10": {
     "decl": "### th-study",
     "file": "template/skills",
@@ -4994,6 +5185,13 @@
       }
     ],
     "title": "Partial output of a failed run is discarded",
+    "type": "scenario"
+  },
+  "rq-8b9e930e": {
+    "decl": "Scenario: The interpretation is left to the human",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The interpretation is left to the human",
     "type": "scenario"
   },
   "rq-8ccc06c7": {
@@ -5421,7 +5619,12 @@
   "rq-9b7fb838": {
     "decl": "Scenario: Agent-specific wording is caught",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Agent-specific wording is caught",
     "type": "scenario"
   },
@@ -5525,7 +5728,12 @@
   "rq-9d45bd87": {
     "decl": "Scenario: Read-only tophat commands need no approval",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Read-only tophat commands need no approval",
     "type": "scenario"
   },
@@ -5804,7 +6012,7 @@
     "type": "section"
   },
   "rq-a27155bc": {
-    "decl": "Scenario: Generation fails when the results root is unconfigured",
+    "decl": "Scenario: Generated outputs default to the project's results folder",
     "file": "pipeline/snakemake",
     "refs": [
       {
@@ -5812,7 +6020,7 @@
         "kind": "code"
       }
     ],
-    "title": "Generation fails when the results root is unconfigured",
+    "title": "Generated outputs default to the project's results folder",
     "type": "scenario"
   },
   "rq-a2a20f9a": {
@@ -5859,6 +6067,18 @@
     ],
     "title": "Pre-commit hook",
     "type": "section"
+  },
+  "rq-a37e2c54": {
+    "decl": "Scenario: A missing local tool repository is reported, not fatal",
+    "file": "template/container",
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A missing local tool repository is reported, not fatal",
+    "type": "scenario"
   },
   "rq-a3b4939d": {
     "decl": "### Front Matter",
@@ -5908,7 +6128,12 @@
   "rq-a4160e43": {
     "decl": "Scenario: The copied example passes the check",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The copied example passes the check",
     "type": "scenario"
   },
@@ -6399,7 +6624,12 @@
     "decl": "## Local Extensions",
     "file": "template/skills",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Local Extensions",
     "type": "section"
   },
@@ -6946,7 +7176,12 @@
     "decl": "## Permissions",
     "file": "template/skills",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Permissions",
     "type": "section"
   },
@@ -7440,7 +7675,7 @@
     "type": "api-item"
   },
   "rq-cde76c0f": {
-    "decl": "Scenario: Unconfigured results root",
+    "decl": "Scenario: A configured results location that does not exist",
     "file": "workflow",
     "refs": [
       {
@@ -7448,7 +7683,7 @@
         "kind": "code"
       }
     ],
-    "title": "Unconfigured results root",
+    "title": "A configured results location that does not exist",
     "type": "scenario"
   },
   "rq-ce0bc1c8": {
@@ -7478,7 +7713,12 @@
   "rq-ce21a33e": {
     "decl": "Scenario: Local extensions survive updates",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Local extensions survive updates",
     "type": "scenario"
   },
@@ -7518,7 +7758,12 @@
   "rq-cf3ebd09": {
     "decl": "Scenario: Every skill defers to its local extension",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Every skill defers to its local extension",
     "type": "scenario"
   },
@@ -7657,7 +7902,7 @@
     "type": "scenario"
   },
   "rq-d1fe5c84": {
-    "decl": "Scenario: The results root is declared but not located",
+    "decl": "Scenario: The results root is declared and defaults to the project",
     "file": "template/project",
     "refs": [
       {
@@ -7665,7 +7910,7 @@
         "kind": "code"
       }
     ],
-    "title": "The results root is declared but not located",
+    "title": "The results root is declared and defaults to the project",
     "type": "scenario"
   },
   "rq-d39d6009": {
@@ -8069,7 +8314,12 @@
   "rq-db5eda37": {
     "decl": "Scenario: The example uses Julia when selected",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The example uses Julia when selected",
     "type": "scenario"
   },
@@ -8454,7 +8704,12 @@
     "decl": "## Agent Instruction Files",
     "file": "template/skills",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Agent Instruction Files",
     "type": "section"
   },
@@ -8715,7 +8970,12 @@
   "rq-ec2d3828": {
     "decl": "Scenario: Adapters only point at the canonical skill",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Adapters only point at the canonical skill",
     "type": "scenario"
   },
@@ -8754,7 +9014,12 @@
   "rq-ed65c3a5": {
     "decl": "Scenario: Remote access and human-only commands are denied",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Remote access and human-only commands are denied",
     "type": "scenario"
   },

@@ -199,9 +199,9 @@ impl Env {
             .join(self.key(stage))
     }
 
+    /// The job folder: `job/` in the stage's output directory.
     fn folder(&self) -> PathBuf {
-        self.out_dir("md")
-            .join(format!("x-vs-docking.md.{}", self.key("md")))
+        self.out_dir("md").join("job")
     }
 
     fn request(&self, stage: &str) -> SealRequest {
@@ -238,10 +238,11 @@ impl Env {
     }
 
     /// The stand-in cluster's copy of the job folder.
+    /// On the cluster the folder is named after the study, stage and key.
     fn remote(&self) -> PathBuf {
         self.base
             .join("cluster")
-            .join(self.folder().file_name().unwrap())
+            .join(format!("x-vs-docking.md.{}", self.key("md")))
     }
 
     /// Copies the job folder to the stand-in cluster (step 1).
@@ -577,6 +578,24 @@ fn return_steps_leave_kept_files_on_the_cluster() {
         .unwrap();
     assert!(back.starts_with("rsync -a "), "{back}");
     assert!(back.contains("--exclude='out/*.trr'"), "{back}");
+    // Locally the folder is job/; on the cluster it is named after the study, stage and key.
+    let remote = format!(
+        "<you>@<cluster>:<directory>/x-vs-docking.md.{}/",
+        env.key("md")
+    );
+    let local = format!("{}/", env.folder().display());
+    let returned = out
+        .lines()
+        .skip_while(|l| !l.starts_with("# 3."))
+        .nth(2)
+        .unwrap();
+    assert_eq!(returned.trim(), format!("{remote} {local}"), "{out}");
+    let sent = out
+        .lines()
+        .skip_while(|l| !l.starts_with("# 1."))
+        .nth(1)
+        .unwrap();
+    assert_eq!(sent, format!("rsync -a {local} {remote}"), "{out}");
 }
 
 #[test] // rq-9eddd05a

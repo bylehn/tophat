@@ -110,8 +110,44 @@ pub fn pipeline_rules(project: &Project) -> Vec<Diagnostic> {
         for config in &configs {
             stages.extend(config.stages.iter().filter(|s| s.file != base_file));
         }
+        // Stages gated in the base or any variant.
+        let base_config = super::config::PipelineConfig {
+            study: study.clone(),
+            variant: "base".into(),
+            stages: base.clone(),
+        };
+        let gated: BTreeSet<String> = base
+            .iter()
+            .map(|s| s.name.clone())
+            .filter(|name| {
+                std::iter::once(&base_config)
+                    .chain(configs.iter())
+                    .any(|c| c.is_gated(name))
+            })
+            .collect();
         let mut reported = BTreeSet::new();
         for stage in stages {
+            // rq-0a10fc96
+            let check_missing = stage.check.as_deref().is_none_or(|c| c.trim().is_empty());
+            if gated.contains(&stage.name)
+                && check_missing
+                && reported.insert((stage.file.clone(), stage.name.clone(), "check"))
+            {
+                let mut d = diagnostic(
+                    "pipeline.qc-check-missing",
+                    ConfigProblem {
+                        file: stage.file.clone(),
+                        line: stage.line,
+                        message: format!(
+                            "stage `{}` has a QC gate but no `check` saying what to look for in its output",
+                            stage.name
+                        ),
+                    },
+                    "Add `check:` with what the human should verify before passing this stage",
+                );
+                d.severity = Severity::Warning;
+                out.push(d);
+            }
             let reason_missing = stage
                 .qc_reason
                 .as_deref()

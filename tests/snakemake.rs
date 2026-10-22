@@ -37,6 +37,7 @@ const BASE: &str = "stages:
     code: [scripts/score.sh]
     inputs: {structures: stage:prepare}
     foreach: structures
+    check: Every structure has one score, and scores are finite
     params: {level: b3lyp}
   - name: analyse
     run: sh scripts/analyse.sh {in.scores} {out}
@@ -524,13 +525,20 @@ fn generation_fails_on_an_invalid_configuration() {
 }
 
 #[test] // rq-a27155bc rq-654fa516
-fn generation_fails_when_the_results_root_is_unconfigured() {
+fn generated_outputs_default_to_the_projects_results_folder() {
     let env = Env::new();
     env.configure(false);
-    assert_eq!(
-        generate_rules(&env.root(), "x-vs-docking"),
-        Err(PipelineError::UnconfiguredRoot("results".into()))
+    let rules = generate_rules(&env.root(), "x-vs-docking").unwrap();
+    let results = format!(
+        "{}/results/",
+        std::path::absolute(env.root()).unwrap().display()
     );
+    let outputs: Vec<&str> = rules
+        .lines()
+        .filter(|l| l.trim_start().starts_with('"') && l.contains("provenance.json"))
+        .collect();
+    assert!(!outputs.is_empty(), "{rules}");
+    assert!(outputs.iter().all(|l| l.contains(&results)), "{outputs:?}");
 }
 
 #[test] // rq-dbe124d9 rq-654fa516
@@ -871,6 +879,21 @@ fn qc_typing(
         },
     );
     (result, String::from_utf8(out).unwrap())
+}
+
+#[test] // rq-88bd99cd rq-6c24fee9
+fn the_qc_prompt_says_what_to_check() {
+    let env = Env::new();
+    env.run_by_hand("base", "rho=0.61", &|_| {});
+    let (result, output) = qc_typing(&env, "score", "pass\nok\n", true);
+    result.unwrap();
+    let check = output
+        .find("Every structure has one score, and scores are finite")
+        .expect("the check text is shown");
+    assert!(
+        check < output.find("Verdict (pass or fail)").unwrap(),
+        "{output}"
+    );
 }
 
 #[test] // rq-79e78b37 rq-6c24fee9 rq-872c3d40

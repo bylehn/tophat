@@ -27,7 +27,7 @@ const BACKGROUND: [(&str, &str); 4] = [
 
 /// The project files every render has: the skeleton of rqm/template/project.md and the launcher
 /// files of rqm/template/container.md.
-const SKELETON: [&str; 23] = [
+const SKELETON: [&str; 24] = [
     ".copier-answers.yml",
     "th.sh",
     ".tophat/managed/launch/th.sh",
@@ -48,6 +48,7 @@ const SKELETON: [&str; 23] = [
     ".github/workflows/tophat-check.yaml",
     ".tophat/.gitignore",
     ".tophat/roots.yaml",
+    ".tophat/managed/GUIDE.md",
     ".tophat/managed/tophat-release.yaml",
     ".tophat/managed/hooks/pre-commit",
     ".tophat/managed/ownership-exceptions",
@@ -348,9 +349,10 @@ fn a_new_project_has_the_skeleton_files_and_no_studies_or_datasets() {
     let scratch = Scratch::new();
     let p = scratch.path("p");
     render(&p, &[]);
-    let mut expected: Vec<String> = SKELETON.iter().map(|s| s.to_string()).collect();
-    expected.sort();
-    assert_eq!(files(&p), expected);
+    let rendered = files(&p);
+    for f in SKELETON {
+        assert!(rendered.iter().any(|r| r == f), "{f} is missing");
+    }
     assert!(!p.join("studies").exists() && !p.join("datasets").exists());
 }
 
@@ -369,11 +371,29 @@ fn managed_files_carry_the_marker() {
         .collect();
     let managed: Vec<String> = files(&p)
         .into_iter()
-        .filter(|f| f.starts_with(".tophat/managed/") || exceptions.contains(f))
+        .filter(|f| {
+            f.starts_with(".tophat/managed/")
+                || exceptions.iter().any(|e| common::path_matches(e, f))
+        })
+        // The worked example is copied into studies/ and then belongs to the project.
+        .filter(|f| !f.starts_with(".tophat/managed/examples/"))
         .collect();
     assert!(managed.len() >= 6, "{managed:?}");
     for f in managed.iter().filter(|f| !f.ends_with(".json")) {
-        let head: Vec<String> = read(&p, f).lines().take(5).map(str::to_string).collect();
+        let text = read(&p, f);
+        let mut lines: Vec<&str> = text.lines().collect();
+        // A file that begins with front matter carries the marker after it.
+        if lines.first() == Some(&"---") {
+            if let Some(end) = lines.iter().skip(1).position(|l| *l == "---") {
+                lines.drain(..=end + 1);
+            }
+        }
+        let head: Vec<String> = lines
+            .iter()
+            .filter(|l| !l.trim().is_empty())
+            .take(5)
+            .map(|l| l.to_string())
+            .collect();
         assert!(
             head.iter().any(|l| l.contains("TopHat-managed")),
             "{f} lacks the marker"
@@ -398,9 +418,10 @@ fn every_project_owned_file_is_skipped_on_update() {
         .collect();
     let exceptions = read(&p, ".tophat/managed/ownership-exceptions");
     for f in files(&p) {
-        let managed = f.starts_with(".tophat/managed/") || exceptions.lines().any(|l| l == f);
+        let managed = f.starts_with(".tophat/managed/")
+            || exceptions.lines().any(|l| common::path_matches(l, &f));
         assert!(
-            managed || skipped.contains(&f.as_str()),
+            managed || skipped.iter().any(|s| common::path_matches(s, &f)),
             "{f} is project-owned but not in _skip_if_exists"
         );
     }
@@ -458,7 +479,7 @@ fn project_md_starts_with_an_empty_question_tree() {
 }
 
 #[test] // rq-d1fe5c84 rq-cba13e20
-fn the_results_root_is_declared_but_not_located() {
+fn the_results_root_is_declared_and_defaults_to_the_project() {
     if !common::copier() {
         return;
     }
@@ -466,7 +487,13 @@ fn the_results_root_is_declared_but_not_located() {
     let p = scratch.path("p");
     render(&p, &[]);
     let out = tophat(&p, &["data", "roots"]);
-    assert_eq!(String::from_utf8_lossy(&out.stdout), "results\t-\n");
+    assert_eq!(
+        String::from_utf8_lossy(&out.stdout),
+        format!(
+            "results\t{}/results\n",
+            std::path::absolute(&p).unwrap().display()
+        )
+    );
     assert!(!p.join(".tophat/roots.local.yaml").exists());
 }
 

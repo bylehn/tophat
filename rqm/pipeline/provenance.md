@@ -59,6 +59,7 @@ stages:
 | `qc` | no | `skip` to exempt the stage from the QC gate it has by default (see `rqm/pipeline/snakemake.md`); no other value is allowed |
 | `qc_reason` | with `qc: skip` | Why the stage's output needs no human verdict; required with `qc: skip` and not allowed without it |
 | `result` | no | File, relative to the output directory, whose single line is the stage's result line |
+| `check` | no | What the human checks in the stage's output at its QC gate, in a sentence or two; shown by `tophat stage qc`. Like `qc` and `qc_reason`, it does not enter the stage key |
 | `tool` | no | `<tool>@<commit>`: run the stage with a pinned tool (see `rqm/pipeline/tools.md`) |
 | `external` | no | Run the stage on a remote machine (see `rqm/pipeline/external.md`) |
 
@@ -238,6 +239,7 @@ A study with no `stages` (or an empty list) has no pipeline and no `pipeline` di
 |---|---|---|
 | `pipeline.config-invalid` | error | A configuration file cannot be parsed, a stage is malformed (missing `name` or `run`, unknown or key, `tool` together with `external`, duplicate name, bad `threads`, unknown placeholder, `foreach` naming no input, `foreach` with `result`, `qc` other than `skip`, `qc_reason` without `qc: skip`), an input references a later or unknown stage, or a variant names an unknown stage or adds stages |
 | `pipeline.qc-reason-missing` | error | A stage declares `qc: skip` without a non-empty `qc_reason` |
+| `pipeline.qc-check-missing` | warning | A stage that is gated in some variant has no non-empty `check`, so its QC gate would ask for a verdict without saying what to look for |
 | `pipeline.code-missing` | error | A `code` entry does not exist or lies outside the project |
 | `pipeline.env-missing` | error | `pixi.lock` is missing or lacks the stage's environment |
 
@@ -331,6 +333,20 @@ Feature: Stage configuration, keys and provenance
     Given stage "prepare" has "qc: skip" and no "qc_reason"
     When "tophat check" is run
     Then an error "pipeline.qc-reason-missing" is reported at stage "prepare"
+
+  @rq-0a10fc96
+  Scenario: A gated stage should say what to check
+    Given stage "score" is gated and has no "check"
+    When "tophat check" is run
+    Then a warning "pipeline.qc-check-missing" is reported at stage "score"
+    When "score" gets "check: Each item has one score per structure"
+    Then no "pipeline.qc-check-missing" is reported
+
+  @rq-617974f2
+  Scenario: The check text does not enter the key
+    Given the key of "score" is recorded
+    When its "check" text changes
+    Then the key of "score" is unchanged
 
   @rq-2a51782f
   Scenario: The old opt-in form is rejected
@@ -506,8 +522,8 @@ Feature: Stage configuration, keys and provenance
     Then "prepare" is listed as "sealed" and "score" as "missing"
 
   @rq-11940cec
-  Scenario: Keys command with an unconfigured results root
+  Scenario: Keys command with the default results root
     Given root "results" is not configured
     When "tophat pipeline keys x-vs-docking" is run
-    Then every stage is listed with its key and status "unavailable"
+    Then every stage's output directory lies under "<project root>/results/"
 ```

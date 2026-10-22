@@ -61,6 +61,7 @@ the CLI reads (`PROJECT.md`, `.tophat/roots.yaml`, studies, datasets) are specif
     .gitignore                   managed   ignore rules for machine-local TopHat state
     roots.yaml                   project   data roots: declares `results`
     managed/
+      GUIDE.md                   managed   how a study works, from question to report
       tophat-release.yaml        managed   the pinned `tophat` release and its checksums
       hooks/pre-commit           managed   runs `tophat check` and never blocks
       ownership-exceptions       managed   managed files that live outside .tophat/managed/
@@ -80,7 +81,10 @@ Every file of a generated project is either **managed** or **project-owned**.
   `.tophat/managed/`, except those whose path a tool mandates, which are listed one per line in
   `.tophat/managed/ownership-exceptions` (`.copier-answers.yml`, `.tophat/.gitignore`,
   `.github/workflows/tophat-check.yaml`, and the files other features add). Every managed file in a
-  format with comments carries the marker `TopHat-managed` within its first five lines.
+  format with comments carries the marker `TopHat-managed` within its first five lines (within five
+  lines after the front matter, for a file that must begin with front matter), except the
+  files of the worked example study (see `rqm/template/skills.md`), which are copied into `studies/`
+  and then belong to the project.
 - **Project-owned** files belong to the project. They are written once, by `copier copy`, and never
   again: every one is listed in `_skip_if_exists`, so `copier update` leaves them unchanged even when
   the template's version of them changed, and copying the template into an existing repository
@@ -108,9 +112,21 @@ No line of the comment starts with `#`, so the tree is empty (see `rqm/question-
 ### README.md <!-- rq-485c120f -->
 
 Names the project, repeats its description, and gives the first steps: open the dev container,
-run `tophat status`, configure the `results` root in `.tophat/roots.local.yaml`, and ask the agent
-to help write the overarching question. It states that results are reported only from
-pre-registered studies.
+run `tophat status`, and ask the agent to help write the overarching question. It says that stage
+outputs go to the git-ignored `results/` folder unless `.tophat/roots.local.yaml` puts them
+elsewhere, that results are reported only from pre-registered studies, and that
+`.tophat/managed/GUIDE.md` explains how a study works.
+
+### GUIDE.md <!-- rq-226c596c -->
+
+`.tophat/managed/GUIDE.md` explains, in one page, how a study goes from question to report, and
+why each step exists: the question tree; planning and pre-registration (what is frozen, and why the
+plan comes before any result is seen); stages, stage keys and why outputs live in directories named
+by their key; QC gates (that a human looks at each consumed output before anything downstream uses
+it, guided by the stage's `check` text) and `qc: skip`; external stages and their job folders;
+the summary, clean and dirty results, and reporting; who does what (the human pre-registers, gives
+QC verdicts, runs cluster jobs, commits, and writes the Interpretation; the agent does the rest);
+and the commands for each step. The README and the agent rules point to it.
 
 ### exploration/README.md <!-- rq-45cc9712 -->
 
@@ -124,6 +140,7 @@ the location in `.tophat/roots.local.yaml` (see `rqm/data.md`):
 
 ```yaml
 # Data roots of this project. Locations are per machine: see .tophat/roots.local.yaml.
+# Stage outputs go to results/ in the project unless that file puts them elsewhere.
 roots:
   results: {}
 ```
@@ -143,8 +160,9 @@ with a project's own `.gitignore`:
 /state/
 ```
 
-The root `.gitignore` (project-owned) lists the working directories that tools create at the
-project root: `/.snakemake/` and `/.pixi/`.
+The root `.gitignore` (project-owned) lists the directories that tools create at the project root:
+`/.snakemake/`, `/.pixi/`, and `/results/`, the default location of stage outputs (see
+`rqm/data.md`).
 
 ### Environment <!-- rq-260d84c9 -->
 
@@ -271,13 +289,13 @@ Feature: Generated project skeleton
   @rq-d0e11fee
   Scenario: A new project has the skeleton files and no studies or datasets
     When the template is rendered with default answers
-    Then the project contains PROJECT.md, README.md, pixi.toml, pixi.lock, .gitignore, exploration/README.md, .github/workflows/tophat-check.yaml, .tophat/.gitignore, .tophat/roots.yaml, .tophat/managed/tophat-release.yaml, .tophat/managed/hooks/pre-commit and .tophat/managed/ownership-exceptions
+    Then the project contains PROJECT.md, README.md, pixi.toml, pixi.lock, .gitignore, exploration/README.md, .github/workflows/tophat-check.yaml, .tophat/.gitignore, .tophat/roots.yaml, .tophat/managed/GUIDE.md, .tophat/managed/tophat-release.yaml, .tophat/managed/hooks/pre-commit and .tophat/managed/ownership-exceptions
     And it contains no studies/ and no datasets/ directory
 
   @rq-74365fac
   Scenario: Managed files carry the marker
     When the template is rendered with default answers
-    Then every file under .tophat/managed/ and every path listed in ownership-exceptions, except those in formats without comments, has "TopHat-managed" within its first five lines
+    Then every file under .tophat/managed/ and every path listed in ownership-exceptions, except those in formats without comments and those of the worked example, has "TopHat-managed" within its first five lines
 
   @rq-cae7fbe8
   Scenario: Every project-owned file is skipped on update
@@ -287,7 +305,7 @@ Feature: Generated project skeleton
   @rq-4da71d7f
   Scenario: Machine-local state is ignored
     Given a rendered project in a git repository
-    When .tophat/roots.local.yaml, .tophat/slurm.local.yaml, .tophat/cache/hashes.json, .tophat/tools/x/y, .tophat/generated/s.smk, .tophat/state/apptainer/x.sif, .snakemake/log and .pixi/envs/x are created
+    When .tophat/roots.local.yaml, .tophat/slurm.local.yaml, .tophat/cache/hashes.json, .tophat/tools/x/y, .tophat/generated/s.smk, .tophat/state/apptainer/x.sif, .snakemake/log, .pixi/envs/x and results/s/a/sk-0/x are created
     Then "git status --porcelain" lists none of them
 
   # --- Files ---
@@ -300,10 +318,11 @@ Feature: Generated project skeleton
     And "tophat question tree" shows no questions
 
   @rq-d1fe5c84
-  Scenario: The results root is declared but not located
+  Scenario: The results root is declared and defaults to the project
     When the template is rendered with default answers
     Then .tophat/roots.yaml declares exactly the root "results"
     And no .tophat/roots.local.yaml exists
+    And "tophat data roots" locates "results" at the project's results/ folder
 
   @rq-e9156963
   Scenario: Python and Snakemake are always installed

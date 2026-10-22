@@ -738,7 +738,10 @@ fn shell_word(s: &str) -> String {
     }
 }
 
-/// The name of a job folder.
+/// The name of the job folder inside a stage's output directory.
+pub const JOB_DIR: &str = "job";
+
+/// The name of a job folder on the cluster.
 pub fn job_folder_name(study: &str, stage: &str, key: &str) -> String {
     format!("{study}.{stage}.{key}")
 }
@@ -755,17 +758,14 @@ fn steps(
     folder: &Path,
     trial: bool,
 ) -> String {
-    let name = folder
-        .file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_default();
-    let out_dir = folder.parent().unwrap_or(Path::new("."));
-    let local = shell_word(&folder.display().to_string());
-    let back = format!("{}/", shell_word(&out_dir.display().to_string()));
+    // Locally the folder is `job/`; on the cluster it carries the study, stage and key.
+    let name = job_folder_name(study, stage, key);
+    let local = format!("{}/", shell_word(&folder.display().to_string()));
+    let back = local.clone();
     let copy_back = if external.keep.is_empty() {
         format!(
             "# 3. When the job has finished, copy the folder back\n\
-             rsync -a <you>@<cluster>:<directory>/{name} {back}\n"
+             rsync -a <you>@<cluster>:<directory>/{name}/ {back}\n"
         )
     } else {
         let excludes: Vec<String> = external
@@ -775,7 +775,7 @@ fn steps(
             .collect();
         format!(
             "# 3. When the job has finished, copy the folder back, leaving the large files on the cluster\n\
-             rsync -a {} \\\n  <you>@<cluster>:<directory>/{name} {back}\n",
+             rsync -a {} \\\n  <you>@<cluster>:<directory>/{name}/ {back}\n",
             excludes.join(" ")
         )
     };
@@ -789,7 +789,7 @@ commands are examples; <you>@<cluster>:<directory> stands for your login and a d
 choice on the cluster.
 
 # 1. Copy this folder to the cluster
-rsync -a {local} <you>@<cluster>:<directory>/
+rsync -a {local} <you>@<cluster>:<directory>/{name}/
 
 # 2. On the cluster, submit it (you may edit the #SBATCH lines first; change nothing else)
 cd <directory>/{name} && sbatch job.sh
@@ -861,11 +861,9 @@ fn load_external(root: &Path, request: &SealRequest) -> Result<ResolvedStage, Ex
     Ok(resolved)
 }
 
+/// The job folder of a stage: `job/` in its output directory.
 fn folder_of(resolved: &ResolvedStage, stage: &str, trial: bool) -> Result<PathBuf, ExternalError> {
-    let key = resolved.key(stage);
-    Ok(resolved
-        .out_dir(stage, trial)?
-        .join(job_folder_name(&resolved.config.study, stage, key)))
+    Ok(resolved.out_dir(stage, trial)?.join(JOB_DIR))
 }
 
 fn steps_of(resolved: &ResolvedStage, stage: &StageConfig, folder: &Path, trial: bool) -> String {
@@ -1066,7 +1064,7 @@ pub fn ingest(root: &Path, request: &SealRequest) -> Result<PathBuf, ExternalErr
     let key = resolved.key(&stage.name).to_string();
     let out_dir = resolved.out_dir(&stage.name, request.trial)?;
     let folder = folder_of(&resolved, &stage.name, request.trial)?;
-    let folder_name = job_folder_name(study, &stage.name, &key);
+    let folder_name = JOB_DIR.to_string();
 
     let receipt_path = folder.join(RECEIPT_FILE);
     let receipt_text = fs::read_to_string(&receipt_path).map_err(io_error(&receipt_path))?;
@@ -1378,6 +1376,7 @@ mod tests {
             external: None,
             qc_skip: false,
             qc_reason: None,
+            check: None,
             result: None,
             file: String::new(),
             line: None,

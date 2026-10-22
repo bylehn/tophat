@@ -56,8 +56,7 @@ the `summary` target does (or, for a draft study, what the `trial` target does).
 
 `tophat pipeline rules <study> --output <file>` writes a Snakemake rules file for every variant
 listed in the study's `STUDY.md`. Generation fails, writing nothing, when the configuration has a
-`pipeline.config-invalid`, `pipeline.code-missing` or `pipeline.env-missing` error, the `results`
-root is unconfigured, or a referenced dataset is unknown, retired, in an unconfigured root, or has a
+`pipeline.config-invalid`, `pipeline.code-missing` or `pipeline.env-missing` error, or a referenced dataset is unknown, retired, in an unconfigured root, or has a
 file missing or of the wrong size. The output is deterministic for a given project state.
 
 ### One job per key <!-- rq-5782f3d0 -->
@@ -176,9 +175,11 @@ configuration.
     `tophat study preregister`; the verdict is a human decision.
   - Requires the stage to be gated in the variant (default `base`), a sealed non-trial output for
     the variant's current key, and no existing verdict file for that key.
-  - Prints a summary of the output (key, number of files, total size, number of items, whether the
-    record is clean, and the output directory), then asks the user to type `pass` or `fail` and a
-    one-line note. Any other verdict text aborts without changes.
+  - Prints the stage's `check` text (what to look for; see `rqm/pipeline/provenance.md`) and a
+    summary of the output (key, number of files, total size, number of items, whether the record is
+    clean, and the output directory), then asks the user to type `pass` or `fail` and a one-line
+    note. Any other verdict text aborts without changes. A stage without `check` is shown with a
+    line saying that it does not say what to check.
   - Writes the verdict file atomically with today's local date.
 - `tophat stage qc-status <study> <stage> --key <key>` <!-- rq-872c3d40 -->
   - Exits 0 if the verdict file for the key says `pass`, 1 if it says `fail`, and 2 if it is
@@ -288,10 +289,10 @@ Feature: Snakemake pipelines, QC gates and summaries
     And "rules.smk" is not written
 
   @rq-a27155bc
-  Scenario: Generation fails when the results root is unconfigured
+  Scenario: Generated outputs default to the project's results folder
     Given root "results" is not configured
     When the rules are generated
-    Then the command fails naming root "results"
+    Then every rule output lies under "<project root>/results/"
 
   @rq-dbe124d9
   Scenario: Generation fails on a retired dataset
@@ -398,6 +399,12 @@ Feature: Snakemake pipelines, QC gates and summaries
     When "tophat stage qc x-vs-docking score" is run and the user types "pass" and "Distributions look fine"
     Then "studies/x-vs-docking/qc/score/<score base key>.md" is written with verdict "pass", today's date and the note
     And "tophat stage qc-status x-vs-docking score --key <score base key>" exits 0
+
+  @rq-88bd99cd
+  Scenario: The QC prompt says what to check
+    Given "score" has "check: Each item has one score per structure" and is sealed for variant "base"
+    When "tophat stage qc x-vs-docking score" is run interactively
+    Then it prints "Each item has one score per structure" before asking for the verdict
 
   @rq-83c71c3c
   Scenario: QC refused without an interactive terminal

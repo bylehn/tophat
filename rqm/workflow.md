@@ -32,7 +32,7 @@ actions only a human may take; `anyone` marks actions a human or an agent may ta
 | 3 | Status is `draft` and any of Question, Primary endpoint, Decision rule is empty, or there are no scenarios | Write the plan in `STUDY.md` | anyone |
 | 4 | Status is `draft` | Pre-register: `tophat study preregister <study>` | you |
 | 5 | The study has no stages | Add stages to `config/base.yaml` | anyone |
-| 6 | The `results` root is unconfigured | Configure the `results` data root | anyone |
+| 6 | The `results` root is configured (in `.tophat/roots.local.yaml` or `TOPHAT_ROOT_RESULTS`) at a directory that does not exist | Create `<location>`, or fix the `results` entry of `.tophat/roots.local.yaml` | anyone |
 | 7 | A tool stage's pinned commit is unresolved or not cached on this machine | Fetch tools: `tophat tools sync` | you |
 | 8 | An external stage's bundle is written for a variant's current key and the job has not been returned | Run the external job for `<stage>` (`<variant>`): `tophat stage instructions <study> <stage> --variant <variant>` | you |
 | 9 | A gated stage (see `rqm/pipeline/snakemake.md`) is sealed for a variant's current key, has no verdict, and a stage consuming it has no sealed output | Give a QC verdict: `tophat stage qc <study> <stage> --variant <variant>` | you |
@@ -72,8 +72,7 @@ blocks a run.
     ```
 
     The pipeline line counts, per listed variant, stages with a sealed non-trial output for the
-    current key out of all stages; it reads `unavailable` when the `results` root is unconfigured
-    and is omitted for studies without stages.
+    current key out of all stages; it is omitted for studies without stages.
   - `--json` prints `{"project": {...}, "studies": [...]}` with, per study, `id`, `status`,
     `question`, `pipeline` (per variant: `sealed`, `total`, or `null`), and `next`
     (`{"row", "who", "text", "command"}`, `command` being `null` when the action is not a single
@@ -179,12 +178,19 @@ Feature: Status and run
     Then the next action is row 5 "Add stages to config/base.yaml"
 
   @rq-cde76c0f
-  Scenario: Unconfigured results root
+  Scenario: A configured results location that does not exist
     Given preregistered study "x-vs-docking" has stages
-    And root "results" is not configured
+    And ".tophat/roots.local.yaml" locates root "results" at a directory that does not exist
     When "tophat status x-vs-docking" is run
-    Then the next action is row 6
-    And the pipeline line reads "unavailable"
+    Then the next action is row 6 naming that directory
+
+  @rq-1bd248f0
+  Scenario: The default results folder needs no configuration
+    Given preregistered study "x-vs-docking" has stages
+    And root "results" is not configured and "results/" does not exist yet
+    When "tophat status x-vs-docking" is run
+    Then the next action is not row 6
+    And the pipeline line counts the sealed stages of each variant
 
   @rq-9bb38d37
   Scenario: Waiting for a QC verdict

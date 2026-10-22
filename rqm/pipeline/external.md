@@ -82,11 +82,12 @@ change what it computes. Local stages have no `external` line, so their keys are
 ## The Job Folder <!-- rq-340771e5 -->
 
 When an external stage is reached and has not been returned yet, `tophat` writes the job folder
-`<output directory>/<study>.<stage>.<key>/` (see `rqm/pipeline/provenance.md` for the output
-directory):
+`<output directory>/job/` (see `rqm/pipeline/provenance.md` for the output directory, which is
+named by the stage key). On the cluster the folder is called `<study>.<stage>.<key>`, so that the
+human's job folders can sit side by side there and each names what it is:
 
 ```text
-x-vs-docking.md.sk-3f9a1c2b4d5e6f70/
+job/                 on the cluster: x-vs-docking.md.sk-3f9a1c2b4d5e6f70/
   README.md          what this job is, and the steps to run it
   job.sh             the sbatch script
   stage.json         study, stage, variant, key and keep patterns
@@ -101,7 +102,8 @@ x-vs-docking.md.sk-3f9a1c2b4d5e6f70/
   total, `tophat` prints a warning with their size; the folder is still written.
 - The folder is written atomically (to a temporary directory, then renamed) and only if it does not
   exist, so edits the human made to its `#SBATCH` lines are never overwritten.
-- Its name is the same everywhere the folder goes, so a returned folder lands back in place.
+- The steps copy the folder's contents to and from the cluster's `<study>.<stage>.<key>/`, so a
+  returned folder lands back in `job/`.
 
 ## Job Script <!-- rq-13602cac -->
 
@@ -156,14 +158,14 @@ never fills in a host or a remote path:
 
 ```sh
 # 1. Copy this folder to the cluster
-rsync -a <output directory>/x-vs-docking.md.sk-3f9a1c2b4d5e6f70 <you>@<cluster>:<directory>/
+rsync -a <output directory>/job/ <you>@<cluster>:<directory>/x-vs-docking.md.sk-3f9a1c2b4d5e6f70/
 
 # 2. On the cluster, submit it (you may edit the #SBATCH lines first; change nothing else)
 cd <directory>/x-vs-docking.md.sk-3f9a1c2b4d5e6f70 && sbatch job.sh
 
 # 3. When the job has finished, copy the folder back, leaving the large files on the cluster
 rsync -a --exclude='out/*.trr' --exclude='out/*.xtc' --exclude='out/*.cpt' \
-  <you>@<cluster>:<directory>/x-vs-docking.md.sk-3f9a1c2b4d5e6f70 <output directory>/
+  <you>@<cluster>:<directory>/x-vs-docking.md.sk-3f9a1c2b4d5e6f70/ <output directory>/job/
 
 # 4. Continue the pipeline
 tophat run x-vs-docking
@@ -289,7 +291,7 @@ Feature: External (cluster) stages
   @rq-843afa31
   Scenario: Reaching an external stage writes the job folder and waits
     When "tophat stage external x-vs-docking md --key <key>" is run
-    Then "<output directory>/x-vs-docking.md.<key>/" contains "README.md", "job.sh", "stage.json", "inputs.sha256", "params.json", an empty "out/" and the copied inputs under "inputs/system/"
+    Then "<output directory>/job/" contains "README.md", "job.sh", "stage.json", "inputs.sha256", "params.json", an empty "out/" and the copied inputs under "inputs/system/"
     And the command prints the steps, naming that folder and "sbatch job.sh"
     And the exit code is 3
 

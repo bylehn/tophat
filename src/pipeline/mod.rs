@@ -19,7 +19,7 @@ pub use config::{
 pub use external::{
     ingest, instructions, job_folder_name, large_inputs_warning, parse_receipt, script_sha256,
     slurm_defaults, stage_external, waiting_jobs, write_job_folder, write_job_folder_with,
-    ExternalError, Receipt, LARGE_INPUTS_BYTES, RECEIPT_FILE, SLURM_DEFAULTS_FILE,
+    ExternalError, Receipt, JOB_DIR, LARGE_INPUTS_BYTES, RECEIPT_FILE, SLURM_DEFAULTS_FILE,
 };
 pub use generate::{generate_rules, snakefile_path, stub, variant_target};
 pub use keys::{

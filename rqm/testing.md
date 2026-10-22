@@ -122,13 +122,17 @@ specifies.
 ## End-to-End Example Study <!-- rq-aea3767f -->
 
 The end-to-end test runs the worked example study (see `rqm/template/skills.md`) in a project
-rendered with `julia-all-agents`, inside its container image, the way a human and an agent would:
+rendered with Julia selected, the way a human and an agent would. It runs on the CI runner with the
+project's own environment: real pixi installs the shipped lock, and Snakemake, Python and Julia come
+from it. The dev container image is covered by the `image` job; this test covers the workflow. It
+runs only with `TOPHAT_TEST_E2E=1`, and needs `copier`, `pixi`, `git` and `script` (for the
+pseudo-terminal) on `PATH` and network access for the packages:
 
 1. Write and stamp a question in `PROJECT.md`; copy the example into `studies/`; set its question.
-2. Declare a fixture tool (a local git repository with two commits, providing the scoring script) and
-   make `score` a tool stage pinned to the first commit; run `tophat tools sync`.
-3. Commit on the host side of the test (outside the container) and pre-register through a
-   pseudo-terminal, typing the study ID as a human would.
+2. Declare a fixture tool (a local git repository with two commits, providing the Julia scoring
+   script) with a project-supplied environment, make `score` a tool stage pinned to the first
+   commit, and run `tophat tools sync`.
+3. Commit, and pre-register through a pseudo-terminal, typing the study ID as a human would.
 4. Run `tophat run`: it stops at the external stage `filter`. Copy the job folder to a directory
    standing in for the cluster, run `sh job.sh` there with a `PATH` of POSIX tools only, copy the
    folder back without kept files, and run again.
@@ -215,7 +219,7 @@ checks:
 | `traceability` | Linux | `cargo xtask scenarios`, `cargo xtask lock --check` |
 | `render` | Linux, with Podman | `cargo xtask render-test` |
 | `conformance` | Linux | `cargo xtask conformance` |
-| `e2e` | Linux, with Podman | the end-to-end test |
+| `e2e` | Linux | the end-to-end test, with pixi installed and `TOPHAT_TEST_E2E=1` |
 | `adoption` | Linux | `cargo xtask adoption` |
 
 `.github/workflows/evals.yaml` runs `cargo xtask eval` weekly and on manual dispatch, with agent
