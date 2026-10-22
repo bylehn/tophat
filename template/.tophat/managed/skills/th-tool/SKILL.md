@@ -25,6 +25,12 @@ The URL must be cloneable without credentials: a public `https://` repository, o
 The dev container holds no credentials, so private repositories cannot be fetched; tell the human
 so if they give one.
 
+A local repository (an absolute path or a `file://` URL) is mounted read-only into the dev
+container at the same path when a session starts. After declaring one, ask the human to start a new
+session before running `tophat tools sync`. A local repository exists only on this machine, so
+others who clone the project cannot fetch it; suggest a public repository for a tool that will be
+shared.
+
 ## Pinning a stage
 
 A tool stage names the tool and a commit: `tool: method-x@3f9a1c2` (7 to 40 hex characters of a

@@ -16,7 +16,8 @@ with one pre-registered primary endpoint and decision rule, and runs end to end 
 **stages** declared in `config/`. A **variant** is the same study under a different setting. A
 **dataset** is registered raw data or a published study output with a stable name and version. A
 **tool** is general-purpose code in its own repository, pinned by commit. `exploration/` holds
-scratch work that is never cited.
+scratch work that is never cited. `.tophat/managed/GUIDE.md` explains how a study goes from
+question to report; point the human to it when they ask how things work.
 
 ## Hard rules
 
@@ -27,8 +28,9 @@ scratch work that is never cited.
 3. Never connect to a remote machine, transfer data to or from one, or submit a batch job. For an
    external stage, show the human the steps from `tophat stage instructions`.
 4. Never edit the frozen sections (Question, Primary endpoint, Decision rule, Scenarios) of a study
-   that has a `preregistered` block, never hand-write Result lines, and never edit `SUMMARY.md`,
-   provenance records, `.tophat/tools.lock` or the `Snakefile` stub.
+   that has a `preregistered` block, never hand-write Result lines, never write a study's
+   `## Interpretation` (it is the scientist's), and never edit `SUMMARY.md`, provenance records,
+   `.tophat/tools.lock` or the `Snakefile` stub.
 5. Never put a step a human is asked to run into a script you wrote; human steps are `tophat`
    commands or the steps `tophat` prints.
 6. Never change tool code from within a study; changes go through the tool's own repository.

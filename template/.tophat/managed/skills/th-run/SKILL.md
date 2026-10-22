@@ -19,11 +19,15 @@ reported. Every run ends with the study's next action; act on it as below.
 
 When the run stops at a QC gate, the human must look at the stage's output and give a verdict.
 
-1. Show the human where the output is: `tophat pipeline keys <id> --variant <variant>` lists each
-   stage's key and output directory.
-2. If it helps, summarize what the output contains (files, sizes, a few values), without judging
+1. Tell the human what the stage does (from the study's `## Stages`) and what to check in its
+   output: the stage's `check` text in `config/`. If the stage has no `check`, say so; it should
+   get one (`th-study`).
+2. Show where the output is: `tophat pipeline keys <id> --variant <variant>` lists each stage's
+   key and output directory.
+3. If it helps, summarize what the output contains (files, sizes, a few values), without judging
    it.
-3. Give the human the exact command and stop: `tophat stage qc <id> <stage> --variant <variant>`.
+4. Give the human the exact command and stop: `tophat stage qc <id> <stage> --variant <variant>`.
+   It shows the `check` text again before asking for the verdict.
 
 Never give, suggest or imply a verdict, and never write a file under `qc/`. When the verdict is
 `fail`, the cause is fixed upstream (a new configuration or code, hence a new key), never by
@@ -56,10 +60,12 @@ When the next action is to report:
 1. Run `tophat study report <id>`. It copies the result lines from `SUMMARY.md` into `## Result`;
    never write or change a result line yourself.
 2. Apply the pre-registered decision rule to the primary endpoint exactly as written in the study,
-   for each variant.
-3. Draft `## Interpretation` for the human to edit: what the result means for the question, stating
-   plainly when it is not useful or not significant. Diagnostics inform but decide nothing; only the
-   primary endpoint answers the question.
+   for each variant, and tell the human what it gives, stating plainly when a result is not useful
+   or not significant. Diagnostics inform but decide nothing; only the primary endpoint answers the
+   question.
+3. Ask the human to write `## Interpretation`. It is the scientist's own reading of the result:
+   never write or edit it, even as a draft. When the human asks, discuss the result with them in
+   the conversation.
 4. Run `tophat check studies/<id>`, then use `th-question` to answer the question if the human
    agrees.
 

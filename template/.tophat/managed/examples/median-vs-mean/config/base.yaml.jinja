@@ -11,6 +11,9 @@ stages:
     code: [scripts/filter.sh]
     inputs: {signals: stage:generate}
     params: {width: 5}
+    check: >-
+      Every signal has a file with a header and one row per input sample (200 rows), with the
+      columns clean, mean and median, and no empty or non-numeric values.
     external:
       slurm:
         - --time=00:10:00
@@ -24,6 +27,9 @@ stages:
 {%- endif %}
     inputs: {filtered: stage:filter}
     foreach: filtered
+    check: >-
+      There is one item per signal (30), each with an rmse.tsv holding two finite, non-negative
+      values.
   - name: analyse
     run: python scripts/analyse.py {in.scores} {out} --resamples {params.resamples} --seed {params.seed}
     code: [scripts/analyse.py]

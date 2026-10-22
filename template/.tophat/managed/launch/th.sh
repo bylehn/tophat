@@ -174,6 +174,8 @@ read_roots() {
   tab=$(printf '\t')
   while IFS="$tab" read -r name location; do
     [ -n "$name" ] && [ -n "$location" ] && [ "$location" != - ] || continue
+    # A location inside the project (such as the default results/) is in the workspace mount.
+    case "$location" in /work | /work/*) continue ;; esac
     [ -d "$location" ] ||
       fail "data root '$name' is located at $location, which does not exist on this host"
     root_mounts="$root_mounts$location
@@ -181,6 +183,40 @@ read_roots() {
   done <<ROOTS
 $roots
 ROOTS
+}
+
+# --- Local tools ------------------------------------------------------------------------------
+
+# Asks tophat, in a throwaway container, which tools are declared, and sets tool_mounts to one host
+# path per line for the local tool repositories (absolute paths and file:// URLs), which the session
+# mounts read-only so `tophat tools sync` can fetch from them. Problems only warn: the session is
+# where the human fixes them.
+read_tools() {
+  tool_mounts=""
+  set -- podman run --rm -v "$workspace:/work:ro" -w /work
+  if ! tools=$("$@" "$project_image" tophat tools list 2>&1); then
+    printf 'th.sh: warning: the tools cannot be read, so no local tool is mounted: %s\n' "$tools" >&2
+    return 0
+  fi
+  while IFS= read -r line; do
+    case "$line" in '' | ' '*) continue ;; esac
+    name=${line%%  *}
+    url=${line#*  }
+    case "$url" in
+      file://*) path=${url#file://} ;;
+      /*) path=$url ;;
+      *) continue ;;
+    esac
+    case "$path" in /work | /work/*) continue ;; esac
+    if [ -d "$path" ]; then
+      tool_mounts="$tool_mounts$path
+"
+    else
+      printf "th.sh: warning: tool '%s' is declared at %s, which does not exist on this host; it is not mounted\n" "$name" "$path" >&2
+    fi
+  done <<TOOLS
+$tools
+TOOLS
 }
 
 # --- Git hooks ----------------------------------------------------------------------------------
@@ -230,17 +266,24 @@ case "$mode" in
     podman image exists "$project_image" ||
       fail "no image of this project exists yet; launch once first (./th.sh), then use --dry-run"
     read_roots
+    read_tools
     ;;
   session)
     set_hooks
     build
     read_roots
+    read_tools
     ;;
 esac
 
-command=$(with_roots "" podman run --rm -it -v "$workspace:/work" -w /work \
-  -v "tophat-$id-pixi-cache:/opt/tophat/cache/pixi" \
-  -v "tophat-$id-claude:/opt/tophat/home/.claude")
+command=$(
+  with_roots "" podman run --rm -it -v "$workspace:/work" -w /work \
+    -v "tophat-$id-pixi-cache:/opt/tophat/cache/pixi" \
+    -v "tophat-$id-claude:/opt/tophat/home/.claude"
+  printf '%s' "$tool_mounts" | while IFS= read -r path; do
+    [ -n "$path" ] && printf '%s\n' -v "$(host_path "$path"):$path:ro"
+  done
+)
 set -f
 IFS='
 '

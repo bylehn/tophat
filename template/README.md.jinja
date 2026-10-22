@@ -2,22 +2,23 @@
 
 {{ project_description }}
 
-This is a TopHat research project: every result it reports can be traced to
-the pre-registered question and endpoint it answers, the code and environment that computed it, and
-the data it consumed. Results are reported only from pre-registered studies.
+This is a TopHat research project: every result it reports can be traced to the pre-registered
+question and endpoint it answers, the code and environment that computed it, and the data it
+consumed. Results are reported only from pre-registered studies. How a study goes from question to
+report is explained in `.tophat/managed/GUIDE.md`.
 
 ## First steps
 
 1. Start the dev container: `./th.sh`. Everything else runs inside it.
 2. See where the project stands: `tophat status`.
-3. Tell TopHat where stage outputs go on this machine, in `.tophat/roots.local.yaml` (not
-   committed):
+3. Start the agent and ask it what to do next (`th-next`), for example to help you write the
+   project's overarching question in `PROJECT.md`.
 
-   ```yaml
-   roots:
-     results: /absolute/path/for/results
-   ```
+Commits are made on the host, outside the container. Stage outputs go to the git-ignored `results/`
+folder; to put them elsewhere on this machine (a data disk, a scratch filesystem), set an absolute
+path in `.tophat/roots.local.yaml`, which is not committed:
 
-4. Ask the agent to help you write the project's overarching question in `PROJECT.md`.
-
-Commits are made on the host, outside the container.
+```yaml
+roots:
+  results: /absolute/path/for/results
+```
