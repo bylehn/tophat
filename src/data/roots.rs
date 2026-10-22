@@ -18,6 +18,9 @@ pub const LOCAL_ROOTS_FILE: &str = ".tophat/roots.local.yaml";
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Roots {
     pub declared: BTreeMap<String, Option<PathBuf>>,
+    /// Whether `results` is at its default location, `results/` in the project, because neither
+    /// the environment nor `.tophat/roots.local.yaml` locates it.
+    pub results_defaulted: bool,
 }
 
 impl Roots {
@@ -175,7 +178,20 @@ pub(crate) fn load_roots_lenient(
             set_location(&mut declared, &name, &value, &var, &mut problems);
         }
     }
-    (Roots { declared }, problems)
+    // rq-7ec07143
+    // An unconfigured `results` defaults to the git-ignored `results/` folder of the project.
+    let results_defaulted = declared.get(RESULTS_ROOT).is_some_and(Option::is_none);
+    if results_defaulted {
+        let base = std::path::absolute(project).unwrap_or_else(|_| project.to_path_buf());
+        declared.insert(RESULTS_ROOT.to_string(), Some(base.join(RESULTS_ROOT)));
+    }
+    (
+        Roots {
+            declared,
+            results_defaulted,
+        },
+        problems,
+    )
 }
 
 // rq-2960fd26 rq-e4355ed1 rq-7ec07143
@@ -232,7 +248,27 @@ mod tests {
         assert_eq!(roots.location("raw"), Some(Path::new("/data/elsewhere")));
         let roots = load_roots_with(&dir, &|_| None).unwrap();
         assert_eq!(roots.location("raw"), Some(Path::new("/data/local")));
-        assert_eq!(roots.location("results"), None);
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test] // rq-61aa0c3d rq-7ec07143
+    fn the_results_root_defaults_to_the_projects_results_folder() {
+        let dir = project(None, None);
+        let roots = load_roots_with(&dir, &|_| None).unwrap();
+        assert_eq!(
+            roots.location("results"),
+            Some(dir.join("results").as_path())
+        );
+        assert!(roots.results_defaulted);
+        let configured = load_roots_with(&dir, &|var| {
+            (var == "TOPHAT_ROOT_RESULTS").then(|| "/data/results".to_string())
+        })
+        .unwrap();
+        assert_eq!(
+            configured.location("results"),
+            Some(Path::new("/data/results"))
+        );
+        assert!(!configured.results_defaulted);
         fs::remove_dir_all(&dir).unwrap();
     }
 

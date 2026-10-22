@@ -37,7 +37,12 @@ case "$1" in
     done
     [ "$1" = tophat ] || { echo "fake podman cannot run $1" >&2; exit 125; }
     shift
-    cd "$work" && exec "$FAKE_TOPHAT" "$@"
+    # Inside a container the workspace is /work: show its paths that way.
+    cd "$work" || exit 125
+    "$FAKE_TOPHAT" "$@" > "$FAKE_PODMAN_LOG.out" 2>&1
+    status=$?
+    sed "s#$(pwd)#/work#g" "$FAKE_PODMAN_LOG.out"
+    exit "$status"
     ;;
 esac
 exit 0
@@ -466,6 +471,58 @@ fn every_yaml_form_tophat_accepts_is_understood() {
         session.contains(&format!("-v {0}:{0} ", results.display())),
         "{session}"
     );
+}
+
+#[test] // rq-6de57a60 rq-0df094cd
+fn local_tool_repositories_are_mounted_read_only() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let method = env.path("src/method-x");
+    let lib = env.path("src/lib-y");
+    fs::create_dir_all(&method).unwrap();
+    fs::create_dir_all(&lib).unwrap();
+    env.write(
+        ".tophat/tools.yaml",
+        &format!(
+            "tools:\n  method-x:\n    url: {}\n  lib-y:\n    url: file://{}\n  web-z:\n    url: https://github.com/example/web-z.git\n",
+            method.display(),
+            lib.display()
+        ),
+    );
+    let session = env.session(&env.run(&["--dry-run"]));
+    assert!(
+        session.contains(&format!("-v {0}:{0}:ro ", method.display())),
+        "{session}"
+    );
+    assert!(
+        session.contains(&format!("-v {0}:{0}:ro ", lib.display())),
+        "{session}"
+    );
+    assert!(!session.contains("web-z"), "{session}");
+    // The workspace, the two volumes and the two tools.
+    assert_eq!(session.matches(" -v ").count(), 5, "{session}");
+}
+
+#[test] // rq-a37e2c54 rq-0df094cd
+fn a_missing_local_tool_repository_is_reported_not_fatal() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    env.write(
+        ".tophat/tools.yaml",
+        "tools:\n  method-x:\n    url: /nonexistent/method-x\n",
+    );
+    let out = env.run(&["--dry-run"]);
+    let session = env.session(&out);
+    let err = stderr(&out);
+    assert!(
+        err.contains("'method-x'") && err.contains("/nonexistent/method-x"),
+        "{err}"
+    );
+    assert!(!session.contains("/nonexistent"), "{session}");
 }
 
 #[test] // rq-3c33f183 rq-2b0ca72f

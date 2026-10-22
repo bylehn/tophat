@@ -1,7 +1,6 @@
-//! Development tooling for the TopHat template, run as `cargo xtask <command>`. Specified in
-//! `rqm/tooling.md`; never published or shipped to generated projects.
+//! `cargo xtask <command>`: development tooling for the TopHat template (see the library).
 
-mod scenarios;
+use xtask::{lint, scenarios};
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -10,7 +9,8 @@ const USAGE: &str = "\
 Usage: cargo xtask <command>
 
 Commands:
-  scenarios    Check that every Gherkin scenario in rqm/ is referenced by a test
+  scenarios                                   Check that every Gherkin scenario in rqm/ is referenced by a test
+  lint-skills <project dir> [--tophat <bin>]  Lint the agent skills of a rendered project
 ";
 
 /// The repository root: the parent of this crate's directory.
@@ -43,6 +43,44 @@ fn main() -> ExitCode {
                 ExitCode::from(2)
             }
         },
+        ["lint-skills", project, rest @ ..] => {
+            let tophat = match rest {
+                [] => repo_root().join("target/debug/tophat"),
+                ["--tophat", bin] => PathBuf::from(bin),
+                _ => {
+                    eprint!("{USAGE}");
+                    return ExitCode::from(2);
+                }
+            };
+            let usage = match std::process::Command::new(&tophat).arg("--help").output() {
+                Ok(out) if out.status.success() => {
+                    String::from_utf8_lossy(&out.stdout).into_owned()
+                }
+                _ => {
+                    eprintln!(
+                        "cargo xtask lint-skills: cannot run `{} --help`; build tophat or pass --tophat",
+                        tophat.display()
+                    );
+                    return ExitCode::from(2);
+                }
+            };
+            match lint::lint_skills(Path::new(project), &usage) {
+                Ok(findings) => {
+                    for f in &findings {
+                        println!("{f}");
+                    }
+                    if findings.is_empty() {
+                        ExitCode::SUCCESS
+                    } else {
+                        ExitCode::from(1)
+                    }
+                }
+                Err(e) => {
+                    eprintln!("cargo xtask lint-skills: {e}");
+                    ExitCode::from(2)
+                }
+            }
+        }
         ["-h" | "--help" | "help"] => {
             print!("{USAGE}");
             ExitCode::SUCCESS

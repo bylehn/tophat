@@ -25,6 +25,9 @@ tools:
   (`ssh://…`, `<user>@<host>:<path>`) and URLs with embedded user information
   (`https://<user>[:<secret>]@…`) are configuration errors: the dev container holds no credentials
   (see `rqm/template/container.md`), and TopHat stores none.
+- A local repository is mounted read-only into the dev container at the same path (see
+  `rqm/template/container.md`). It exists only on its machine, so others who clone the project
+  cannot fetch it; a public repository suits a tool that is shared.
 
 ## Pinning a Tool in a Stage <!-- rq-cfae36f4 -->
 

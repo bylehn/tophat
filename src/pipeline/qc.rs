@@ -106,7 +106,7 @@ pub fn qc(
         ));
     }
     let resolved = ResolvedStage::load(root, study, variant)?;
-    resolved.stage(stage)?;
+    let check = resolved.stage(stage)?.check.clone();
     if !resolved.config.is_gated(stage) {
         return Err(PipelineError::Qc(format!(
             "stage `{stage}` has no QC gate in variant `{variant}`: nothing consumes it, or it \
@@ -144,6 +144,15 @@ pub fn qc(
     writeln!(out, "  items:   {}", items.len()).map_err(io)?;
     writeln!(out, "  clean:   {}", record.clean).map_err(io)?;
     writeln!(out, "  outputs: {}", dir.display()).map_err(io)?;
+    // rq-88bd99cd
+    match check.as_deref().map(str::trim).filter(|c| !c.is_empty()) {
+        Some(check) => writeln!(out, "\nWhat to check:\n  {check}").map_err(io)?,
+        None => writeln!(
+            out,
+            "\nThis stage does not say what to check (no `check` in its configuration)."
+        )
+        .map_err(io)?,
+    }
     write!(out, "\nVerdict (pass or fail): ").map_err(io)?;
     out.flush().map_err(io)?;
     let mut answer = String::new();

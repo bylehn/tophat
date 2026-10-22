@@ -10,7 +10,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use tophat::check::{Diagnostic, Project};
+use tophat::check::{Diagnostic, Project, Severity};
 use tophat::data::{
     add, parse_manifest, publish, verify, DataError, DatasetKind, Origin, RegisterOptions,
 };
@@ -36,6 +36,7 @@ const BASE: &str = "stages:
     inputs:
       structures: stage:prepare
     foreach: structures
+    check: Every structure has one score, and scores are finite
     params: {level: b3lyp, grid: fine}
     env: chem
     threads: 4
@@ -406,6 +407,36 @@ fn skipping_a_qc_gate_needs_a_reason() {
     let found = with_rule(&ds, "pipeline.qc-reason-missing");
     assert_eq!(found.len(), 1, "{ds:#?}");
     assert_eq!(found[0].line, Some(2));
+}
+
+#[test] // rq-0a10fc96 rq-22c3d944
+fn a_gated_stage_should_say_what_to_check() {
+    let env = Env::new();
+    let check = "    check: Every structure has one score, and scores are finite\n";
+    env.edit("studies/x-vs-docking/config/base.yaml", check, "");
+    let ds = env.diagnostics();
+    let found = with_rule(&ds, "pipeline.qc-check-missing");
+    assert_eq!(found.len(), 1, "{ds:#?}");
+    assert_eq!(found[0].severity, Severity::Warning);
+    assert!(found[0].message.contains("`score`"), "{}", found[0].message);
+    env.edit(
+        "studies/x-vs-docking/config/base.yaml",
+        "    foreach: structures\n",
+        "    foreach: structures\n    check: Each item has one score per structure\n",
+    );
+    assert!(with_rule(&env.diagnostics(), "pipeline.qc-check-missing").is_empty());
+}
+
+#[test] // rq-617974f2 rq-37a6119e
+fn the_check_text_does_not_enter_the_key() {
+    let env = Env::new();
+    let before = env.keys("base");
+    env.edit(
+        "studies/x-vs-docking/config/base.yaml",
+        "    check: Every structure has one score, and scores are finite\n",
+        "    check: Something else entirely\n",
+    );
+    assert_eq!(env.keys("base"), before);
 }
 
 #[test] // rq-2a51782f rq-081e737a
@@ -893,13 +924,15 @@ fn keys_command_reports_sealed_and_missing_outputs() {
 }
 
 #[test] // rq-11940cec rq-c8637010
-fn keys_command_with_an_unconfigured_results_root() {
+fn keys_command_with_the_default_results_root() {
     let env = Env::new();
     env.configure(false);
     let status = key_status(&env.root(), "x-vs-docking", "base").unwrap();
+    let results = std::path::absolute(env.root()).unwrap().join("results");
     assert!(status
         .iter()
-        .all(|s| s.status == "unavailable" && s.output.is_none() && s.key.starts_with("sk-")));
+        .all(|s| s.key.starts_with("sk-")
+            && s.output.as_ref().is_some_and(|o| o.starts_with(&results))));
 }
 
 // --- Publishing (rqm/data.md) -----------------------------------------------------------------

@@ -378,18 +378,24 @@ fn evaluate(root: &Path, view: &ProjectView, study_id: &str) -> Result<StudyStat
                 None,
             ));
         }
+        // Row 6: a results location the human configured that is not there. The default
+        // `results/` folder is created when the first output is written.
         let roots = crate::data::load_roots(root).ok();
-        if roots
-            .as_ref()
-            .and_then(|r| r.location(crate::data::RESULTS_ROOT))
-            .is_none()
-        {
-            return Some(NextAction::new(
-                6,
-                Who::Anyone,
-                "Configure the results data root",
-                None,
-            ));
+        if let Some(roots) = roots.as_ref().filter(|r| !r.results_defaulted) {
+            if let Some(location) = roots
+                .location(crate::data::RESULTS_ROOT)
+                .filter(|l| !l.is_dir())
+            {
+                return Some(NextAction::new(
+                    6,
+                    Who::Anyone,
+                    format!(
+                        "Create {}, or fix the results entry of .tophat/roots.local.yaml",
+                        location.display()
+                    ),
+                    None,
+                ));
+            }
         }
         if !missing_tools(root, &variants, id).is_empty() {
             let cmd = "tophat tools sync".to_string();

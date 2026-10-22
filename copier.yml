@@ -17,6 +17,9 @@ _skip_if_exists:
   - .tophat/roots.yaml
   - .tophat/user/container/Containerfile
   - .tophat/user/podman/run-options
+  - .tophat/user/skills/*/local.md
+  - AGENTS.md
+  - CLAUDE.md
 
 project_name:
   type: str

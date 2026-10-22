@@ -65,6 +65,8 @@ pub struct StageConfig {
     pub qc_skip: bool,
     /// Why the stage needs no QC verdict (with `qc: skip`).
     pub qc_reason: Option<String>,
+    /// What the human checks in the stage's output at its QC gate. Not part of the key.
+    pub check: Option<String>,
     pub result: Option<String>,
     /// Project-relative path of the file that defines the stage.
     pub file: String,
@@ -195,7 +197,7 @@ fn yaml_to_json(value: &Yaml) -> Result<Value, String> {
     })
 }
 
-const STAGE_KEYS: [&str; 13] = [
+const STAGE_KEYS: [&str; 14] = [
     "name",
     "run",
     "code",
@@ -206,6 +208,7 @@ const STAGE_KEYS: [&str; 13] = [
     "foreach",
     "qc",
     "qc_reason",
+    "check",
     "result",
     "tool",
     "external",
@@ -224,6 +227,7 @@ struct StageFields {
     foreach: Option<String>,
     qc_skip: Option<bool>,
     qc_reason: Option<String>,
+    check: Option<String>,
     result: Option<String>,
     tool: Option<String>,
     external: Option<ExternalConfig>,
@@ -417,6 +421,11 @@ fn parse_file(
                     Yaml::String(s) => fields.qc_reason = Some(s),
                     _ => problems.push(bad("text")),
                 },
+                // rq-0a10fc96
+                "check" => match value {
+                    Yaml::String(s) => fields.check = Some(s),
+                    _ => problems.push(bad("text")),
+                },
                 "result" => match value {
                     Yaml::String(s) => fields.result = Some(s),
                     _ => problems.push(bad("a file name")),
@@ -581,6 +590,7 @@ fn build_stage(
         external: fields.external.clone(),
         qc_skip: fields.qc_skip.unwrap_or(false),
         qc_reason: fields.qc_reason.clone(),
+        check: fields.check.clone(),
         tool: fields.tool.clone(),
         result: fields.result.clone(),
         file: file.to_string(),
@@ -808,6 +818,9 @@ fn merge_variant(
         }
         if let Some(reason) = fields.qc_reason {
             stage.qc_reason = Some(reason);
+        }
+        if let Some(check) = fields.check {
+            stage.check = Some(check);
         }
         if let Some(tool) = fields.tool {
             stage.tool = Some(tool);

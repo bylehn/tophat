@@ -106,6 +106,7 @@ The session runs `podman run --rm -it` with exactly these mounts and variables:
 | volume `tophat-<project-id>-pixi-cache` at the pixi cache directory | package cache across sessions |
 | volume `tophat-<project-id>-<agent>` at each selected agent's configuration home | the agent's own login and session state |
 | `TOPHAT_ROOT_<NAME>` | passed through when set on the host (see `rqm/data.md`) |
+| each local tool repository, read-only, at the same path (see *Local tools*) | so `tophat tools sync` can fetch from it |
 | `.tophat/user/podman/run-options` | appended last, so the project's options win |
 
 Nothing else from the host enters the container. In particular the session never mounts `~/.ssh`,
@@ -138,7 +139,26 @@ The launcher asks `tophat` where the data roots are, so it reads `.tophat/roots.
   path in a manifest, provenance record or job folder means the same file on the host and in the
   container.
 - A configured location that does not exist on the host refuses the launch, naming the root.
-  Unconfigured roots bind nothing (`tophat status` then says what to configure).
+  Unconfigured roots bind nothing, and neither does a location inside the project (such as the
+  default `results/`): the workspace mount already holds it.
+
+### Local tools <!-- rq-0df094cd -->
+
+A tool declared in `.tophat/tools.yaml` by an absolute path or a `file://` URL (see
+`rqm/pipeline/tools.md`) is a repository on the host, which the container cannot see unless it is
+mounted:
+
+- The launcher runs `tophat tools list` in a throwaway container from the image, like the data-roots
+  query, and binds each local tool repository **read-only** at the identical path, so the URL in
+  `.tophat/tools.yaml` works inside the container and nothing in the container can change the tool.
+- A local tool path that does not exist on the host gets a warning naming the tool and is not
+  mounted; the session still starts (its `tophat tools sync` then reports the tool as failed).
+- When `tophat tools list` fails (invalid tool files), the launcher warns and mounts no tools; the
+  session still starts, so the human can fix the files there.
+- Public `https://` tools need no mount, and neither does a path inside the project.
+- Mounts are decided when the session starts: a local tool declared during a session is mounted from
+  the next one.
+- `--check` mounts no tools: the check reads only the tool cache.
 
 ### Commits happen on the host <!-- rq-9f886d87 -->
 
@@ -315,6 +335,21 @@ Feature: Dev container and launcher
     Given .tophat/roots.local.yaml locates "results" at the relative path "data/results"
     When "th.sh --dry-run" is run
     Then it exits non-zero with the message of "tophat data roots"
+
+  @rq-6de57a60
+  Scenario: Local tool repositories are mounted read-only
+    Given ".tophat/tools.yaml" declares tool "method-x" at an existing directory /src/method-x and tool "lib-y" at "file:///src/lib-y"
+    And tool "web-z" at "https://github.com/example/web-z.git"
+    When "th.sh --dry-run" is run
+    Then the podman run command binds /src/method-x at /src/method-x read-only and /src/lib-y at /src/lib-y read-only
+    And it mounts nothing for "web-z"
+
+  @rq-a37e2c54
+  Scenario: A missing local tool repository is reported, not fatal
+    Given ".tophat/tools.yaml" declares tool "method-x" at /nonexistent/method-x
+    When "th.sh --dry-run" is run
+    Then the launcher warns naming "method-x" and /nonexistent/method-x
+    And the session command is printed without a mount for it
 
   @rq-7d26723f
   Scenario: Every YAML form tophat accepts is understood

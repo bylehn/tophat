@@ -42,8 +42,11 @@ A root's location on the current machine is, in order of precedence:
 2. The entry for the root in `.tophat/roots.local.yaml`, a git-ignored file of the form
    `roots: { <name>: <absolute path> }`.
 
-A root with neither is **unconfigured** on this machine. Locations are absolute filesystem paths;
-a relative path is an error. Object-store URIs are not supported.
+A root with neither is **unconfigured** on this machine, except `results`, which then defaults to
+the git-ignored directory `results/` in the project root (created when the first output is
+written), so a new project needs no configuration. Configuring `results` puts stage outputs
+elsewhere, for example on a data disk. Locations are absolute filesystem paths; a relative path is
+an error. Object-store URIs are not supported.
 
 ## Datasets <!-- rq-01f47f40 -->
 
@@ -288,6 +291,12 @@ Feature: Data roots, datasets and lineage
     Given ".tophat/roots.local.yaml" locates root "raw" at "data/raw"
     When "tophat data roots" is run
     Then the exit code is 1 and the message names ".tophat/roots.local.yaml"
+
+  @rq-61aa0c3d
+  Scenario: The results root defaults to the project's results folder
+    Given neither TOPHAT_ROOT_RESULTS nor ".tophat/roots.local.yaml" locates root "results"
+    When the roots are loaded
+    Then root "results" is located at "<project root>/results"
 
   # --- Registering raw and declared data ---
 
@@ -557,8 +566,8 @@ Feature: Data roots, datasets and lineage
     Then "old-set@v1" is shown as a leaf marked "[declared, not verified]"
 
   @rq-6c036885
-  Scenario: Lineage through an unconfigured root
-    Given "clean-set@v1" was published from a stage whose results root is unconfigured on this machine
+  Scenario: Lineage through outputs that are not on this machine
+    Given "clean-set@v1" was published from a stage whose output is not in this machine's results root
     When "tophat data lineage clean-set@v1" is run
     Then the producing stage output is shown marked "[unavailable]"
     And the exit code is 0

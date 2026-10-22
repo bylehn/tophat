@@ -124,7 +124,7 @@ jobs:
       - name: Run the tests
         env:
           TOPHAT_REQUIRE_COPIER: "1"
-        run: cargo test --test template --test launcher
+        run: cargo test --test template --test launcher --test skills
 
   image:
     # Builds the real dev container image with Podman and runs the image scenarios of
@@ -155,6 +155,38 @@ jobs:
         run: |
           podman --version
           cargo test --test launcher -- --test-threads=1
+
+  e2e:
+    # The worked example study from question to report with the project's own pixi environment,
+    # then a tool pin change and failing returns of an external job (rqm/testing.md).
+    name: End-to-end example study
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Copier and pixi
+        run: |
+          pip install 'copier>=9,<10'
+          curl -fsSL https://pixi.sh/install.sh | bash
+          echo "$HOME/.pixi/bin" >> "$GITHUB_PATH"
+
+      - name: Run the end-to-end test
+        env:
+          TOPHAT_TEST_E2E: "1"
+        run: |
+          pixi --version
+          cargo test --test e2e -- --nocapture
 
   traceability:
     # Every Gherkin scenario in rqm/ is referenced by a test, except those of files listed in

@@ -58,3 +58,21 @@ pub fn copier() -> bool {
         }
     }
 }
+
+/// Whether `path` matches a Copier-style pattern: `*` matches within one path segment, and a
+/// trailing `/**` matches everything below a directory.
+pub fn path_matches(pattern: &str, path: &str) -> bool {
+    if let Some(dir) = pattern.strip_suffix("/**") {
+        return path.starts_with(&format!("{dir}/"));
+    }
+    fn glob(p: &[u8], s: &[u8]) -> bool {
+        match p.split_first() {
+            None => s.is_empty(),
+            Some((b'*', rest)) => (0..=s.len())
+                .take_while(|&i| i == 0 || s[i - 1] != b'/')
+                .any(|i| glob(rest, &s[i..])),
+            Some((c, rest)) => s.first() == Some(c) && glob(rest, &s[1..]),
+        }
+    }
+    glob(pattern.as_bytes(), path.as_bytes())
+}
