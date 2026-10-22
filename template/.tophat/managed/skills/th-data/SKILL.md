@@ -19,7 +19,9 @@ roots:
   raw: /absolute/path/on/this/machine
 ```
 
-Add a root name to `.tophat/roots.yaml` when the human needs one. Write a location to
+Stage outputs go to the `results` root, which defaults to the git-ignored `results/` folder of the
+project; configure it only to put outputs elsewhere. Add a root name to `.tophat/roots.yaml` when
+the human needs one. Write a location to
 `.tophat/roots.local.yaml` only as the human gives it, as an absolute path. Show the current roots
 with `tophat data roots`.
 

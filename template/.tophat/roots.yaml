@@ -1,3 +1,4 @@
 # Data roots of this project. Locations are per machine: see .tophat/roots.local.yaml.
+# Stage outputs go to results/ in the project unless that file puts them elsewhere.
 roots:
   results: {}

@@ -1,3 +1,5 @@
-# Working directories that tools create at the project root.
+# Directories that tools create at the project root.
 /.snakemake/
 /.pixi/
+# Stage outputs (the default location of the `results` data root).
+/results/

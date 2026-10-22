@@ -78,9 +78,11 @@ meet them, stop and tell the human.
    environments and provenance follow from this; never compute them.
 2. **Scripts** go in `scripts/`, in any language the environment has. They take every input and
    output path as an argument and never hard-code a path.
-3. **QC gates.** Every stage that another stage consumes needs a human QC verdict by default. Use
-   `qc: skip` only for a deterministic stage covered by a scenario test, with a `qc_reason` that
-   names that scenario.
+3. **QC gates.** Every stage that another stage consumes needs a human QC verdict by default. Give
+   each gated stage a `check`: a sentence or two saying what the human should verify in its output
+   before anything downstream uses it (shape, completeness, plausible ranges), without hinting at
+   the study's answer. `tophat stage qc` shows it. Use `qc: skip` only for a deterministic stage
+   covered by a scenario test, with a `qc_reason` that names that scenario.
 4. **Tools.** Every stage that a tool computes is a tool stage, `tool: <tool>@<commit>` with the
    commit the human chose (see `th-tool`). Never copy tool code into the study.
 5. **Cluster compute** is an external stage (`external:` with `setup`, `slurm` and `keep`): the

@@ -8,6 +8,9 @@ description: Find out where the project stands and take its next step. Use at th
 
 # th-next
 
+When the human asks how a study works, or why a step exists, point them to
+`.tophat/managed/GUIDE.md`.
+
 ## 1. Read the status
 
 Run `tophat status --json`. For each study it gives `next`: the `row` of the next-action table,
@@ -28,7 +31,7 @@ Run `tophat status --json`. For each study it gives `next`: the `row` of the nex
 | 3 | The draft's plan is incomplete | `th-study`, plan mode |
 | 4 | The plan is ready for pre-registration | Give the human `tophat study preregister <id>` and stop |
 | 5 | The study has no stages | `th-study`, build mode |
-| 6 | The `results` root is not configured | Ask the human where stage outputs should go on this machine, and write that absolute path to `.tophat/roots.local.yaml` (see `th-data`) |
+| 6 | The configured `results` location does not exist | Tell the human; ask whether to create that directory or to change the location in `.tophat/roots.local.yaml` (see `th-data`) |
 | 7 | Tool code is not on this machine | Give the human `tophat tools sync` and stop |
 | 8 | An external job is waiting | `th-run`, external hand-off |
 | 9 | A QC verdict is needed | Give the human the `tophat stage qc` command from `command` and stop |
