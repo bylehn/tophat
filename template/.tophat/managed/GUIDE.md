@@ -6,7 +6,10 @@ TopHat makes every result you report traceable, mechanically and without trustin
 to the question it answers, the plan you committed to before seeing it, the code and environment
 that computed it, and the data it consumed. This page follows one study from question to report and
 says why each step exists. The worked example in `.tophat/managed/examples/median-vs-mean/` goes
-through all of them.
+through all of them; the agent can walk you through it as a practice study.
+
+The path of a study, in five words: **explore, plan, lock, run, report.** Terms are explained in
+the glossary at the end.
 
 ## Who does what
 
@@ -24,19 +27,33 @@ through all of them.
 `PROJECT.md` holds the project's overarching question and its sub-questions. A study answers one
 of them. `tophat question stamp` gives each question a stable ID.
 
-## 2. The plan, and pre-registration
+## 2. Explore first
 
-A study's `STUDY.md` says what will be measured (the **primary endpoint**), how its value answers
-the question (the **decision rule**, with every threshold), and what must be true of the pipeline
-(the **scenarios**, each checked by a test). You pre-register it with
-`tophat study preregister <study>` before any result is seen. From then on the question, endpoint,
-decision rule and scenarios are frozen; a later change is an amendment, dated and saying whether
-results had been seen. This is what makes a result evidence rather than a story told afterwards.
+You cannot choose a good endpoint or threshold for data you do not understand yet: chosen too
+early, they are guesses. So explore first. Scratch analyses and notebooks go in `exploration/`;
+nothing there is ever cited as a result. You can also write a draft study and run its pipeline as
+a trial (`tophat run <study> --draft`) to debug it and to learn what the data looks like.
 
-A draft can be run as a trial (`tophat run <study> --draft`) to debug the pipeline. Trial results
-are kept apart and can never be reported.
+What you see while exploring shapes the plan, which is the point. The one thing to avoid is
+exploring on exactly the data that will answer the question and then pretending you had not seen
+the answer. Where you can, explore on a subset (a pilot set, a few systems), and keep the rest for
+the run that decides the question.
 
-## 3. Stages and keys
+## 3. The plan, and locking it
+
+Once you know what to measure, the study's `STUDY.md` says it: the number that answers the
+question (the **primary endpoint**), how that number answers it (the **decision rule**, with every
+threshold), and what must be true of the pipeline (the **scenarios**, a checklist such as
+`- S1: …`, each checked by a test). Then you lock the plan, which TopHat calls pre-registering:
+`tophat study preregister <study>`. From then on the question, endpoint, decision rule and
+scenarios are frozen; a later change is an amendment, dated and saying whether results had been
+seen. The pipeline itself can still change. Locking the plan before the deciding run is what makes
+the result evidence rather than a story told afterwards.
+
+Trial results from the draft are kept apart and can never be reported: after locking, the real run
+computes everything again.
+
+## 4. Stages and keys
 
 The pipeline is a list of **stages** in `config/base.yaml`; each runs one command and writes one
 output. A stage's **key** is a fingerprint of everything that determines its output: the command,
@@ -49,7 +66,7 @@ named by the key, such as `results/<study>/<stage>/<key>/`, so:
 
 Each output directory has a `provenance.json` recording what produced it.
 
-## 4. Validation and review
+## 5. Validation and review
 
 What code can check, code checks, every time: a stage's `validate` command (file counts, shapes,
 missing values, ranges) runs right after the stage, and a failed check stops it before its output
@@ -60,7 +77,7 @@ at the output and answer with `tophat stage qc <study> <stage> --variant <varian
 blocks everything downstream until the cause is fixed upstream, which gives the stage a new key and
 asks for a new verdict.
 
-## 5. External (cluster) stages
+## 6. External (cluster) stages
 
 Heavy compute can run on a cluster. When the pipeline reaches such a stage it writes a job folder
 (`<output directory>/job/`) and stops with the steps: copy the folder to the cluster, submit
@@ -68,7 +85,7 @@ Heavy compute can run on a cluster. When the pipeline reaches such a stage it wr
 itself. The job checks its inputs, and on return its receipt is checked before the outputs are
 accepted.
 
-## 6. Summary and reporting
+## 7. Summary and reporting
 
 When every stage has run, the pipeline writes `SUMMARY.md` with one result line per variant. A
 result computed from uncommitted code is **dirty** and cannot be reported: commit, then run again.
@@ -83,10 +100,29 @@ answered, citing the study.
 | Where am I? | `tophat status` |
 | Stamp new questions | `tophat question stamp` |
 | Start a study | `tophat study new <study> --question <question ID>` |
-| Pre-register | `tophat study preregister <study>` |
+| Try the pipeline on a draft | `tophat run <study> --draft` |
+| Lock the plan (pre-register) | `tophat study preregister <study>` |
 | Run (or continue) the pipeline | `tophat run <study>` |
 | Stage keys and output directories | `tophat pipeline keys <study> --variant <variant>` |
 | Answer a review question | `tophat stage qc <study> <stage> --variant <variant>` |
 | Steps for a cluster job | `tophat stage instructions <study> <stage> --variant <variant>` |
 | Report | `tophat study report <study>` |
 | Check the whole project | `tophat check` |
+
+## Glossary
+
+- **Pre-register** (lock the plan): freeze a study's question, primary endpoint, decision rule and
+  scenarios before the run that answers the question, so the result is judged by the plan made in
+  advance.
+- **Primary endpoint**: the one number that answers the study's question, and how it is measured.
+- **Decision rule**: how the endpoint's value maps to an answer, with every threshold.
+- **Scenario**: one checkable expectation of the pipeline (`S1`, `S2`, …), each tested by a test
+  that mentions `th:S1`.
+- **Amendment**: a dated change to a locked plan, saying whether results had been seen.
+- **Variant**: the same study and endpoint under a different setting (a parameter, a method, a
+  data subset).
+- **Stage key**: a fingerprint of everything that determines a stage's output; outputs live in a
+  directory named by it.
+- **Validation**: a stage's automatic check of its own output, run every time.
+- **Review**: a question about a stage's output that you answer by looking, before anything uses it.
+- **Trial run**: a run of a draft study, kept apart, never reportable.

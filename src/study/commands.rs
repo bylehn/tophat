@@ -86,22 +86,26 @@ variants:
 
 ## Question
 
-<!-- The single question this study answers. Frozen once pre-registered. -->
+<!-- The one question this study answers, in plain words. Locked when you pre-register. -->
 
 ## Primary endpoint
 
-<!-- The one quantity that answers the question, and how it is measured. Frozen once
-     pre-registered. -->
+<!-- The one number that answers the question (for example \"the mean RMSE difference over all
+     signals\"), and how it is measured. If you cannot name it yet, explore first. Locked when you
+     pre-register. -->
 
 ## Decision rule
 
-<!-- How the endpoint's value maps to an answer, including thresholds. Frozen once
-     pre-registered. -->
+<!-- How that number answers the question, with every threshold (for example \"method X is
+     better if the 95% interval lies above 0\"). Locked when you pre-register. -->
 
 ## Scenarios
 
-<!-- Testable expectations as gherkin code blocks. Put a tag such as @S1 on the line before each
-     Scenario. Tests under tests/ reference a scenario with th:S1. Frozen once pre-registered. -->
+<!-- What must be true of the pipeline, one checkable statement per line:
+     - S1: <expectation>
+     - S2: <expectation>
+     Each needs a test under tests/ that mentions th:S1, th:S2, ... (Gherkin blocks tagged @S1
+     also work.) Locked when you pre-register. -->
 
 ## Variants
 
@@ -214,9 +218,18 @@ pub fn preregister(
     }
 
     let out = &mut *console.out;
+    // rq-bcb83d0a
     writeln!(
         out,
-        "Pre-registering study `{id}`. These sections will be frozen:\n"
+        "Pre-registering study `{id}`.
+
+Pre-registration locks the plan before you see the result, so that the result is judged by the
+plan you made in advance rather than by one chosen afterwards. From now on the four sections below
+are frozen. If one must change later, the change is recorded as a dated amendment that says
+whether you had seen results. The pipeline, its stages, variants and scripts can still change.
+
+The sections to lock:
+"
     )?;
     for name in FROZEN_SECTIONS {
         writeln!(out, "## {name}")?;

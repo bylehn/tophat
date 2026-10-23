@@ -310,6 +310,21 @@ fn create_a_new_study() {
     );
     assert!(p.file("studies/x-vs-docking/tests").is_dir());
     assert_clean(&diagnostics(&p));
+    // Each governed section explains in plain words what goes there.
+    for name in ["Question", "Primary endpoint", "Decision rule", "Scenarios"] {
+        let section = study.section(name).unwrap();
+        let text: String = section
+            .content
+            .iter()
+            .map(|(_, l)| l.trim())
+            .collect::<Vec<_>>()
+            .join(" ");
+        assert!(
+            text.contains("<!--") && text.contains("Locked when you pre-register"),
+            "{name}"
+        );
+    }
+    assert!(text.contains("- S1: <expectation>") && text.contains("explore first"));
 }
 
 #[test] // rq-7fcedcf8 rq-f689a538
@@ -553,6 +568,60 @@ fn duplicate_scenario_numbers() {
     assert_eq!(found[0].line, Some(second));
 }
 
+#[test] // rq-3c295093 rq-04595081
+fn scenarios_as_a_checklist() {
+    let p = TempProject::new();
+    write_study(
+        &p,
+        &Doc::draft("study-a").set(
+            "Scenarios",
+            "- S1: The endpoint is computed from all items.\n- S2: No item is skipped.\n- A note that is not a scenario.",
+        ),
+    );
+    p.write("studies/study-a/tests/test_scores.py", "# th:S1\n# th:S2\n");
+    let ds = diagnostics(&p);
+    assert!(
+        !ds.iter()
+            .any(|d| d.rule.starts_with("study.scenario") || d.rule == "study.test-orphan"),
+        "{ds:#?}"
+    );
+    let study = parse_study_text("study-a", "STUDY.md", &p.study_text("study-a")).unwrap();
+    let numbers: Vec<Option<u32>> = study.scenarios.iter().map(|s| s.number).collect();
+    assert_eq!(numbers, [Some(1), Some(2)]);
+    assert_eq!(
+        study.scenarios[0].title,
+        "The endpoint is computed from all items."
+    );
+}
+
+#[test] // rq-de619d22 rq-04595081
+fn checklist_and_gherkin_numbers_are_unique_together() {
+    let p = TempProject::new();
+    write_study(
+        &p,
+        &Doc::draft("study-a").set(
+            "Scenarios",
+            &format!("- S1: one\n\n{}", scenario_block(&["@S1"])),
+        ),
+    );
+    assert_eq!(
+        with_rule(&diagnostics(&p), "study.scenario-duplicate").len(),
+        1
+    );
+}
+
+#[test] // rq-e4d78a92 rq-04595081
+fn an_invalid_checklist_number() {
+    let p = TempProject::new();
+    write_study(&p, &Doc::draft("study-a").set("Scenarios", "- S01: one\n"));
+    let ds = diagnostics(&p);
+    assert_eq!(
+        with_rule(&ds, "study.scenario-tag-invalid").len(),
+        1,
+        "{ds:#?}"
+    );
+}
+
 #[test] // rq-af111715 rq-04595081
 fn gaps_in_scenario_numbers_are_allowed() {
     let p = TempProject::new();
@@ -717,6 +786,23 @@ fn preregister_a_ready_draft_interactively() {
             .filter(|d| d.rule != "study.scenario-untested")
             .collect::<Vec<_>>(),
     );
+}
+
+#[test] // rq-c69454bd rq-bcb83d0a
+fn preregistration_explains_what_it_locks() {
+    let p = TempProject::new();
+    write_study(&p, &Doc::draft("study-a"));
+    let (result, output) = preregister_typing(&p, "study-a", "study-a");
+    result.unwrap();
+    let confirm = output.find("Type the study ID").unwrap();
+    let explained = &output[..confirm];
+    for phrase in [
+        "locks the plan before you see the result",
+        "dated amendment",
+        "The pipeline, its stages, variants and scripts can still change",
+    ] {
+        assert!(explained.contains(phrase), "{phrase}: {output}");
+    }
 }
 
 #[test] // rq-54c9eb81 rq-bcb83d0a

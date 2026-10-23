@@ -556,6 +556,32 @@ fn the_lock_is_the_templates_pre_solved_lock() {
     );
 }
 
+#[test] // rq-06b39dff rq-485c120f
+fn the_guide_starts_with_exploring_and_explains_its_terms() {
+    if !common::copier() {
+        return;
+    }
+    let scratch = Scratch::new();
+    let p = scratch.path("p");
+    render(&p, &[]);
+    let guide = read(&p, ".tophat/managed/GUIDE.md");
+    let explore = guide
+        .find("## 2. Explore first")
+        .expect("an explore section");
+    let plan = guide.find("## 3. The plan").expect("a plan section");
+    assert!(explore < plan);
+    assert!(guide.contains("explore, plan, lock, run, report"));
+    let glossary = &guide[guide.find("## Glossary").expect("a glossary")..];
+    for term in [
+        "Pre-register",
+        "Primary endpoint",
+        "Decision rule",
+        "Scenario",
+    ] {
+        assert!(glossary.contains(&format!("- **{term}**")), "{term}");
+    }
+}
+
 #[test] // rq-99f3ccdf rq-56d220b5 rq-72b63b68
 fn an_unreleased_pin_says_so() {
     if !common::copier() {

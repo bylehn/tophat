@@ -51,7 +51,7 @@ pub struct Scenario {
     /// The scenario number from its `@S<n>` tag, when it has exactly one valid tag.
     pub number: Option<u32>,
     pub title: String,
-    /// 1-based line of the `Scenario:` keyword.
+    /// 1-based line of the `Scenario:` keyword, or of the checklist item.
     pub line: u32,
 }
 
@@ -360,8 +360,19 @@ fn scenario_tag_number(tag: &str) -> Option<u32> {
     digits.parse().ok()
 }
 
+/// A checklist scenario `- S<digits>: <expectation>` as `(@S<digits>, expectation)`. Only
+/// top-level list items count, and the expectation must not be empty.
+fn checklist_item(line: &str) -> Option<(String, String)> {
+    let rest = line.strip_prefix("- S")?;
+    let (digits, title) = rest.split_once(':')?;
+    let title = title.trim();
+    (!digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit()) && !title.is_empty())
+        .then(|| (format!("@S{digits}"), title.to_string()))
+}
+
 // rq-04595081
-/// Finds the scenarios in the `## Scenarios` section and checks their tags.
+/// Finds the scenarios in the `## Scenarios` section, in the checklist and the Gherkin form, and
+/// checks their tags.
 fn parse_scenarios(section: &Section) -> (Vec<Scenario>, Vec<TagIssue>) {
     let mut scenarios = Vec::new();
     let mut issues = Vec::new();
@@ -375,8 +386,30 @@ fn parse_scenarios(section: &Section) -> (Vec<Scenario>, Vec<TagIssue>) {
                 previous = None;
                 continue;
             }
-            FenceState::Closes | FenceState::Outside => {
+            FenceState::Closes => {
                 in_gherkin = false;
+                continue;
+            }
+            FenceState::Outside => {
+                in_gherkin = false;
+                // The checklist form: a top-level list item `- S<n>: <expectation>`.
+                if let Some((tag, title)) = checklist_item(line) {
+                    match scenario_tag_number(&tag) {
+                        Some(number) => scenarios.push(Scenario {
+                            number: Some(number),
+                            title,
+                            line: *no,
+                        }),
+                        None => {
+                            issues.push(TagIssue::Invalid { line: *no, tag });
+                            scenarios.push(Scenario {
+                                number: None,
+                                title,
+                                line: *no,
+                            });
+                        }
+                    }
+                }
                 continue;
             }
             FenceState::Inside if !in_gherkin => continue,

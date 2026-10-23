@@ -120,7 +120,11 @@ elsewhere, that results are reported only from pre-registered studies, and that
 ### GUIDE.md <!-- rq-226c596c -->
 
 `.tophat/managed/GUIDE.md` explains, in one page, how a study goes from question to report, and
-why each step exists: the question tree; planning and pre-registration (what is frozen, and why the
+why each step exists. It starts with the path in five words (explore, plan, lock, run, report) and
+with exploring first: endpoints and thresholds chosen before the data is understood are arbitrary,
+so exploration in `exploration/` and trial runs of a draft come before the plan is locked. It ends
+with a short glossary of the terms it uses (pre-register, primary endpoint, decision rule,
+scenario, stage key, validation, review, variant, amendment). In between: the question tree; planning and pre-registration (what is frozen, and why the
 plan comes before any result is seen); stages, stage keys and why outputs live in directories named
 by their key; validation (the checks code runs after every stage) and review (the few QC gates where
 a human's judgment is asked for, and why they block what comes after); external stages and their
@@ -343,6 +347,12 @@ Feature: Generated project skeleton
     When the template is rendered twice with the same languages into different directories
     Then the two pixi.lock files are identical
     And the environment hash of "default" is the same in both projects
+
+  @rq-06b39dff
+  Scenario: The guide starts with exploring and explains its terms
+    When the template is rendered with default answers
+    Then .tophat/managed/GUIDE.md has a section on exploring before the plan, before the section on the plan
+    And it has a glossary defining "pre-register", "primary endpoint", "decision rule" and "scenario"
 
   @rq-f2b4f4cc
   Scenario: The release pin is complete
