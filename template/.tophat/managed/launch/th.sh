@@ -22,7 +22,7 @@ USAGE
 
 fail() {
   printf 'th.sh: %s\n' "$1" >&2
-  exit 1
+  exit 2
 }
 
 mode=session
@@ -84,7 +84,7 @@ project_image="localhost/tophat-$id-project:latest"
 # --- Run options --------------------------------------------------------------------------------
 
 . .tophat/managed/launch/run-options.sh
-run_options=$(emit_run_options .tophat/user/podman/run-options) || exit 1
+run_options=$(emit_run_options .tophat/user/podman/run-options) || exit 2
 
 # --- Mount sources ------------------------------------------------------------------------------
 

@@ -653,6 +653,32 @@ fn the_hook_uses_the_container_on_the_host() {
     assert!(log.contains("question.status-missing"), "{log}");
 }
 
+#[test] // rq-c0d8a5d1 rq-a35593b1
+fn the_hook_says_when_the_check_could_not_run() {
+    if !common::copier() {
+        return;
+    }
+    let scratch = Scratch::new();
+    let project = hooked_project(&scratch);
+    let bin = path_with(&scratch, "bin", &["git", "sh"]);
+    executable(&bin.join("podman"), "#!/bin/sh\nexit 0\n");
+    // A stand-in for the launcher refusing to start, as it does without a development binary.
+    executable(
+        &project.join("th.sh"),
+        "#!/bin/sh\necho 'th.sh: no tophat release is pinned' >&2\nexit 2\n",
+    );
+    let out = commit_with_path(&project, &bin);
+    let log = format!(
+        "{}{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(out.status.success(), "{log}");
+    assert!(log.contains("no tophat release is pinned"), "{log}");
+    assert!(log.contains("could not run (exit status 2)"), "{log}");
+    assert!(!log.contains("CI will reject"), "{log}");
+}
+
 #[test] // rq-26afc755 rq-a35593b1
 fn the_hook_is_skipped_without_tophat_or_a_container_runtime() {
     if !common::copier() {

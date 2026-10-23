@@ -21,6 +21,7 @@ printf '%s\n' "$output"
 case "$status" in
   0) ;;
   1) echo "TopHat: the check found errors; CI will reject this commit until they are fixed." ;;
-  *) echo "TopHat: the check could not run (exit status $status)." ;;
+  # Anything else, such as the launcher refusing to start (exit 2), means nothing was checked.
+  *) echo "TopHat: the check could not run (exit status $status), so nothing was checked." ;;
 esac
 exit 0
