@@ -28,27 +28,12 @@ if it lies entirely below 0, the mean filter is better.
 
 ## Scenarios
 
-```gherkin
-Feature: median-vs-mean
-
-  @S1
-  Scenario: The endpoint is the mean RMSE difference
-    Given the per-signal RMSEs of the mean and median filters
-    When the analyse stage runs
-    Then its result line reports the mean of RMSE(mean) − RMSE(median) and its 95% bootstrap interval
-
-  @S2
-  Scenario: Signals are reproducible
-    Given the same parameters and seed
-    When the generate stage runs twice
-    Then it writes identical signal files
-
-  @S3
-  Scenario: The filter keeps every sample
-    Given a generated signal
-    When the filter stage runs
-    Then its output has the clean, mean-filtered and median-filtered value of every input sample
-```
+- S1: The analyse stage's result line reports the mean of RMSE(mean) − RMSE(median) over the
+  signals of a variant, and its 95% bootstrap interval.
+- S2: The generate stage writes identical signal files when run twice with the same parameters
+  and seed.
+- S3: The filter stage's output has the clean, mean-filtered and median-filtered value of every
+  input sample.
 
 ## Variants
 

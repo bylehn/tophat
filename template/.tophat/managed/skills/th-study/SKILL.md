@@ -27,7 +27,13 @@ Plan mode writes only `STUDY.md`: no configuration, scripts or tests.
 3. **Create the study** when it does not exist: `tophat study new <id> --question <question ID>`
    (add `--visibility private` when it touches private data). The ID uses lowercase letters, digits
    and single hyphens.
-4. **Ask the human** for everything only they can decide, and wait for the answers:
+4. **Explore first if needed.** If the human cannot yet say what to measure, or which threshold
+   would decide, they have not explored enough, and any endpoint chosen now would be a guess.
+   Suggest exploring first: scratch analyses in `exploration/`, or writing the stages now and trial
+   runs of the draft (`tophat run <id> --draft`), preferably on a subset of the data, keeping the
+   rest for the run that decides the question. Explain why: what is seen before the plan is locked
+   shapes the plan. Never fill the gap with a suggestion of your own.
+5. **Ask the human** for everything only they can decide, and wait for the answers:
    - the **primary endpoint**: the single quantity that answers the question, and how it is
      measured;
    - the **decision rule**: how the endpoint's value maps to an answer, including every threshold;
@@ -36,16 +42,18 @@ Plan mode writes only `STUDY.md`: no configuration, scripts or tests.
 
    Never invent an endpoint, a threshold or a decision rule, and never fill those sections with a
    suggestion the human has not confirmed. Leave a section empty until the human has answered.
-5. **Write the plan.** Fill `## Question`, `## Primary endpoint`, `## Decision rule`, `## Variants`
+6. **Write the plan.** Fill `## Question`, `## Primary endpoint`, `## Decision rule`, `## Variants`
    (and list them in the front matter) and `## Stages` (prose; the machine-readable stages come in
-   build mode). In `## Scenarios`, write testable expectations as Gherkin in a fenced block, each
-   `Scenario:` on the line after its own tag `@S1`, `@S2`, …; never reuse a number. Scenarios cover
-   the endpoint computation, the data preparation that the result depends on, and any stage that
-   skips QC.
-6. **Check.** Run `tophat check studies/<id>` and fix what it reports.
-7. **Hand over.** When the plan is complete, ask the human to commit it on the host and give them
-   the command to pre-register it themselves: `tophat study preregister <id>`. Pre-registration
-   freezes the Question, Primary endpoint, Decision rule and Scenarios; only a human runs it.
+   build mode). In `## Scenarios`, write each testable expectation as a checklist item,
+   `- S1: <expectation>`, `- S2: …`, never reusing a number (Gherkin blocks tagged `@S1` also work,
+   if the human prefers them). Scenarios cover the endpoint computation, the data preparation that
+   the result depends on, and anything else the result relies on.
+7. **Check.** Run `tophat check studies/<id>` and fix what it reports.
+8. **Hand over.** When the plan is complete, ask the human to commit it on the host and give them
+   the command to lock it themselves: `tophat study preregister <id>`. Explain what it does in
+   plain words: it locks the Question, Primary endpoint, Decision rule and Scenarios, so the result
+   is judged by the plan made before it was seen; the pipeline can still change. Only a human runs
+   it.
 
 ### After pre-registration
 

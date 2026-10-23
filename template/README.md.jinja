@@ -11,8 +11,9 @@ report is explained in `.tophat/managed/GUIDE.md`.
 
 1. Start the dev container: `./th.sh`. Everything else runs inside it.
 2. See where the project stands: `tophat status`.
-3. Start the agent and ask it what to do next (`th-next`), for example to help you write the
-   project's overarching question in `PROJECT.md`.
+3. Start the agent and ask it what to do next (`th-next`). In a new project it explains how a study
+   goes (explore, plan, lock, run, report) and offers a practice run on the worked example before
+   you start on your own question.
 
 Commits are made on the host, outside the container. Stage outputs go to the git-ignored `results/`
 folder; to put them elsewhere on this machine (a data disk, a scratch filesystem), set an absolute

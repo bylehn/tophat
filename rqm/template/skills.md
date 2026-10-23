@@ -161,7 +161,11 @@ Starting point of a session.
   rows 4, 7 and 9 → tell the human the exact command and stop; row 5 → `th-study` (build); row 6 → ask
   the human for the `results` location and write it to `.tophat/roots.local.yaml`; row 8 → `th-run` (external hand-off); rows 10 to 13 → `th-run`; row 14 →
   `th-question` (answer).
-- With an empty question tree, routes to `th-question`.
+- With an empty question tree and no studies (a new project), explains the path of a study in a
+  few sentences (explore, plan, lock the plan, run, report; see `.tophat/managed/GUIDE.md`) and
+  offers two starts: walking through the worked example as a practice study (a practice question
+  and the example copied into `studies/`, both removable afterwards), or writing the project's own
+  question with `th-question`.
 - Never acts on a next action whose `who` is `you`.
 
 ### th-question <!-- rq-21f52f37 -->
@@ -184,10 +188,15 @@ A study's plan and pipeline. Two modes; the skill says which one it is in.
 
 - Asks the human for the question it answers (a stamped question ID), the primary endpoint, the
   decision rule and thresholds, the variants that matter, and the study's visibility.
+- Explores first when the human cannot yet name a well-founded endpoint or threshold: suggests
+  exploring in `exploration/`, or trial runs of the draft (`tophat run <id> --draft`), preferably
+  on a subset of the data, and says why: results seen before the plan is locked can shape it, so
+  the plan should be locked before the run that decides the question. Never fills the gap with a
+  suggestion of its own.
 - Looks for what already exists first: datasets (`tophat data used-by`, `datasets/`), published
   outputs of other studies, tools (`tophat tools list`). Prefers pinning an existing dataset over
   planning a new computation.
-- Writes every scenario with an `@S<n>` tag.
+- Writes scenarios as a checklist, `- S<n>: <expectation>`, unless the human prefers Gherkin.
 - After pre-registration, changes go into `## Amendments` as
   `- YYYY-MM-DD — results seen: yes|no — <reason>`; frozen sections are never edited. Whether a
   change is an amendment, a variant or a new study follows `local.md`, or by default: a new question
@@ -308,8 +317,8 @@ never placed in `studies/` by the template.
   - `score`: a fan-out over the filtered signals computing both RMSEs, in Julia when the project
     selected Julia and in Python otherwise, with a `validate` script checking each item's RMSEs;
   - `analyse`: a Python script computing the endpoint and its interval and writing `result.txt`.
-- **Scenarios** cover the endpoint, the determinism of `generate`, and the shape of the filter
-  output, each with a test carrying its `th:S<n>` token.
+- **Scenarios**, written as a checklist, cover the endpoint, the determinism of `generate`, and the
+  shape of the filter output, each with a test carrying its `th:S<n>` token.
 - `STUDY.md` has `status: draft` and `question: q-00000000`, and a `README.md` beside it says how
   to adapt it: copy it into `studies/`, set `question` to a stamped question, and pre-register.
 
@@ -488,6 +497,20 @@ Feature: Agent skills (behaviour evals, not a CI gate)
     When the human asks the agent to report the study
     Then the agent runs "tophat study report <id>"
     And the Result section equals the SUMMARY.md result lines
+
+  @rq-d3d008f8
+  Scenario: A new project starts with the path of a study
+    Given a new project with an empty question tree and no studies
+    When the human starts the agent with th-next
+    Then the agent explains explore, plan, lock, run and report in a few sentences
+    And it offers to walk through the worked example or to write the project's own question
+
+  @rq-f480be87
+  Scenario: The agent suggests exploring before guessing an endpoint
+    Given a stamped open question and no exploration of its data
+    When the human asks the agent to plan a study but cannot say what to measure
+    Then the agent suggests exploring first, in exploration/ or with trial runs of a draft
+    And STUDY.md's Primary endpoint and Decision rule stay empty
 
   @rq-8b9e930e
   Scenario: The interpretation is left to the human

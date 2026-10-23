@@ -85,15 +85,32 @@ matched exactly (case-sensitive). The governed sections are:
 
 ### Scenarios <!-- rq-04595081 -->
 
-- The `## Scenarios` section contains one or more ` ```gherkin ` fenced blocks.
+A scenario is one testable expectation of the study. The `## Scenarios` section writes them in
+either or both of two forms:
+
+- **Checklist:** a top-level list item outside any fenced block, `- S<n>: <expectation>`, where
+  `<n>` is a positive integer without leading zeros and the expectation is non-empty. This is the
+  form the study template suggests:
+
+  ```markdown
+  - S1: Spearman rho of method X against experiment exceeds that of docking on the benchmark set.
+  - S2: No scored structure has a heavy-atom clash below 2.0 Å.
+  ```
+
+  A list item `- S<digits>: …` whose number is zero or has leading zeros is an invalid tag; other
+  list items are free text.
+- **Gherkin:** ` ```gherkin ` fenced blocks, for those who prefer Given/When/Then.
+
+For the Gherkin form:
+
 - Each `Scenario:` (or `Scenario Outline:`) is immediately preceded, on its own line, by exactly one
   scenario tag of the form `@S<n>`, where `<n>` is a positive integer without leading zeros. Other
   Gherkin tags may appear on the same line. A tag is a scenario tag only if it is `@S` followed by
   digits only; tags such as `@Slow` or `@Smoke` are ordinary tags.
-- Scenario numbers are unique within the study. Gaps are allowed (a removed draft scenario's number
-  need not be reused).
+- Scenario numbers are unique within the study, across both forms. Gaps are allowed (a removed
+  draft scenario's number need not be reused).
 
-Example:
+Gherkin example:
 
 ```markdown
 ## Scenarios
@@ -213,8 +230,11 @@ Result empty → `preregistered`; block absent → `retrospective`.
   - Requires status `draft` and that the study has no `error` diagnostics from the `study` rule
     family when evaluated as if it were `preregistered` with a matching fingerprint (non-empty
     frozen sections, at least one scenario, valid tags, variant configs consistent).
-  - Prints the frozen sections, then asks the user to type the study ID to confirm. Any other input
-    aborts without changes.
+  - Explains in plain words what pre-registration does: the Question, Primary endpoint, Decision
+    rule and Scenarios printed below are locked from now on, so the result is judged by the plan
+    made before it was seen; later changes go into dated amendments that say whether results had
+    been seen; the pipeline, variants and stages can still change. Then prints the frozen sections
+    and asks the user to type the study ID to confirm. Any other input aborts without changes.
   - On confirmation, sets `status: preregistered` and writes `preregistered.date` (current local
     date) and `preregistered.frozen_hash`. Changes nothing else in the file.
   - Prints a reminder to commit `STUDY.md` before running any answer-stage computation.
@@ -292,7 +312,7 @@ front-matter field, heading, scenario, list item or result line where one exists
 | `study.prereg-unexpected` | error | Status `draft` or `retrospective` (or superseded from it) has a `preregistered` block |
 | `study.frozen-modified` | error | The recomputed fingerprint differs from `preregistered.frozen_hash` |
 | `study.scenario-untagged` | error | A scenario lacks exactly one `@S<n>` tag |
-| `study.scenario-tag-invalid` | error | A tag is `@S` followed by digits but is not a valid scenario tag (e.g. `@S0`, `@S01`) |
+| `study.scenario-tag-invalid` | error | A tag is `@S` followed by digits, or a checklist item starts with `S` followed by digits and a colon, but the number is not valid (e.g. `@S0`, `- S01:`) |
 | `study.scenario-duplicate` | error | Two scenarios share a number |
 | `study.no-scenarios` | error | Status requires at least one scenario and there are none |
 | `study.scenario-untested` | warning in `preregistered`; error in `reported` | A scenario is not referenced by any test file |
@@ -345,7 +365,7 @@ Feature: Study document format, lifecycle and check rules
   Scenario: Create a new study
     When "tophat study new x-vs-docking --question q-1a2b3c4d" is run
     Then "studies/x-vs-docking/STUDY.md" exists with status "draft", visibility "public" and variants ["base"]
-    And it contains every governed section heading
+    And it contains every governed section heading, each with a plain-language comment saying what goes there
     And "studies/x-vs-docking/config/base.yaml" exists and contains "stages: []"
     And "studies/x-vs-docking/Snakefile" equals the stub for "x-vs-docking"
     And the directory "studies/x-vs-docking/tests" exists
@@ -432,6 +452,26 @@ Feature: Study document format, lifecycle and check rules
     Then no diagnostic mentions the "Background" section
 
   # --- Scenarios and tests ---
+
+  @rq-3c295093
+  Scenario: Scenarios as a checklist
+    Given study "study-a" has a Scenarios section with the list items "- S1: The endpoint is computed from all items." and "- S2: No item is skipped."
+    And a test file references "th:S1" and "th:S2"
+    When "tophat check" is run
+    Then no "study" diagnostic is reported for its scenarios
+    And the study has scenarios 1 and 2
+
+  @rq-de619d22
+  Scenario: Checklist and Gherkin numbers are unique together
+    Given study "study-a" has the list item "- S1: one" and a Gherkin scenario tagged "@S1"
+    When "tophat check" is run
+    Then an error "study.scenario-duplicate" is reported
+
+  @rq-e4d78a92
+  Scenario: An invalid checklist number
+    Given study "study-a" has the list item "- S01: one"
+    When "tophat check" is run
+    Then an error "study.scenario-tag-invalid" is reported
 
   @rq-520893f5
   Scenario: Scenario without a tag
@@ -523,6 +563,12 @@ Feature: Study document format, lifecycle and check rules
     And "preregistered.date" is today's local date
     And "preregistered.frozen_hash" equals the frozen fingerprint of the study
     And no other byte of STUDY.md has changed
+
+  @rq-c69454bd
+  Scenario: Pre-registration explains what it locks
+    Given study "study-a" is a ready draft
+    When "tophat study preregister study-a" is run interactively
+    Then before asking for confirmation it says that the Question, Primary endpoint, Decision rule and Scenarios will be locked, that later changes go into amendments, and that the pipeline can still change
 
   @rq-54c9eb81
   Scenario: Pre-registration refused without an interactive terminal

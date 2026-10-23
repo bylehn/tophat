@@ -584,10 +584,13 @@ fn the_copied_example_passes_the_check() {
     let tests = p.read("studies/median-vs-mean/tests/test_scenarios.py");
     let study = p.read("studies/median-vs-mean/STUDY.md");
     for n in 1..=3 {
-        assert!(study.contains(&format!("@S{n}\n")), "S{n}");
+        assert!(study.contains(&format!("\n- S{n}: ")), "S{n}");
         assert!(tests.contains(&format!("th:S{n}")), "S{n}");
     }
-    assert!(!study.contains("@S4"));
+    assert!(!study.contains("- S4:"));
+    let parsed = tophat::study::parse_study_text("median-vs-mean", "STUDY.md", &study).unwrap();
+    let numbers: Vec<Option<u32>> = parsed.scenarios.iter().map(|s| s.number).collect();
+    assert_eq!(numbers, [Some(1), Some(2), Some(3)]);
 }
 
 #[test] // rq-38e5cf5f rq-428f178b

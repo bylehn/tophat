@@ -16,8 +16,8 @@ When the human asks how a study works, or why a step exists, point them to
 Run `tophat status --json`. For each study it gives `next`: the `row` of the next-action table,
 `who` may take it (`you` means only the human), its `text`, and the `command` to run.
 
-- If the question tree is empty (`questions` counts all zero and there are no studies), the project
-  needs its overarching question: use `th-question`.
+- If the question tree is empty and there are no studies, this is a new project: see *A new
+  project* below.
 - If the human named a study, take that study. Otherwise take the study whose next action is
   furthest along (the highest row below 15); if several are equally far, ask the human which one.
 - If every study's row is 15 (done) and no question is open, say so and stop.
@@ -39,6 +39,24 @@ Run `tophat status --json`. For each study it gives `next`: the `row` of the nex
 | 14 | The study is reported and its question is still open | `th-question`, answering |
 
 Never carry out a next action whose `who` is `you`: give the human its `command` and stop.
+
+## A new project
+
+Explain, in a few sentences, how a study goes: **explore** the data until you know what to
+measure; **plan** the study (the question, the one number that answers it, and how that number
+decides); **lock** the plan before the run that answers the question (`tophat study preregister`,
+done by the human); **run** the pipeline; **report** the result. Point to
+`.tophat/managed/GUIDE.md` for the details. Then offer two starts, and let the human choose:
+
+- **A practice run on the worked example**, to see the whole path once on a study that is known to
+  work. Add a practice question to `PROJECT.md` (for example "Practice: does a median filter
+  recover noisy step signals better than a mean filter?") with `status: open`, stamp it with
+  `tophat question stamp`, copy `.tophat/managed/examples/median-vs-mean/` to
+  `studies/median-vs-mean/`, set its `question:` to the stamped ID, and follow its `README.md`,
+  handing each human step to the human as it comes. Say at the start that the practice question and
+  study can be removed afterwards (drop the question with the reason "practice"; delete the study
+  directory and its outputs under `results/`).
+- **Their own project**: use `th-question` to write the overarching question.
 
 ## 3. Finish
 

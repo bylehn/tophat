@@ -287,6 +287,18 @@
     "title": "Hard Rules",
     "type": "section"
   },
+  "rq-06b39dff": {
+    "decl": "Scenario: The guide starts with exploring and explains its terms",
+    "file": "template/project",
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The guide starts with exploring and explains its terms",
+    "type": "scenario"
+  },
   "rq-079894b1": {
     "decl": "### Commands",
     "file": "workflow",
@@ -2291,6 +2303,18 @@
     "title": "ToolsError",
     "type": "api-item"
   },
+  "rq-3c295093": {
+    "decl": "Scenario: Scenarios as a checklist",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Scenarios as a checklist",
+    "type": "scenario"
+  },
   "rq-3c33f183": {
     "decl": "Scenario: Project run options are appended and validated",
     "file": "template/container",
@@ -2693,7 +2717,12 @@
     "decl": "### README.md",
     "file": "template/project",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "README.md",
     "type": "section"
   },
@@ -4477,7 +4506,12 @@
   "rq-75cc7ed6": {
     "decl": "Scenario: An external stage cannot validate",
     "file": "pipeline/external",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/external.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An external stage cannot validate",
     "type": "scenario"
   },
@@ -7413,6 +7447,18 @@
     "title": "STUDY.md Format",
     "type": "section"
   },
+  "rq-c69454bd": {
+    "decl": "Scenario: Pre-registration explains what it locks",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Pre-registration explains what it locks",
+    "type": "scenario"
+  },
   "rq-c698a75a": {
     "decl": "Scenario: Missing Snakefile for a study with stages",
     "file": "pipeline/snakemake",
@@ -7980,6 +8026,13 @@
     "title": "parse_receipt",
     "type": "api-item"
   },
+  "rq-d3d008f8": {
+    "decl": "Scenario: A new project starts with the path of a study",
+    "file": "template/skills",
+    "refs": [],
+    "title": "A new project starts with the path of a study",
+    "type": "scenario"
+  },
   "rq-d4227e28": {
     "decl": "Scenario: Renaming a pre-registered study is detected",
     "file": "study/format",
@@ -8525,6 +8578,18 @@
     "title": "Feature: Stage Configuration, Keys and Provenance",
     "type": "file"
   },
+  "rq-de619d22": {
+    "decl": "Scenario: Checklist and Gherkin numbers are unique together",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Checklist and Gherkin numbers are unique together",
+    "type": "scenario"
+  },
   "rq-de80fc6b": {
     "decl": "## Out of Scope",
     "file": "check",
@@ -8720,6 +8785,18 @@
       }
     ],
     "title": "Consuming declared data is flagged as legacy",
+    "type": "scenario"
+  },
+  "rq-e4d78a92": {
+    "decl": "Scenario: An invalid checklist number",
+    "file": "study/format",
+    "refs": [
+      {
+        "file": "tests/study.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "An invalid checklist number",
     "type": "scenario"
   },
   "rq-e54fa7fd": {
@@ -9328,6 +9405,13 @@
     ],
     "title": "QuestionStatus",
     "type": "api-item"
+  },
+  "rq-f480be87": {
+    "decl": "Scenario: The agent suggests exploring before guessing an endpoint",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The agent suggests exploring before guessing an endpoint",
+    "type": "scenario"
   },
   "rq-f503e56e": {
     "decl": "Scenario: An existing hook path is left alone",
