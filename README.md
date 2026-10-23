@@ -254,3 +254,8 @@ The template files that Copier copies into a new project (everything under `temp
 MIT No Attribution. See [template/TEMPLATE-LICENSE](template/TEMPLATE-LICENSE). A generated project
 needs no notice from TopHat. When you create a project, Copier asks which license it should use
 (MIT, BSD-3-Clause, Apache-2.0, GPL-3.0-or-later, or none) and writes the matching `LICENSE` file.
+
+The development setup of this repository comes from [riprap](https://github.com/MolSSI/riprap)
+under the MIT License. See [LICENSE-riprap](LICENSE-riprap). It covers the riprap-managed files:
+everything under `.riprap/managed/` and the paths listed in `.riprap/managed/ownership-exceptions`
+(including `rr.sh`, `rr.bat` and the agent skill folders).
