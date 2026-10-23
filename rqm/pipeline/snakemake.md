@@ -20,8 +20,9 @@ and then writes `SUMMARY.md`. The target `variant_<variant>` builds every stage 
 without writing the summary. `tophat run` (see `rqm/workflow.md`) wraps this command.
 
 For a study with status `draft`, the generated rules contain only the **trial** targets `trial`
-(every variant) and `trial_<variant>`, which build trial outputs (see `rqm/workflow.md`) and never
-write the summary. For every other status they contain the targets above and no trial targets.
+(every variant) and `trial_<variant>`, which build trial outputs (see `rqm/workflow.md`) with each
+stage's `trial` overrides applied, never write the summary, and end by running
+`tophat study exploration <study>` (see `rqm/study/exploration.md`). For every other status they contain the targets above and no trial targets.
 
 ## The Snakefile Stub <!-- rq-fbc524b4 -->
 

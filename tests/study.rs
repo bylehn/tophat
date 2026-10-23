@@ -11,8 +11,8 @@ use chrono::NaiveDate;
 use tophat::check::{Diagnostic, Project, Severity, RULE_FAMILIES};
 use tophat::cli::{run, Streams, EXIT_OK};
 use tophat::study::{
-    frozen_fingerprint, new_study, parse_study_text, preregister, report, study_rules_at,
-    supersede, Console, Status, StudyError, GOVERNED_SECTIONS,
+    exploration_hash, frozen_fingerprint, new_study, parse_exploration, parse_study_text,
+    preregister, report, study_rules_at, supersede, Console, Status, StudyError, GOVERNED_SECTIONS,
 };
 
 // --- Fixtures -------------------------------------------------------------------------------
@@ -749,12 +749,22 @@ fn missing_base_config() {
 // --- Pre-registration -------------------------------------------------------------------------
 
 /// The draft text with the edits `preregister` is specified to make.
-fn expected_preregistered(draft: &str, date: &str, fingerprint: &str) -> String {
+/// The draft as pre-registration writes it, with the exploration fields of the study's
+/// `EXPLORATION.md` (which pre-registration writes too).
+fn expected_preregistered(p: &TempProject, draft: &str, date: &str, fingerprint: &str) -> String {
     let with_status = draft.replacen("status: draft\n", "status: preregistered\n", 1);
     let close = with_status[4..].find("---\n").unwrap() + 4;
+    let id = with_status
+        .lines()
+        .find_map(|l| l.strip_prefix("study: "))
+        .unwrap();
+    let exploration = p.read(&format!("studies/{id}/EXPLORATION.md"));
+    let seen = parse_exploration(&exploration).unwrap().1;
     format!(
-        "{}preregistered:\n  date: \"{date}\"\n  frozen_hash: \"{fingerprint}\"\n{}",
+        "{}preregistered:\n  date: \"{date}\"\n  frozen_hash: \"{fingerprint}\"\n  \
+         exploration_hash: \"{}\"\n  deciding_data_seen: {seen}\n{}",
         &with_status[..close],
+        exploration_hash(&exploration),
         &with_status[close..]
     )
 }
@@ -779,7 +789,10 @@ fn preregister_a_ready_draft_interactively() {
         block.value.frozen_hash.as_deref(),
         Some(fingerprint.as_str())
     );
-    assert_eq!(after, expected_preregistered(&before, TODAY, &fingerprint));
+    assert_eq!(
+        after,
+        expected_preregistered(&p, &before, TODAY, &fingerprint)
+    );
     assert_clean(
         &diagnostics(&p)
             .into_iter()
@@ -1477,7 +1490,10 @@ fn commands_preserve_unrelated_content() {
     let after = p.study_text("study-a");
     let study = parse_study_text("study-a", "STUDY.md", &after).unwrap();
     let fingerprint = frozen_fingerprint(&study);
-    assert_eq!(after, expected_preregistered(&text, TODAY, &fingerprint));
+    assert_eq!(
+        after,
+        expected_preregistered(&p, &text, TODAY, &fingerprint)
+    );
 }
 
 #[test] // rq-1dd3778a rq-ecacda48

@@ -84,6 +84,8 @@ pub struct StudyStatus {
     pub question: Option<String>,
     pub question_text: Option<String>,
     pub superseded_by: Option<String>,
+    /// Whether the plan was informed by its deciding data (see `rqm/study/exploration.md`).
+    pub informed: bool,
     /// Per listed variant, in `STUDY.md` order; `None` for studies without stages.
     pub pipeline: Option<Vec<(String, Progress)>>,
     pub next: NextAction,
@@ -320,6 +322,7 @@ fn evaluate(root: &Path, view: &ProjectView, study_id: &str) -> Result<StudyStat
             question: None,
             question_text: None,
             superseded_by: None,
+            informed: false,
             pipeline: None,
             next: fix(study_id),
         });
@@ -341,6 +344,7 @@ fn evaluate(root: &Path, view: &ProjectView, study_id: &str) -> Result<StudyStat
         question: question.clone(),
         question_text,
         superseded_by: superseded_by.clone(),
+        informed: study.deciding_data_seen(),
         pipeline,
         next: NextAction::new(15, Who::Nobody, "None: done", None),
     };
@@ -504,7 +508,12 @@ pub fn render_status(project: &Value, studies: &[StudyStatus]) -> String {
         .partition(|s| s.status.as_deref() == Some("superseded"));
     for s in &active {
         out.push('\n');
-        let mut header = vec![s.id.clone(), s.status.clone().unwrap_or_else(|| "?".into())];
+        let mut status = s.status.clone().unwrap_or_else(|| "?".into());
+        // rq-3a21c28f
+        if s.informed && status == "reported" {
+            status.push_str(" (plan informed by its deciding data)");
+        }
+        let mut header = vec![s.id.clone(), status];
         if let Some(q) = &s.question {
             header.push(q.clone());
         }
@@ -545,6 +554,7 @@ pub fn status_json(project: &Value, studies: &[StudyStatus]) -> Value {
         "studies": studies.iter().map(|s| json!({
             "id": s.id,
             "status": s.status,
+            "plan_informed_by_deciding_data": s.informed,
             "question": s.question,
             "pipeline": s.pipeline.as_ref().map(|p| p.iter().map(|(v, progress)| (v.clone(), match progress {
                 Some((sealed, total)) => json!({"sealed": sealed, "total": total}),

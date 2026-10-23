@@ -43,7 +43,8 @@ if it lies entirely below 0, the mean filter is better.
 ## Stages
 
 1. `generate` writes 30 seeded synthetic step signals of 200 samples, one file per signal; its
-   validation checks the number of signals, their length and their values.
+   validation checks the number of signals, their length and their values. Trial runs of the
+   draft explore on 10 signals with seed 2, so the 30 signals that decide stay unseen.
 2. `filter` applies both filters (width 5) with a POSIX shell and awk script. It is an external
    stage: it runs on a cluster from a job folder that needs only POSIX tools. A human reviews its
    output: whether the median filter follows the step without the noise spikes.

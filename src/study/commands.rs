@@ -7,6 +7,9 @@ use std::path::{Path, PathBuf};
 use chrono::NaiveDate;
 
 use super::edit::EditableDoc;
+use super::exploration::{
+    exploration_hash, exploration_text, explore, write_exploration, Exploration, EXPLORATION_FILE,
+};
 use super::rules::{check_study, Context};
 use super::{
     frozen_fingerprint, is_valid_question_id, is_valid_study_id, parse_study_text, parse_summary,
@@ -192,6 +195,9 @@ pub fn preregister(
     require_status(&loaded.study, &[Status::Draft])?;
 
     let fingerprint = frozen_fingerprint(&loaded.study);
+    // rq-fea6913a
+    let exploration = explore(root, id)?;
+    let (exploration_text, _) = exploration_text(root, &exploration);
     let mut doc = editable(&loaded)?;
     doc.set_field("status", &["status: preregistered".to_string()]);
     doc.set_field(
@@ -200,6 +206,11 @@ pub fn preregister(
             "preregistered:".to_string(),
             format!("  date: \"{}\"", today.format("%Y-%m-%d")),
             format!("  frozen_hash: \"{fingerprint}\""),
+            format!(
+                "  exploration_hash: \"{}\"",
+                exploration_hash(&exploration_text)
+            ),
+            format!("  deciding_data_seen: {}", exploration.deciding_data_seen),
         ],
     );
     let new_text = doc.text();
@@ -211,7 +222,8 @@ pub fn preregister(
     let ctx = Context::load(&project, today);
     let problems: Vec<_> = check_study(&ctx, &hypothetical)
         .into_iter()
-        .filter(|d| d.severity == Severity::Error)
+        // EXPLORATION.md is written only on confirmation.
+        .filter(|d| d.severity == Severity::Error && !d.rule.starts_with("study.exploration-"))
         .collect();
     if !problems.is_empty() {
         return Err(StudyError::NotReady(problems));
@@ -239,6 +251,20 @@ The sections to lock:
             }
         }
     }
+    // rq-db0c3b99
+    writeln!(
+        out,
+        "\nWhat the exploration saw: {}. This is recorded in {EXPLORATION_FILE}.",
+        exploration.account()
+    )?;
+    if exploration.deciding_data_seen {
+        writeln!(
+            out,
+            "The trial runs already saw the deciding data (the data the locked plan will compute \
+             from). That is allowed, but the result will be labelled as informed by its deciding \
+             data."
+        )?;
+    }
     write!(out, "\nType the study ID (`{id}`) to confirm: ")?;
     out.flush()?;
     let mut answer = String::new();
@@ -247,13 +273,31 @@ The sections to lock:
         return Err(StudyError::ConfirmationMismatch);
     }
 
+    write_atomic(&Exploration::path(root, id), &exploration_text)?;
     write_atomic(&loaded.path, &new_text)?;
     writeln!(
         console.out,
-        "Study `{id}` is pre-registered. Commit {STUDY_FILE} now, before running any \
-         answer-stage computation."
+        "Study `{id}` is pre-registered. Commit {STUDY_FILE} and {EXPLORATION_FILE} now, before \
+         running any answer-stage computation."
     )?;
     Ok(())
+}
+
+// rq-bc7ec152 rq-e3a73fb1
+/// `tophat study exploration`: writes `EXPLORATION.md` of a draft study. Returns the record and
+/// whether the file changed.
+pub fn record_exploration(root: &Path, id: &str) -> Result<(Exploration, bool), StudyError> {
+    let loaded = load(root, id)?;
+    match loaded.study.status() {
+        Some(Status::Draft) => {}
+        Some(_) => return Err(StudyError::ExplorationLocked(id.to_string())),
+        None => {
+            require_status(&loaded.study, &[Status::Draft])?;
+        }
+    }
+    let exploration = explore(root, id)?;
+    let changed = write_exploration(root, &exploration)?;
+    Ok((exploration, changed))
 }
 
 // rq-ecacda48

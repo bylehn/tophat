@@ -454,6 +454,8 @@ struct LineageContext {
     manifests: BTreeMap<DatasetRef, Manifest>,
     results: Option<PathBuf>,
     depth_limit: usize,
+    /// Studies whose plan was informed by their deciding data.
+    informed: BTreeSet<String>,
 }
 
 impl LineageContext {
@@ -495,6 +497,10 @@ impl LineageContext {
             node.mark = Some("[truncated]".into());
             return node;
         }
+        // rq-643d82cb
+        if self.informed.contains(study) {
+            node.mark = Some("[plan informed by its deciding data]".into());
+        }
         match recorded_inputs(self.results.as_deref(), study, stage, key) {
             None => node.mark = Some("[unavailable]".into()),
             Some(inputs) => {
@@ -510,6 +516,20 @@ impl LineageContext {
         }
         node
     }
+}
+
+/// The studies whose `preregistered` block says the plan was informed by its deciding data.
+fn informed_studies(root: &Path) -> BTreeSet<String> {
+    let dir = root.join(crate::study::STUDIES_DIR);
+    let Ok(entries) = std::fs::read_dir(&dir) else {
+        return BTreeSet::new();
+    };
+    entries
+        .flatten()
+        .filter_map(|e| crate::study::parse_study(&e.path()).ok())
+        .filter(|s| s.deciding_data_seen())
+        .map(|s| s.id)
+        .collect()
 }
 
 /// Parses `<study>/<stage>@<key>`.
@@ -532,6 +552,7 @@ pub fn lineage(project_root: &Path, target: &str) -> Result<LineageNode, DataErr
             .location(RESULTS_ROOT)
             .map(Path::to_path_buf),
         depth_limit: 256,
+        informed: informed_studies(project_root),
     };
     if let Some((study, stage, key)) = parse_stage_target(target) {
         return Ok(ctx.stage(study, stage, key, 0));

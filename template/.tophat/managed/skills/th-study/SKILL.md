@@ -29,10 +29,15 @@ Plan mode writes only `STUDY.md`: no configuration, scripts or tests.
    and single hyphens.
 4. **Explore first if needed.** If the human cannot yet say what to measure, or which threshold
    would decide, they have not explored enough, and any endpoint chosen now would be a guess.
-   Suggest exploring first: scratch analyses in `exploration/`, or writing the stages now and trial
-   runs of the draft (`tophat run <id> --draft`), preferably on a subset of the data, keeping the
-   rest for the run that decides the question. Explain why: what is seen before the plan is locked
-   shapes the plan. Never fill the gap with a suggestion of your own.
+   Suggest exploring first: scratch analyses in `exploration/<id>/`, or writing the stages now and
+   trial runs of the draft (`tophat run <id> --draft`), preferably on a pilot: a small dataset
+   registered next to the full one, used in trial runs through the stage's `trial` field
+   (`trial: {inputs: {raw: dataset:<pilot>@v1}}`, or `trial: {params: {...}}` for fewer or
+   differently seeded synthetic data), keeping the rest for the run that decides the question.
+   Explain why: what is seen before the plan is locked shapes the plan, and TopHat labels a result
+   whose plan was informed by its own deciding data (`EXPLORATION.md` records what the trial runs
+   saw; `tophat study exploration <id>` rewrites it). Never fill the gap with a suggestion of your
+   own.
 5. **Ask the human** for everything only they can decide, and wait for the answers:
    - the **primary endpoint**: the single quantity that answers the question, and how it is
      measured;

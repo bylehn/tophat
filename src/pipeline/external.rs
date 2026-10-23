@@ -840,7 +840,13 @@ pub fn large_inputs_warning(total: u64) -> Option<String> {
 /// Loads a stage for an external command: it must be external and `request.key` current.
 fn load_external(root: &Path, request: &SealRequest) -> Result<ResolvedStage, ExternalError> {
     let variant = request.variant.as_deref().unwrap_or("base");
-    let resolved = ResolvedStage::load_until(root, &request.study, variant, Some(&request.stage))?;
+    let resolved = ResolvedStage::load_mode(
+        root,
+        &request.study,
+        variant,
+        Some(&request.stage),
+        request.trial,
+    )?;
     let stage = resolved.stage(&request.stage)?;
     if stage.external.is_none() {
         return Err(PipelineError::Config {
@@ -1250,7 +1256,7 @@ pub fn instructions(
     variant: &str,
 ) -> Result<String, ExternalError> {
     let trial = super::summary::read_study(root, study)?.status() == Some(Status::Draft);
-    let resolved = ResolvedStage::load_until(root, study, variant, Some(stage))?;
+    let resolved = ResolvedStage::load_mode(root, study, variant, Some(stage), trial)?;
     let request = SealRequest {
         study: study.to_string(),
         stage: stage.to_string(),
@@ -1377,6 +1383,7 @@ mod tests {
             external: None,
             validate: None,
             review: None,
+            trial: None,
             result: None,
             file: String::new(),
             line: None,

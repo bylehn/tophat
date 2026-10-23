@@ -13,7 +13,7 @@ description: Run a study's pipeline and see it through to a reported result, han
 Run `tophat run <id>`. It refuses to start a run that cannot produce reportable results and says
 why; fix that first (usually with `th-study` or `th-data`). For a draft study, run
 `tophat run <id> --draft` and tell the human that trial results are kept apart and can never be
-reported. Every run ends with the study's next action; act on it as below.
+reported; the run updates the study's `EXPLORATION.md`, and the human commits it with the plan. Every run ends with the study's next action; act on it as below.
 
 ## QC hand-off
 

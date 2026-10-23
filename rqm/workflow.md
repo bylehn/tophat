@@ -14,7 +14,9 @@ producing anything that can be reported.
 
 - Trial outputs live under `<results root>/<study>/.trial/<stage>/<key>/` and their provenance
   records have `"trial": true` (see `rqm/pipeline/provenance.md`).
-- Trial runs skip QC gates, never write `SUMMARY.md`, and their outputs cannot be published.
+- Trial runs use each stage's `trial` inputs and parameters (see `rqm/study/exploration.md`), skip
+  QC gates, never write `SUMMARY.md`, and their outputs cannot be published. The trial target ends
+  by writing `EXPLORATION.md`.
 - Outputs of a trial run never satisfy a non-trial run: after pre-registration the pipeline runs
   again into the non-trial locations.
 - The rules generated for a `draft` study contain only trial targets (see

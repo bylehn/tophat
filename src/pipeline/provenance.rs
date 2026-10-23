@@ -332,7 +332,21 @@ impl ResolvedStage {
         variant: &str,
         last: Option<&str>,
     ) -> Result<ResolvedStage, PipelineError> {
+        Self::load_mode(root, study, variant, last, false)
+    }
+
+    // rq-52742c3b
+    /// Like [`ResolvedStage::load_until`]; for a trial run (`trial`), each stage's `trial` inputs
+    /// and parameters are merged in before the keys are computed.
+    pub fn load_mode(
+        root: &Path,
+        study: &str,
+        variant: &str,
+        last: Option<&str>,
+        trial: bool,
+    ) -> Result<ResolvedStage, PipelineError> {
         let config = load_pipeline(root, study, variant)?;
+        let config = if trial { config.for_trial() } else { config };
         let ctx = KeyContext::new(root);
         let keys = super::keys::compute_keys_until(&config, &ctx, last)?;
         let roots = load_roots(root).map_err(|e| PipelineError::Io(e.to_string()))?;
@@ -494,7 +508,13 @@ pub struct SealRequest {
 /// cleanliness and writes `provenance.json`. Returns the record's path.
 pub fn seal(root: &Path, request: &SealRequest) -> Result<PathBuf, PipelineError> {
     let variant = request.variant.as_deref().unwrap_or("base");
-    let resolved = ResolvedStage::load_until(root, &request.study, variant, Some(&request.stage))?;
+    let resolved = ResolvedStage::load_mode(
+        root,
+        &request.study,
+        variant,
+        Some(&request.stage),
+        request.trial,
+    )?;
     let stage = resolved.stage(&request.stage)?;
     let actual = resolved.key(&stage.name).to_string();
     if actual != request.key {
@@ -727,7 +747,13 @@ pub struct BegunJob {
 /// for a fan-out item), writes the parameters file, and returns the command to run.
 pub fn begin(root: &Path, request: &SealRequest) -> Result<BegunJob, PipelineError> {
     let variant = request.variant.as_deref().unwrap_or("base");
-    let resolved = ResolvedStage::load_until(root, &request.study, variant, Some(&request.stage))?;
+    let resolved = ResolvedStage::load_mode(
+        root,
+        &request.study,
+        variant,
+        Some(&request.stage),
+        request.trial,
+    )?;
     let stage = resolved.stage(&request.stage)?;
     let actual = resolved.key(&stage.name).to_string();
     if actual != request.key {
