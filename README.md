@@ -158,6 +158,13 @@ claude        # start the agent inside the container
 Copier asks for the project's name, description and author, any languages to install besides
 Python, and the default GPU setting.
 
+To create a project from a local checkout of this repository, give Copier its absolute path:
+`copier copy /path/to/tophat my-project`. Copier stores the path in `.copier-answers.yml` exactly as
+given, and `copier update` resolves it from the project folder, so a relative path like `tophat/`
+breaks later updates. If that has already happened, set `_src_path` in `.copier-answers.yml` to
+the absolute path and commit the change. To update from a local checkout, commit there first, then
+run `copier update --vcs-ref HEAD` in the project.
+
 Until the first release, the container needs a `tophat` binary you build yourself. Run
 `cargo build --release` in this repository and point `TOPHAT_DEV_BINARY` at the result before
 running `./th.sh`.
