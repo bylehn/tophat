@@ -16,6 +16,8 @@ specified elsewhere. This file depends on them only through the interfaces state
 studies/<study-id>/
   STUDY.md          the study document (this file's subject)
   SUMMARY.md        written by `tophat study summarize`; committed
+  EXPLORATION.md    written from the trial runs while a draft, locked at pre-registration
+                    (see rqm/study/exploration.md); committed
   Snakefile         fixed stub (see rqm/pipeline/snakemake.md)
   config/
     base.yaml       base pipeline configuration (always present)
@@ -49,7 +51,7 @@ and `rqm/pipeline/snakemake.md`. Other files (scripts) may exist and are not gov
 | `status` | enum | always | `draft`, `preregistered`, `reported`, `superseded`, or `retrospective` |
 | `visibility` | enum | always | `public` or `private` |
 | `variants` | list of strings | always | Variant names; non-empty; each matches the study ID pattern; no duplicates |
-| `preregistered` | mapping | see *Lifecycle* | `date` (`YYYY-MM-DD`) and `frozen_hash` (`sha256:` followed by 64 lowercase hex characters) |
+| `preregistered` | mapping | see *Lifecycle* | `date` (`YYYY-MM-DD`) and `frozen_hash` (`sha256:` followed by 64 lowercase hex characters); for studies locked with an exploration record also `exploration_hash` (same form) and `deciding_data_seen` (`true` or `false`), see `rqm/study/exploration.md` |
 | `superseded_by` | string | iff `status: superseded` | Study ID of the replacing study |
 | `supersedes` | list of strings | optional | Study IDs this study replaces |
 
@@ -171,6 +173,8 @@ It is never hand-edited.
   - `tophat_version` — version string of the `tophat` binary that wrote it.
   - `keys` — optional mapping from `<variant>/<stage>` to the stage key each result line was read
     from. Summaries written by `tophat study summarize` always include it.
+  - `deciding_data_seen` — optional boolean, copied from the study's `preregistered` block when it
+    has one (see `rqm/study/exploration.md`).
 - A body containing a `## Results` section whose content is one or more **result lines**, each a
   top-level list item `- <variant>/<stage>: <text>`, where `<variant>` is a listed variant and
   `<stage>` matches the study ID pattern.
@@ -235,8 +239,11 @@ Result empty → `preregistered`; block absent → `retrospective`.
     made before it was seen; later changes go into dated amendments that say whether results had
     been seen; the pipeline, variants and stages can still change. Then prints the frozen sections
     and asks the user to type the study ID to confirm. Any other input aborts without changes.
+  - Says what the exploration saw before asking for confirmation, and on confirmation writes
+    `EXPLORATION.md` (see `rqm/study/exploration.md`).
   - On confirmation, sets `status: preregistered` and writes `preregistered.date` (current local
-    date) and `preregistered.frozen_hash`. Changes nothing else in the file.
+    date), `preregistered.frozen_hash`, `preregistered.exploration_hash` and
+    `preregistered.deciding_data_seen`. Changes nothing else in the file.
   - Prints a reminder to commit `STUDY.md` before running any answer-stage computation.
 - `tophat study report <study-id>` <!-- rq-ecacda48 -->
   - Requires status `preregistered` or `reported`, or status `retrospective` with a `SUMMARY.md`.

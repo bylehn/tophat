@@ -76,6 +76,18 @@
     "title": "Project line",
     "type": "scenario"
   },
+  "rq-019ede34": {
+    "decl": "Scenario: An identical trial computation is seen",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "An identical trial computation is seen",
+    "type": "scenario"
+  },
   "rq-01a6c860": {
     "decl": "Scenario: Agent entry points read the managed rules",
     "file": "template/skills",
@@ -580,6 +592,14 @@
       }
     ],
     "title": "Local tools",
+    "type": "section"
+  },
+  "rq-0e00e0de": {
+    "decl": "## Gherkin Scenarios",
+    "file": "study/exploration",
+    "level": 2,
+    "refs": [],
+    "title": "Gherkin Scenarios",
     "type": "section"
   },
   "rq-0e435215": {
@@ -1259,6 +1279,22 @@
     "title": "Parent is the nearest shallower question",
     "type": "scenario"
   },
+  "rq-2048dd2b": {
+    "decl": "Scenario: Studies pre-registered without an exploration record",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Studies pre-registered without an exploration record",
+    "type": "scenario"
+  },
   "rq-205358e8": {
     "decl": "Scenario: Publishing an output modified after sealing fails",
     "file": "data",
@@ -1503,6 +1539,18 @@
       }
     ],
     "title": "Fresh clone without a hash cache",
+    "type": "scenario"
+  },
+  "rq-246da339": {
+    "decl": "Scenario: A trial mapping holds only inputs and params",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A trial mapping holds only inputs and params",
     "type": "scenario"
   },
   "rq-24702b2d": {
@@ -1878,6 +1926,22 @@
     "title": "Warnings do not block a run",
     "type": "scenario"
   },
+  "rq-2e420949": {
+    "decl": "Scenario: The trial target writes EXPLORATION.md",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "src/pipeline/generate.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The trial target writes EXPLORATION.md",
+    "type": "scenario"
+  },
   "rq-2ec453d8": {
     "decl": "Scenario: A complete draft waits for the human to pre-register",
     "file": "workflow",
@@ -1928,6 +1992,14 @@
     ],
     "title": "Stage-level seal of a fan-out stage requires all items",
     "type": "scenario"
+  },
+  "rq-2fd2cf95": {
+    "decl": "## Out of Scope",
+    "file": "study/exploration",
+    "level": 2,
+    "refs": [],
+    "title": "Out of Scope",
+    "type": "section"
   },
   "rq-3123c559": {
     "decl": "Scenario: Stub can be restored",
@@ -2093,6 +2165,22 @@
     "title": "Prompts are refused on the host",
     "type": "scenario"
   },
+  "rq-36d7d1e3": {
+    "decl": "- `Exploration` — the content of `EXPLORATION.md`: trial result lines with keys, datasets used in",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "src/study/exploration.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Exploration",
+    "type": "api-item"
+  },
   "rq-3727b411": {
     "decl": "Scenario: Any other edit to the job script is refused",
     "file": "pipeline/external",
@@ -2144,6 +2232,18 @@
       }
     ],
     "title": "Uncommitted code makes the record unclean",
+    "type": "scenario"
+  },
+  "rq-3842f534": {
+    "decl": "Scenario: Exploring on a pilot leaves the deciding data unseen",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Exploring on a pilot leaves the deciding data unseen",
     "type": "scenario"
   },
   "rq-384cc812": {
@@ -2217,6 +2317,27 @@
       }
     ],
     "title": "Read-only and offline",
+    "type": "section"
+  },
+  "rq-3a21c28f": {
+    "decl": "## Labels",
+    "file": "study/exploration",
+    "level": 2,
+    "refs": [
+      {
+        "file": "src/study/document.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/workflow.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Labels",
     "type": "section"
   },
   "rq-3a78943e": {
@@ -2622,6 +2743,23 @@
     "title": "th-tool",
     "type": "section"
   },
+  "rq-45ae65c9": {
+    "decl": "## The Deciding Data",
+    "file": "study/exploration",
+    "level": 2,
+    "refs": [
+      {
+        "file": "src/study/exploration.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The Deciding Data",
+    "type": "section"
+  },
   "rq-45cc9712": {
     "decl": "### exploration/README.md",
     "file": "template/project",
@@ -2787,6 +2925,14 @@
     "title": "Skill Lint Rules",
     "type": "section"
   },
+  "rq-4a253518": {
+    "decl": "## Feature API",
+    "file": "study/exploration",
+    "level": 2,
+    "refs": [],
+    "title": "Feature API",
+    "type": "section"
+  },
   "rq-4a8d3a7d": {
     "decl": "## Initial State",
     "file": "template/project",
@@ -2911,6 +3057,23 @@
     ],
     "title": "Errors in another study do not block this one",
     "type": "scenario"
+  },
+  "rq-4d6751e2": {
+    "decl": "## Check Rules (`study` family)",
+    "file": "study/exploration",
+    "level": 2,
+    "refs": [
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Check Rules (`study` family)",
+    "type": "section"
   },
   "rq-4d7646da": {
     "decl": "Scenario: Unrecognised verdict aborts",
@@ -3077,6 +3240,27 @@
     ],
     "title": "Scenario without a tag",
     "type": "scenario"
+  },
+  "rq-52742c3b": {
+    "decl": "## Trial Inputs",
+    "file": "study/exploration",
+    "level": 2,
+    "refs": [
+      {
+        "file": "src/pipeline/config.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/pipeline/provenance.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Trial Inputs",
+    "type": "section"
   },
   "rq-52dc4a39": {
     "decl": "## Receipt",
@@ -3507,6 +3691,22 @@
     "title": "Traceability",
     "type": "section"
   },
+  "rq-5b211090": {
+    "decl": "Scenario: Editing the locked exploration is an error",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Editing the locked exploration is an error",
+    "type": "scenario"
+  },
   "rq-5b3d8f35": {
     "decl": "Scenario: Unknown options are refused",
     "file": "template/container",
@@ -3886,6 +4086,30 @@
     "title": "QC refused for a stage without a gate",
     "type": "scenario"
   },
+  "rq-643d82cb": {
+    "decl": "Scenario: A result informed by its deciding data is labelled",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "src/cli.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/data/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/pipeline/summary.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A result informed by its deciding data is labelled",
+    "type": "scenario"
+  },
   "rq-6467b79d": {
     "decl": "## Permissions",
     "file": "template/agents",
@@ -3904,6 +4128,22 @@
       }
     ],
     "title": "Retrospective study cannot carry a pre-registration block",
+    "type": "scenario"
+  },
+  "rq-647bcecc": {
+    "decl": "Scenario: An invalid exploration file is reported",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "An invalid exploration file is reported",
     "type": "scenario"
   },
   "rq-648eee87": {
@@ -4232,6 +4472,22 @@
     "refs": [],
     "title": "Out of Scope",
     "type": "section"
+  },
+  "rq-6ee5a634": {
+    "decl": "Scenario: The summary must carry the study's label",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The summary must carry the study's label",
+    "type": "scenario"
   },
   "rq-6ef37d58": {
     "decl": "Scenario: Study names a question when PROJECT.md is missing",
@@ -4629,6 +4885,22 @@
     "title": "Supersede a reported study",
     "type": "scenario"
   },
+  "rq-79590bc8": {
+    "decl": "- `write_exploration(root: &Path, exploration: &Exploration) -> Result<bool, StudyError>` — writes",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "src/study/exploration.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "write_exploration",
+    "type": "api-item"
+  },
   "rq-79aca0da": {
     "decl": "Scenario: Valid manifests pass",
     "file": "data",
@@ -4680,6 +4952,18 @@
     "refs": [],
     "title": "Out of Scope",
     "type": "section"
+  },
+  "rq-7aef1eb3": {
+    "decl": "Scenario: Pre-registration records the exploration",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Pre-registration records the exploration",
+    "type": "scenario"
   },
   "rq-7b0b2ae8": {
     "decl": "## Check Rules (`pipeline` family, execution)",
@@ -5106,6 +5390,22 @@
     "title": "A new dataset version changes the key",
     "type": "scenario"
   },
+  "rq-864e9f23": {
+    "decl": "Scenario: A trial input must be an input of the stage",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "src/pipeline/config.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A trial input must be an input of the stage",
+    "type": "scenario"
+  },
   "rq-86db826d": {
     "decl": "Scenario: Missing status line",
     "file": "question-tree",
@@ -5225,6 +5525,18 @@
     "refs": [],
     "title": "th-study",
     "type": "section"
+  },
+  "rq-89cbcbc0": {
+    "decl": "Scenario: A different trial seed keeps synthetic data unseen",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A different trial seed keeps synthetic data unseen",
+    "type": "scenario"
   },
   "rq-8a1808bb": {
     "decl": "Scenario: Status is read-only",
@@ -5380,6 +5692,14 @@
     ],
     "title": "Report refuses a summary for another study",
     "type": "scenario"
+  },
+  "rq-91c22cd5": {
+    "decl": "### Types",
+    "file": "study/exploration",
+    "level": 3,
+    "refs": [],
+    "title": "Types",
+    "type": "section"
   },
   "rq-930cacde": {
     "decl": "Scenario: Reordering sections does not alter the fingerprint",
@@ -5563,6 +5883,19 @@
     "refs": [],
     "title": "The host variable overrides the project default",
     "type": "scenario"
+  },
+  "rq-983f740b": {
+    "decl": "## EXPLORATION.md",
+    "file": "study/exploration",
+    "level": 2,
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "EXPLORATION.md",
+    "type": "section"
   },
   "rq-985dbe20": {
     "decl": "## Data Roots",
@@ -6079,6 +6412,13 @@
     "title": "Ingest",
     "type": "section"
   },
+  "rq-a213aa7e": {
+    "decl": "# Feature: Exploration Before the Plan",
+    "file": "study/exploration",
+    "refs": [],
+    "title": "Feature: Exploration Before the Plan",
+    "type": "file"
+  },
   "rq-a27155bc": {
     "decl": "Scenario: Generated outputs default to the project's results folder",
     "file": "pipeline/snakemake",
@@ -6314,6 +6654,18 @@
     "title": "A study without stages has no pipeline",
     "type": "scenario"
   },
+  "rq-a65aea60": {
+    "decl": "Scenario: Trial runs use the trial inputs",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Trial runs use the trial inputs",
+    "type": "scenario"
+  },
   "rq-a70e0d9d": {
     "decl": "# Feature: Codex and OpenCode",
     "file": "template/agents",
@@ -6416,6 +6768,18 @@
     ],
     "title": "Tool Environments",
     "type": "section"
+  },
+  "rq-a96b7d8f": {
+    "decl": "Scenario: The trial mapping does not enter the locked key",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The trial mapping does not enter the locked key",
+    "type": "scenario"
   },
   "rq-a97cc02c": {
     "decl": "Scenario: Missing pre-registration block on a preregistered study",
@@ -6829,6 +7193,22 @@
     "title": "Empty evidence list",
     "type": "scenario"
   },
+  "rq-b3af0612": {
+    "decl": "Scenario: Rewriting an unchanged exploration changes nothing",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "src/study/exploration.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Rewriting an unchanged exploration changes nothing",
+    "type": "scenario"
+  },
   "rq-b3ee805a": {
     "decl": "Scenario: The check runs in a throwaway container",
     "file": "template/container",
@@ -7103,6 +7483,22 @@
     ],
     "title": "Missing roots file declares only results",
     "type": "scenario"
+  },
+  "rq-bc7ec152": {
+    "decl": "- `tophat study exploration <study-id>`",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "src/study/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "tophat",
+    "type": "api-item"
   },
   "rq-bcb83d0a": {
     "decl": "- `tophat study preregister <study-id>`",
@@ -7835,6 +8231,18 @@
     "title": "study_rules",
     "type": "api-item"
   },
+  "rq-ce8f7bac": {
+    "decl": "Scenario: Trial results and exploration files are listed",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Trial results and exploration files are listed",
+    "type": "scenario"
+  },
   "rq-ceffcdab": {
     "decl": "## Check Rules (`question` family)",
     "file": "question-tree",
@@ -7929,6 +8337,30 @@
     ],
     "title": "Citing a reported study about a descendant question",
     "type": "scenario"
+  },
+  "rq-d087ce39": {
+    "decl": "## Assumptions",
+    "file": "study/exploration",
+    "level": 2,
+    "refs": [],
+    "title": "Assumptions",
+    "type": "section"
+  },
+  "rq-d0c8b971": {
+    "decl": "- `explore(root: &Path, study: &str) -> Result<Exploration, StudyError>` — computes the exploration",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "src/study/exploration.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "explore",
+    "type": "api-item"
   },
   "rq-d0e11fee": {
     "decl": "Scenario: A new project has the skeleton files and no studies or datasets",
@@ -8032,6 +8464,14 @@
     "refs": [],
     "title": "A new project starts with the path of a study",
     "type": "scenario"
+  },
+  "rq-d3e631be": {
+    "decl": "### Commands",
+    "file": "study/exploration",
+    "level": 3,
+    "refs": [],
+    "title": "Commands",
+    "type": "section"
   },
   "rq-d4227e28": {
     "decl": "Scenario: Renaming a pre-registered study is detected",
@@ -8379,6 +8819,22 @@
     "title": "Functions",
     "type": "section"
   },
+  "rq-db0c3b99": {
+    "decl": "Scenario: Pre-registration says what the exploration saw",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "src/study/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Pre-registration says what the exploration saw",
+    "type": "scenario"
+  },
   "rq-db0d11c1": {
     "decl": "Scenario: Citing a retrospective study is flagged as legacy",
     "file": "question-tree",
@@ -8513,6 +8969,18 @@
       }
     ],
     "title": "Stamp adds a missing status line to a stamped question",
+    "type": "scenario"
+  },
+  "rq-dc5dfbc8": {
+    "decl": "Scenario: Exploring on the deciding dataset is seen",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Exploring on the deciding dataset is seen",
     "type": "scenario"
   },
   "rq-dc6ab3b5": {
@@ -8758,6 +9226,22 @@
     "title": "Detection",
     "type": "section"
   },
+  "rq-e3a73fb1": {
+    "decl": "Scenario: Exploration only for drafts",
+    "file": "study/exploration",
+    "refs": [
+      {
+        "file": "src/study/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Exploration only for drafts",
+    "type": "scenario"
+  },
   "rq-e4355ed1": {
     "decl": "### Declaring roots",
     "file": "data",
@@ -8798,6 +9282,14 @@
     ],
     "title": "An invalid checklist number",
     "type": "scenario"
+  },
+  "rq-e5152739": {
+    "decl": "### Functions",
+    "file": "study/exploration",
+    "level": 3,
+    "refs": [],
+    "title": "Functions",
+    "type": "section"
   },
   "rq-e54fa7fd": {
     "decl": "### Rule evaluation",
@@ -9830,6 +10322,23 @@
     ],
     "title": "Study names a question that does not exist",
     "type": "scenario"
+  },
+  "rq-fea6913a": {
+    "decl": "## Locking the Plan",
+    "file": "study/exploration",
+    "level": 2,
+    "refs": [
+      {
+        "file": "src/study/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/workflow.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Locking the Plan",
+    "type": "section"
   },
   "rq-fed9f56b": {
     "decl": "Scenario: Consuming unreported work while still in draft warns",

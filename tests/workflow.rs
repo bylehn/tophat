@@ -18,7 +18,10 @@ use tophat::pipeline::{
     compute_keys, generate_rules, load_pipeline, seal, summarize, write_summary, KeyContext,
     ProvenanceRecord, SealRequest,
 };
-use tophat::study::{new_study, preregister, report, supersede, Console};
+use tophat::study::{
+    exploration_hash, new_study, parse_study_text, preregister, record_exploration, report,
+    supersede, Console, Status, StudyError,
+};
 use tophat::workflow::{next_action, study_status, Who};
 
 // --- Fixtures -------------------------------------------------------------------------------
@@ -1036,7 +1039,7 @@ fn pixi_not_available() {
 
 // --- Trial runs -------------------------------------------------------------------------------
 
-#[test] // rq-2a741327 rq-0d5e77fe
+#[test] // rq-2a741327 rq-0d5e77fe rq-2e420949
 fn trial_outputs_are_separate_and_unreportable() {
     let env = Env::draft();
     let Some(snakemake) = common::snakemake() else {
@@ -1058,6 +1061,15 @@ fn trial_outputs_are_separate_and_unreportable() {
     }
     assert!(!env.root().join("studies/x-vs-docking/SUMMARY.md").exists());
     assert!(!env.root().join("studies/x-vs-docking/qc").exists());
+    let exploration = env.read("studies/x-vs-docking/EXPLORATION.md");
+    assert!(
+        exploration.contains("- base/analyse: n=2 ("),
+        "{exploration}"
+    );
+    assert!(
+        exploration.contains("- pbe/analyse: n=2 ("),
+        "{exploration}"
+    );
     assert!(
         ProvenanceRecord::read(&env.out_dir("prepare", &env.keys("base")["prepare"])).is_none()
     );
@@ -1094,4 +1106,471 @@ fn direct_snakemake_on_a_draft_only_offers_trial_targets() {
             && rules.contains("rule trial_pbe:")
     );
     assert!(!rules.contains("rule summary:") && !rules.contains("rule variant_"));
+}
+
+// --- Exploration (rqm/study/exploration.md) ---------------------------------------------------
+
+impl Env {
+    /// Registers `benchmark-pilot@v1`, a one-structure pilot of the benchmark set.
+    fn add_pilot(&self) {
+        fs::create_dir_all(self.base.join("raw/pilot")).unwrap();
+        fs::write(self.base.join("raw/pilot/1abc.pdb"), "ATOM 1\n").unwrap();
+        add(
+            &self.root(),
+            &RegisterOptions {
+                name: "benchmark-pilot".into(),
+                root: "raw".into(),
+                path: "pilot".into(),
+                visibility: "public".into(),
+                origin: Origin::Raw {
+                    source: "test".into(),
+                    date: None,
+                    license: None,
+                },
+            },
+        )
+        .unwrap();
+    }
+
+    /// Gives stage `prepare` the trial mapping `trial`.
+    fn prepare_trial(&self, trial: &str) {
+        self.edit(
+            "studies/x-vs-docking/config/base.yaml",
+            "    inputs: {raw: dataset:benchmark-set@v1}\n",
+            &format!("    inputs: {{raw: dataset:benchmark-set@v1}}\n    trial: {trial}\n"),
+        );
+    }
+
+    fn trial_keys(&self, variant: &str) -> BTreeMap<String, String> {
+        let config = load_pipeline(&self.root(), "x-vs-docking", variant)
+            .unwrap()
+            .for_trial();
+        compute_keys(&config, &KeyContext::new(&self.root()))
+            .unwrap()
+            .keys
+    }
+
+    fn trial_seal(&self, stage: &str, variant: &str, item: Option<&str>) {
+        seal(
+            &self.root(),
+            &SealRequest {
+                study: "x-vs-docking".into(),
+                stage: stage.into(),
+                key: self.trial_keys(variant)[stage].clone(),
+                variant: Some(variant.into()),
+                item: item.map(str::to_string),
+                trial: true,
+            },
+        )
+        .unwrap();
+    }
+
+    fn trial_dir(&self, stage: &str, key: &str) -> PathBuf {
+        self.base
+            .join("results/x-vs-docking/.trial")
+            .join(stage)
+            .join(key)
+    }
+
+    /// Seals every stage of the base variant as a trial, by hand, with result line `result`.
+    fn trial_by_hand(&self, result: &str) {
+        let keys = self.trial_keys("base");
+        let prepare = self.trial_dir("prepare", &keys["prepare"]);
+        fs::create_dir_all(&prepare).unwrap();
+        fs::write(prepare.join("1abc.pdb"), "ATOM 1\n").unwrap();
+        self.trial_seal("prepare", "base", None);
+        let score = self.trial_dir("score", &keys["score"]);
+        fs::create_dir_all(score.join("items/1abc")).unwrap();
+        fs::write(score.join("items/1abc/score.txt"), "1\n").unwrap();
+        self.trial_seal("score", "base", Some("1abc"));
+        self.trial_seal("score", "base", None);
+        let analyse = self.trial_dir("analyse", &keys["analyse"]);
+        fs::create_dir_all(&analyse).unwrap();
+        fs::write(analyse.join("result.txt"), format!("{result}\n")).unwrap();
+        self.trial_seal("analyse", "base", None);
+    }
+
+    /// Replaces the pipeline with one stage that generates its result from a seed.
+    fn seeded(&self, trial: &str) {
+        fs::remove_file(self.root().join("studies/x-vs-docking/config/pbe.yaml")).unwrap();
+        self.edit(
+            "studies/x-vs-docking/STUDY.md",
+            "variants:\n  - base\n  - pbe\n",
+            "variants:\n  - base\n",
+        );
+        self.write(
+            "studies/x-vs-docking/config/base.yaml",
+            &format!(
+                "stages:\n  - name: generate\n    run: echo {{params.seed}} > {{out}}/result.txt\n    params: {{seed: 1}}\n    result: result.txt\n{trial}"
+            ),
+        );
+        let key = self.trial_keys("base")["generate"].clone();
+        let dir = self.trial_dir("generate", &key);
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("result.txt"), "1\n").unwrap();
+        self.trial_seal("generate", "base", None);
+    }
+
+    fn exploration(&self) -> String {
+        record_exploration(&self.root(), "x-vs-docking").unwrap();
+        self.read("studies/x-vs-docking/EXPLORATION.md")
+    }
+
+    /// Pre-registers interactively and returns what was printed.
+    fn preregister_output(&self) -> String {
+        let mut input = Cursor::new(b"x-vs-docking\n".to_vec());
+        let mut out = Vec::new();
+        preregister(
+            &self.root(),
+            "x-vs-docking",
+            chrono::Local::now().date_naive(),
+            &mut Console {
+                interactive: true,
+                input: &mut input,
+                out: &mut out,
+            },
+        )
+        .unwrap();
+        self.commit();
+        String::from_utf8(out).unwrap()
+    }
+
+    fn rules(&self) -> Vec<String> {
+        run_check(&self.root(), &[])
+            .unwrap()
+            .into_iter()
+            .filter(|d| d.severity == Severity::Error)
+            .map(|d| format!("{} {}", d.rule, d.message))
+            .collect()
+    }
+}
+
+#[test] // rq-a65aea60 rq-52742c3b
+fn trial_runs_use_the_trial_inputs() {
+    let env = Env::draft();
+    env.add_pilot();
+    env.prepare_trial("{inputs: {raw: dataset:benchmark-pilot@v1}}");
+    env.trial_by_hand("rho=0.42");
+    let key = env.trial_keys("base")["prepare"].clone();
+    let record = ProvenanceRecord::read(&env.trial_dir("prepare", &key)).unwrap();
+    assert!(record.trial);
+    assert_eq!(record.inputs[0]["name"], "raw");
+    assert_eq!(record.inputs[0]["ref"], "benchmark-pilot@v1");
+}
+
+#[test] // rq-a96b7d8f rq-52742c3b
+fn the_trial_mapping_does_not_enter_the_locked_key() {
+    let env = Env::draft();
+    let before = (env.keys("base"), env.keys("pbe"));
+    env.prepare_trial("{params: {n: 10}}");
+    assert_eq!((env.keys("base"), env.keys("pbe")), before);
+    assert_ne!(env.trial_keys("base")["prepare"], before.0["prepare"]);
+}
+
+#[test] // rq-864e9f23 rq-52742c3b
+fn a_trial_input_must_be_an_input_of_the_stage() {
+    let env = Env::draft();
+    env.add_pilot();
+    env.prepare_trial("{inputs: {other: dataset:benchmark-pilot@v1}}");
+    let errors = env.rules();
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.starts_with("pipeline.config-invalid") && e.contains("other")),
+        "{errors:?}"
+    );
+}
+
+#[test] // rq-246da339 rq-52742c3b
+fn a_trial_mapping_holds_only_inputs_and_params() {
+    let env = Env::draft();
+    env.prepare_trial("{run: echo x}");
+    let errors = env.rules();
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.starts_with("pipeline.config-invalid") && e.contains("run")),
+        "{errors:?}"
+    );
+}
+
+#[test] // rq-3842f534 rq-45ae65c9 rq-983f740b
+fn exploring_on_a_pilot_leaves_the_deciding_data_unseen() {
+    let env = Env::draft();
+    env.add_pilot();
+    env.prepare_trial("{inputs: {raw: dataset:benchmark-pilot@v1}}");
+    env.trial_by_hand("rho=0.42");
+    let text = env.exploration();
+    assert!(
+        text.contains("- dataset benchmark-pilot@v1, by stage prepare\n"),
+        "{text}"
+    );
+    assert!(
+        text.contains("- dataset benchmark-set@v1: not used by any trial run\n"),
+        "{text}"
+    );
+    assert!(text.contains("- no trial run computed an output of the locked pipeline\n"));
+    assert!(text.contains("\ndeciding_data_seen: false\n"), "{text}");
+}
+
+#[test] // rq-dc5dfbc8 rq-45ae65c9 rq-983f740b
+fn exploring_on_the_deciding_dataset_is_seen() {
+    let env = Env::draft();
+    env.trial_by_hand("rho=0.42");
+    let text = env.exploration();
+    assert!(
+        text.contains("- dataset benchmark-set@v1: used by a trial run\n"),
+        "{text}"
+    );
+    assert!(text.contains("\ndeciding_data_seen: true\n"), "{text}");
+}
+
+#[test] // rq-019ede34 rq-45ae65c9
+fn an_identical_trial_computation_is_seen() {
+    let env = Env::draft();
+    env.seeded("");
+    let text = env.exploration();
+    assert!(
+        text.contains("- a trial run computed an output of the locked pipeline\n"),
+        "{text}"
+    );
+    assert!(text.contains("\ndeciding_data_seen: true\n"), "{text}");
+}
+
+#[test] // rq-89cbcbc0 rq-45ae65c9
+fn a_different_trial_seed_keeps_synthetic_data_unseen() {
+    let env = Env::draft();
+    env.seeded("    trial: {params: {seed: 2}}\n");
+    let text = env.exploration();
+    assert!(text.contains("- no trial run computed an output of the locked pipeline\n"));
+    assert!(text.contains("\ndeciding_data_seen: false\n"), "{text}");
+}
+
+#[test] // rq-ce8f7bac rq-983f740b rq-36d7d1e3 rq-d0c8b971
+fn trial_results_and_exploration_files_are_listed() {
+    let env = Env::draft();
+    env.add_pilot();
+    env.prepare_trial("{inputs: {raw: dataset:benchmark-pilot@v1}}");
+    env.trial_by_hand("rho=0.42");
+    env.write("exploration/x-vs-docking/notes.ipynb", "{}\n");
+    let exploration = tophat::study::explore(&env.root(), "x-vs-docking").unwrap();
+    assert!(!exploration.deciding_data_seen);
+    let text = env.exploration();
+    let key = &env.trial_keys("base")["analyse"];
+    assert!(
+        text.contains(&format!("- base/analyse: rho=0.42 ({key})\n")),
+        "{text}"
+    );
+    let pbe = &env.trial_keys("pbe")["analyse"];
+    assert!(
+        text.contains(&format!("- pbe/analyse: not run ({pbe})\n")),
+        "{text}"
+    );
+    let sha = tophat::data::hash_file(&env.root().join("exploration/x-vs-docking/notes.ipynb"))
+        .unwrap()
+        .1;
+    assert!(
+        text.contains(&format!(
+            "- exploration/x-vs-docking/notes.ipynb sha256:{sha}\n"
+        )),
+        "{text}"
+    );
+}
+
+#[test] // rq-e3a73fb1 rq-bc7ec152
+fn exploration_only_for_drafts() {
+    let env = Env::preregistered();
+    assert!(matches!(
+        record_exploration(&env.root(), "x-vs-docking"),
+        Err(StudyError::ExplorationLocked(_))
+    ));
+    let (code, _, err) = env.tophat(&["study", "exploration", "x-vs-docking"], &[]);
+    assert_eq!(code, 1);
+    assert!(
+        err.contains("recorded in EXPLORATION.md when the plan was locked"),
+        "{err}"
+    );
+}
+
+#[test] // rq-b3af0612 rq-79590bc8 rq-bc7ec152
+fn rewriting_an_unchanged_exploration_changes_nothing() {
+    let env = Env::draft();
+    env.trial_by_hand("rho=0.42");
+    let rel = "studies/x-vs-docking/EXPLORATION.md";
+    let text = env.exploration();
+    let generated = text.lines().find(|l| l.starts_with("generated:")).unwrap();
+    let old = text.replace(generated, "generated: \"2026-01-01T00:00:00Z\"");
+    env.write(rel, &old);
+    let (code, out, err) = env.tophat(&["study", "exploration", "x-vs-docking"], &[]);
+    assert_eq!(code, 0, "{err}");
+    assert!(
+        out.contains("Unchanged: studies/x-vs-docking/EXPLORATION.md"),
+        "{out}"
+    );
+    assert!(out.contains("the deciding data"), "{out}");
+    assert_eq!(env.read(rel), old);
+}
+
+#[test] // rq-7aef1eb3 rq-fea6913a
+fn pre_registration_records_the_exploration() {
+    let env = Env::draft();
+    env.add_pilot();
+    env.prepare_trial("{inputs: {raw: dataset:benchmark-pilot@v1}}");
+    env.trial_by_hand("rho=0.42");
+    env.commit();
+    env.preregister_output();
+    let exploration = env.read("studies/x-vs-docking/EXPLORATION.md");
+    let study = parse_study_text(
+        "x-vs-docking",
+        "STUDY.md",
+        &env.read("studies/x-vs-docking/STUDY.md"),
+    )
+    .unwrap();
+    let block = &study.front.preregistered.as_ref().unwrap().value;
+    assert_eq!(
+        block.exploration_hash.as_deref(),
+        Some(exploration_hash(&exploration).as_str())
+    );
+    assert_eq!(block.deciding_data_seen.as_deref(), Some("false"));
+    assert!(env.rules().is_empty(), "{:?}", env.rules());
+}
+
+#[test] // rq-db0c3b99 rq-fea6913a
+fn pre_registration_says_what_the_exploration_saw() {
+    let env = Env::draft();
+    env.trial_by_hand("rho=0.42");
+    env.commit();
+    let out = env.preregister_output();
+    let before_confirm = &out[..out.find("Type the study ID").unwrap()];
+    assert!(
+        before_confirm.contains("data used in trial runs: benchmark-set@v1"),
+        "{out}"
+    );
+    assert!(
+        before_confirm.contains("already saw the deciding data")
+            && before_confirm.contains("labelled as informed by its deciding"),
+        "{out}"
+    );
+    let study = parse_study_text(
+        "x-vs-docking",
+        "STUDY.md",
+        &env.read("studies/x-vs-docking/STUDY.md"),
+    )
+    .unwrap();
+    assert_eq!(study.status(), Some(Status::Preregistered));
+    assert!(study.deciding_data_seen());
+}
+
+#[test] // rq-5b211090 rq-4d6751e2
+fn editing_the_locked_exploration_is_an_error() {
+    let env = Env::preregistered();
+    assert!(env.rules().is_empty(), "{:?}", env.rules());
+    env.edit(
+        "studies/x-vs-docking/EXPLORATION.md",
+        "## Trial results",
+        "## Trial results\n\nNothing to see.",
+    );
+    assert!(env
+        .rules()
+        .iter()
+        .any(|e| e.starts_with("study.exploration-modified")));
+    fs::remove_file(env.root().join("studies/x-vs-docking/EXPLORATION.md")).unwrap();
+    assert!(env
+        .rules()
+        .iter()
+        .any(|e| e.starts_with("study.exploration-modified") && e.contains("missing")));
+}
+
+#[test] // rq-647bcecc rq-4d6751e2
+fn an_invalid_exploration_file_is_reported() {
+    let env = Env::draft();
+    env.write(
+        "studies/x-vs-docking/EXPLORATION.md",
+        "---\nstudy: other-study\ndeciding_data_seen: false\n---\n",
+    );
+    assert!(env
+        .rules()
+        .iter()
+        .any(|e| e.starts_with("study.exploration-invalid") && e.contains("other-study")));
+    env.write("studies/x-vs-docking/EXPLORATION.md", "no front matter\n");
+    assert!(env
+        .rules()
+        .iter()
+        .any(|e| e.starts_with("study.exploration-invalid")));
+}
+
+#[test] // rq-643d82cb rq-3a21c28f
+fn a_result_informed_by_its_deciding_data_is_labelled() {
+    let env = Env::draft();
+    env.trial_by_hand("rho=0.42");
+    env.commit();
+    env.preregister_output();
+    env.complete();
+    assert!(env
+        .read("studies/x-vs-docking/SUMMARY.md")
+        .contains("\ndeciding_data_seen: true\n"));
+    let (code, out, err) = env.tophat(&["study", "report", "x-vs-docking"], &[]);
+    assert_eq!(code, 0, "{err}");
+    assert!(
+        out.contains("the plan was informed by results on the deciding data"),
+        "{out}"
+    );
+    let key = env.keys("base")["analyse"].clone();
+    let tree = tophat::data::lineage(&env.root(), &format!("x-vs-docking/analyse@{key}"))
+        .unwrap()
+        .render();
+    assert!(
+        tree.lines()
+            .next()
+            .unwrap()
+            .ends_with("[plan informed by its deciding data]"),
+        "{tree}"
+    );
+    let (_, status, _) = env.tophat(&["status"], &[]);
+    assert!(
+        status.contains("x-vs-docking  reported (plan informed by its deciding data)"),
+        "{status}"
+    );
+}
+
+#[test] // rq-6ee5a634 rq-4d6751e2
+fn the_summary_must_carry_the_studys_label() {
+    let env = Env::draft();
+    env.trial_by_hand("rho=0.42");
+    env.commit();
+    env.preregister_output();
+    env.complete();
+    assert!(env.rules().is_empty(), "{:?}", env.rules());
+    env.edit(
+        "studies/x-vs-docking/SUMMARY.md",
+        "deciding_data_seen: true\n",
+        "deciding_data_seen: false\n",
+    );
+    assert!(env
+        .rules()
+        .iter()
+        .any(|e| e.starts_with("study.exploration-label-mismatch")));
+}
+
+#[test] // rq-2048dd2b rq-3a21c28f
+fn studies_pre_registered_without_an_exploration_record() {
+    let env = Env::preregistered();
+    let rel = "studies/x-vs-docking/STUDY.md";
+    let text = env.read(rel);
+    let stripped: String = text
+        .lines()
+        .filter(|l| {
+            !l.starts_with("  exploration_hash:") && !l.starts_with("  deciding_data_seen:")
+        })
+        .map(|l| format!("{l}\n"))
+        .collect();
+    env.write(rel, &stripped);
+    fs::remove_file(env.root().join("studies/x-vs-docking/EXPLORATION.md")).unwrap();
+    env.complete();
+    let all = run_check(&env.root(), &[]).unwrap();
+    assert!(
+        !all.iter().any(|d| d.rule.starts_with("study.exploration-")),
+        "{all:?}"
+    );
+    assert!(!status_of(&env).informed);
 }

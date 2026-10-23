@@ -32,6 +32,7 @@ Commands:
   check [--json] [--strict] [PATH...]            Check project integrity
   study new <ID> --question <Q-ID> [--visibility public|private]
                                                  Create a draft study
+  study exploration <ID>                         Write EXPLORATION.md of a draft study
   study preregister <ID>                         Pre-register a draft (interactive, by a human)
   study report <ID>                              Copy SUMMARY.md results into STUDY.md
   study supersede <OLD-ID> --by <NEW-ID>         Mark a study as replaced by another
@@ -190,6 +191,7 @@ enum StudyCommand {
         private: bool,
     },
     Preregister(String),
+    Exploration(String),
     Report(String),
     Supersede {
         old: String,
@@ -201,7 +203,7 @@ enum StudyCommand {
 fn parse_study_args(args: &[String]) -> Result<StudyCommand, String> {
     let (sub, rest) = args
         .split_first()
-        .ok_or("missing study subcommand (new, preregister, report, supersede)")?;
+        .ok_or("missing study subcommand (new, exploration, preregister, report, supersede)")?;
     let one_id = |positionals: Vec<String>| match positionals.as_slice() {
         [id] => Ok(id.clone()),
         _ => Err(format!("`tophat study {sub}` takes exactly one study ID")),
@@ -229,6 +231,9 @@ fn parse_study_args(args: &[String]) -> Result<StudyCommand, String> {
             })
         }
         "preregister" => Ok(StudyCommand::Preregister(one_id(
+            parse_options(rest, &[])?.0,
+        )?)),
+        "exploration" => Ok(StudyCommand::Exploration(one_id(
             parse_options(rest, &[])?.0,
         )?)),
         "report" => Ok(StudyCommand::Report(one_id(parse_options(rest, &[])?.0)?)),
@@ -295,8 +300,30 @@ fn run_study_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
             };
             study::preregister(&root, id, today, &mut console)
         }
+        StudyCommand::Exploration(id) => {
+            study::record_exploration(&root, id).map(|(exploration, changed)| {
+                let verb = if changed { "Wrote" } else { "Unchanged:" };
+                let _ = writeln!(io.out, "{verb} studies/{id}/{}", study::EXPLORATION_FILE);
+                let seen = if exploration.deciding_data_seen {
+                    "the trial runs have seen the deciding data"
+                } else {
+                    "the deciding data has not been seen"
+                };
+                let _ = writeln!(io.out, "{}; {seen}.", exploration.account());
+            })
+        }
         StudyCommand::Report(id) => study::report(&root, id).map(|()| {
             let _ = writeln!(io.out, "Copied SUMMARY.md results into study `{id}`.");
+            // rq-643d82cb
+            let informed = study::parse_study(&root.join(study::STUDIES_DIR).join(id))
+                .is_ok_and(|s| s.deciding_data_seen());
+            if informed {
+                let _ = writeln!(
+                    io.out,
+                    "Note: the plan was informed by results on the deciding data (see {}).",
+                    study::EXPLORATION_FILE
+                );
+            }
         }),
         StudyCommand::Supersede { old, new } => study::supersede(&root, old, new).map(|()| {
             let _ = writeln!(io.out, "Study `{old}` is now superseded by `{new}`.");

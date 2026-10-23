@@ -34,6 +34,8 @@ pub struct Summary {
     pub tophat_version: String,
     /// `<variant>/<stage>` → the stage key each result line was read from, when recorded.
     pub keys: Option<std::collections::BTreeMap<String, String>>,
+    /// Whether the study's plan was informed by its deciding data; `false` when absent.
+    pub deciding_data_seen: bool,
     pub results: Vec<ResultLine>,
 }
 
@@ -70,12 +72,17 @@ pub(super) fn parse_summary_text(text: &str) -> Result<Summary, String> {
     let mut generated = None;
     let mut tophat_version = None;
     let mut keys = None;
+    let mut deciding_data_seen = false;
     for (key, value) in &loaded.entries {
         match key.as_str() {
             "study" => study = Some(loaded.scalar(key, value)?),
             "commit" => commit = Some(loaded.scalar(key, value)?),
             "generated" => generated = Some(loaded.scalar(key, value)?),
             "tophat_version" => tophat_version = Some(loaded.scalar(key, value)?),
+            "deciding_data_seen" => match value {
+                Yaml::Boolean(b) => deciding_data_seen = *b,
+                _ => return Err("field `deciding_data_seen` must be `true` or `false`".into()),
+            },
             "dirty" => match value {
                 Yaml::Boolean(b) => dirty = Some(*b),
                 _ => return Err("field `dirty` must be `true` or `false`".into()),
@@ -144,6 +151,7 @@ pub(super) fn parse_summary_text(text: &str) -> Result<Summary, String> {
         generated,
         tophat_version,
         keys,
+        deciding_data_seen,
         results,
     })
 }

@@ -37,7 +37,20 @@ a trial (`tophat run <study> --draft`) to debug it and to learn what the data lo
 What you see while exploring shapes the plan, which is the point. The one thing to avoid is
 exploring on exactly the data that will answer the question and then pretending you had not seen
 the answer. Where you can, explore on a subset (a pilot set, a few systems), and keep the rest for
-the run that decides the question.
+the run that decides the question. A stage's `trial` field says what trial runs use instead:
+
+```yaml
+    inputs: {raw: dataset:bench@v2}
+    trial:
+      inputs: {raw: dataset:bench-pilot@v1}
+```
+
+Keep scratch work for a study in `exploration/<study>/`. TopHat keeps a record of the exploration
+in the study's `EXPLORATION.md` (written after every trial run): the trial results, which data
+they used, and the exploration files. When you lock the plan it records whether the exploration
+already saw the data that decides the question. Nothing is refused for that, but such a result is
+labelled "plan informed by its deciding data", the way an amendment says whether results had been
+seen.
 
 ## 3. The plan, and locking it
 
@@ -51,7 +64,8 @@ seen. The pipeline itself can still change. Locking the plan before the deciding
 the result evidence rather than a story told afterwards.
 
 Trial results from the draft are kept apart and can never be reported: after locking, the real run
-computes everything again.
+computes everything again. Commit `EXPLORATION.md` with the locked `STUDY.md`; it is then part of
+the locked record and must not change.
 
 ## 4. Stages and keys
 

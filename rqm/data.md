@@ -172,7 +172,9 @@ loading a whole file into memory) and hashes several files in parallel.
   - Prints the tree of everything the target was derived from: a published dataset leads to its
     producing stage output; a stage output leads to its inputs as recorded in its
     `provenance.json`; raw datasets are leaves; declared datasets are leaves marked
-    `[declared, not verified]`; outputs whose provenance cannot be read (unconfigured root or
+    `[declared, not verified]`; outputs of a study whose plan was informed by its deciding data are
+    marked `[plan informed by its deciding data]` (see `rqm/study/exploration.md`); outputs whose
+    provenance cannot be read (unconfigured root or
     missing record) are leaves marked `[unavailable]`.
 - `tophat data used-by <name>[@v<n>] [--json]` <!-- rq-23b73104 -->
   - Lists every study, variant and stage whose configuration references the dataset (or the given

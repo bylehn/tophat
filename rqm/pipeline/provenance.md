@@ -58,6 +58,7 @@ stages:
 | `validate` | no | Command, with the placeholders of `run`, that checks the stage's output after `run` and exits non-zero when it is wrong; the job then fails and nothing is sealed (see `rqm/pipeline/snakemake.md`). Its scripts belong in `code` |
 | `review` | no | The question a human answers by looking at the stage's output; it gives the stage a QC gate (see `rqm/pipeline/snakemake.md`). It does not enter the stage key |
 | `result` | no | File, relative to the output directory, whose single line is the stage's result line |
+| `trial` | no | Mapping with `inputs` and `params` merged into the stage in trial runs only, for example pilot data (see `rqm/study/exploration.md`); it does not enter the non-trial key |
 | `tool` | no | `<tool>@<commit>`: run the stage with a pinned tool (see `rqm/pipeline/tools.md`) |
 | `external` | no | Run the stage on a remote machine (see `rqm/pipeline/external.md`) |
 

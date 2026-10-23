@@ -211,7 +211,7 @@ pub fn generate_rules(root: &Path, study: &str) -> Result<String, PipelineError>
     let mut variant_records: Vec<(String, Vec<PathBuf>, Vec<PathBuf>)> = Vec::new();
 
     for variant in &variants {
-        let resolved = ResolvedStage::load(root, study, variant)?;
+        let resolved = ResolvedStage::load_mode(root, study, variant, None, trial)?;
         let mut all = Vec::new();
         let mut results = Vec::new();
         for stage in &resolved.config.stages {
@@ -301,14 +301,15 @@ pub fn generate_rules(root: &Path, study: &str) -> Result<String, PipelineError>
 
     // Targets. An included file cannot set Snakemake's default target, so the stub's
     // `tophat_default` rule takes its inputs and action from `_TOPHAT_DEFAULT_INPUTS` and
-    // `_tophat_default`: the summary normally, every trial output for a draft.
+    // `_tophat_default`: the summary normally, every trial output and `EXPLORATION.md` for a draft.
+    // rq-2e420949
     if trial {
         let all: Vec<PathBuf> = variant_records
             .iter()
             .flat_map(|(_, all, _)| all.clone())
             .collect();
         out.push_str(&format!(
-            "_TOPHAT_DEFAULT_INPUTS = [\n{}]\n\n\ndef _tophat_default():\n    pass\n\n\nrule trial:\n    input:\n{}\n",
+            "_TOPHAT_DEFAULT_INPUTS = [\n{}]\n\n\ndef _tophat_default():\n    _tophat(\"study\", \"exploration\", _TOPHAT_STUDY)\n\n\nrule trial:\n    input:\n{}    run:\n        _tophat_default()\n\n",
             list(&all).replace("        ", "    "),
             list(&all)
         ));

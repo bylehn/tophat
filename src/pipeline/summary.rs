@@ -144,6 +144,7 @@ pub fn summarize(root: &Path, study: &str) -> Result<Summary, PipelineError> {
         generated: chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
         tophat_version: env!("CARGO_PKG_VERSION").to_string(),
         keys: Some(keys),
+        deciding_data_seen: doc.deciding_data_seen(),
         results,
     })
 }
@@ -164,6 +165,10 @@ pub fn render_summary(summary: &Summary) -> String {
         for (label, key) in keys {
             out.push_str(&format!("  {}: {}\n", q(label), q(key)));
         }
+    }
+    // rq-643d82cb
+    if summary.deciding_data_seen {
+        out.push_str("deciding_data_seen: true\n");
     }
     out.push_str("---\n\n## Results\n\n");
     for line in &summary.results {

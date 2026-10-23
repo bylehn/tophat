@@ -41,6 +41,14 @@ impl ExternalConfig {
     }
 }
 
+// rq-52742c3b
+/// A stage's `trial` mapping: inputs and parameters that replace the stage's own in trial runs.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct TrialOverride {
+    pub inputs: BTreeMap<String, StageInput>,
+    pub params: Map<String, Value>,
+}
+
 // rq-9950b389 rq-081e737a
 /// One stage after variant merging.
 #[derive(Debug, Clone, PartialEq)]
@@ -61,6 +69,8 @@ pub struct StageConfig {
     pub foreach: Option<String>,
     /// The `external` mapping, for an external stage.
     pub external: Option<ExternalConfig>,
+    /// The inputs and parameters merged into the stage in trial runs only.
+    pub trial: Option<TrialOverride>,
     /// The command that checks the stage's output after `run`; part of the key.
     pub validate: Option<String>,
     /// The question a human answers at the stage's QC gate; not part of the key.
@@ -91,6 +101,20 @@ impl PipelineConfig {
     /// before its consumers run and before the study is reported.
     pub fn is_gated(&self, name: &str) -> bool {
         self.stage(name).is_some_and(|s| s.review.is_some())
+    }
+
+    // rq-52742c3b
+    /// The pipeline as a trial run computes it: each stage's `trial` inputs and parameters merged
+    /// into it, key by key.
+    pub fn for_trial(&self) -> PipelineConfig {
+        let mut config = self.clone();
+        for stage in &mut config.stages {
+            if let Some(trial) = stage.trial.clone() {
+                stage.inputs.extend(trial.inputs);
+                stage.params.extend(trial.params);
+            }
+        }
+        config
     }
 
     /// Whether another stage consumes `name` (as a `stage:` input, including as a fan-out source).
@@ -199,10 +223,63 @@ fn yaml_to_json(value: &Yaml) -> Result<Value, String> {
     })
 }
 
-const STAGE_KEYS: [&str; 13] = [
+const STAGE_KEYS: [&str; 14] = [
     "name", "run", "code", "inputs", "params", "env", "threads", "foreach", "validate", "review",
-    "result", "tool", "external",
+    "result", "tool", "external", "trial",
 ];
+
+/// Parses an input source: `stage:<stage>` or `dataset:<name>@v<n>`.
+fn parse_source(source: &str) -> Option<StageInput> {
+    if let Some(stage) = source.strip_prefix("stage:") {
+        Some(StageInput::Stage(stage.to_string()))
+    } else {
+        source
+            .strip_prefix("dataset:")
+            .and_then(DatasetRef::parse)
+            .map(StageInput::Dataset)
+    }
+}
+
+// rq-52742c3b
+/// Parses a `trial` mapping: only `inputs` (input names to sources) and `params`.
+fn parse_trial(value: Yaml) -> Result<TrialOverride, String> {
+    let Yaml::Hash(hash) = value else {
+        return Err("must be a mapping with `inputs` and `params`".into());
+    };
+    let mut trial = TrialOverride::default();
+    for (key, value) in hash {
+        match key.as_str() {
+            Some("inputs") => {
+                let Yaml::Hash(inputs) = value else {
+                    return Err("`inputs` must be a mapping of input names to sources".into());
+                };
+                for (name, source) in inputs {
+                    let (Some(name), Some(source)) = (name.as_str(), source.as_str()) else {
+                        return Err("`inputs` must be a mapping of input names to sources".into());
+                    };
+                    let parsed = parse_source(source).ok_or_else(|| {
+                        format!(
+                            "input `{name}` must be `stage:<stage>` or `dataset:<name>@v<n>`, not `{source}`"
+                        )
+                    })?;
+                    trial.inputs.insert(name.to_string(), parsed);
+                }
+            }
+            Some("params") => match yaml_to_json(&value)? {
+                Value::Object(map) => trial.params = map,
+                Value::Null => {}
+                _ => return Err("`params` must be a mapping".into()),
+            },
+            Some(other) => {
+                return Err(format!(
+                    "unknown key `{other}`; a trial mapping holds only `inputs` and `params`"
+                ))
+            }
+            None => return Err("keys must be text".into()),
+        }
+    }
+    Ok(trial)
+}
 
 /// The fields given for one stage in one file, before merging.
 #[derive(Debug, Default, Clone)]
@@ -220,6 +297,7 @@ struct StageFields {
     result: Option<String>,
     tool: Option<String>,
     external: Option<ExternalConfig>,
+    trial: Option<TrialOverride>,
     line: Option<u32>,
 }
 
@@ -421,6 +499,10 @@ fn parse_file(
                     Yaml::String(s) => fields.tool = Some(s),
                     _ => problems.push(bad("a pin `<tool>@<commit>`")),
                 },
+                "trial" => match parse_trial(value) {
+                    Ok(trial) => fields.trial = Some(trial),
+                    Err(m) => problems.push(problem(at, format!("stage `{label}`: trial: {m}"))),
+                },
                 "external" => match parse_external(value) {
                     Ok(external) => fields.external = Some(external),
                     Err(m) => problems.push(problem(at, format!("stage `{label}`: external: {m}"))),
@@ -575,6 +657,7 @@ fn build_stage(
         threads: fields.threads.unwrap_or(1),
         foreach: fields.foreach.clone(),
         external: fields.external.clone(),
+        trial: fields.trial.clone(),
         validate: fields.validate.clone(),
         review: fields.review.clone(),
         tool: fields.tool.clone(),
@@ -677,6 +760,15 @@ fn validate(
                         stage.name
                     )));
                 }
+            }
+        }
+        // rq-864e9f23
+        for input in stage.trial.iter().flat_map(|t| t.inputs.keys()) {
+            if !stage.inputs.contains_key(input) {
+                problems.push(problem(format!(
+                    "stage `{}`: trial input `{input}` is not an input of the stage",
+                    stage.name
+                )));
             }
         }
         if external && stage.validate.is_some() {
@@ -813,6 +905,9 @@ fn merge_variant(
         }
         if let Some(tool) = fields.tool {
             stage.tool = Some(tool);
+        }
+        if let Some(trial) = fields.trial {
+            stage.trial = Some(trial);
         }
         if let Some(external) = fields.external {
             stage.external = Some(external);

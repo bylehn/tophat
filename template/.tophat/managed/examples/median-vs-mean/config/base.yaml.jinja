@@ -5,6 +5,10 @@ stages:
     validate: python scripts/validate.py signals {out} --signals {params.signals} --length {params.length}
     code: [scripts/generate.py, scripts/validate.py]
     params: {signals: 30, length: 200, noise: gaussian, seed: 1}
+    # Trial runs of the draft explore on fewer signals with another seed, so the signals that
+    # decide the question stay unseen until the plan is locked.
+    trial:
+      params: {signals: 10, seed: 2}
   - name: filter
     run: sh scripts/filter.sh {in.signals} {out} {params.width}
     code: [scripts/filter.sh]

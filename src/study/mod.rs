@@ -4,6 +4,7 @@
 mod commands;
 mod document;
 mod edit;
+mod exploration;
 mod fingerprint;
 mod rules;
 mod summary;
@@ -13,10 +14,14 @@ use std::fmt;
 use crate::check::Diagnostic;
 
 pub use crate::markdown::Section;
-pub use commands::{new_study, preregister, report, supersede, Console};
+pub use commands::{new_study, preregister, record_exploration, report, supersede, Console};
 pub use document::{
     parse_study, parse_study_text, Amendment, Field, FrontMatter, Preregistration, Scenario, Study,
     TagIssue,
+};
+pub use exploration::{
+    exploration_hash, explore, parse_exploration, write_exploration, Exploration, TrialResult,
+    EXPLORATION_FILE,
 };
 pub use fingerprint::frozen_fingerprint;
 pub use rules::{study_rules, study_rules_at};
@@ -118,6 +123,8 @@ pub enum StudyError {
     NotInteractive,
     ConfirmationMismatch,
     NotReady(Vec<Diagnostic>),
+    /// The study is past its draft, so its exploration record is locked.
+    ExplorationLocked(String),
     Summary(String),
     Io(String),
 }
@@ -177,6 +184,11 @@ impl fmt::Display for StudyError {
                 }
                 Ok(())
             }
+            StudyError::ExplorationLocked(id) => write!(
+                f,
+                "study `{id}` is no longer a draft: its exploration was recorded in \
+                 EXPLORATION.md when the plan was locked"
+            ),
             StudyError::Summary(message) => write!(f, "SUMMARY.md: {message}"),
             StudyError::Io(message) => write!(f, "I/O error: {message}"),
         }

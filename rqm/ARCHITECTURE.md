@@ -48,7 +48,11 @@ A generated project organizes work in these levels:
 
 ### Study lifecycle and pre-registration
 
-- `draft`: everything may change.
+- `draft`: everything may change, and this is where exploring happens: trial runs, on pilot data
+  where possible, keep their provenance and are collected in a generated exploration record. When
+  the plan is locked, TopHat records what the exploration saw, including whether it already saw the
+  data that will decide the question; a result whose plan was informed by its own deciding data is
+  labelled, not refused.
 - `preregistered`: set by the human (with a date) before any answer-stage result is seen. From then on
   the question, primary endpoint and scenarios are **frozen**; changes go into a dated
   **Amendments** section stating the reason and whether results had been seen.

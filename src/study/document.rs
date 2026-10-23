@@ -24,6 +24,10 @@ pub struct Field<T> {
 pub struct Preregistration {
     pub date: Option<String>,
     pub frozen_hash: Option<String>,
+    /// `sha256:<hex>` of `EXPLORATION.md` at pre-registration (see `rqm/study/exploration.md`).
+    pub exploration_hash: Option<String>,
+    /// `true` or `false`: whether the exploration saw the deciding data.
+    pub deciding_data_seen: Option<String>,
     /// Unknown sub-field names.
     pub unknown: Vec<String>,
 }
@@ -123,6 +127,16 @@ impl Study {
         self.section("Result")
             .map(|s| meaningful_lines(&s.content))
             .unwrap_or_default()
+    }
+
+    // rq-3a21c28f
+    /// Whether the `preregistered` block says the exploration saw the deciding data.
+    pub fn deciding_data_seen(&self) -> bool {
+        self.front
+            .preregistered
+            .as_ref()
+            .and_then(|p| p.value.deciding_data_seen.as_deref())
+            == Some("true")
     }
 
     /// The variant names, or an empty list if the field is absent.
@@ -289,6 +303,8 @@ fn parse_preregistration(value: &Yaml) -> Result<Preregistration, String> {
         match key {
             "date" => out.date = text,
             "frozen_hash" => out.frozen_hash = text,
+            "exploration_hash" => out.exploration_hash = text,
+            "deciding_data_seen" => out.deciding_data_seen = text,
             other => out.unknown.push(other.to_string()),
         }
     }

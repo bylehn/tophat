@@ -189,10 +189,10 @@ A study's plan and pipeline. Two modes; the skill says which one it is in.
 - Asks the human for the question it answers (a stamped question ID), the primary endpoint, the
   decision rule and thresholds, the variants that matter, and the study's visibility.
 - Explores first when the human cannot yet name a well-founded endpoint or threshold: suggests
-  exploring in `exploration/`, or trial runs of the draft (`tophat run <id> --draft`), preferably
-  on a subset of the data, and says why: results seen before the plan is locked can shape it, so
-  the plan should be locked before the run that decides the question. Never fills the gap with a
-  suggestion of its own.
+  scratch work in `exploration/<id>/`, or trial runs of the draft (`tophat run <id> --draft`) on
+  pilot data through the stages' `trial` inputs (see `rqm/study/exploration.md`), and says why:
+  results seen before the plan is locked shape it, and TopHat labels a result whose plan was
+  informed by its own deciding data. Never fills the gap with a suggestion of its own.
 - Looks for what already exists first: datasets (`tophat data used-by`, `datasets/`), published
   outputs of other studies, tools (`tophat tools list`). Prefers pinning an existing dataset over
   planning a new computation.
@@ -310,7 +310,9 @@ never placed in `studies/` by the template.
 - **Variants**: `base` (Gaussian noise) and `impulse` (impulse noise).
 - **Stages**:
   - `generate`: a Python script writing seeded synthetic signals, one file per signal, with a
-    `validate` script checking the number of signals, their length and their values;
+    `validate` script checking the number of signals, their length and their values, and a `trial`
+    override that explores on fewer signals with a different seed, so the deciding data stays
+    unseen;
   - `filter`: an external stage applying both filters with a script that needs only `sh`, `awk`
     and `mkdir`, so it runs on a cluster with only POSIX tools; it has a `review` question asking
     whether the median-filtered signals follow the step without the spikes the mean filter keeps;
