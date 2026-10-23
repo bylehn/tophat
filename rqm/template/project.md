@@ -24,6 +24,12 @@ the CLI reads (`PROJECT.md`, `.tophat/roots.yaml`, studies, datasets) are specif
   language selection, and template tooling regenerates them for each template release.
 - The answers are stored in `.copier-answers.yml` at the project root, so `copier update` finds
   them without extra arguments.
+- `template/.licenses/` holds the texts of the licenses a project can choose (see *LICENSE*), and
+  `template/TEMPLATE-LICENSE` grants the contents of `template/` under MIT No Attribution (MIT-0), so
+  the files a project receives from the template come with no conditions and the project's own
+  license covers all of it. Both are in `_exclude` and never rendered into a project. The rest of
+  this repository (the `tophat` tool) stays under the BSD 3-Clause license of the root `LICENSE`,
+  and the README says which license covers which part.
 
 ## Copier Questions <!-- rq-99c9f467 -->
 
@@ -37,11 +43,17 @@ the CLI reads (`PROJECT.md`, `.tophat/roots.yaml`, studies, datasets) are specif
 | `languages` | multi-select: `julia` | none | — |
 | `agents` | multi-select: `claude-code` (and the agents of `rqm/template/agents.md`) | `claude-code` | At least one |
 | `gpu` | choice: `auto`, `on`, `off` | `auto` | — |
+| `license` | choice: `MIT`, `BSD-3-Clause`, `Apache-2.0`, `GPL-3.0-or-later`, `none` | `none` | — |
+| `copyright_year` | text, asked unless `license` is `none` | the current year | Four digits |
 
 - Python is always installed, because Snakemake runs on it; `languages` lists what is added beyond
   it.
 - `agents` selects the skill adapters (see `rqm/template/skills.md`); `gpu` is the launcher's
   default (see `rqm/template/container.md`). This file only records them.
+- `license` defaults to `none` because choosing a license is the human's decision: the template
+  never picks one for them. Its help text says that `none` means nobody else may reuse the project
+  until a license is added, and that MIT, BSD-3-Clause and Apache-2.0 let others reuse and adapt
+  the work freely, while GPL-3.0-or-later requires that changed versions stay open.
 - An invalid answer is rejected by Copier at the prompt, before any file is written.
 
 ## Generated Project Layout <!-- rq-fc2247e5 -->
@@ -51,6 +63,7 @@ the CLI reads (`PROJECT.md`, `.tophat/roots.yaml`, studies, datasets) are specif
   .copier-answers.yml            managed   Copier's record of the answers and template version
   PROJECT.md                     project   question tree: title and description, no questions
   README.md                      project   what the project is and how to start
+  LICENSE                        project   the chosen license; absent when `license` is `none`
   pixi.toml                      project   the environment: Python, Snakemake, selected languages
   pixi.lock                      project   the pre-solved lock for the selected languages
   .gitignore                     project   root ignore rules (Snakemake and pixi working dirs)
@@ -133,6 +146,21 @@ the summary, clean and dirty results, and reporting; who does what (the human pr
 review verdicts, runs cluster jobs, commits, and writes the Interpretation; the agent does the
 rest);
 and the commands for each step. The README and the agent rules point to it.
+
+### LICENSE <!-- rq-39c292b1 -->
+
+`LICENSE` holds the full text of the chosen license:
+
+- `MIT` and `BSD-3-Clause`: the standard text, with the copyright line
+  `Copyright (c) {{ copyright_year }}, {{ author_name }}` (BSD) or
+  `Copyright (c) {{ copyright_year }} {{ author_name }}` (MIT).
+- `Apache-2.0` and `GPL-3.0-or-later`: the license text verbatim, as published by the Apache
+  Software Foundation and the Free Software Foundation; neither text carries a copyright line.
+- `none`: no `LICENSE` file is written.
+
+`LICENSE` is project-owned: `copier update` never changes it, so a later change of the `license`
+answer does not replace a license already in place, and copying the template into a repository that
+has its own `LICENSE` keeps that file.
 
 ### exploration/README.md <!-- rq-45cc9712 -->
 
@@ -262,7 +290,9 @@ works without `--trust`.
 - The dev container, launcher, GPU handling and enabling the hook (`rqm/template/container.md`).
 - The worked example study: it lives with the skills that copy from it, never in a new project's
   `studies/`.
-- Languages other than Python and Julia, and license files for the generated project.
+- Languages other than Python and Julia.
+- Licenses beyond the five choices, separate licenses for data or documentation (such as CC BY),
+  and per-file license headers.
 - Checking in `tophat check` that managed files are unmodified.
 
 ## Gherkin Scenarios <!-- rq-d4cc96df -->
@@ -292,6 +322,12 @@ Feature: Generated project skeleton
     When the template is rendered with an empty agents selection
     Then Copier rejects the answer
 
+  @rq-11ae7d55
+  Scenario: A malformed copyright year is rejected
+    When the template is rendered with license "MIT" and copyright_year "26"
+    Then Copier rejects the answer
+    And no file is written
+
   # --- Layout and ownership ---
 
   @rq-d0e11fee
@@ -307,7 +343,7 @@ Feature: Generated project skeleton
 
   @rq-cae7fbe8
   Scenario: Every project-owned file is skipped on update
-    When the template is rendered with default answers
+    When the template is rendered with license "MIT"
     Then every rendered file that is neither under .tophat/managed/ nor listed in ownership-exceptions is matched by _skip_if_exists
 
   @rq-4da71d7f
@@ -324,6 +360,30 @@ Feature: Generated project skeleton
     Then PROJECT.md starts with "# Method X"
     And it contains "Does method X improve affinity prediction?"
     And "tophat question tree" shows no questions
+
+  @rq-2b58b0cd
+  Scenario: The chosen license is written with its notice
+    When the template is rendered with copyright_year "2031" and each license other than "none"
+    Then for license "MIT", LICENSE starts with "MIT License" and contains "Copyright (c) 2031 A. Scientist"
+    And for license "BSD-3-Clause", LICENSE starts with "BSD 3-Clause License" and contains "Copyright (c) 2031, A. Scientist"
+    And for license "Apache-2.0", LICENSE contains "Apache License" and "Version 2.0, January 2004"
+    And for license "GPL-3.0-or-later", LICENSE contains "GNU GENERAL PUBLIC LICENSE" and "Version 3, 29 June 2007"
+
+  @rq-8a5a143e
+  Scenario: Long license texts are verbatim
+    When the template is rendered with license "Apache-2.0", and again with license "GPL-3.0-or-later"
+    Then each LICENSE equals the corresponding file of template/.licenses/ byte for byte
+
+  @rq-63eb6559
+  Scenario: No license is written by default
+    When the template is rendered with default answers
+    Then the project has no LICENSE file
+    And the answers file records license "none" and no copyright_year
+
+  @rq-ed4a5363
+  Scenario: The template's own license files are not copied
+    When the template is rendered with license "MIT"
+    Then the project contains no TEMPLATE-LICENSE and no .licenses/ directory
 
   @rq-d1fe5c84
   Scenario: The results root is declared and defaults to the project
@@ -452,8 +512,8 @@ Feature: Generated project skeleton
 
   @rq-46aa2f57
   Scenario: Copying into an existing repository overwrites no user file
-    Given an existing repository with README.md, .gitignore and pixi.toml of its own
-    When the template is copied into it
-    Then README.md, .gitignore and pixi.toml are unchanged
+    Given an existing repository with README.md, .gitignore, pixi.toml and LICENSE of its own
+    When the template is copied into it with license "MIT"
+    Then README.md, .gitignore, pixi.toml and LICENSE are unchanged
     And .tophat/.gitignore and .tophat/roots.yaml are written
 ```
