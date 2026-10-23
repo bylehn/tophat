@@ -248,4 +248,9 @@ On a compute cluster without Podman, build an Apptainer image elsewhere with
 
 ## License
 
-BSD 3-Clause. See [LICENSE](LICENSE).
+The `tophat` tool is under the BSD 3-Clause license. See [LICENSE](LICENSE).
+
+The template files that Copier copies into a new project (everything under `template/`) are under
+MIT No Attribution. See [template/TEMPLATE-LICENSE](template/TEMPLATE-LICENSE). A generated project
+needs no notice from TopHat. When you create a project, Copier asks which license it should use
+(MIT, BSD-3-Clause, Apache-2.0, GPL-3.0-or-later, or none) and writes the matching `LICENSE` file.

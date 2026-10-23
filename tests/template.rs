@@ -339,6 +339,24 @@ fn at_least_one_agent_is_required() {
     assert!(String::from_utf8_lossy(&out.stderr).contains("at least one agent"));
 }
 
+#[test] // rq-11ae7d55 rq-99c9f467
+fn a_malformed_copyright_year_is_rejected() {
+    if !common::copier() {
+        return;
+    }
+    let scratch = Scratch::new();
+    let p = scratch.path("p");
+    let out = copier_copy(
+        &repo(),
+        "HEAD",
+        &p,
+        &[("license", "MIT"), ("copyright_year", "26")],
+    );
+    assert!(!out.status.success());
+    assert!(String::from_utf8_lossy(&out.stderr).contains("four digits"));
+    assert!(!p.exists() || files(&p).is_empty());
+}
+
 // --- Layout and ownership -----------------------------------------------------------------------
 
 #[test] // rq-d0e11fee rq-fc2247e5
@@ -408,7 +426,8 @@ fn every_project_owned_file_is_skipped_on_update() {
     }
     let scratch = Scratch::new();
     let p = scratch.path("p");
-    render(&p, &[]);
+    render(&p, &[("license", "MIT")]);
+    assert!(p.join("LICENSE").is_file());
     let config = yaml(&fs::read_to_string(repo().join("copier.yml")).unwrap());
     let skipped: Vec<&str> = config["_skip_if_exists"]
         .as_vec()
@@ -476,6 +495,82 @@ fn project_md_starts_with_an_empty_question_tree() {
         !String::from_utf8_lossy(&out.stdout).contains("\"q-"),
         "{tree}"
     );
+}
+
+#[test] // rq-2b58b0cd rq-39c292b1
+fn the_chosen_license_is_written_with_its_notice() {
+    if !common::copier() {
+        return;
+    }
+    let cases = [
+        ("MIT", "MIT License\n", "Copyright (c) 2031 A. Scientist\n"),
+        (
+            "BSD-3-Clause",
+            "BSD 3-Clause License\n",
+            "Copyright (c) 2031, A. Scientist\n",
+        ),
+        ("Apache-2.0", "", "Version 2.0, January 2004"),
+        ("GPL-3.0-or-later", "", "Version 3, 29 June 2007"),
+    ];
+    let scratch = Scratch::new();
+    for (license, first, notice) in cases {
+        let p = scratch.path(license);
+        render(&p, &[("license", license), ("copyright_year", "2031")]);
+        let text = read(&p, "LICENSE");
+        assert!(text.starts_with(first), "{license}: {text}");
+        assert!(text.contains(notice), "{license}: {text}");
+    }
+    let apache = read(&scratch.path("Apache-2.0"), "LICENSE");
+    assert!(apache.contains("Apache License"));
+    let gpl = read(&scratch.path("GPL-3.0-or-later"), "LICENSE");
+    assert!(gpl.contains("GNU GENERAL PUBLIC LICENSE"));
+}
+
+#[test] // rq-8a5a143e rq-39c292b1
+fn long_license_texts_are_verbatim() {
+    if !common::copier() {
+        return;
+    }
+    let scratch = Scratch::new();
+    for license in ["Apache-2.0", "GPL-3.0-or-later"] {
+        let p = scratch.path(license);
+        render(&p, &[("license", license)]);
+        let source = fs::read(repo().join("template/.licenses").join(license)).unwrap();
+        assert!(
+            fs::read(p.join("LICENSE")).unwrap() == source,
+            "{license} differs"
+        );
+    }
+}
+
+#[test] // rq-63eb6559 rq-39c292b1 rq-99c9f467
+fn no_license_is_written_by_default() {
+    if !common::copier() {
+        return;
+    }
+    let scratch = Scratch::new();
+    let p = scratch.path("p");
+    render(&p, &[]);
+    assert!(!p.join("LICENSE").exists());
+    let answers = yaml(&read(&p, ".copier-answers.yml"));
+    assert_eq!(answers["license"].as_str(), Some("none"));
+    assert!(answers["copyright_year"].is_badvalue());
+}
+
+#[test] // rq-ed4a5363 rq-e68d06e8
+fn the_templates_own_license_files_are_not_copied() {
+    if !common::copier() {
+        return;
+    }
+    let scratch = Scratch::new();
+    let p = scratch.path("p");
+    render(&p, &[("license", "MIT")]);
+    for f in files(&p) {
+        assert!(
+            !f.ends_with("TEMPLATE-LICENSE") && !f.split('/').any(|c| c == ".licenses"),
+            "{f} was copied"
+        );
+    }
 }
 
 #[test] // rq-d1fe5c84 rq-cba13e20
@@ -964,11 +1059,12 @@ fn copying_into_an_existing_repository_overwrites_no_user_file() {
         ("README.md", "# An existing project\n"),
         (".gitignore", "*.o\n"),
         ("pixi.toml", "[workspace]\nname = \"existing\"\n"),
+        ("LICENSE", "Proprietary. All rights reserved.\n"),
     ];
     for (f, text) in own {
         write(&p, f, text);
     }
-    render(&p, &[]);
+    render(&p, &[("license", "MIT")]);
     for (f, text) in own {
         assert_eq!(read(&p, f), text, "{f} was overwritten");
     }

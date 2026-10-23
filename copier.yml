@@ -6,10 +6,14 @@ _templates_suffix: .jinja
 _exclude:
   # Pre-solved locks, one per language selection; pixi.lock includes the matching one.
   - .locks
+  # License texts the LICENSE file includes, and the template's own license (MIT-0).
+  - .licenses
+  - TEMPLATE-LICENSE
 _skip_if_exists:
   # Project-owned files: written once by `copier copy`, never by `copier update`.
   - PROJECT.md
   - README.md
+  - LICENSE
   - pixi.toml
   - pixi.lock
   - .gitignore
@@ -76,3 +80,26 @@ gpu:
     - "on"
     - "off"
   default: auto
+
+license:
+  type: str
+  help: >-
+    License of the project. "none" means nobody else may reuse it until you add one; MIT,
+    BSD-3-Clause and Apache-2.0 let others reuse and adapt it freely; GPL-3.0-or-later requires
+    that changed versions stay open
+  choices:
+    - MIT
+    - BSD-3-Clause
+    - Apache-2.0
+    - GPL-3.0-or-later
+    - none
+  default: none
+
+copyright_year:
+  type: str
+  help: Year of the copyright notice
+  when: "{{ license != 'none' }}"
+  default: "{{ '%Y' | strftime }}"
+  validator: >-
+    {% if not (copyright_year | regex_search('^[0-9]{4}$')) %}The copyright year must be four
+    digits{% endif %}

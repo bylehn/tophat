@@ -36,7 +36,8 @@ sets are:
 | `julia-all-agents` | `julia` | all three | `auto` |
 | `gpu-off` | none | all three | `off` |
 
-All sets use `project_name: Example Project`, a fixed description and a fixed author.
+All sets use `project_name: Example Project`, a fixed description, a fixed author, `license: MIT`
+and `copyright_year: 2026`.
 
 ## Commands <!-- rq-ff41b0bc -->
 

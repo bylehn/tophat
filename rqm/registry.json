@@ -689,6 +689,18 @@
     "title": "Keys command with the default results root",
     "type": "scenario"
   },
+  "rq-11ae7d55": {
+    "decl": "Scenario: A malformed copyright year is rejected",
+    "file": "template/project",
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A malformed copyright year is rejected",
+    "type": "scenario"
+  },
   "rq-11b56000": {
     "decl": "Scenario: Human output separates legacy items",
     "file": "check",
@@ -1772,6 +1784,18 @@
     "title": "Out of Scope",
     "type": "section"
   },
+  "rq-2b58b0cd": {
+    "decl": "Scenario: The chosen license is written with its notice",
+    "file": "template/project",
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The chosen license is written with its notice",
+    "type": "scenario"
+  },
   "rq-2b638c5b": {
     "decl": "Scenario: Adapters are written for every selected agent",
     "file": "template/skills",
@@ -2298,6 +2322,19 @@
     ],
     "title": "The example validates what code can check and reviews what needs judgment",
     "type": "scenario"
+  },
+  "rq-39c292b1": {
+    "decl": "### LICENSE",
+    "file": "template/project",
+    "level": 3,
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "LICENSE",
+    "type": "section"
   },
   "rq-39d23d3d": {
     "decl": "Scenario: The release pin is written from the binaries",
@@ -4086,6 +4123,18 @@
     "title": "QC refused for a stage without a gate",
     "type": "scenario"
   },
+  "rq-63eb6559": {
+    "decl": "Scenario: No license is written by default",
+    "file": "template/project",
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "No license is written by default",
+    "type": "scenario"
+  },
   "rq-643d82cb": {
     "decl": "Scenario: A result informed by its deciding data is labelled",
     "file": "study/exploration",
@@ -5548,6 +5597,18 @@
       }
     ],
     "title": "Status is read-only",
+    "type": "scenario"
+  },
+  "rq-8a5a143e": {
+    "decl": "Scenario: Long license texts are verbatim",
+    "file": "template/project",
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Long license texts are verbatim",
     "type": "scenario"
   },
   "rq-8a9e97ed": {
@@ -9395,7 +9456,12 @@
     "decl": "## Template Layout",
     "file": "template/project",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Template Layout",
     "type": "section"
   },
@@ -9642,6 +9708,18 @@
     ],
     "title": "tophat",
     "type": "api-item"
+  },
+  "rq-ed4a5363": {
+    "decl": "Scenario: The template's own license files are not copied",
+    "file": "template/project",
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The template's own license files are not copied",
+    "type": "scenario"
   },
   "rq-ed65c3a5": {
     "decl": "Scenario: Remote access and human-only commands are denied",
