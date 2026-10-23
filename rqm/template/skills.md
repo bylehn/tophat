@@ -203,9 +203,11 @@ one:
 - Writes `config/base.yaml`, one `config/<variant>.yaml` per variant holding only what differs,
   scripts that take their input and output paths as arguments, and tests under `tests/` carrying a
   `th:S<n>` token for every scenario and none for a scenario that does not exist.
-- Declares a QC gate by default, with a `check` text for every gated stage saying what the human
-  should look for in its output; uses `qc: skip` only for a deterministic stage covered by a
-  scenario test, with a `qc_reason` that names the scenario.
+- Writes a `validate` command for every stage another stage consumes (except external stages),
+  checking mechanically what code can: file counts, shapes, missing or non-finite values, ranges.
+- Asks the human which stages need their own judgment, and gives only those a `review` question
+  about what a person should decide by looking (a plot, a fit, whether a result makes sense),
+  preferably with a file the stage writes for the purpose; never a check that `validate` could do.
 - Uses a tool stage (`tool: <tool>@<commit>`) for every stage a tool computes, and an external stage
   for compute that must run on a cluster; never fans out an external stage.
 - Never edits the frozen sections. If the pipeline cannot meet them, stops and tells the human.
@@ -220,8 +222,8 @@ Running a study and reporting it.
 
 - Runs `tophat run <id>` (`--draft` for a draft study, saying that trial results can never be
   reported), and acts on the next action it prints.
-- **QC hand-off** (row 9): tells the human what the stage does and what to check (its `check`
-  text), shows where the output is (`tophat pipeline keys`), may summarize what the output contains
+- **QC hand-off** (row 9): tells the human what the stage does and its `review` question, shows
+  where the output is (`tophat pipeline keys`), may summarize what the output contains
   to help them look, and gives the exact `tophat stage qc` command. Never gives or implies a
   verdict.
 - **External hand-off** (row 8): shows the output of `tophat stage instructions`, and after the human
@@ -246,6 +248,8 @@ Data roots and datasets.
   as the human gives them.
 - Registers raw data with `tophat data add`, asking the human for the source, date and licence;
   registers data of unknown history with `tophat data declare`, with the human's own statement.
+- Asks the human for each dataset's visibility, which describes the data itself, and never derives
+  it from the visibility of a study that uses it: a private study may use public data.
 - Publishes a sealed stage output with `tophat data publish`; verifies with `tophat data verify`;
   retires a version with `tophat data retire` only for a defect the human confirms, with their reason.
 - Never lets private data reach a public study.
@@ -255,7 +259,9 @@ Data roots and datasets.
 
 Tools used by stages.
 
-- Declares a tool in `.tophat/tools.yaml` with the git URL the human gives.
+- Declares a tool in `.tophat/tools.yaml` with the git URL the human gives. After declaring a local
+  repository, asks the human to relaunch the dev container (`./th.sh`), which mounts it; restarting
+  only the agent is not enough.
 - Pins stages to `<tool>@<commit>`, never to a branch or tag, with the commit the human chooses;
   inspects with `tophat tools list`.
 - After a new pin, and on a machine whose cache lacks a pinned commit, gives the human the command
@@ -294,12 +300,13 @@ never placed in `studies/` by the template.
   endpoint lies above 0.
 - **Variants**: `base` (Gaussian noise) and `impulse` (impulse noise).
 - **Stages**:
-  - `generate`: a Python script writing seeded synthetic signals, one file per signal; `qc: skip`
-    with a `qc_reason` naming the scenario that checks it;
+  - `generate`: a Python script writing seeded synthetic signals, one file per signal, with a
+    `validate` script checking the number of signals, their length and their values;
   - `filter`: an external stage applying both filters with a script that needs only `sh`, `awk`
-    and `mkdir`, so it runs on a cluster with only POSIX tools; gated;
+    and `mkdir`, so it runs on a cluster with only POSIX tools; it has a `review` question asking
+    whether the median-filtered signals follow the step without the spikes the mean filter keeps;
   - `score`: a fan-out over the filtered signals computing both RMSEs, in Julia when the project
-    selected Julia and in Python otherwise; gated;
+    selected Julia and in Python otherwise, with a `validate` script checking each item's RMSEs;
   - `analyse`: a Python script computing the endpoint and its interval and writing `result.txt`.
 - **Scenarios** cover the endpoint, the determinism of `generate`, and the shape of the filter
   output, each with a test carrying its `th:S<n>` token.
@@ -374,9 +381,9 @@ Feature: Agent skills (render and lint)
     Then the edited local.md is unchanged
 
   @rq-38e5cf5f
-  Scenario: The example says what each gated stage's QC checks
-    Then every stage of the example that another stage consumes and that does not declare "qc: skip" has a non-empty "check"
-    And "tophat check" of the copied example reports no "pipeline.qc-check-missing"
+  Scenario: The example validates what code can check and reviews what needs judgment
+    Then the example's "generate" and "score" stages have a "validate" command and the "filter" stage has a "review" question
+    And "tophat check" of the copied example reports no "pipeline.validate-missing"
 
   @rq-01a6c860
   Scenario: Agent entry points read the managed rules

@@ -410,15 +410,11 @@
     "type": "section"
   },
   "rq-0a10fc96": {
-    "decl": "Scenario: A gated stage should say what to check",
+    "decl": "Scenario: The validate command enters the key",
     "file": "pipeline/provenance",
     "refs": [
       {
-        "file": "src/pipeline/config.rs",
-        "kind": "code"
-      },
-      {
-        "file": "src/pipeline/rules.rs",
+        "file": "src/pipeline/keys.rs",
         "kind": "code"
       },
       {
@@ -426,7 +422,7 @@
         "kind": "code"
       }
     ],
-    "title": "A gated stage should say what to check",
+    "title": "The validate command enters the key",
     "type": "scenario"
   },
   "rq-0a389452": {
@@ -929,15 +925,19 @@
     "type": "scenario"
   },
   "rq-180689f2": {
-    "decl": "Scenario: Skipping a QC gate needs a reason",
+    "decl": "Scenario: A consumed stage without validation is flagged",
     "file": "pipeline/provenance",
     "refs": [
+      {
+        "file": "src/pipeline/rules.rs",
+        "kind": "code"
+      },
       {
         "file": "tests/pipeline.rs",
         "kind": "code"
       }
     ],
-    "title": "Skipping a QC gate needs a reason",
+    "title": "A consumed stage without validation is flagged",
     "type": "scenario"
   },
   "rq-18896042": {
@@ -1648,7 +1648,7 @@
     "type": "scenario"
   },
   "rq-29ef4225": {
-    "decl": "Scenario: Stages are gated by default",
+    "decl": "Scenario: Only stages with a review question are gated",
     "file": "pipeline/snakemake",
     "refs": [
       {
@@ -1656,11 +1656,11 @@
         "kind": "code"
       }
     ],
-    "title": "Stages are gated by default",
+    "title": "Only stages with a review question are gated",
     "type": "scenario"
   },
   "rq-2a51782f": {
-    "decl": "Scenario: The old opt-in form is rejected",
+    "decl": "Scenario: The removed QC fields are rejected",
     "file": "pipeline/provenance",
     "refs": [
       {
@@ -1668,7 +1668,7 @@
         "kind": "code"
       }
     ],
-    "title": "The old opt-in form is rejected",
+    "title": "The removed QC fields are rejected",
     "type": "scenario"
   },
   "rq-2a741327": {
@@ -1787,7 +1787,12 @@
   "rq-2da2ae3f": {
     "decl": "Scenario: The example study runs end to end",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/e2e.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The example study runs end to end",
     "type": "scenario"
   },
@@ -2171,7 +2176,7 @@
     "type": "scenario"
   },
   "rq-38e5cf5f": {
-    "decl": "Scenario: The example says what each gated stage's QC checks",
+    "decl": "Scenario: The example validates what code can check and reviews what needs judgment",
     "file": "template/skills",
     "refs": [
       {
@@ -2179,7 +2184,7 @@
         "kind": "code"
       }
     ],
-    "title": "The example says what each gated stage's QC checks",
+    "title": "The example validates what code can check and reviews what needs judgment",
     "type": "scenario"
   },
   "rq-39d23d3d": {
@@ -2442,6 +2447,18 @@
       }
     ],
     "title": "Legacy items never fail the check, even in strict mode",
+    "type": "scenario"
+  },
+  "rq-41afeb5b": {
+    "decl": "Scenario: A reviewed stage that nothing consumes gates the report",
+    "file": "pipeline/snakemake",
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A reviewed stage that nothing consumes gates the report",
     "type": "scenario"
   },
   "rq-41dc6a2d": {
@@ -3769,7 +3786,7 @@
     "type": "scenario"
   },
   "rq-617974f2": {
-    "decl": "Scenario: The check text does not enter the key",
+    "decl": "Scenario: The review question does not enter the key",
     "file": "pipeline/provenance",
     "refs": [
       {
@@ -3777,7 +3794,7 @@
         "kind": "code"
       }
     ],
-    "title": "The check text does not enter the key",
+    "title": "The review question does not enter the key",
     "type": "scenario"
   },
   "rq-61aa0c3d": {
@@ -4261,7 +4278,12 @@
   "rq-6ffea465": {
     "decl": "Scenario: Failing returns write no record",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/e2e.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Failing returns write no record",
     "type": "scenario"
   },
@@ -4452,6 +4474,13 @@
     "title": "Files",
     "type": "section"
   },
+  "rq-75cc7ed6": {
+    "decl": "Scenario: An external stage cannot validate",
+    "file": "pipeline/external",
+    "refs": [],
+    "title": "An external stage cannot validate",
+    "type": "scenario"
+  },
   "rq-765490e4": {
     "decl": "Scenario: Supersede refuses a missing replacement",
     "file": "study/format",
@@ -4523,7 +4552,7 @@
     "type": "section"
   },
   "rq-78b231e3": {
-    "decl": "Scenario: A stage that nothing consumes is never gated",
+    "decl": "Scenario: A stage without a review question has no gate",
     "file": "pipeline/snakemake",
     "refs": [
       {
@@ -4531,7 +4560,7 @@
         "kind": "code"
       }
     ],
-    "title": "A stage that nothing consumes is never gated",
+    "title": "A stage without a review question has no gate",
     "type": "scenario"
   },
   "rq-78cc426d": {
@@ -5140,7 +5169,7 @@
     "type": "scenario"
   },
   "rq-88bd99cd": {
-    "decl": "Scenario: The QC prompt says what to check",
+    "decl": "Scenario: The QC prompt asks the review question",
     "file": "pipeline/snakemake",
     "refs": [
       {
@@ -5152,7 +5181,7 @@
         "kind": "code"
       }
     ],
-    "title": "The QC prompt says what to check",
+    "title": "The QC prompt asks the review question",
     "type": "scenario"
   },
   "rq-89a79c10": {
@@ -5593,7 +5622,12 @@
   "rq-9b40e3a8": {
     "decl": "Scenario: A changed tool pin re-runs exactly the downstream stages",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/e2e.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A changed tool pin re-runs exactly the downstream stages",
     "type": "scenario"
   },
@@ -5754,7 +5788,7 @@
     "type": "section"
   },
   "rq-9e24cb69": {
-    "decl": "Scenario: QC settings do not change keys",
+    "decl": "Scenario: Gating a stage does not change keys",
     "file": "pipeline/provenance",
     "refs": [
       {
@@ -5762,7 +5796,7 @@
         "kind": "code"
       }
     ],
-    "title": "QC settings do not change keys",
+    "title": "Gating a stage does not change keys",
     "type": "scenario"
   },
   "rq-9eddd05a": {
@@ -6030,6 +6064,18 @@
     "refs": [],
     "title": "Functions",
     "type": "section"
+  },
+  "rq-a30a3eff": {
+    "decl": "Scenario: A failing validation stops the stage",
+    "file": "pipeline/snakemake",
+    "refs": [
+      {
+        "file": "tests/snakemake.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A failing validation stops the stage",
+    "type": "scenario"
   },
   "rq-a32e7ed9": {
     "decl": "Scenario: Amendment on a draft",
@@ -6564,7 +6610,12 @@
     "decl": "## End-to-End Example Study",
     "file": "testing",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/e2e.rs",
+        "kind": "code"
+      }
+    ],
     "title": "End-to-End Example Study",
     "type": "section"
   },
@@ -8379,7 +8430,7 @@
     "type": "scenario"
   },
   "rq-dc1e521d": {
-    "decl": "## QC Gates",
+    "decl": "## Validation and Review",
     "file": "pipeline/snakemake",
     "level": 2,
     "refs": [
@@ -8396,7 +8447,7 @@
         "kind": "code"
       }
     ],
-    "title": "QC Gates",
+    "title": "Validation and Review",
     "type": "section"
   },
   "rq-dc4c3c26": {
@@ -9592,7 +9643,7 @@
     "type": "scenario"
   },
   "rq-fd086402": {
-    "decl": "Scenario: A reason without a skip is rejected",
+    "decl": "Scenario: An empty review question is rejected",
     "file": "pipeline/provenance",
     "refs": [
       {
@@ -9600,7 +9651,7 @@
         "kind": "code"
       }
     ],
-    "title": "A reason without a skip is rejected",
+    "title": "An empty review question is rejected",
     "type": "scenario"
   },
   "rq-fd2bf270": {

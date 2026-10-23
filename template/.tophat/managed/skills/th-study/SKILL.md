@@ -78,21 +78,27 @@ meet them, stop and tell the human.
    environments and provenance follow from this; never compute them.
 2. **Scripts** go in `scripts/`, in any language the environment has. They take every input and
    output path as an argument and never hard-code a path.
-3. **QC gates.** Every stage that another stage consumes needs a human QC verdict by default. Give
-   each gated stage a `check`: a sentence or two saying what the human should verify in its output
-   before anything downstream uses it (shape, completeness, plausible ranges), without hinting at
-   the study's answer. `tophat stage qc` shows it. Use `qc: skip` only for a deterministic stage
-   covered by a scenario test, with a `qc_reason` that names that scenario.
-4. **Tools.** Every stage that a tool computes is a tool stage, `tool: <tool>@<commit>` with the
+3. **Validation.** Give every stage that another stage consumes (except an external stage) a
+   `validate` command: a script that checks its output mechanically (file counts, shapes, missing
+   or non-finite values, ranges) and exits non-zero, saying what is wrong, when a check fails. It
+   runs after the stage, every time; a failing validation stops the stage before anything is
+   sealed. List the script in `code`. External stages are checked by scenario tests instead.
+4. **Review.** Ask the human which stages need their own judgment, and give only those a `review`
+   question: what a person decides by looking (does this plot look right, does this fit make
+   sense), never something `validate` could check, and without hinting at the study's answer. If
+   it helps the human look, have the stage write a figure or a short summary for the purpose. A
+   reviewed stage waits for the human's verdict before its consumers run and before the study is
+   reported.
+5. **Tools.** Every stage that a tool computes is a tool stage, `tool: <tool>@<commit>` with the
    commit the human chose (see `th-tool`). Never copy tool code into the study.
-5. **Cluster compute** is an external stage (`external:` with `setup`, `slurm` and `keep`): the
+6. **Cluster compute** is an external stage (`external:` with `setup`, `slurm` and `keep`): the
    pipeline writes a job folder that the human runs on the cluster. An external stage never fans
    out, and its `code` lies inside the study directory.
-6. **Scenario tests** go in `tests/`. Every scenario `S<n>` has at least one test carrying the
+7. **Scenario tests** go in `tests/`. Every scenario `S<n>` has at least one test carrying the
    token `th:S<n>`, and no test names a scenario that does not exist.
-7. **Check.** Run `tophat check studies/<id>` and `tophat pipeline keys <id>`, and fix what they
+8. **Check.** Run `tophat check studies/<id>` and `tophat pipeline keys <id>`, and fix what they
    report.
-8. **Hand over.** Ask the human to commit the configuration, scripts and tests on the host before
+9. **Hand over.** Ask the human to commit the configuration, scripts and tests on the host before
    the run whose results will be reported, naming the files: results computed from uncommitted code
    are dirty and cannot be reported. Then continue with `th-run`.
 

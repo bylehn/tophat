@@ -1204,6 +1204,7 @@ pub fn ingest(root: &Path, request: &SealRequest) -> Result<PathBuf, ExternalErr
     });
     let content = RecordContent {
         run: job_run(stage)?,
+        validate: None,
         outputs: receipt
             .outputs
             .iter()
@@ -1374,9 +1375,8 @@ mod tests {
             threads: 8,
             foreach: None,
             external: None,
-            qc_skip: false,
-            qc_reason: None,
-            check: None,
+            validate: None,
+            review: None,
             result: None,
             file: String::new(),
             line: None,

@@ -37,14 +37,14 @@ const STAGES: &str = "stages:
     run: sh scripts/prepare.sh {in.raw} {out}
     code: [scripts/prepare.sh]
     inputs: {raw: dataset:benchmark-set@v1}
-    qc: skip
-    qc_reason: Copies the input structures unchanged; checked by scenario S2
+    validate: find {out} -name '*.pdb' | grep -q .
   - name: score
     run: sh scripts/score.sh {item} {out} {params.level}
     code: [scripts/score.sh]
     inputs: {structures: stage:prepare}
     foreach: structures
-    check: Every structure has one score, and scores are finite
+    validate: test -s {out}/score.txt
+    review: Do the scores look plausible for these structures?
     params: {level: b3lyp}
   - name: analyse
     run: sh scripts/analyse.sh {in.scores} {out}

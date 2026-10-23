@@ -147,13 +147,17 @@ def _tophat_job(stage, key, variant, item=None, trial=False, qc=(), external=Fal
             text=True,
         ).stdout
     )
-    _tophat_subprocess.run(
+    pixi = (
         ["pixi", "run", "--frozen"]
         + (["--manifest-path", begun["manifest"]] if begun.get("manifest") else [])
-        + ["-e", begun["env"], "--", "sh", "-c", begun["run"]],
-        cwd=begun["cwd"],
-        check=True,
+        + ["-e", begun["env"], "--", "sh", "-c"]
     )
+    _tophat_subprocess.run(pixi + [begun["run"]], cwd=begun["cwd"], check=True)
+    if begun.get("validate"):
+        if _tophat_subprocess.run(pixi + [begun["validate"]], cwd=begun["cwd"]).returncode != 0:
+            raise ValueError(
+                "Validation of stage " + stage + " failed (see above); its output is not sealed"
+            )
     _tophat("stage", "seal", _TOPHAT_STUDY, stage, "--key", key, "--variant", variant, *extra)
 "#;
 

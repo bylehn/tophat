@@ -580,6 +580,12 @@ pub fn seal(root: &Path, request: &SealRequest) -> Result<PathBuf, PipelineError
 
     let run_paths = resolved.run_paths(stage, request.item.as_deref(), request.trial)?;
     let run = render_run(stage, &run_paths).map_err(PipelineError::Io)?;
+    let validate = stage
+        .validate
+        .as_ref()
+        .map(|v| super::keys::render_template(v, stage, &run_paths))
+        .transpose()
+        .map_err(PipelineError::Io)?;
     write_record(
         root,
         &resolved,
@@ -588,6 +594,7 @@ pub fn seal(root: &Path, request: &SealRequest) -> Result<PathBuf, PipelineError
         &dir,
         &RecordContent {
             run,
+            validate,
             outputs,
             items,
             external: None,
@@ -599,6 +606,8 @@ pub fn seal(root: &Path, request: &SealRequest) -> Result<PathBuf, PipelineError
 pub(crate) struct RecordContent {
     /// The command as executed.
     pub run: String,
+    /// The `validate` command that checked the output, as executed.
+    pub validate: Option<String>,
     /// The outputs, with the file each was hashed from.
     pub outputs: Vec<(OutputFile, PathBuf)>,
     pub items: Option<Vec<ItemSummary>>,
@@ -657,6 +666,7 @@ pub(crate) fn write_record(
         "key": actual,
         "item": request.item,
         "run": content.run,
+        "validate": content.validate,
         "env": env,
         "code": code.iter().map(|c| json!({"path": c.path, "sha256": c.sha256})).collect::<Vec<_>>(),
         "params": Value::Object(stage.params.clone()),
@@ -703,6 +713,8 @@ pub(crate) fn write_record(
 pub struct BegunJob {
     /// The command with placeholders substituted.
     pub run: String,
+    /// The `validate` command with placeholders substituted, run after `run` when set.
+    pub validate: Option<String>,
     /// The pixi environment.
     pub env: String,
     /// The directory to run in: the study directory.
@@ -754,8 +766,15 @@ pub fn begin(root: &Path, request: &SealRequest) -> Result<BegunJob, PipelineErr
         .tool_info(stage)
         .map_err(PipelineError::Io)?
         .map(|t| t.manifest);
+    let validate = stage
+        .validate
+        .as_ref()
+        .map(|v| super::keys::render_template(v, stage, &paths))
+        .transpose()
+        .map_err(PipelineError::Io)?;
     Ok(BegunJob {
         run,
+        validate,
         env: stage.env.clone(),
         cwd: root.join(STUDIES_DIR).join(&request.study),
         manifest,

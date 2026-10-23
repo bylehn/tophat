@@ -122,10 +122,12 @@ elsewhere, that results are reported only from pre-registered studies, and that
 `.tophat/managed/GUIDE.md` explains, in one page, how a study goes from question to report, and
 why each step exists: the question tree; planning and pre-registration (what is frozen, and why the
 plan comes before any result is seen); stages, stage keys and why outputs live in directories named
-by their key; QC gates (that a human looks at each consumed output before anything downstream uses
-it, guided by the stage's `check` text) and `qc: skip`; external stages and their job folders;
+by their key; validation (the checks code runs after every stage) and review (the few QC gates where
+a human's judgment is asked for, and why they block what comes after); external stages and their
+job folders;
 the summary, clean and dirty results, and reporting; who does what (the human pre-registers, gives
-QC verdicts, runs cluster jobs, commits, and writes the Interpretation; the agent does the rest);
+review verdicts, runs cluster jobs, commits, and writes the Interpretation; the agent does the
+rest);
 and the commands for each step. The README and the agent rules point to it.
 
 ### exploration/README.md <!-- rq-45cc9712 -->

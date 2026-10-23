@@ -30,14 +30,14 @@ const BASE: &str = "stages:
     run: sh scripts/prepare.sh {in.raw} {out}
     code: [scripts/prepare.sh]
     inputs: {raw: dataset:benchmark-set@v1}
-    qc: skip
-    qc_reason: Copies the input structures unchanged; checked by scenario S2
+    validate: find {out} -name '*.pdb' | grep -q .
   - name: score
     run: sh scripts/score.sh {item} {out} {params.level}
     code: [scripts/score.sh]
     inputs: {structures: stage:prepare}
     foreach: structures
-    check: Every structure has one score, and scores are finite
+    validate: test -s {out}/score.txt
+    review: Do the scores look plausible for these structures?
     params: {level: b3lyp}
   - name: analyse
     run: sh scripts/analyse.sh {in.scores} {out}
@@ -796,32 +796,48 @@ fn fan_out_over_a_dataset() {
 // --- QC gates ---------------------------------------------------------------------------------
 
 #[test] // rq-29ef4225 rq-dc1e521d
-fn stages_are_gated_by_default() {
+fn only_stages_with_a_review_question_are_gated() {
     let env = Env::new();
-    let text = env.read("studies/x-vs-docking/config/base.yaml").replace(
-        "    qc: skip\n    qc_reason: Copies the input structures unchanged; checked by scenario S2\n",
-        "",
-    );
-    env.write("studies/x-vs-docking/config/base.yaml", &text);
-    let rules = env.rules();
-    let base = env.keys("base");
-    let item_rule = rules
-        .split(&format!("rule score_{}_item:", hex(&base["score"])))
-        .nth(1)
-        .unwrap();
-    let item_rule = item_rule.split("\nrule ").next().unwrap();
-    assert!(
-        item_rule.contains(&format!(
-            "qc=[(\"prepare\", \"{}\", \"base\")]",
-            base["prepare"]
-        )),
-        "{item_rule}"
-    );
+    let item_rule = |env: &Env| {
+        let rules = env.rules();
+        let base = env.keys("base");
+        let rule = rules
+            .split(&format!("rule score_{}_item:", hex(&base["score"])))
+            .nth(1)
+            .unwrap()
+            .split("\nrule ")
+            .next()
+            .unwrap()
+            .to_string();
+        (rules, base, rule)
+    };
+    let (rules, base, rule) = item_rule(&env);
+    assert!(rule.contains("qc=[]"), "{rule}");
     let analyse = rules
         .split(&format!("rule analyse_{}:", hex(&base["analyse"])))
         .nth(1)
         .unwrap();
     assert!(analyse.contains(&format!("(\"score\", \"{}\", \"base\")", base["score"])));
+
+    let config = env.read("studies/x-vs-docking/config/base.yaml");
+    let line = "    inputs: {raw: dataset:benchmark-set@v1}\n";
+    assert!(config.contains(line));
+    env.write(
+        "studies/x-vs-docking/config/base.yaml",
+        &config.replacen(
+            line,
+            &format!("{line}    review: Are all structures present and intact?\n"),
+            1,
+        ),
+    );
+    let (_, base, rule) = item_rule(&env);
+    assert!(
+        rule.contains(&format!(
+            "qc=[(\"prepare\", \"{}\", \"base\")]",
+            base["prepare"]
+        )),
+        "{rule}"
+    );
 }
 
 #[test] // rq-78b231e3 rq-dc1e521d
@@ -837,6 +853,61 @@ fn a_stage_that_nothing_consumes_is_never_gated() {
     env.run_by_hand("base", "rho=0.61", &|_| {});
     let (result, _) = qc_typing(&env, "analyse", "pass\nok\n", true);
     assert!(matches!(result, Err(PipelineError::Qc(m)) if m.contains("no QC gate")));
+}
+
+#[test] // rq-41afeb5b rq-dc1e521d rq-ecacda48
+fn a_reviewed_stage_that_nothing_consumes_gates_the_report() {
+    let env = Env::new();
+    let config = env.read("studies/x-vs-docking/config/base.yaml");
+    let line = "    result: result.txt\n";
+    assert!(config.contains(line));
+    env.write(
+        "studies/x-vs-docking/config/base.yaml",
+        &config.replacen(
+            line,
+            &format!("{line}    review: Does the result line make sense?\n"),
+            1,
+        ),
+    );
+    env.commit();
+    summarized(&env);
+    env.verdict("base", "pass");
+    env.verdict("pbe", "pass");
+    let before = env.read("studies/x-vs-docking/STUDY.md");
+    match report(&env.root(), "x-vs-docking") {
+        Err(StudyError::Summary(m)) => assert!(
+            m.contains("tophat stage qc x-vs-docking analyse --variant base"),
+            "{m}"
+        ),
+        other => panic!("unexpected {other:?}"),
+    }
+    assert_eq!(env.read("studies/x-vs-docking/STUDY.md"), before);
+}
+
+#[test] // rq-a30a3eff rq-dc1e521d rq-5782f3d0
+fn a_failing_validation_stops_the_stage() {
+    let env = Env::new();
+    let config = env.read("studies/x-vs-docking/config/base.yaml");
+    let line = "    validate: find {out} -name '*.pdb' | grep -q .\n";
+    assert!(config.contains(line));
+    env.write(
+        "studies/x-vs-docking/config/base.yaml",
+        &config.replacen(
+            line,
+            "    validate: sh -c 'echo validation found no structures >&2; exit 1'\n",
+            1,
+        ),
+    );
+    env.commit();
+    let Some((ok, log)) = env.snakemake(&[]) else {
+        return;
+    };
+    assert!(!ok);
+    assert!(log.contains("validation found no structures"), "{log}");
+    assert!(log.contains("Validation of stage prepare failed"), "{log}");
+    let keys = env.keys("base");
+    assert!(ProvenanceRecord::read(&env.out_dir("prepare", &keys["prepare"])).is_none());
+    assert!(!env.out_dir("score", &keys["score"]).exists());
 }
 
 #[test] // rq-c705fcd3 rq-dc1e521d
@@ -882,16 +953,16 @@ fn qc_typing(
 }
 
 #[test] // rq-88bd99cd rq-6c24fee9
-fn the_qc_prompt_says_what_to_check() {
+fn the_qc_prompt_asks_the_review_question() {
     let env = Env::new();
     env.run_by_hand("base", "rho=0.61", &|_| {});
     let (result, output) = qc_typing(&env, "score", "pass\nok\n", true);
     result.unwrap();
-    let check = output
-        .find("Every structure has one score, and scores are finite")
-        .expect("the check text is shown");
+    let question = output
+        .find("Do the scores look plausible for these structures?")
+        .expect("the review question is shown");
     assert!(
-        check < output.find("Verdict (pass or fail)").unwrap(),
+        question < output.find("Verdict (pass or fail)").unwrap(),
         "{output}"
     );
 }

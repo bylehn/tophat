@@ -27,8 +27,7 @@ stages:
     inputs:
       raw: dataset:benchmark-set@v2
     params: {cutoff: 2.0}
-    qc: skip
-    qc_reason: Copies the input structures unchanged; checked by scenario S2
+    validate: julia --project=. scripts/validate_prepare.jl {out}
   - name: score
     run: python scripts/score.py {item} {out} --level {params.level}
     code: [scripts/score.py, scripts/common/]
@@ -56,17 +55,17 @@ stages:
 | `env` | no | pixi environment name; default `default` |
 | `threads` | no | Positive integer passed to Snakemake; default 1 |
 | `foreach` | no | Name of an input; run the stage once per item of that input (see `rqm/pipeline/snakemake.md`) |
-| `qc` | no | `skip` to exempt the stage from the QC gate it has by default (see `rqm/pipeline/snakemake.md`); no other value is allowed |
-| `qc_reason` | with `qc: skip` | Why the stage's output needs no human verdict; required with `qc: skip` and not allowed without it |
+| `validate` | no | Command, with the placeholders of `run`, that checks the stage's output after `run` and exits non-zero when it is wrong; the job then fails and nothing is sealed (see `rqm/pipeline/snakemake.md`). Its scripts belong in `code` |
+| `review` | no | The question a human answers by looking at the stage's output; it gives the stage a QC gate (see `rqm/pipeline/snakemake.md`). It does not enter the stage key |
 | `result` | no | File, relative to the output directory, whose single line is the stage's result line |
-| `check` | no | What the human checks in the stage's output at its QC gate, in a sentence or two; shown by `tophat stage qc`. Like `qc` and `qc_reason`, it does not enter the stage key |
 | `tool` | no | `<tool>@<commit>`: run the stage with a pinned tool (see `rqm/pipeline/tools.md`) |
 | `external` | no | Run the stage on a remote machine (see `rqm/pipeline/external.md`) |
 
 - `stage:` inputs name a stage that appears **earlier** in the list, so the pipeline has no cycles.
 - `foreach` and `result` are not allowed on the same stage.
-- `qc` and `qc_reason` only decide whether the stage is gated; which stages are gated is specified
-  in `rqm/pipeline/snakemake.md`.
+- `review` only decides whether the stage is gated (see `rqm/pipeline/snakemake.md`), so adding,
+  removing or rewording it never re-runs anything. `validate` decides what is sealed, so it is part
+  of the key.
 - `tool` makes the stage a tool stage (see `rqm/pipeline/tools.md`) and `external` makes it an
   external stage run on a remote machine (see `rqm/pipeline/external.md`); a stage cannot have both.
 - Unknown keys are configuration errors.
@@ -102,25 +101,26 @@ A stage key is `sk-` followed by the first 16 lowercase hex characters of the SH
 
 1. `tophat-stage-key/1`
 2. `run <run template exactly as configured>`
-3. Tool stages only: `tool <tool>@<resolved commit>` (see `rqm/pipeline/tools.md`)
-4. `env <environment hash>` (see below), or `env external` for an external stage
-5. External stages only: `external <canonical JSON>` (see `rqm/pipeline/external.md`)
-6. `threads <n>`
-7. `foreach <input name>` if fan-out, otherwise `foreach -`
-8. `result <file>` if set, otherwise `result -`
-9. One line `code <path> <sha256>` per file reached through `code` (directories expanded to all
+3. Stages with `validate` only: `validate <validate template exactly as configured>`
+4. Tool stages only: `tool <tool>@<resolved commit>` (see `rqm/pipeline/tools.md`)
+5. `env <environment hash>` (see below), or `env external` for an external stage
+6. External stages only: `external <canonical JSON>` (see `rqm/pipeline/external.md`)
+7. `threads <n>`
+8. `foreach <input name>` if fan-out, otherwise `foreach -`
+9. `result <file>` if set, otherwise `result -`
+10. One line `code <path> <sha256>` per file reached through `code` (directories expanded to all
    files recursively), sorted by path, with paths relative to the study directory and `/`-separated
-10. `params <canonical JSON>`: the merged parameters, serialized with sorted keys and no whitespace
-11. One line per input, sorted by input name: `input <name> stage <upstream key>` or
+11. `params <canonical JSON>`: the merged parameters, serialized with sorted keys and no whitespace
+12. One line per input, sorted by input name: `input <name> stage <upstream key>` or
    `input <name> dataset <name>@v<n> <content_hash>`
 
-The study ID, variant name and QC settings (`qc`, `qc_reason`) are not part of the key, so two variants with identical
-effective settings for a stage share one output.
+The study ID, variant name and `review` question are not part of the key, so two variants with
+identical effective settings for a stage share one output.
 
 ### Environment hash <!-- rq-3ac5de89 -->
 
-Lines 3 and 5 appear only for tool and external stages, so stages of other kinds have exactly the
-key text they would have without those features.
+Lines 3, 4 and 6 appear only for stages with `validate`, tool stages and external stages, so other
+stages have exactly the key text they would have without those features.
 
 The environment hash is `sha256:` followed by the SHA-256 of the sorted list of package entries
 recorded in the project's `pixi.lock` (for a tool stage, the tool environment's `pixi.lock`) for the
@@ -207,7 +207,7 @@ untracked or have uncommitted changes. Outside a git repository, or when `git` i
 ### Types <!-- rq-01092d90 -->
 
 - `StageConfig` — one stage after variant merging: name, run, code, inputs, params, env, threads, <!-- rq-9950b389 -->
-  foreach, qc (whether it is `skip`), qc_reason, result, and the 1-based line of the stage in its
+  foreach, validate, review, result, tool, external, and the 1-based line of the stage in its
   configuration file.
 - `StageInput` — `Stage(String)` or `Dataset(DatasetRef)`. <!-- rq-5cd91e7d -->
 - `PipelineConfig` — the stages of a study for one variant. <!-- rq-cbd35529 -->
@@ -237,9 +237,8 @@ A study with no `stages` (or an empty list) has no pipeline and no `pipeline` di
 
 | Rule | Severity | Condition |
 |---|---|---|
-| `pipeline.config-invalid` | error | A configuration file cannot be parsed, a stage is malformed (missing `name` or `run`, unknown or key, `tool` together with `external`, duplicate name, bad `threads`, unknown placeholder, `foreach` naming no input, `foreach` with `result`, `qc` other than `skip`, `qc_reason` without `qc: skip`), an input references a later or unknown stage, or a variant names an unknown stage or adds stages |
-| `pipeline.qc-reason-missing` | error | A stage declares `qc: skip` without a non-empty `qc_reason` |
-| `pipeline.qc-check-missing` | warning | A stage that is gated in some variant has no non-empty `check`, so its QC gate would ask for a verdict without saying what to look for |
+| `pipeline.config-invalid` | error | A configuration file cannot be parsed, a stage is malformed (missing `name` or `run`, unknown or key, `tool` together with `external`, duplicate name, bad `threads`, unknown placeholder, `foreach` naming no input, `foreach` with `result`, an empty `review`, `validate` on an external stage, or one of the removed QC fields `qc`, `qc_reason` and `check`), an input references a later or unknown stage, or a variant names an unknown stage or adds stages |
+| `pipeline.validate-missing` | warning | A stage that another stage consumes, other than an external stage, has no `validate`, so nothing checks its output before it is used |
 | `pipeline.code-missing` | error | A `code` entry does not exist or lies outside the project |
 | `pipeline.env-missing` | error | `pixi.lock` is missing or lacks the stage's environment |
 
@@ -264,7 +263,7 @@ Feature: Stage configuration, keys and provenance
   Background:
     Given a TopHat project in a git repository with a pixi.lock containing environments "default" and "chem"
     And root "results" is configured
-    And study "x-vs-docking" has the stages "prepare" (qc: skip), "score" (fan-out) and "analyse" (result) from this specification
+    And study "x-vs-docking" has the stages "prepare" (with validate), "score" (fan-out) and "analyse" (result) from this specification
     And all its files are committed
 
   # --- Configuration ---
@@ -329,34 +328,34 @@ Feature: Stage configuration, keys and provenance
     Then an error "pipeline.env-missing" is reported
 
   @rq-180689f2
-  Scenario: Skipping a QC gate needs a reason
-    Given stage "prepare" has "qc: skip" and no "qc_reason"
+  Scenario: A consumed stage without validation is flagged
+    Given stage "prepare" has no "validate" and stage "score" consumes it
     When "tophat check" is run
-    Then an error "pipeline.qc-reason-missing" is reported at stage "prepare"
+    Then a warning "pipeline.validate-missing" is reported at stage "prepare"
+    And none is reported for "analyse", which nothing consumes
 
   @rq-0a10fc96
-  Scenario: A gated stage should say what to check
-    Given stage "score" is gated and has no "check"
-    When "tophat check" is run
-    Then a warning "pipeline.qc-check-missing" is reported at stage "score"
-    When "score" gets "check: Each item has one score per structure"
-    Then no "pipeline.qc-check-missing" is reported
+  Scenario: The validate command enters the key
+    Given the keys of all stages are recorded
+    When the "validate" command of "prepare" changes
+    Then the keys of "prepare" and of every stage downstream of it change
+    And a stage without "validate" has no "validate" line in its key text
 
   @rq-617974f2
-  Scenario: The check text does not enter the key
+  Scenario: The review question does not enter the key
     Given the key of "score" is recorded
-    When its "check" text changes
+    When its "review" question is reworded
     Then the key of "score" is unchanged
 
   @rq-2a51782f
-  Scenario: The old opt-in form is rejected
-    Given stage "score" has "qc: true"
+  Scenario: The removed QC fields are rejected
+    Given stage "score" has "qc: skip", "qc_reason" or "check"
     When "tophat check" is run
-    Then an error "pipeline.config-invalid" is reported whose message names "qc: skip"
+    Then an error "pipeline.config-invalid" is reported whose message names "review" and "validate"
 
   @rq-fd086402
-  Scenario: A reason without a skip is rejected
-    Given stage "score" has "qc_reason: not needed" and no "qc" field
+  Scenario: An empty review question is rejected
+    Given stage "score" has "review: ''"
     When "tophat check" is run
     Then an error "pipeline.config-invalid" is reported
 
@@ -424,9 +423,9 @@ Feature: Stage configuration, keys and provenance
     Then the key of "score" changes
 
   @rq-9e24cb69
-  Scenario: QC settings do not change keys
+  Scenario: Gating a stage does not change keys
     Given the keys of all stages are recorded
-    When "qc: skip" and its reason are removed from stage "prepare"
+    When stage "prepare" gets a "review" question
     Then the keys of all stages are unchanged
 
   @rq-6d9d6c2d

@@ -35,7 +35,7 @@ actions only a human may take; `anyone` marks actions a human or an agent may ta
 | 6 | The `results` root is configured (in `.tophat/roots.local.yaml` or `TOPHAT_ROOT_RESULTS`) at a directory that does not exist | Create `<location>`, or fix the `results` entry of `.tophat/roots.local.yaml` | anyone |
 | 7 | A tool stage's pinned commit is unresolved or not cached on this machine | Fetch tools: `tophat tools sync` | you |
 | 8 | An external stage's bundle is written for a variant's current key and the job has not been returned | Run the external job for `<stage>` (`<variant>`): `tophat stage instructions <study> <stage> --variant <variant>` | you |
-| 9 | A gated stage (see `rqm/pipeline/snakemake.md`) is sealed for a variant's current key, has no verdict, and a stage consuming it has no sealed output | Give a QC verdict: `tophat stage qc <study> <stage> --variant <variant>` | you |
+| 9 | A gated stage (one with a `review` question, see `rqm/pipeline/snakemake.md`) is sealed for a variant's current key and has no verdict, and either a stage consuming it has no sealed output or the study is not yet reported | Give a QC verdict: `tophat stage qc <study> <stage> --variant <variant>` | you |
 | 10 | A QC verdict for a current key is `fail` | Fix the cause of the failed QC of `<stage>` (`<variant>`); the next run uses a new key | anyone |
 | 11 | Some stage of some listed variant has no sealed output for its current key, or `SUMMARY.md` is missing or stale | Run the pipeline: `tophat run <study>` | anyone |
 | 12 | `SUMMARY.md` is dirty | Commit the code listed as unclean, then `tophat run <study>` | anyone |

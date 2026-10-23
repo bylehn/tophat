@@ -30,7 +30,7 @@ pub use provenance::{
     begin, cleanliness, is_valid_item_name, key_status, platform, seal, BegunJob, Cleanliness,
     ItemSummary, KeyStatus, OutputFile, ProvenanceRecord, SealRequest, RECORD_FILE,
 };
-pub use qc::{parse_verdict, qc, qc_status, verdict_path, Verdict, VerdictFile};
+pub use qc::{missing_reviews, parse_verdict, qc, qc_status, verdict_path, Verdict, VerdictFile};
 pub use rules::pipeline_rules;
 pub use summary::{render_summary, stale_entries, summarize, write_summary};
 

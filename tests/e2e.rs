@@ -389,11 +389,11 @@ fn the_example_study_runs_end_to_end() {
     }
     let config_path = env.study("config/base.yaml");
     let config = fs::read_to_string(&config_path).unwrap();
-    let local = "    run: julia scripts/score.jl {item} {out}\n    code: [scripts/score.jl]\n";
+    let local = "    run: julia scripts/score.jl {item} {out}\n    code: [scripts/score.jl, scripts/validate.py]\n";
     assert!(config.contains(local), "{config}");
     let pin = |commit: &str| {
         format!(
-            "    tool: scorer@{}\n    run: julia {{tool}}/score.jl {{item}} {{out}}\n",
+            "    tool: scorer@{}\n    run: julia {{tool}}/score.jl {{item}} {{out}}\n    code: [scripts/validate.py]\n",
             &commit[..7]
         )
     };
@@ -422,6 +422,12 @@ fn the_example_study_runs_end_to_end() {
     assert_eq!(report["summary"]["errors"], 0, "{report}");
     let (row, _) = env.next();
     assert_eq!(row, 14, "the next action is to answer the question");
+    // The human was asked only about the one stage with a review question.
+    let reviewed: Vec<String> = fs::read_dir(env.study("qc"))
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    assert_eq!(reviewed, ["filter"]);
 
     // 6. Outputs, provenance, summary and lineage.
     let study_md = fs::read_to_string(env.study("STUDY.md")).unwrap();

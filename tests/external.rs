@@ -27,8 +27,7 @@ const BASE: &str = "stages:
   - name: prepare
     run: sh scripts/prepare.sh {out}
     code: [scripts/prepare.sh]
-    qc: skip
-    qc_reason: Writes a fixed test system
+    validate: test -s {out}/system.gro
   - name: md
     run: {run}
     inputs: {system: stage:prepare}
@@ -381,6 +380,21 @@ fn an_external_stage_cannot_have_a_pixi_environment() {
     );
 }
 
+#[test] // rq-75cc7ed6 rq-fd86ea5e rq-3898af16
+fn an_external_stage_cannot_validate() {
+    let env = Env::new();
+    env.edit_config(
+        "    threads: 4\n",
+        "    threads: 4\n    validate: sh scripts/check.sh {out}\n",
+    );
+    let ds = env.diagnostics();
+    let found: Vec<_> = errors(&ds, "pipeline.config-invalid")
+        .into_iter()
+        .filter(|d| d.message.contains("`validate`") && d.message.contains("`md`"))
+        .collect();
+    assert_eq!(found.len(), 1, "{ds:?}");
+}
+
 #[test] // rq-d8643ac5 rq-fd86ea5e rq-3898af16
 fn connection_details_are_not_configuration() {
     let env = Env::new();
@@ -473,7 +487,7 @@ fn local_stages_keep_their_keys() {
         .1;
     let ctx = KeyContext::new(&env.root());
     let expected = format!(
-        "tophat-stage-key/1\nrun sh scripts/prepare.sh {{out}}\nenv {}\nthreads 1\nforeach -\n\
+        "tophat-stage-key/1\nrun sh scripts/prepare.sh {{out}}\nvalidate test -s {{out}}/system.gro\nenv {}\nthreads 1\nforeach -\n\
          result -\ncode scripts/prepare.sh {code}\nparams {{}}\n",
         ctx.environment_hash("default").unwrap()
     );

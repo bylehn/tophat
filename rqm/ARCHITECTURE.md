@@ -88,16 +88,19 @@ first-class workflow engine and does all execution; nobody writes Snakemake rule
 - **External stages** — compute that must run elsewhere (e.g. MD simulations on an HPC cluster)
   — are described in *External stages and clusters* below. The agent never hides steps in
   agent-writable scripts that a human is asked to run.
-- **QC gates** — by default, every stage whose output another stage consumes requires a human
-  verdict (`pass` or `fail`) on that output before the consumer runs: nothing reaches a later stage
-  without a human having looked at it. A stage can opt out only explicitly, with `qc: skip` and a
-  written `qc_reason` (e.g. a deterministic format conversion covered by a scenario test); the
-  exception is committed in the configuration, so it is visible in review, and a skip without a
-  reason is a check error. The gate setting does not enter the stage key, so changing it never
-  re-runs anything. Verdicts are given only through an interactive command, belong to one stage key
-  (any change upstream needs a new verdict), and are committed with the study. Each consuming job
-  checks the verdict before doing anything, so a missing verdict stops the run with the exact command
-  to give one, and a `fail` blocks everything downstream.
+- **Validation and QC review** — what code can check, code checks, every time: a stage declares a
+  `validate` command (counts, shapes, missing or non-finite values, ranges) that runs after the
+  stage and fails it before anything is sealed; the agent writes these, and the validation is part
+  of the stage key. A human's attention is kept for what needs judgment: a stage that declares a
+  `review` question (does this plot look right, does this fit make sense) gets a QC gate, and needs
+  a human verdict (`pass` or `fail`) before any consumer runs and before the study can be reported.
+  Gates are opt-in, so the few the scientist is asked for are worth looking at, rather than
+  verdicts on row counts that invite rubber-stamping. The review question does not enter the stage
+  key, so adding or rewording it never re-runs anything. Verdicts are given only through an
+  interactive command, belong to one stage key (any change upstream needs a new verdict), and are
+  committed with the study. Each consuming job checks the verdict before doing anything, so a
+  missing verdict stops the run with the exact command to give one, and a `fail` blocks everything
+  downstream.
 - **Summary.** The default target writes `SUMMARY.md` from the result files of sealed stages, with
   the key behind each result line. `STUDY.md` is never an input of any rule, so editing results or
   status never re-runs analysis.

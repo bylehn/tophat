@@ -33,7 +33,10 @@ with `tophat data roots`.
 - **Data of unknown history** (processed files whose origin is unclear): `tophat data declare <name>
   --root <root> --path <path> --statement <text>`, with the human's own statement of what is known.
   Declared data is labelled as such wherever it is used.
-- Add `--visibility private` for data that must not reach public studies.
+- Visibility belongs to the data, not to the study that uses it: ask the human, for each dataset,
+  whether the data itself is public or private, and add `--visibility private` only for data that
+  must not reach public studies. Never infer it from a study's visibility: a private study may use
+  public data (only the reverse is forbidden).
 
 `tophat` hashes every file and writes the manifest under `datasets/`; never write or edit a
 manifest yourself. Stages reference a dataset as `dataset:<name>@v<n>`.

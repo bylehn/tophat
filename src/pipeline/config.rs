@@ -61,12 +61,10 @@ pub struct StageConfig {
     pub foreach: Option<String>,
     /// The `external` mapping, for an external stage.
     pub external: Option<ExternalConfig>,
-    /// Whether the stage declares `qc: skip`, exempting it from its default QC gate.
-    pub qc_skip: bool,
-    /// Why the stage needs no QC verdict (with `qc: skip`).
-    pub qc_reason: Option<String>,
-    /// What the human checks in the stage's output at its QC gate. Not part of the key.
-    pub check: Option<String>,
+    /// The command that checks the stage's output after `run`; part of the key.
+    pub validate: Option<String>,
+    /// The question a human answers at the stage's QC gate; not part of the key.
+    pub review: Option<String>,
     pub result: Option<String>,
     /// Project-relative path of the file that defines the stage.
     pub file: String,
@@ -89,16 +87,20 @@ impl PipelineConfig {
     }
 
     // rq-dc1e521d
-    /// Whether a stage is gated: another stage consumes it (as a `stage:` input, including as a
-    /// fan-out source) and it does not declare `qc: skip`.
+    /// Whether a stage is gated: it declares a `review` question, so a human verdict is needed
+    /// before its consumers run and before the study is reported.
     pub fn is_gated(&self, name: &str) -> bool {
-        self.stage(name).is_some_and(|s| !s.qc_skip)
-            && self.stages.iter().any(|consumer| {
-                consumer
-                    .inputs
-                    .values()
-                    .any(|i| matches!(i, StageInput::Stage(s) if s == name))
-            })
+        self.stage(name).is_some_and(|s| s.review.is_some())
+    }
+
+    /// Whether another stage consumes `name` (as a `stage:` input, including as a fan-out source).
+    pub fn is_consumed(&self, name: &str) -> bool {
+        self.stages.iter().any(|consumer| {
+            consumer
+                .inputs
+                .values()
+                .any(|i| matches!(i, StageInput::Stage(s) if s == name))
+        })
     }
 }
 
@@ -197,21 +199,9 @@ fn yaml_to_json(value: &Yaml) -> Result<Value, String> {
     })
 }
 
-const STAGE_KEYS: [&str; 14] = [
-    "name",
-    "run",
-    "code",
-    "inputs",
-    "params",
-    "env",
-    "threads",
-    "foreach",
-    "qc",
-    "qc_reason",
-    "check",
-    "result",
-    "tool",
-    "external",
+const STAGE_KEYS: [&str; 13] = [
+    "name", "run", "code", "inputs", "params", "env", "threads", "foreach", "validate", "review",
+    "result", "tool", "external",
 ];
 
 /// The fields given for one stage in one file, before merging.
@@ -225,9 +215,8 @@ struct StageFields {
     env: Option<String>,
     threads: Option<u32>,
     foreach: Option<String>,
-    qc_skip: Option<bool>,
-    qc_reason: Option<String>,
-    check: Option<String>,
+    validate: Option<String>,
+    review: Option<String>,
     result: Option<String>,
     tool: Option<String>,
     external: Option<ExternalConfig>,
@@ -407,25 +396,23 @@ fn parse_file(
                     Yaml::String(s) => fields.foreach = Some(s),
                     _ => problems.push(bad("an input name")),
                 },
-                "qc" => match value {
-                    Yaml::String(s) if s == "skip" => fields.qc_skip = Some(true),
-                    _ => problems.push(problem(
-                        at,
-                        format!(
-                            "stage `{label}`: stages consumed by other stages are gated by default; \
-                             the only `qc` setting is `qc: skip` (with a `qc_reason`)"
-                        ),
-                    )),
+                // rq-dc1e521d
+                "validate" => match value {
+                    Yaml::String(s) => fields.validate = Some(s),
+                    _ => problems.push(bad("a command")),
                 },
-                "qc_reason" => match value {
-                    Yaml::String(s) => fields.qc_reason = Some(s),
-                    _ => problems.push(bad("text")),
+                "review" => match value {
+                    Yaml::String(s) if !s.trim().is_empty() => fields.review = Some(s),
+                    _ => problems.push(bad("a question for the human, as non-empty text")),
                 },
-                // rq-0a10fc96
-                "check" => match value {
-                    Yaml::String(s) => fields.check = Some(s),
-                    _ => problems.push(bad("text")),
-                },
+                "qc" | "qc_reason" | "check" => problems.push(problem(
+                    at,
+                    format!(
+                        "stage `{label}`: `{key}` is no longer used: a stage's output is checked \
+                         by its `validate` command, and a human reviews it only when the stage \
+                         declares a `review` question"
+                    ),
+                )),
                 "result" => match value {
                     Yaml::String(s) => fields.result = Some(s),
                     _ => problems.push(bad("a file name")),
@@ -588,9 +575,8 @@ fn build_stage(
         threads: fields.threads.unwrap_or(1),
         foreach: fields.foreach.clone(),
         external: fields.external.clone(),
-        qc_skip: fields.qc_skip.unwrap_or(false),
-        qc_reason: fields.qc_reason.clone(),
-        check: fields.check.clone(),
+        validate: fields.validate.clone(),
+        review: fields.review.clone(),
         tool: fields.tool.clone(),
         result: fields.result.clone(),
         file: file.to_string(),
@@ -631,12 +617,6 @@ fn validate(
                     )));
                 }
             }
-        }
-        if stage.qc_reason.is_some() && !stage.qc_skip {
-            problems.push(problem(format!(
-                "stage `{}`: `qc_reason` is only allowed with `qc: skip`",
-                stage.name
-            )));
         }
         if let Some(f) = &stage.foreach {
             if !stage.inputs.contains_key(f) {
@@ -699,40 +679,52 @@ fn validate(
                 }
             }
         }
-        match parse_template(&stage.run) {
-            Err(e) => problems.push(problem(format!("stage `{}`: run: {e}", stage.name))),
-            Ok(parts) => {
-                for part in parts {
-                    let TemplatePart::Placeholder(p) = part else {
-                        continue;
-                    };
-                    let valid = match p.as_str() {
-                        "out" | "params_file" | "threads" => true,
-                        "tool" => stage.tool.is_some() && !external,
-                        "item" | "item_name" => stage.foreach.is_some() && !external,
-                        _ => {
-                            if let Some(input) = p.strip_prefix("in.") {
-                                stage.inputs.contains_key(input)
-                            } else if let Some(key) = p.strip_prefix("params.") {
-                                stage
-                                    .params
-                                    .get(key)
-                                    .is_some_and(|v| !v.is_object() && !v.is_array())
-                            } else {
-                                false
+        if external && stage.validate.is_some() {
+            problems.push(problem(format!(
+                "stage `{}`: an external stage cannot have `validate`: its output is sealed when \
+                 the returned job folder is ingested; check it with scenario tests",
+                stage.name
+            )));
+        }
+        let templates = std::iter::once(("run", &stage.run))
+            .chain(stage.validate.as_ref().map(|v| ("validate", v)));
+        for (field, template) in templates {
+            match parse_template(template) {
+                Err(e) => problems.push(problem(format!("stage `{}`: {field}: {e}", stage.name))),
+                Ok(parts) => {
+                    for part in parts {
+                        let TemplatePart::Placeholder(p) = part else {
+                            continue;
+                        };
+                        let valid = match p.as_str() {
+                            "out" | "params_file" | "threads" => true,
+                            "tool" => stage.tool.is_some() && !external,
+                            "item" | "item_name" => stage.foreach.is_some() && !external,
+                            _ => {
+                                if let Some(input) = p.strip_prefix("in.") {
+                                    stage.inputs.contains_key(input)
+                                } else if let Some(key) = p.strip_prefix("params.") {
+                                    stage
+                                        .params
+                                        .get(key)
+                                        .is_some_and(|v| !v.is_object() && !v.is_array())
+                                } else {
+                                    false
+                                }
                             }
+                        };
+                        if !valid && external && ["tool", "item", "item_name"].contains(&p.as_str())
+                        {
+                            problems.push(problem(format!(
+                                "stage `{}`: placeholder `{{{p}}}` is not available in an external stage",
+                                stage.name
+                            )));
+                        } else if !valid {
+                            problems.push(problem(format!(
+                                "stage `{}`: unknown placeholder `{{{p}}}` in {field}",
+                                stage.name
+                            )));
                         }
-                    };
-                    if !valid && external && ["tool", "item", "item_name"].contains(&p.as_str()) {
-                        problems.push(problem(format!(
-                            "stage `{}`: placeholder `{{{p}}}` is not available in an external stage",
-                            stage.name
-                        )));
-                    } else if !valid {
-                        problems.push(problem(format!(
-                            "stage `{}`: unknown placeholder `{{{p}}}` in run",
-                            stage.name
-                        )));
                     }
                 }
             }
@@ -813,14 +805,11 @@ fn merge_variant(
         if let Some(foreach) = fields.foreach {
             stage.foreach = Some(foreach);
         }
-        if let Some(skip) = fields.qc_skip {
-            stage.qc_skip = skip;
+        if let Some(validate) = fields.validate {
+            stage.validate = Some(validate);
         }
-        if let Some(reason) = fields.qc_reason {
-            stage.qc_reason = Some(reason);
-        }
-        if let Some(check) = fields.check {
-            stage.check = Some(check);
+        if let Some(review) = fields.review {
+            stage.review = Some(review);
         }
         if let Some(tool) = fields.tool {
             stage.tool = Some(tool);

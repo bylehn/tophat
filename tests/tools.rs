@@ -116,7 +116,7 @@ impl Env {
         self.write(
             "studies/x-vs-docking/config/base.yaml",
             &format!(
-                "stages:\n  - name: prepare\n    run: echo x > {{out}}/a.pdb\n    qc: skip\n    qc_reason: trivial\n  \
+                "stages:\n  - name: prepare\n    run: echo x > {{out}}/a.pdb\n    validate: test -s {{out}}/a.pdb\n  \
                  - name: score\n    tool: method-x@{pin}\n    run: sh {{tool}}/bin/x-score.sh {{in.structures}}/a.pdb {{out}}\n    \
                  inputs: {{structures: stage:prepare}}\n"
             ),

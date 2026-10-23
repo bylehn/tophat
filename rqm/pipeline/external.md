@@ -43,14 +43,16 @@ A stage is external when it has an `external` mapping:
 
 - `external: {}` is valid: an external stage with no setup, no extra options and nothing kept.
 - An external stage cannot have `foreach`, `env` or `tool`: its software comes from the cluster.
+  Nor can it have `validate`: its output is sealed when the returned job folder is ingested, so
+  scenario tests check it.
 - `code` files are placed in the job folder at their study-relative paths, so `run` can call study
   scripts exactly as local stages do.
 - Placeholders: `{out}` is the job folder's `out/`; `{in.<input>}` is the input's copy in the job
   folder's `inputs/<input>/`; `{params.<key>}`, `{params_file}` and `{threads}` are as for local
   stages. `{item}`, `{item_name}` and `{tool}` are not available. All of them are relative to the job
   folder, so the folder can be placed anywhere on the cluster.
-- QC gates apply as for any stage: an external stage that another stage consumes is gated unless it
-  declares `qc: skip`.
+- An external stage may declare `review` like any stage, which gives it a QC gate (see
+  `rqm/pipeline/snakemake.md`).
 
 ## SLURM Defaults <!-- rq-964a4533 -->
 
@@ -224,7 +226,7 @@ returned files to the record that lists them.
 
 | Rule | Severity | Condition |
 |---|---|---|
-| `pipeline.config-invalid` | error | An `external` value is not a mapping or has an unknown key, or an external stage has `foreach`, `env` or `tool`, or uses an unavailable placeholder |
+| `pipeline.config-invalid` | error | An `external` value is not a mapping or has an unknown key, or an external stage has `foreach`, `env`, `tool` or `validate`, or uses an unavailable placeholder |
 | `pipeline.slurm-defaults-invalid` | error | `.tophat/slurm.local.yaml` cannot be parsed or `sbatch` is not a list of options starting with `--` |
 
 ## Assumptions <!-- rq-f5aed182 -->
@@ -249,7 +251,7 @@ Feature: External (cluster) stages
 
   Background:
     Given a TopHat project in a git repository with root "results" configured
-    And preregistered study "x-vs-docking" has stages "prepare" (qc: skip), "md" (external, keep ["*.trr"]) and "analyse" (result)
+    And preregistered study "x-vs-docking" has stages "prepare", "md" (external, keep ["*.trr"], with a review question) and "analyse" (result)
     And "prepare" is sealed
 
   # --- Configuration and keys ---
@@ -265,6 +267,12 @@ Feature: External (cluster) stages
     Given stage "md" also has "env: default"
     When "tophat check" is run
     Then an error "pipeline.config-invalid" is reported
+
+  @rq-75cc7ed6
+  Scenario: An external stage cannot validate
+    Given stage "md" also has "validate: sh scripts/check.sh {out}"
+    When "tophat check" is run
+    Then an error "pipeline.config-invalid" naming "validate" is reported at stage "md"
 
   @rq-d8643ac5
   Scenario: Connection details are not configuration

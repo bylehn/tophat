@@ -303,6 +303,16 @@ pub fn report(root: &Path, id: &str) -> Result<(), StudyError> {
             }
         }
     }
+    // rq-ecacda48
+    if let Some((stage, variant)) = crate::pipeline::missing_reviews(root, id, study.variants())
+        .into_iter()
+        .next()
+    {
+        return Err(StudyError::Summary(format!(
+            "stage `{stage}` ({variant}) has a review question and no `pass` verdict for its \
+             current key; a human gives it with `tophat stage qc {id} {stage} --variant {variant}`"
+        )));
+    }
     let unreported = crate::data::unreported_dependencies(&Project::new(root), study);
     if !unreported.is_empty() {
         let refs: Vec<String> = unreported.iter().map(|r| r.to_string()).collect();

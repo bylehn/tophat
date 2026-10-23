@@ -19,7 +19,7 @@ RUN mkdir -p /opt/tophat/bin /opt/tophat/home /opt/tophat/cache/pixi && \
     chmod 1777 /opt/tophat/home /opt/tophat/cache /opt/tophat/cache/pixi
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends bash ca-certificates curl git pipx && \
+    apt-get install -y --no-install-recommends bash ca-certificates curl git less pipx vim && \
     rm -rf /var/lib/apt/lists/*
 
 # Git reads the repository but never commits here: there is no identity, and none is invented.
