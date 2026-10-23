@@ -70,7 +70,7 @@ The image is built in three layers, all for the host's architecture (`linux-64` 
 `linux-aarch64`):
 
 1. **Base** (`.tophat/managed/container/Containerfile`): `ubuntu:24.04` with `bash`, `git`,
-   `ca-certificates`, `curl` and `pipx`; pixi at the version in `versions.yaml`, whose archive's
+   `ca-certificates`, `curl`, `pipx`, and `less` and `vim` for reading and editing in a session; pixi at the version in `versions.yaml`, whose archive's
    SHA-256 must match the one listed there for the architecture; Copier at its version; and the `tophat`
    binary from `.tophat/managed/tophat-release.yaml` for the image's architecture. The build
    downloads the binary, compares its SHA-256 with the pinned hash, and fails on a mismatch. When
@@ -156,8 +156,9 @@ mounted:
 - When `tophat tools list` fails (invalid tool files), the launcher warns and mounts no tools; the
   session still starts, so the human can fix the files there.
 - Public `https://` tools need no mount, and neither does a path inside the project.
-- Mounts are decided when the session starts: a local tool declared during a session is mounted from
-  the next one.
+- Mounts are made when the launcher starts the container: a local tool declared during a session is
+  mounted only after the human exits the container and runs `./th.sh` again; restarting the agent
+  inside the container is not enough.
 - `--check` mounts no tools: the check reads only the tool cache.
 
 ### Commits happen on the host <!-- rq-9f886d87 -->

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-labelledby="title">
+  <title id="title">TopHat</title>
+  <style>
+    .felt { fill: #1c1f24; stroke: #1c1f24; }
+    .top { fill: #2c313a; stroke: #1c1f24; }
+    .shine { fill: #ffffff; opacity: 0.10; }
+    .band { fill: #005b99; }
+    .stripe { fill: #fecc02; }
+    .shadow { fill: #000000; opacity: 0.12; }
+    @media (prefers-color-scheme: dark) {
+      .felt { fill: #23272e; stroke: #c9d1d9; }
+      .top { fill: #343a44; stroke: #c9d1d9; }
+      .shadow { opacity: 0; }
+    }
+  </style>
+
+  <!-- Shadow and brim, drawn behind the crown -->
+  <ellipse class="shadow" cx="100" cy="166" rx="70" ry="9"/>
+  <ellipse class="felt" cx="100" cy="146" rx="80" ry="18" stroke-width="3"/>
+
+  <!-- Crown: slightly flared towards the top, its base following the brim's curve -->
+  <path class="felt" stroke-width="3" stroke-linejoin="round"
+        d="M52 46 L58 140 A42 9 0 0 0 142 140 L148 46 Z"/>
+
+  <!-- Band in Swedish blue with a thin yellow stripe -->
+  <path class="band" d="M56.6 118 A43.4 9 0 0 0 143.4 118 L142.3 136 A42.3 9 0 0 1 57.7 136 Z"/>
+  <path class="stripe" d="M57.3 128 A42.7 9 0 0 0 142.7 128 L142.5 131.5 A42.5 9 0 0 1 57.5 131.5 Z"/>
+
+  <!-- Highlight down the left of the crown -->
+  <path class="shine" d="M62 50 L66 50 L70 116 L66 116 Z"/>
+
+  <!-- Top of the crown -->
+  <ellipse class="top" cx="100" cy="46" rx="48" ry="10" stroke-width="3"/>
+</svg>

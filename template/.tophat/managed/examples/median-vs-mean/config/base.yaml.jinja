@@ -2,34 +2,31 @@
 stages:
   - name: generate
     run: python scripts/generate.py --out {out} --signals {params.signals} --length {params.length} --noise {params.noise} --seed {params.seed}
-    code: [scripts/generate.py]
+    validate: python scripts/validate.py signals {out} --signals {params.signals} --length {params.length}
+    code: [scripts/generate.py, scripts/validate.py]
     params: {signals: 30, length: 200, noise: gaussian, seed: 1}
-    qc: skip
-    qc_reason: Deterministic synthetic signals, checked by scenario S2
   - name: filter
     run: sh scripts/filter.sh {in.signals} {out} {params.width}
     code: [scripts/filter.sh]
     inputs: {signals: stage:generate}
     params: {width: 5}
-    check: >-
-      Every signal has a file with a header and one row per input sample (200 rows), with the
-      columns clean, mean and median, and no empty or non-numeric values.
+    review: >-
+      Open two or three of the filtered signals: does the median column follow the step from 0
+      to 1 without the spikes that the mean column keeps? Under impulse noise the spikes are large.
     external:
       slurm:
         - --time=00:10:00
   - name: score
 {%- if 'julia' in languages %}
     run: julia scripts/score.jl {item} {out}
-    code: [scripts/score.jl]
+    code: [scripts/score.jl, scripts/validate.py]
 {%- else %}
     run: python scripts/score.py {item} {out}
-    code: [scripts/score.py]
+    code: [scripts/score.py, scripts/validate.py]
 {%- endif %}
     inputs: {filtered: stage:filter}
     foreach: filtered
-    check: >-
-      There is one item per signal (30), each with an rmse.tsv holding two finite, non-negative
-      values.
+    validate: python scripts/validate.py rmse {out}
   - name: analyse
     run: python scripts/analyse.py {in.scores} {out} --resamples {params.resamples} --seed {params.seed}
     code: [scripts/analyse.py]

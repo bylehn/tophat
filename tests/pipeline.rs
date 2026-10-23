@@ -28,15 +28,15 @@ const BASE: &str = "stages:
     inputs:
       raw: dataset:benchmark-set@v2
     params: {cutoff: 2.0}
-    qc: skip
-    qc_reason: Copies the input structures unchanged; checked by scenario S2
+    validate: find {out} -name '*.pdb' | grep -q .
   - name: score
     run: python scripts/score.py {item} {out} --level {params.level}
     code: [scripts/score.py, scripts/common/]
     inputs:
       structures: stage:prepare
     foreach: structures
-    check: Every structure has one score, and scores are finite
+    validate: test -s {out}/score.txt
+    review: Do the scores look plausible for these structures?
     params: {level: b3lyp, grid: fine}
     env: chem
     threads: 4
@@ -396,79 +396,98 @@ fn missing_environment() {
 }
 
 #[test] // rq-180689f2 rq-22c3d944
-fn skipping_a_qc_gate_needs_a_reason() {
+fn a_consumed_stage_without_validation_is_flagged() {
     let env = Env::new();
+    assert!(with_rule(&env.diagnostics(), "pipeline.validate-missing").is_empty());
     env.edit(
         "studies/x-vs-docking/config/base.yaml",
-        "    qc_reason: Copies the input structures unchanged; checked by scenario S2\n",
+        "    validate: find {out} -name '*.pdb' | grep -q .\n",
         "",
     );
     let ds = env.diagnostics();
-    let found = with_rule(&ds, "pipeline.qc-reason-missing");
+    let found = with_rule(&ds, "pipeline.validate-missing");
     assert_eq!(found.len(), 1, "{ds:#?}");
+    assert_eq!(found[0].severity, Severity::Warning);
+    assert!(
+        found[0].message.contains("`prepare`"),
+        "{}",
+        found[0].message
+    );
     assert_eq!(found[0].line, Some(2));
 }
 
-#[test] // rq-0a10fc96 rq-22c3d944
-fn a_gated_stage_should_say_what_to_check() {
+#[test] // rq-0a10fc96 rq-4aa0232e
+fn the_validate_command_enters_the_key() {
     let env = Env::new();
-    let check = "    check: Every structure has one score, and scores are finite\n";
-    env.edit("studies/x-vs-docking/config/base.yaml", check, "");
-    let ds = env.diagnostics();
-    let found = with_rule(&ds, "pipeline.qc-check-missing");
-    assert_eq!(found.len(), 1, "{ds:#?}");
-    assert_eq!(found[0].severity, Severity::Warning);
-    assert!(found[0].message.contains("`score`"), "{}", found[0].message);
+    let config = load_pipeline(&env.root(), "x-vs-docking", "base").unwrap();
+    let ctx = KeyContext::new(&env.root());
+    let text = stage_key_text(&config, "prepare", &ctx).unwrap();
+    assert_eq!(
+        text.lines().nth(2),
+        Some("validate find {out} -name '*.pdb' | grep -q .")
+    );
+    let before = env.keys("base");
     env.edit(
         "studies/x-vs-docking/config/base.yaml",
-        "    foreach: structures\n",
-        "    foreach: structures\n    check: Each item has one score per structure\n",
+        "    validate: find {out} -name '*.pdb' | grep -q .\n",
+        "    validate: find {out} -name '*.pdb' | grep -q pdb\n",
     );
-    assert!(with_rule(&env.diagnostics(), "pipeline.qc-check-missing").is_empty());
+    let after = env.keys("base");
+    for stage in ["prepare", "score", "analyse"] {
+        assert_ne!(before[stage], after[stage], "{stage}");
+    }
+    let analyse = stage_key_text(&config, "analyse", &ctx).unwrap();
+    assert!(!analyse.contains("\nvalidate "), "{analyse}");
 }
 
 #[test] // rq-617974f2 rq-37a6119e
-fn the_check_text_does_not_enter_the_key() {
+fn the_review_question_does_not_enter_the_key() {
     let env = Env::new();
     let before = env.keys("base");
     env.edit(
         "studies/x-vs-docking/config/base.yaml",
-        "    check: Every structure has one score, and scores are finite\n",
-        "    check: Something else entirely\n",
+        "    review: Do the scores look plausible for these structures?\n",
+        "    review: Something else entirely?\n",
     );
     assert_eq!(env.keys("base"), before);
 }
 
 #[test] // rq-2a51782f rq-081e737a
-fn the_old_opt_in_form_is_rejected() {
-    let env = Env::new();
-    env.edit(
-        "studies/x-vs-docking/config/base.yaml",
-        "    threads: 4\n",
-        "    threads: 4\n    qc: true\n",
-    );
-    let ds = env.diagnostics();
-    let found = with_rule(&ds, "pipeline.config-invalid");
-    assert_eq!(found.len(), 1);
-    assert!(
-        found[0].message.contains("qc: skip"),
-        "{}",
-        found[0].message
-    );
+fn the_removed_qc_fields_are_rejected() {
+    for field in ["qc: skip", "qc_reason: not needed", "check: something"] {
+        let env = Env::new();
+        env.edit(
+            "studies/x-vs-docking/config/base.yaml",
+            "    threads: 4\n",
+            &format!("    threads: 4\n    {field}\n"),
+        );
+        let ds = env.diagnostics();
+        let found = with_rule(&ds, "pipeline.config-invalid");
+        assert_eq!(found.len(), 1, "{field}: {ds:#?}");
+        assert!(
+            found[0].message.contains("`review`") && found[0].message.contains("`validate`"),
+            "{}",
+            found[0].message
+        );
+    }
 }
 
 #[test] // rq-fd086402 rq-081e737a
-fn a_reason_without_a_skip_is_rejected() {
+fn an_empty_review_question_is_rejected() {
     let env = Env::new();
     env.edit(
         "studies/x-vs-docking/config/base.yaml",
-        "    threads: 4\n",
-        "    threads: 4\n    qc_reason: not needed\n",
+        "    review: Do the scores look plausible for these structures?\n",
+        "    review: ''\n",
     );
     let ds = env.diagnostics();
     let found = with_rule(&ds, "pipeline.config-invalid");
-    assert_eq!(found.len(), 1);
-    assert!(found[0].message.contains("qc_reason"));
+    assert_eq!(found.len(), 1, "{ds:#?}");
+    assert!(
+        found[0].message.contains("`review`"),
+        "{}",
+        found[0].message
+    );
 }
 
 // --- Variants ---------------------------------------------------------------------------------
@@ -538,12 +557,13 @@ fn key_text_follows_the_specified_construction() {
         lines[1],
         "run julia --project=. scripts/prepare.jl {in.raw} {out}"
     );
-    assert!(lines[2].starts_with("env sha256:"));
-    assert_eq!(lines[3..6], ["threads 1", "foreach -", "result -"]);
-    assert_eq!(lines[6], format!("code scripts/prepare.jl {script_sha}"));
-    assert_eq!(lines[7], r#"params {"cutoff":2.0}"#);
+    assert_eq!(lines[2], "validate find {out} -name '*.pdb' | grep -q .");
+    assert!(lines[3].starts_with("env sha256:"));
+    assert_eq!(lines[4..7], ["threads 1", "foreach -", "result -"]);
+    assert_eq!(lines[7], format!("code scripts/prepare.jl {script_sha}"));
+    assert_eq!(lines[8], r#"params {"cutoff":2.0}"#);
     assert_eq!(
-        lines[8],
+        lines[9],
         format!("input raw dataset benchmark-set@v2 {content_hash}")
     );
     assert!(text.ends_with('\n'));
@@ -632,13 +652,13 @@ fn a_code_directory_is_hashed_file_by_file() {
 }
 
 #[test] // rq-9e24cb69 rq-4aa0232e
-fn qc_settings_do_not_change_keys() {
+fn gating_a_stage_does_not_change_keys() {
     let env = Env::new();
     let before = env.keys("base");
     env.edit(
         "studies/x-vs-docking/config/base.yaml",
-        "    qc: skip\n    qc_reason: Copies the input structures unchanged; checked by scenario S2\n",
-        "",
+        "    params: {cutoff: 2.0}\n",
+        "    params: {cutoff: 2.0}\n    review: Do the prepared structures look complete?\n",
     );
     assert_eq!(before, env.keys("base"));
 }

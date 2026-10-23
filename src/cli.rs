@@ -728,7 +728,8 @@ fn run_stage_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
                 match pipeline::begin(&root, &request) {
                     Ok(job) => {
                         let value = serde_json::json!({
-                            "run": job.run, "env": job.env, "cwd": job.cwd.display().to_string(),
+                            "run": job.run, "validate": job.validate, "env": job.env,
+                            "cwd": job.cwd.display().to_string(),
                             "manifest": job.manifest.as_ref().map(|m| m.display().to_string()),
                         });
                         let _ = writeln!(io.out, "{value}");

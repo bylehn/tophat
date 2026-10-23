@@ -260,7 +260,9 @@ fn pipeline_action(root: &Path, study: &Study, variants: &[String]) -> Option<Ne
                             .any(|i| matches!(i, StageInput::Stage(s) if *s == stage.name))
                             && state[c.name.as_str()].1 != "sealed"
                     });
-                    if consumer_unsealed {
+                    // A reviewed stage blocks its consumers, and the report.
+                    let not_reported = study.status() != Some(Status::Reported);
+                    if consumer_unsealed || not_reported {
                         let cmd =
                             format!("tophat stage qc {id} {} --variant {variant}", stage.name);
                         qc_needed.get_or_insert_with(|| {

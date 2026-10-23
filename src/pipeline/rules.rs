@@ -110,64 +110,43 @@ pub fn pipeline_rules(project: &Project) -> Vec<Diagnostic> {
         for config in &configs {
             stages.extend(config.stages.iter().filter(|s| s.file != base_file));
         }
-        // Stages gated in the base or any variant.
+        // Stages that another stage consumes in the base or any variant.
         let base_config = super::config::PipelineConfig {
             study: study.clone(),
             variant: "base".into(),
             stages: base.clone(),
         };
-        let gated: BTreeSet<String> = base
+        let consumed: BTreeSet<String> = base
             .iter()
             .map(|s| s.name.clone())
             .filter(|name| {
                 std::iter::once(&base_config)
                     .chain(configs.iter())
-                    .any(|c| c.is_gated(name))
+                    .any(|c| c.is_consumed(name))
             })
             .collect();
         let mut reported = BTreeSet::new();
         for stage in stages {
-            // rq-0a10fc96
-            let check_missing = stage.check.as_deref().is_none_or(|c| c.trim().is_empty());
-            if gated.contains(&stage.name)
-                && check_missing
-                && reported.insert((stage.file.clone(), stage.name.clone(), "check"))
+            // rq-180689f2
+            if consumed.contains(&stage.name)
+                && stage.validate.is_none()
+                && stage.external.is_none()
+                && reported.insert((stage.file.clone(), stage.name.clone(), "validate"))
             {
                 let mut d = diagnostic(
-                    "pipeline.qc-check-missing",
+                    "pipeline.validate-missing",
                     ConfigProblem {
                         file: stage.file.clone(),
                         line: stage.line,
                         message: format!(
-                            "stage `{}` has a QC gate but no `check` saying what to look for in its output",
+                            "stage `{}` is used by another stage but has no `validate` command, so nothing checks its output first",
                             stage.name
                         ),
                     },
-                    "Add `check:` with what the human should verify before passing this stage",
+                    "Add `validate:` with a script that checks the output (counts, shapes, missing values, ranges)",
                 );
                 d.severity = Severity::Warning;
                 out.push(d);
-            }
-            let reason_missing = stage
-                .qc_reason
-                .as_deref()
-                .is_none_or(|r| r.trim().is_empty());
-            if stage.qc_skip
-                && reason_missing
-                && reported.insert((stage.file.clone(), stage.name.clone(), "qc"))
-            {
-                out.push(diagnostic(
-                    "pipeline.qc-reason-missing",
-                    ConfigProblem {
-                        file: stage.file.clone(),
-                        line: stage.line,
-                        message: format!(
-                            "stage `{}` declares `qc: skip` without a `qc_reason`",
-                            stage.name
-                        ),
-                    },
-                    "Write why this stage's output needs no human verdict in `qc_reason`",
-                ));
             }
             if let Err(message) = ctx.code_files(&study, stage) {
                 if reported.insert((stage.file.clone(), stage.name.clone(), "code")) {

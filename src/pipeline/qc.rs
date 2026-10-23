@@ -75,6 +75,29 @@ pub fn parse_verdict(text: &str) -> Result<VerdictFile, String> {
     })
 }
 
+// rq-dc1e521d
+/// The `(stage, variant)` pairs, in variant and stage order, of the stages declaring `review` that
+/// have no `pass` verdict for their current key. A variant whose configuration or keys cannot be
+/// computed is skipped (its problems are reported by `tophat check`).
+pub fn missing_reviews(root: &Path, study: &str, variants: &[String]) -> Vec<(String, String)> {
+    let ctx = super::keys::KeyContext::new(root);
+    let mut missing = Vec::new();
+    for variant in variants {
+        let Ok(config) = super::config::load_pipeline(root, study, variant) else {
+            continue;
+        };
+        let Ok(keys) = super::keys::compute_keys(&config, &ctx) else {
+            continue;
+        };
+        for stage in config.stages.iter().filter(|s| s.review.is_some()) {
+            if qc_status(root, study, &stage.name, &keys.keys[&stage.name]) != Ok(Verdict::Pass) {
+                missing.push((stage.name.clone(), variant.clone()));
+            }
+        }
+    }
+    missing
+}
+
 // rq-872c3d40
 /// The verdict recorded for a stage key: `Ok(verdict)`, or `Err` describing why there is none.
 pub fn qc_status(root: &Path, study: &str, stage: &str, key: &str) -> Result<Verdict, String> {
@@ -106,11 +129,10 @@ pub fn qc(
         ));
     }
     let resolved = ResolvedStage::load(root, study, variant)?;
-    let check = resolved.stage(stage)?.check.clone();
+    let review = resolved.stage(stage)?.review.clone();
     if !resolved.config.is_gated(stage) {
         return Err(PipelineError::Qc(format!(
-            "stage `{stage}` has no QC gate in variant `{variant}`: nothing consumes it, or it \
-             declares `qc: skip`"
+            "stage `{stage}` has no QC gate: it declares no `review` question"
         )));
     }
     let key = resolved.key(stage).to_string();
@@ -145,13 +167,8 @@ pub fn qc(
     writeln!(out, "  clean:   {}", record.clean).map_err(io)?;
     writeln!(out, "  outputs: {}", dir.display()).map_err(io)?;
     // rq-88bd99cd
-    match check.as_deref().map(str::trim).filter(|c| !c.is_empty()) {
-        Some(check) => writeln!(out, "\nWhat to check:\n  {check}").map_err(io)?,
-        None => writeln!(
-            out,
-            "\nThis stage does not say what to check (no `check` in its configuration)."
-        )
-        .map_err(io)?,
+    if let Some(review) = review.as_deref().map(str::trim) {
+        writeln!(out, "\nThe question:\n  {review}").map_err(io)?;
     }
     write!(out, "\nVerdict (pass or fail): ").map_err(io)?;
     out.flush().map_err(io)?;

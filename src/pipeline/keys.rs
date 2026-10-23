@@ -311,6 +311,11 @@ pub fn compute_keys_until(
                 .map_err(|e| key_error(stage, e))?,
         };
         let mut lines = vec![KEY_FORMAT.to_string(), format!("run {}", stage.run)];
+        // rq-0a10fc96
+        // Only stages with `validate` have a `validate` line, so other stages' keys are unaffected.
+        if let Some(validate) = &stage.validate {
+            lines.push(format!("validate {validate}"));
+        }
         // Only tool stages have a `tool` line, so other stages' keys are unaffected.
         if let Some(tool) = ctx.tool_info(stage).map_err(|e| key_error(stage, e))? {
             lines.push(format!("tool {}@{}", tool.pin.name, tool.commit));
@@ -455,8 +460,18 @@ pub struct RunPaths {
 
 /// The `run` command with its placeholders substituted and shell-quoted.
 pub fn render_run(stage: &StageConfig, paths: &RunPaths) -> Result<String, String> {
+    render_template(&stage.run, stage, paths)
+}
+
+/// A command template of `stage` (its `run` or `validate`) with its placeholders substituted and
+/// shell-quoted.
+pub fn render_template(
+    template: &str,
+    stage: &StageConfig,
+    paths: &RunPaths,
+) -> Result<String, String> {
     let mut out = String::new();
-    for part in parse_template(&stage.run)? {
+    for part in parse_template(template)? {
         match part {
             TemplatePart::Text(t) => out.push_str(&t),
             TemplatePart::Placeholder(p) => {

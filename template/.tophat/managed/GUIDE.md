@@ -14,7 +14,7 @@ through all of them.
 |---|---|---|
 | Ask the questions, choose the endpoint and decision rule | Help you phrase them; never invents them | Gives questions their IDs |
 | Pre-register the plan | Writes the plan with you | Freezes it and records the date |
-| Look at outputs and give QC verdicts | Shows you what to check | Stops the pipeline until you have |
+| Answer the review questions you chose | Writes the validation checks; shows you what to review | Runs every check; stops for your verdicts |
 | Run cluster jobs | Shows you the steps | Writes and checks the job folders |
 | Commit, on the host | Tells you what to commit | Records which commit each result came from |
 | Write the interpretation | Applies the decision rule you chose | Copies the result lines into the study |
@@ -49,15 +49,16 @@ named by the key, such as `results/<study>/<stage>/<key>/`, so:
 
 Each output directory has a `provenance.json` recording what produced it.
 
-## 4. QC gates
+## 4. Validation and review
 
-By default, every stage whose output another stage uses waits for your verdict before anything
-downstream runs: nothing reaches the next step unless a person has looked at it. Each such stage
-says, in its `check` text, what to look for. When the run stops at a gate, look at the output and
-give your verdict with `tophat stage qc <study> <stage> --variant <variant>`. A `fail` blocks
-everything downstream until the cause is fixed upstream, which gives the stage a new key and a new
-gate. A stage can skip its gate (`qc: skip`) only with a written reason, typically because a
-scenario test covers it.
+What code can check, code checks, every time: a stage's `validate` command (file counts, shapes,
+missing values, ranges) runs right after the stage, and a failed check stops it before its output
+is sealed. You are asked only for judgment: a stage with a `review` question (does this plot look
+right, does this fit make sense) waits for your verdict before anything that uses it runs, and
+before the study can be reported. You choose which stages get one. When the run stops there, look
+at the output and answer with `tophat stage qc <study> <stage> --variant <variant>`. A `fail`
+blocks everything downstream until the cause is fixed upstream, which gives the stage a new key and
+asks for a new verdict.
 
 ## 5. External (cluster) stages
 
@@ -85,7 +86,7 @@ answered, citing the study.
 | Pre-register | `tophat study preregister <study>` |
 | Run (or continue) the pipeline | `tophat run <study>` |
 | Stage keys and output directories | `tophat pipeline keys <study> --variant <variant>` |
-| Give a QC verdict | `tophat stage qc <study> <stage> --variant <variant>` |
+| Answer a review question | `tophat stage qc <study> <stage> --variant <variant>` |
 | Steps for a cluster job | `tophat stage instructions <study> <stage> --variant <variant>` |
 | Report | `tophat study report <study>` |
 | Check the whole project | `tophat check` |

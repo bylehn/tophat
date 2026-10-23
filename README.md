@@ -1,251 +1,244 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="TopHat logo: a black top hat with a blue and yellow band" width="160">
+</p>
 
-# TopHat
+<h1 align="center">TopHat</h1>
 
-An LLM skill/structure based on riprap applied to science workflows
+<p align="center">
+  <strong>AI-assisted research where the scientist stays in charge, the agent does the legwork, and
+  every result comes with its provenance.</strong>
+</p>
 
-## Getting Started
+---
+
+TopHat is a [Copier](https://copier.readthedocs.io/) template for research projects done with an
+LLM coding agent, such as Claude Code. It divides the work along a clear line:
+
+- **You make the scientific decisions.** You ask the questions, choose what will be measured and
+  what result would count as an answer, pre-register that plan, judge whether outputs are fit to
+  use, and interpret what you find. The agent helps you think these through but is never allowed to
+  make them for you.
+- **The agent does the legwork.** It writes and runs the pipelines, and keeps the records that
+  provenance needs: which question a study answers, which data and tool versions it used, which
+  environment it ran in.
+- **`tophat` checks the agent's work mechanically.** Every result you report can be traced, without
+  trusting the LLM, to the question it answers, the plan you made before seeing it, the code and
+  environment that computed it, and the data it consumed.
+
+All of this runs in a rootless container that keeps the agent away from the rest of your machine
+and your credentials (see [How safe is it?](#how-safe-is-it) for what that does and does not
+protect). TopHat works in any scientific field and any language your pipeline needs (Python, R,
+Julia, shell, …), and it is built for projects that live for years.
+
+> **Status: pre-release.** TopHat works end to end on its worked example, but no `tophat` binary
+> has been released yet, and the study format may still change before 1.0. See
+> [Getting started](#getting-started) for running it today.
+
+## Why "TopHat"?
+
+When you are awarded a doctorate in Sweden, the conferment ceremony crowns you with a top hat. It
+marks the moment the academic community trusts your research: you have shown, in public, that you
+can ask a question, answer it honestly and defend how you got there.
+
+TopHat is about that kind of trust. An AI agent can now write a pipeline in minutes, which makes it
+easier than ever to produce results, and harder to tell which of them deserve belief. The hat
+stays with the scientist: your domain expertise decides what is asked and what counts as an answer.
+The agent takes on the tedious parts, including the record-keeping that usually gets skipped, under
+rules it cannot quietly break.
+
+*(Not to be confused with the TopHat RNA-seq read aligner, which is unrelated.)*
+
+## How it works
+
+### The scientist decides, the agent builds, `tophat` checks
+
+| You, the scientist | The agent | The `tophat` CLI |
+|---|---|---|
+| Ask the questions; choose the endpoint and decision rule | Helps you phrase them; never invents them | Gives each question a stable ID |
+| Pre-register the plan | Writes the plan with you | Freezes it and records the date |
+| Inspect outputs and give QC verdicts | Shows you what to check | Stops the pipeline until you have |
+| Run cluster jobs | Prepares the job and shows you the steps | Writes the job folders and verifies what comes back |
+| Commit your work | Tells you what to commit | Records which commit each result came from |
+| Write the interpretation | Applies the decision rule you chose | Copies the result lines into the study |
+
+Skills (Markdown instructions for the agent) handle judgment. Everything that must be exactly
+right, such as IDs, hashes, provenance records and validation, is done by `tophat`, a Rust CLI. Every
+integrity guarantee holds with no LLM involved.
+
+### A project is a tree of questions, answered by studies
+
+- **`PROJECT.md`** holds the project's question, broken down into sub-questions with stable IDs.
+- A **study** answers one question with one pre-registered **primary endpoint** and **decision
+  rule**. Its `STUDY.md` also lists numbered **scenarios** (testable expectations of the pipeline,
+  each checked by a test), the **variants** it runs under, and its **stages**.
+- A study moves from `draft` to `preregistered` to `reported`. Once pre-registered, the question,
+  endpoint, decision rule and scenarios are frozen; later changes are dated amendments that say
+  whether results had been seen.
+- An **exploration** area holds scratch work that can inspire studies but is never cited as a
+  result. Work done before adopting TopHat can be written up as a clearly labelled **retrospective**
+  study.
+
+Here is the decision rule of the worked example that ships with every project:
+
+> The median filter is better if the 95% bootstrap interval of the endpoint (2000 resamples of the
+> signals, seed 1) lies entirely above 0. If the interval contains 0, the study shows no
+> difference; if it lies entirely below 0, the mean filter is better.
+
+### One command runs a study, and nothing runs twice
+
+`tophat run <study>` runs the whole pipeline with [Snakemake](https://snakemake.github.io/). You
+declare stages in a configuration file and write ordinary scripts; nobody writes Snakemake rules.
+
+- Each stage has a **key** derived from its command, code, parameters, inputs and its locked
+  [pixi](https://pixi.sh/) environment. Outputs live in a directory named by the key, so changing
+  anything that matters runs into a new directory, never over an old result, and unchanged stages
+  never re-run.
+- **QC gates** let you inspect a stage's output and give a verdict before anything downstream uses
+  it.
+- **Tools** (your own or others' code) live in their own repositories and are pinned by commit, so
+  different variants can use different versions side by side.
+- **External stages** split a pipeline across machines: TopHat writes a self-contained job folder,
+  you run it on your cluster, and on return every file is checked against the hashes the job
+  recorded. TopHat never connects to a remote machine itself.
+- **Data** is never modified in place. Raw datasets are registered with content hashes; studies
+  hand data to each other only through named, versioned, published datasets; and lineage can be
+  queried in both directions.
+- A draft can be run as a **trial** to debug the pipeline, but trial results are kept apart and can
+  never be reported.
+
+`tophat check` ties it together. It fails loudly on edits to frozen sections, results from
+uncommitted code, stale summaries, missing QC verdicts, scenarios without tests, private data
+flowing into public studies, and more. Agents, hooks, CI and humans all use the same check.
+
+## How safe is it?
+
+Safe-ish. An LLM agent can be misled by text it reads (prompt injection) or simply make mistakes,
+so TopHat limits what it can reach rather than trusting it to behave. All work, including the
+agent, runs inside a rootless container: Podman on your machine, Apptainer on a cluster.
+
+What the container protects:
+
+- **The rest of your machine.** The agent sees the project directory and your configured data
+  locations, and nothing else from your home directory.
+- **Your credentials.** No SSH keys, Git credentials, cloud credentials or host agent configuration
+  enter the container. The agent logs in separately, and that login is stored apart from your own.
+- **Your Git history and remotes.** The container has no Git identity and refuses to commit. You
+  review and commit on the host, so nothing the agent writes reaches a result or a remote without
+  passing you.
+- **Your clusters.** The agent never connects to a remote machine, transfers data or submits jobs.
+  It prepares a job folder and you run it.
+
+What it does not protect:
+
+- **Files the agent can see.** It can change or delete files in the project and in your mounted
+  data locations. Keep data backed up and commit often; `tophat check` will flag data that no longer
+  matches its recorded hashes.
+- **Data leaving over the network.** The container needs network access for the agent and for
+  installing packages, so a misled agent could send out what it can read. Don't mount data that
+  must not leave your machine without considering this.
+- **Root-level escapes.** A rootless container is a strong barrier, not an absolute one.
+
+## Getting started
 
 ### Prerequisites
 
-Install Podman by following the official [installation instructions](https://podman.io/docs/installation).
+- [Podman](https://podman.io/docs/installation) (or Apptainer on a cluster)
+- [Copier](https://copier.readthedocs.io/) 9 or later
+- A [Claude Code](https://claude.com/claude-code) account (the only supported agent so far)
 
-You will also need access to Claude Code.
+### Create a project
 
-### Launching the development environment
-
-All development **must** take place within the development container.
-The template includes hooks that prevent Claude Code from answering prompts unless you are running in a containerized environment. Podman builds and runs that container on your own machine; on a host that cannot build one, such as a compute cluster, Apptainer runs a prebuilt image (see [Running on a compute cluster](#running-on-a-compute-cluster) below).
-
-Run `bash rr.sh` on Linux/Mac, or `rr.bat` on Windows.
-This builds the container and drops you into an interactive shell in `/work`.
-
-From the shell, run `claude` to start Claude Code.
-Agent authentication is stored in separate Podman named volumes scoped by the random UUID in
-`.riprap/state/project-id`; the launchers never mount your host agent configuration directories.
-The UUID is non-secret project metadata and should be committed. To clear authentication, run
-`bash rr.sh --reset-agent-state` with `claude`, or `all` (use `rr.bat` on Windows).
-
-
-
-
-
-#### Updating the agents
-
-The agents update themselves automatically, at most once a week, with no action from you.
-
-The agents will not auto-update *within* the container (such changes would only last as long as
-the container itself, and would need to be repeated every time you launch a new container).
-Instead, the launcher reinstalls them when the calendar week changes, so the agents are never more
-than a week behind their current releases. One launch a week therefore takes a few minutes longer
-while the agent layers rebuild; every other launch reuses the cache and contacts the network not
-at all. If a rebuild fails — no network, or a broken upstream release — the launcher says so and
-carries on with the image you already have, so a refresh can never block your work.
-
-##### Pinning a release
-
-If a new agent release turns out to be a bad one, you can pin your way out of it without waiting
-for an upstream fix. Create `.riprap/user/agent-pin.env`:
-
-```
-CLAUDE_VERSION=2.1.205
+```sh
+copier copy gh:<owner>/tophat my-project
+cd my-project
+./th.sh       # builds and enters the dev container
+claude        # start the agent inside the container
 ```
 
-Pinned agents are held at exactly those releases; any agent you leave out keeps tracking its
-current release. Only exact `x.y.z` versions are accepted; values such as `latest` will error.
-Delete the file to return to the weekly schedule described above.
+Copier asks for the project's name, description and author, any languages to install besides
+Python, and the default GPU setting.
 
+Until the first release, the container needs a `tophat` binary you build yourself. Run
+`cargo build --release` in this repository and point `TOPHAT_DEV_BINARY` at the result before
+running `./th.sh`.
 
-#### Running on a compute cluster
+### First steps in a project
 
-Many clusters run [Apptainer](https://apptainer.org) rather than Podman, and often you cannot build
-an image on them at all. Riprap allows you to instead build the image on a machine where you do have
-Podman and subsequently run it on the cluster.
+The agent knows the workflow, so you can simply tell it what you want to find out. The commands
+underneath are:
 
-First: on a machine with Podman, build the image and export it as a single Apptainer image (this step
-needs Apptainer installed alongside Podman):
+| Goal | Command |
+|---|---|
+| Where am I, and what's next? | `tophat status` |
+| Start a study | `tophat study new <study> --question <question ID>` |
+| Pre-register it | `tophat study preregister <study>` |
+| Run (or continue) the pipeline | `tophat run <study>` |
+| Give a QC verdict | `tophat stage qc <study> <stage> --variant <variant>` |
+| Report the result | `tophat study report <study>` |
+| Check the whole project | `tophat check` |
 
-```
-bash rr.sh --export-sif
-```
+Each generated project includes a guide, `.tophat/managed/GUIDE.md`, that follows one study from
+question to report, and the worked example `median-vs-mean` to copy from.
 
-This writes `.riprap/state/apptainer/riprap-<uuid>-project.sif`. Copy the entire repository
-to the cluster with whatever you already use (e.g, `scp`, `rsync`, or a shared filesystem). Then,
-from the repository on the cluster:
+### Keeping a project up to date
 
-```
-bash rr.sh --run-sif
-```
-
-This drops you into an Apptainer container that works much the same way as the Podman containers.
-The launcher contains the invoking user's home directory and environment, so the container
-sees neither, and it presents the image read-only. Exporting and running are Unix-only; Windows
-does not support Apptainer.
-
-Note that `.sif` files can be quite large, and therefore should not be committed to the git
-repository.
-
-Agent authentication on the cluster is stored in directories under
-`.riprap/state/apptainer/credentials/`, created readable only by you. Note that cluster home and
-project filesystems are commonly shared, backed up, and readable by administrators, who could
-potentially view your agent credentials.
-
-### Initializing the project
-
-
-
-The repository contains a skeletal Rust crate: a `Cargo.toml`, `src/lib.rs`
-with a placeholder function, a `tests/` directory, and a GitHub Actions
-workflow (`.github/workflows/CI.yaml`) that checks formatting, runs clippy, and
-runs the test suite with coverage on every push and pull request. These files
-were seeded by the template and are yours to edit; the template never updates
-them.
-
-Check that the sample tests pass:
-
-```
-cargo test
+```sh
+copier update
 ```
 
-Replace the placeholder `canvas` function in `src/lib.rs` (and its tests) with
-your own code as your first features land.
+Updates bring in new skills, checks and container fixes. They never overwrite your `PROJECT.md`,
+studies, data or local skill extensions. The study format and stage keys are a versioned contract:
+an update must not invalidate your results or make finished studies re-run.
 
+## What TopHat is not
 
+- A workflow engine or job scheduler. Snakemake runs pipelines; you run cluster jobs.
+- A data store. Your data stays where it is; TopHat records and verifies its hashes.
+- An LLM runtime. Your coding agent is the LLM; TopHat gives it structure and rules.
+- A domain library, electronic lab notebook or LIMS.
 
+## Related work
 
-The template also seeds a CodeQL security-scanning workflow at
-`.github/workflows/codeql.yaml`. Like the other seeded files, it is yours to
-edit: choose the languages it analyzes, the query suites it runs, and how often
-it is scheduled. Keeping its `github/codeql-action` versions current is the
-project's responsibility, as GitHub retires older versions over time.
+TopHat builds on ideas from riprap (agent skills that turn intent into
+written, reviewable requirements before code is written), applied to research instead of software.
+Other projects worth knowing:
 
-## Development Workflow
+- [preregister](https://github.com/reinthal/preregister): an agent skill that interrogates the
+  researcher and freezes a pre-registration before an experiment.
+- [research-methods](https://github.com/phdemotions/research-methods): Claude Code skills for
+  reproducible quantitative research in business and social science.
+- [showyourwork](https://github.com/showyourwork/showyourwork): Snakemake-based workflow that links
+  every figure in a paper to the code that made it.
+- [DVC](https://dvc.org/): content-addressed data and pipeline versioning.
 
-### 1. Define the project architecture
+## Developing TopHat
 
-Start by capturing the project's high-level goals and architecture. Run the built-in skill.
+This repository contains the Copier template (`template/`), the `tophat` CLI (`src/`, Rust) and
+development tooling (`xtask/`). The design is in [`rqm/ARCHITECTURE.md`](rqm/ARCHITECTURE.md), and
+every behaviour is specified as a requirements file with Gherkin scenarios under [`rqm/`](rqm/).
 
-In Claude Code, use:
+TopHat is itself developed with riprap: all development, including the agent, happens inside a
+dev container.
 
-```
-/rr-architecture <one-line description of what you are building>
-```
-
-
-
-
-The agent will ask questions to pin down the decisions with broad architectural leverage — intended scale and audience, execution targets, extensibility (for example, whether a plugin system is needed), key libraries, and the whole-project testing strategy — and record them in `rqm/ARCHITECTURE.md`.
-The agent's project guidance references that file, so every later step shares the same context.
-Re-run the skill whenever the architecture needs to evolve.
-
-### 2. Write a requirements document
-
-Before generating code, create a requirements document in the `rqm/` directory.
-Use the built-in skill by prompting:
-
-```
-Help me plan <feature description>. Place the requirements document in rqm/<feature>.md.
-```
-
-
-Or invoke the skill explicitly in Claude Code:
-
-```
-/rr-plan Help me plan <feature description>. Place the requirements document in rqm/<feature>.md.
+```sh
+bash rr.sh        # Linux/macOS; rr.bat on Windows. Builds and enters the container.
+cargo test        # inside the container
 ```
 
+The workflow is requirements first. Change or add the requirements file under `rqm/`, then
+implement it, and keep code and requirements in step. The `rr-plan` and `rr-implement` skills
+guide the agent through this. A few rules:
 
+- **Only run the agent inside the rootless container.** Never give it private keys, write access to
+  remote repositories, or unreviewed pushes.
+- **Keep credentials out of Git.** Install the pre-commit scanner with
+  `bash rr.sh --install-git-hooks`.
+- **Don't edit managed files.** Files under `.riprap/managed/` belong to riprap; project
+  customization goes in `.riprap/user/`.
 
+On a compute cluster without Podman, build an Apptainer image elsewhere with
+`bash rr.sh --export-sif`, copy the repository over, and run `bash rr.sh --run-sif`.
 
-The agent will ask clarifying questions and write a complete requirements file including Gherkin scenarios.
+## License
 
-### 3. Implement the feature
-
-```
-Implement the feature in rqm/<feature>.md
-```
-
-### 4. Iterate
-
-If the output is incorrect or incomplete, **modify the requirements file first**, then ask the agent to update the implementation:
-
-```
-I have updated rqm/<feature>.md. Update the implementation to match.
-```
-
-### 5. Verify understanding with quizzes
-
-Run the `rr-quiz` skill — `/rr-quiz` in Claude Code. The
-agent will ask you a multiple-choice question about the implementation to help ensure you understand
-the code.
-
-### Customizing skills
-
-The authoritative, agent-neutral skill implementations live under `.riprap/managed/skills/`.
-Claude discovers adapters under `.claude/skills/`. 
-Project-owned extensions live under `.riprap/user/skills/<skill-name>/local.md`. Use those files to
-extend or override skills with project-specific conventions; Copier preserves them during template
-updates. Avoid editing `SKILL.md` directly because canonical implementations and adapters are
-managed by Riprap.
-
-### File ownership
-
-Riprap-managed implementations live under `.riprap/managed/` and should not be edited. Supported
-project customization lives under `.riprap/user/`, and generated project or machine state lives
-under `.riprap/state/`. A small number of managed adapters remain at conventional or tool-mandated
-paths, including `rr.sh`, `rr.bat`, and the agent discovery directories. Conventional project files
-outside `.riprap`, such as source files, manifests, `README.md`, and the root `Containerfile`, belong
-to the project.
-
-Run template updates with `copier update`.
-
-
-### Agent permissions
-
-`.claude/settings.json` is Riprap-managed. It pre-approves the commands Riprap's own skills run and
-your language's routine build, test, and lint commands, and it denies reading credential files. It
-deliberately does not pre-approve a general interpreter, a package installer, or a shell, so those
-prompt the first time they are used.
-
-Add your project's own permissions to `.claude/settings.local.json`, which Claude Code merges with
-the managed settings rather than replacing them. Choosing "don't ask again" at a prompt writes the
-rule there for you. That file is ignored by Git, so your approvals stay yours and template updates
-never disturb them.
-
-
-
-
-## Key Rules
-
-### Only ever use agentic AI inside a rootless container
-
-LLMs are susceptible to prompt injection and data poisoning.
-This repository includes hooks that block Claude Code unless they are running inside a rootless container,
-such as a Podman container.
-Even inside a container, you should:
-
-- Never share private SSH keys or other sensitive credentials.
-- Never give the LLM write access to remote repositories.
-- Never push LLM-generated code without reviewing it carefully first.
-
-### Keep credentials out of Git
-
-Install the version-controlled pre-commit scanner with `bash rr.sh --install-git-hooks` (or
-`rr.bat --install-git-hooks`). It refuses to replace an existing custom `core.hooksPath`; follow
-the reported composition instructions in that case. Run
-`.riprap/managed/hooks/check-secrets.sh --repository` in CI to scan committed content. Ignore rules and
-local hooks are bypassable safeguards, so repositories hosted on GitHub should also enable secret
-scanning and push protection in their security settings.
-
-### Treat requirements documents as the source of truth
-
-The `rqm/` directory should contain a complete, version-controlled description of every intended behavior of the project.
-If you delete everything in `src/`, it should be possible to reproduce your code from the requirements files alone.
-**Never write code that isn't directly necessitated by a requirements file.**
-
-### Use memory-safe languages and modern tooling
-
-
-Rust's compiler catches a large class of bugs at compile time.
-Always resolve all compiler errors and warnings before considering a feature complete.
-
-
+BSD 3-Clause. See [LICENSE](LICENSE).

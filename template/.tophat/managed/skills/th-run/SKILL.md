@@ -17,17 +17,16 @@ reported. Every run ends with the study's next action; act on it as below.
 
 ## QC hand-off
 
-When the run stops at a QC gate, the human must look at the stage's output and give a verdict.
+When the run stops at a QC gate, a stage with a `review` question waits for the human's judgment.
 
-1. Tell the human what the stage does (from the study's `## Stages`) and what to check in its
-   output: the stage's `check` text in `config/`. If the stage has no `check`, say so; it should
-   get one (`th-study`).
+1. Tell the human what the stage does (from the study's `## Stages`) and its `review` question
+   from `config/`.
 2. Show where the output is: `tophat pipeline keys <id> --variant <variant>` lists each stage's
    key and output directory.
 3. If it helps, summarize what the output contains (files, sizes, a few values), without judging
    it.
 4. Give the human the exact command and stop: `tophat stage qc <id> <stage> --variant <variant>`.
-   It shows the `check` text again before asking for the verdict.
+   It shows the question again before asking for the verdict.
 
 Never give, suggest or imply a verdict, and never write a file under `qc/`. When the verdict is
 `fail`, the cause is fixed upstream (a new configuration or code, hence a new key), never by
@@ -44,7 +43,8 @@ When the run stops at an external stage, the human runs its job on a cluster.
 
 ## Failures
 
-When a stage fails, read the Snakemake output, find the cause, and explain it. Fix study code under
+When a stage fails, read the Snakemake output, find the cause, and explain it. A failed
+validation says what it found wrong in the output. Fix study code under
 the build rules of `th-study`, then run again. Never edit outputs or provenance records by hand.
 
 ## Stale or dirty results

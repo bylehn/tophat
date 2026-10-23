@@ -225,6 +225,9 @@ Result empty → `preregistered`; block absent → `retrospective`.
   - Requires the summary not to be stale (its `keys`, when present, equal the current stage keys;
     see `pipeline.summary-stale` in `rqm/pipeline/snakemake.md`), and the study not to depend on
     unreported work without an accepting amendment (see `rqm/data.md`).
+  - Requires a `pass` verdict for the current key of every stage that declares `review`, in every
+    listed variant (see `rqm/pipeline/snakemake.md`); otherwise it fails naming the
+    `tophat stage qc` command of the first one missing.
   - Replaces the content of `## Result` with the summary's result lines, verbatim and in order.
   - Sets status `reported` if it was `preregistered`; otherwise leaves status unchanged.
   - Changes nothing else in the file. Does not require an interactive terminal.

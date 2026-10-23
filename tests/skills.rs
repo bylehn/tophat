@@ -591,22 +591,31 @@ fn the_copied_example_passes_the_check() {
 }
 
 #[test] // rq-38e5cf5f rq-428f178b
-fn the_example_says_what_each_gated_stages_qc_checks() {
+fn the_example_validates_what_code_can_check_and_reviews_what_needs_judgment() {
     if !common::copier() {
         return;
     }
     let p = Project::render(&[]);
     let config = p.read(&format!("{EXAMPLE}/config/base.yaml"));
-    for stage in ["filter", "score"] {
-        let block = config
+    let block = |stage: &str| {
+        config
             .split("  - name: ")
             .find(|s| s.starts_with(&format!("{stage}\n")))
-            .unwrap();
+            .unwrap()
+            .to_string()
+    };
+    for stage in ["generate", "score"] {
         assert!(
-            block.contains("\n    check: "),
-            "{stage} has no check:\n{block}"
+            block(stage).contains("\n    validate: "),
+            "{stage}:\n{}",
+            block(stage)
         );
     }
+    assert!(
+        block("filter").contains("\n    review: "),
+        "{}",
+        block("filter")
+    );
     adopt_example(&p);
     let out = p.tophat(&["check", "--json", "studies/median-vs-mean"]);
     let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
@@ -616,7 +625,7 @@ fn the_example_says_what_each_gated_stages_qc_checks() {
         .iter()
         .filter_map(|d| d["rule"].as_str())
         .collect();
-    assert!(!rules.contains(&"pipeline.qc-check-missing"), "{report}");
+    assert!(!rules.contains(&"pipeline.validate-missing"), "{report}");
 }
 
 #[test] // rq-60ea5f24 rq-428f178b
