@@ -138,6 +138,21 @@ What it does not protect:
   must not leave your machine without considering this.
 - **Root-level escapes.** A rootless container is a strong barrier, not an absolute one.
 
+### Keeping data confidential from the agent
+
+Everything the agent reads (file contents, command output, error messages) is sent to the company
+that runs its model. Whether that company keeps it or trains on it depends on your plan and its
+terms, so check them before you start.
+
+Data the agent never reads never leaves your machine through it. The container only sees the project
+directory and your configured data locations, so to keep a dataset from the agent, keep it outside
+both. TopHat does not yet automate working this way, which means:
+
+- you run the steps that read the confidential data yourself, outside the agent session;
+- you keep their outputs out of the project and the data locations too, since outputs of
+  confidential data can be just as sensitive;
+- you give the agent a synthetic or anonymized sample to build and test the pipeline against.
+
 ## Getting started
 
 ### Prerequisites
