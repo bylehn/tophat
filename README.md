@@ -11,28 +11,216 @@
 
 ---
 
-TopHat is a [Copier](https://copier.readthedocs.io/) template for research projects done with an
-LLM coding agent, such as Claude Code. It divides the work along a clear line:
+TopHat sets up a research project in which you work with an AI coding agent, such as Claude Code.
+You talk to the agent about what you want to find out; it writes and runs the analysis. TopHat
+makes sure that you, not the agent, make the scientific decisions, and that every result can be
+traced back to how it was made.
 
-- **You make the scientific decisions.** You ask the questions, choose what will be measured and
-  what result would count as an answer, pre-register that plan, judge whether outputs are fit to
-  use, and interpret what you find. The agent helps you think these through but is never allowed to
-  make them for you.
-- **The agent does the legwork.** It writes and runs the pipelines, and keeps the records that
-  provenance needs: which question a study answers, which data and tool versions it used, which
-  environment it ran in.
-- **`tophat` checks the agent's work mechanically.** Every result you report can be traced, without
-  trusting the LLM, to the question it answers, the plan you made before seeing it, the code and
-  environment that computed it, and the data it consumed.
+- **You make the scientific decisions.** You ask the questions, decide what will be measured and
+  what result would count as an answer, and interpret what you find. The agent helps you think them
+  through but never makes them for you.
+- **The agent does the legwork.** It writes the pipelines, runs them and keeps the records that
+  usually get skipped: which data, which code, which software versions.
+- **The `tophat` tool checks the agent's work.** It checks mechanically, with no AI involved, that
+  every reported result traces back to its question, to the plan you made before seeing any
+  results, and to the exact code, environment and data that computed it.
 
-All of this runs in a rootless container that keeps the agent away from the rest of your machine
-and your credentials (see [How safe is it?](#how-safe-is-it) for what that does and does not
-protect). TopHat works in any scientific field and any language your pipeline needs (Python, R,
-Julia, shell, …), and it is built for projects that live for years.
+Everything runs in a container that keeps the agent away from the rest of your computer. TopHat
+works in any scientific field and any language your analysis needs (Python, R, Julia, shell, …).
 
 > **Status: pre-release.** TopHat works end to end on its worked example, but no `tophat` binary
 > has been released yet, and the study format may still change before 1.0. See
 > [Getting started](#getting-started) for running it today.
+
+## How it works
+
+### A study, step by step
+
+A TopHat project starts from your research questions. Each question is answered by one or more
+**studies**, and every study follows the same path:
+
+1. **Ask.** You and the agent write down the question in `PROJECT.md`.
+2. **Explore.** You look at the data together in a scratch area, to learn what is worth measuring.
+   Nothing from exploration can be reported as a result.
+3. **Plan.** You decide the **primary endpoint** (the number that answers the question) and the
+   **decision rule** (which values mean yes, no or no difference). The agent writes it all into the
+   study's `STUDY.md`, together with checks the pipeline must pass.
+4. **Pre-register.** You freeze the plan with one command, before any real result exists. Later
+   changes are allowed but are recorded as dated amendments.
+5. **Run.** The agent builds the pipeline and runs it. Where a step needs your judgment, such as
+   whether an output looks right, the pipeline stops until you have looked.
+6. **Report.** The result is filled in from the recorded outputs, the decision rule is applied as
+   written, and you write the interpretation.
+
+Here is the decision rule of the worked example that ships with every project:
+
+> The median filter is better if the 95% bootstrap interval of the endpoint (2000 resamples of the
+> signals, seed 1) lies entirely above 0. If the interval contains 0, the study shows no
+> difference; if it lies entirely below 0, the mean filter is better.
+
+### Who does what
+
+| You, the scientist | The agent | The `tophat` tool |
+|---|---|---|
+| Ask the questions; choose the endpoint and decision rule | Helps you phrase them; never invents them | Gives each question a stable ID |
+| Pre-register the plan | Writes the plan with you | Freezes it and records the date |
+| Look at outputs and say whether they are fit to use | Shows you what to check | Stops the pipeline until you have |
+| Run jobs on a compute cluster | Prepares the job and tells you the steps | Writes the job folder and verifies what comes back |
+| Commit your work with Git | Tells you what to commit | Records which commit each result came from |
+| Write the interpretation | Applies the decision rule you chose | Copies the result into the study |
+
+### What keeps results trustworthy
+
+- **Nothing runs twice, and nothing is overwritten.** Each pipeline step's output is stored under
+  a fingerprint of its code, settings, inputs and software environment. Change anything that
+  matters and it runs into a new folder; change nothing and it doesn't run again.
+- **Data is never changed in place.** Datasets are registered with checksums, and studies share data
+  only as named, versioned datasets, so you can always ask what a result was computed from.
+- **Your own code stays separate.** Tools (your code or other people's) live in their own Git
+  repositories and are pinned to an exact commit.
+- **One check covers it all.** `tophat check` fails loudly on changes to a frozen plan, results from
+  uncommitted code, out-of-date summaries, skipped quality checks, private data flowing into public
+  studies, and more. The agent, a Git hook, CI and you all run the same check.
+
+Pipelines run with [Snakemake](https://snakemake.github.io/) in a locked
+[pixi](https://pixi.sh/) environment, but you never write Snakemake rules: the agent declares the
+steps and writes ordinary scripts.
+
+## Where it runs
+
+<p align="center">
+  <img src="assets/container.svg" alt="Diagram: the agent, tophat, pixi and Snakemake run in a rootless dev container on your computer. Only the project folder, your configured data locations and local tool repositories (read-only) are mounted into it; your home folder and credentials never are. The container reaches the internet for the model provider, public tool repositories and packages. You commit on the host and carry cluster jobs yourself." width="100%">
+</p>
+
+The agent works inside a rootless container, started with `./th.sh` from the project folder. The
+container sees only what you give it:
+
+- **The project folder**, with your code, studies, plans and (by default) the `results/` folder.
+- **Data locations** you choose, such as a data disk or a shared drive. Tell the agent where your
+  data is; it records the path in `.tophat/roots.local.yaml`, a file that stays on your machine
+  and is never committed, so each computer can keep the data somewhere different.
+- **Tools** your pipeline uses. A public Git repository is fetched over the internet. A repository
+  on your own computer is mounted read-only, so nothing in the container can change it.
+
+After adding a data location or a local tool, exit the container and run `./th.sh` again: the
+container's folders are set when it starts.
+
+### How safe is it?
+
+Safe-ish. An AI agent can be misled by text it reads (prompt injection) or simply make mistakes,
+so TopHat limits what it can reach rather than trusting it to behave.
+
+What the container protects:
+
+- **The rest of your computer.** The agent sees the project folder and the locations above, and
+  nothing else from your home folder.
+- **Your credentials.** No SSH keys, Git credentials, cloud credentials or your own agent settings
+  enter the container. The agent logs in separately, and that login is stored apart from your own.
+- **Your Git history and remotes.** The container has no Git identity and cannot commit. You review
+  and commit on your computer, so nothing the agent writes reaches a result or a remote without
+  passing you.
+- **Your clusters.** The agent never connects to a remote machine, transfers data or submits jobs.
+  It prepares a job folder and you run it.
+
+What it does not protect:
+
+- **Files the agent can see.** It can change or delete files in the project and in your data
+  locations. Keep data backed up and commit often; `tophat check` flags data that no longer
+  matches its checksums.
+- **Data leaving over the network.** The container needs internet access for the agent and for
+  installing packages, so a misled agent could send out what it can read.
+- **Escapes from the container.** A rootless container is a strong barrier, not an absolute one.
+
+### Keeping data confidential from the agent
+
+Everything the agent reads (file contents, command output, error messages) is sent to the company
+that runs its model. Whether that company keeps it or trains on it depends on your plan and its
+terms, so check them before you start.
+
+Data the agent never reads never leaves your computer through it. The container only sees the
+project folder and your data locations, so to keep a dataset from the agent, keep it outside
+both. TopHat does not yet automate working this way, which means:
+
+- you run the steps that read the confidential data yourself, outside the agent session;
+- you keep their outputs out of the project and the data locations too, since outputs of
+  confidential data can be just as sensitive;
+- you give the agent a synthetic or anonymized sample to build and test the pipeline against.
+
+## Getting started
+
+### What you need
+
+- [Podman](https://podman.io/docs/installation) (or Apptainer on a cluster)
+- [Copier](https://copier.readthedocs.io/) 9 or later, which creates the project
+- A [Claude Code](https://claude.com/claude-code) account (the only supported agent so far)
+
+### Create a project
+
+```sh
+copier copy gh:<owner>/tophat my-project
+cd my-project
+./th.sh       # builds and enters the container (the first build takes a few minutes)
+claude        # start the agent inside the container
+```
+
+Copier asks for the project's name, description and author, any languages to install besides
+Python, the default GPU setting, and a license for the project.
+
+### Talk to the agent
+
+From here on you mostly talk to the agent, in your own words. It knows the TopHat workflow and
+runs the `tophat` commands itself. Some ways to begin:
+
+- *"What should I do next?"* It looks at the project and suggests the next step. In Claude Code,
+  `/th-next` does the same.
+- *"Help me write the main question of this project."*
+- *"My measurements are in /data/lab/2026-run. Register them."*
+- *"I want to test whether method X beats docking on this benchmark. Let's plan a study."*
+- *"Run the study."* or *"Why did the last run fail?"*
+- *"How does a study work?"* It explains, using the guide in `.tophat/managed/GUIDE.md`.
+
+The worked example study, `median-vs-mean`, shows a complete study from question to report. Ask the
+agent to walk you through it.
+
+### The steps you take yourself
+
+A few steps are deliberately left to you, because they are your decisions or need your
+credentials. When it is your turn, the agent stops and gives you the exact command.
+
+| Step | Why it is yours | Where |
+|---|---|---|
+| Pre-register a study (`tophat study preregister`) | Freezing the plan is your commitment | in the container |
+| Give a quality verdict (`tophat stage qc`) | Only you can judge if an output is fit to use | in the container |
+| Fetch tool code (`tophat tools sync`) | You decide which code runs | in the container |
+| Commit and push with Git | The container holds no Git identity or credentials | on your computer |
+| Run cluster jobs | The agent never connects to remote machines | on the cluster |
+| Write the study's interpretation | It is your reading of the result | in `STUDY.md` |
+
+To run a command in the container while the agent is busy, open another terminal and run `./th.sh`
+there.
+
+### Keeping a project up to date
+
+```sh
+copier update
+```
+
+Updates bring in new agent skills, checks and container fixes. They never overwrite your
+`PROJECT.md`, studies, data, license or local skill extensions, and they never invalidate your
+results or make finished studies re-run.
+
+### Before the first release
+
+Until the first release, the container needs a `tophat` binary you build yourself. Run
+`cargo build --release` in this repository and point `TOPHAT_DEV_BINARY` at the result before
+running `./th.sh`.
+
+To create a project from a local checkout of this repository, give Copier its absolute path:
+`copier copy /path/to/tophat my-project`. Copier stores the path in `.copier-answers.yml` exactly as
+given, and `copier update` resolves it from the project folder, so a relative path like `tophat/`
+breaks later updates. If that has already happened, set `_src_path` in `.copier-answers.yml` to
+the absolute path and commit the change. To update from a local checkout, commit there first, then
+run `copier update --vcs-ref HEAD` in the project.
 
 ## Why "TopHat"?
 
@@ -46,192 +234,17 @@ stays with the scientist: your domain expertise decides what is asked and what c
 The agent takes on the tedious parts, including the record-keeping that usually gets skipped, under
 rules it cannot quietly break.
 
-*(Not to be confused with the TopHat RNA-seq read aligner, which is unrelated.)*
-
-## How it works
-
-### The scientist decides, the agent builds, `tophat` checks
-
-| You, the scientist | The agent | The `tophat` CLI |
-|---|---|---|
-| Ask the questions; choose the endpoint and decision rule | Helps you phrase them; never invents them | Gives each question a stable ID |
-| Pre-register the plan | Writes the plan with you | Freezes it and records the date |
-| Inspect outputs and give QC verdicts | Shows you what to check | Stops the pipeline until you have |
-| Run cluster jobs | Prepares the job and shows you the steps | Writes the job folders and verifies what comes back |
-| Commit your work | Tells you what to commit | Records which commit each result came from |
-| Write the interpretation | Applies the decision rule you chose | Copies the result lines into the study |
-
-Skills (Markdown instructions for the agent) handle judgment. Everything that must be exactly
-right, such as IDs, hashes, provenance records and validation, is done by `tophat`, a Rust CLI. Every
-integrity guarantee holds with no LLM involved.
-
-### A project is a tree of questions, answered by studies
-
-- **`PROJECT.md`** holds the project's question, broken down into sub-questions with stable IDs.
-- A **study** answers one question with one pre-registered **primary endpoint** and **decision
-  rule**. Its `STUDY.md` also lists numbered **scenarios** (testable expectations of the pipeline,
-  each checked by a test), the **variants** it runs under, and its **stages**.
-- A study moves from `draft` to `preregistered` to `reported`. Once pre-registered, the question,
-  endpoint, decision rule and scenarios are frozen; later changes are dated amendments that say
-  whether results had been seen.
-- An **exploration** area holds scratch work that can inspire studies but is never cited as a
-  result. Work done before adopting TopHat can be written up as a clearly labelled **retrospective**
-  study.
-
-Here is the decision rule of the worked example that ships with every project:
-
-> The median filter is better if the 95% bootstrap interval of the endpoint (2000 resamples of the
-> signals, seed 1) lies entirely above 0. If the interval contains 0, the study shows no
-> difference; if it lies entirely below 0, the mean filter is better.
-
-### One command runs a study, and nothing runs twice
-
-`tophat run <study>` runs the whole pipeline with [Snakemake](https://snakemake.github.io/). You
-declare stages in a configuration file and write ordinary scripts; nobody writes Snakemake rules.
-
-- Each stage has a **key** derived from its command, code, parameters, inputs and its locked
-  [pixi](https://pixi.sh/) environment. Outputs live in a directory named by the key, so changing
-  anything that matters runs into a new directory, never over an old result, and unchanged stages
-  never re-run.
-- **QC gates** let you inspect a stage's output and give a verdict before anything downstream uses
-  it.
-- **Tools** (your own or others' code) live in their own repositories and are pinned by commit, so
-  different variants can use different versions side by side.
-- **External stages** split a pipeline across machines: TopHat writes a self-contained job folder,
-  you run it on your cluster, and on return every file is checked against the hashes the job
-  recorded. TopHat never connects to a remote machine itself.
-- **Data** is never modified in place. Raw datasets are registered with content hashes; studies
-  hand data to each other only through named, versioned, published datasets; and lineage can be
-  queried in both directions.
-- A draft can be run as a **trial** to debug the pipeline, but trial results are kept apart and can
-  never be reported.
-
-`tophat check` ties it together. It fails loudly on edits to frozen sections, results from
-uncommitted code, stale summaries, missing QC verdicts, scenarios without tests, private data
-flowing into public studies, and more. Agents, hooks, CI and humans all use the same check.
-
-## How safe is it?
-
-Safe-ish. An LLM agent can be misled by text it reads (prompt injection) or simply make mistakes,
-so TopHat limits what it can reach rather than trusting it to behave. All work, including the
-agent, runs inside a rootless container: Podman on your machine, Apptainer on a cluster.
-
-What the container protects:
-
-- **The rest of your machine.** The agent sees the project directory and your configured data
-  locations, and nothing else from your home directory.
-- **Your credentials.** No SSH keys, Git credentials, cloud credentials or host agent configuration
-  enter the container. The agent logs in separately, and that login is stored apart from your own.
-- **Your Git history and remotes.** The container has no Git identity and refuses to commit. You
-  review and commit on the host, so nothing the agent writes reaches a result or a remote without
-  passing you.
-- **Your clusters.** The agent never connects to a remote machine, transfers data or submits jobs.
-  It prepares a job folder and you run it.
-
-What it does not protect:
-
-- **Files the agent can see.** It can change or delete files in the project and in your mounted
-  data locations. Keep data backed up and commit often; `tophat check` will flag data that no longer
-  matches its recorded hashes.
-- **Data leaving over the network.** The container needs network access for the agent and for
-  installing packages, so a misled agent could send out what it can read. Don't mount data that
-  must not leave your machine without considering this.
-- **Root-level escapes.** A rootless container is a strong barrier, not an absolute one.
-
-### Keeping data confidential from the agent
-
-Everything the agent reads (file contents, command output, error messages) is sent to the company
-that runs its model. Whether that company keeps it or trains on it depends on your plan and its
-terms, so check them before you start.
-
-Data the agent never reads never leaves your machine through it. The container only sees the project
-directory and your configured data locations, so to keep a dataset from the agent, keep it outside
-both. TopHat does not yet automate working this way, which means:
-
-- you run the steps that read the confidential data yourself, outside the agent session;
-- you keep their outputs out of the project and the data locations too, since outputs of
-  confidential data can be just as sensitive;
-- you give the agent a synthetic or anonymized sample to build and test the pipeline against.
-
-## Getting started
-
-### Prerequisites
-
-- [Podman](https://podman.io/docs/installation) (or Apptainer on a cluster)
-- [Copier](https://copier.readthedocs.io/) 9 or later
-- A [Claude Code](https://claude.com/claude-code) account (the only supported agent so far)
-
-### Create a project
-
-```sh
-copier copy gh:<owner>/tophat my-project
-cd my-project
-./th.sh       # builds and enters the dev container
-claude        # start the agent inside the container
-```
-
-Copier asks for the project's name, description and author, any languages to install besides
-Python, and the default GPU setting.
-
-To create a project from a local checkout of this repository, give Copier its absolute path:
-`copier copy /path/to/tophat my-project`. Copier stores the path in `.copier-answers.yml` exactly as
-given, and `copier update` resolves it from the project folder, so a relative path like `tophat/`
-breaks later updates. If that has already happened, set `_src_path` in `.copier-answers.yml` to
-the absolute path and commit the change. To update from a local checkout, commit there first, then
-run `copier update --vcs-ref HEAD` in the project.
-
-Until the first release, the container needs a `tophat` binary you build yourself. Run
-`cargo build --release` in this repository and point `TOPHAT_DEV_BINARY` at the result before
-running `./th.sh`.
-
-### First steps in a project
-
-The agent knows the workflow, so you can simply tell it what you want to find out. The commands
-underneath are:
-
-| Goal | Command |
-|---|---|
-| Where am I, and what's next? | `tophat status` |
-| Start a study | `tophat study new <study> --question <question ID>` |
-| Pre-register it | `tophat study preregister <study>` |
-| Run (or continue) the pipeline | `tophat run <study>` |
-| Give a QC verdict | `tophat stage qc <study> <stage> --variant <variant>` |
-| Report the result | `tophat study report <study>` |
-| Check the whole project | `tophat check` |
-
-Each generated project includes a guide, `.tophat/managed/GUIDE.md`, that follows one study from
-question to report, and the worked example `median-vs-mean` to copy from.
-
-### Keeping a project up to date
-
-```sh
-copier update
-```
-
-Updates bring in new skills, checks and container fixes. They never overwrite your `PROJECT.md`,
-studies, data or local skill extensions. The study format and stage keys are a versioned contract:
-an update must not invalidate your results or make finished studies re-run.
-
 ## What TopHat is not
 
 - A workflow engine or job scheduler. Snakemake runs pipelines; you run cluster jobs.
-- A data store. Your data stays where it is; TopHat records and verifies its hashes.
-- An LLM runtime. Your coding agent is the LLM; TopHat gives it structure and rules.
+- A data store. Your data stays where it is; TopHat records and verifies its checksums.
+- An AI model. Your coding agent is the AI; TopHat gives it structure and rules.
 - A domain library, electronic lab notebook or LIMS.
 
 ## Related work
 
-TopHat builds on ideas from riprap (agent skills that turn intent into
+TopHat builds on ideas from [riprap](https://github.com/MolSSI/riprap) (agent skills that turn intent into
 written, reviewable requirements before code is written), applied to research instead of software.
-Other projects worth knowing:
-
-- [preregister](https://github.com/reinthal/preregister): an agent skill that interrogates the
-  researcher and freezes a pre-registration before an experiment.
-- [research-methods](https://github.com/phdemotions/research-methods): Claude Code skills for
-  reproducible quantitative research in business and social science.
-- [showyourwork](https://github.com/showyourwork/showyourwork): Snakemake-based workflow that links
-  every figure in a paper to the code that made it.
-- [DVC](https://dvc.org/): content-addressed data and pipeline versioning.
 
 ## Developing TopHat
 

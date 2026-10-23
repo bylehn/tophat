@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="960" height="560" role="img" aria-labelledby="title desc">
+  <title id="title">Where TopHat runs</title>
+  <desc id="desc">The agent, the tophat CLI, pixi and Snakemake run in a rootless dev container on your
+  computer. Only the project folder, the data locations you configure and local tool repositories
+  (read-only) are mounted into it; your home folder and credentials never are. The container reaches
+  the internet for the model provider, public tool repositories and packages. You commit on the host
+  and carry cluster jobs yourself.</desc>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #1f2328; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .h { font-size: 16px; font-weight: 600; }
+    .b { font-size: 14px; font-weight: 600; }
+    .s { font-size: 12.5px; fill: #59636e; }
+    .bg { fill: #ffffff; }
+    .zone { fill: #f6f8fa; stroke: #d0d7de; stroke-width: 1.5; }
+    .card { fill: #ffffff; stroke: #d0d7de; stroke-width: 1.2; }
+    .box { fill: #e8f1f8; stroke: #005b99; stroke-width: 2; }
+    .chip { fill: #ffffff; stroke: #005b99; stroke-width: 1; }
+    .out { fill: #fff5f5; stroke: #cf222e; stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .outh { fill: #cf222e; }
+    .line { stroke: #59636e; stroke-width: 1.8; fill: none; }
+    .dash { stroke-dasharray: 6 4; }
+    .head { fill: #59636e; }
+    .stripe { fill: #fecc02; }
+    @media (prefers-color-scheme: dark) {
+      text { fill: #e6edf3; }
+      .s { fill: #9198a1; }
+      .bg { fill: #0d1117; }
+      .zone { fill: #161b22; stroke: #30363d; }
+      .card { fill: #0d1117; stroke: #3d444d; }
+      .box { fill: #0f2a40; stroke: #4a9fd8; }
+      .chip { fill: #0d1117; stroke: #4a9fd8; }
+      .out { fill: #25171a; stroke: #f85149; }
+      .outh { fill: #f85149; }
+      .line { stroke: #9198a1; }
+      .head { fill: #9198a1; }
+    }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="head" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="960" height="560" rx="12"/>
+
+  <!-- Your computer -->
+  <rect class="zone" x="16" y="16" width="648" height="528" rx="10"/>
+  <text class="h" x="36" y="46">Your computer</text>
+
+  <!-- Host folders that are mounted -->
+  <rect class="card" x="36" y="72" width="256" height="76" rx="8"/>
+  <text class="b" x="52" y="98">Project folder</text>
+  <text class="s" x="52" y="118">code, studies, plans, results/</text>
+  <text class="s" x="52" y="136">read-write, at /work</text>
+
+  <rect class="card" x="36" y="164" width="256" height="76" rx="8"/>
+  <text class="b" x="52" y="190">Data locations</text>
+  <text class="s" x="52" y="210">listed in <tspan class="mono">roots.local.yaml</tspan></text>
+  <text class="s" x="52" y="228">read-write, at the same path</text>
+
+  <rect class="card" x="36" y="256" width="256" height="76" rx="8"/>
+  <text class="b" x="52" y="282">Local tool repositories</text>
+  <text class="s" x="52" y="302">listed in <tspan class="mono">tools.yaml</tspan></text>
+  <text class="s" x="52" y="320">read-only, at the same path</text>
+
+  <!-- Never mounted -->
+  <rect class="out" x="36" y="362" width="256" height="162" rx="8"/>
+  <text class="b outh" x="52" y="390">Never mounted</text>
+  <text class="s" x="52" y="414">the rest of your home folder</text>
+  <text class="s" x="52" y="436">SSH keys and Git credentials</text>
+  <text class="s" x="52" y="458">cloud logins and tokens</text>
+  <text class="s" x="52" y="480">your own agent settings</text>
+  <text class="s" x="52" y="502">data you keep anywhere else</text>
+
+  <!-- Mount arrows -->
+  <line class="line" x1="294" y1="110" x2="340" y2="110" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+  <line class="line" x1="294" y1="202" x2="340" y2="202" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+  <line class="line" x1="294" y1="294" x2="340" y2="294" marker-end="url(#arrow)"/>
+
+  <!-- Dev container -->
+  <rect class="box" x="342" y="72" width="302" height="260" rx="10"/>
+  <rect class="stripe" x="342" y="72" width="6" height="260" rx="3"/>
+  <text class="h" x="362" y="100">Dev container</text>
+  <text class="s" x="362" y="120">rootless Podman, started by <tspan class="mono">./th.sh</tspan></text>
+
+  <rect class="chip" x="362" y="136" width="262" height="54" rx="7"/>
+  <text class="b" x="376" y="158">Coding agent</text>
+  <text class="s" x="376" y="178">builds and runs pipelines</text>
+
+  <rect class="chip" x="362" y="200" width="262" height="54" rx="7"/>
+  <text class="b" x="376" y="222"><tspan class="mono">tophat</tspan></text>
+  <text class="s" x="376" y="242">checks and records everything</text>
+
+  <rect class="chip" x="362" y="264" width="262" height="54" rx="7"/>
+  <text class="b" x="376" y="286">pixi + Snakemake</text>
+  <text class="s" x="376" y="306">locked environment, runs stages</text>
+
+  <!-- You, on the host -->
+  <rect class="card" x="342" y="362" width="302" height="162" rx="8"/>
+  <text class="b" x="358" y="390">You, on the host</text>
+  <text class="s" x="358" y="414">review the agent's changes</text>
+  <text class="s" x="358" y="436">commit and push with Git</text>
+  <text class="s" x="358" y="458">run the few steps it hands you</text>
+  <text class="s" x="358" y="480">copy cluster jobs there and back</text>
+  <line class="line dash" x1="493" y1="360" x2="493" y2="336" marker-end="url(#arrow)"/>
+
+  <!-- Internet -->
+  <rect class="zone" x="688" y="16" width="256" height="320" rx="10"/>
+  <text class="h" x="708" y="46">Internet</text>
+
+  <rect class="card" x="704" y="72" width="224" height="76" rx="8"/>
+  <text class="b" x="720" y="98">Model provider</text>
+  <text class="s" x="720" y="118">receives everything</text>
+  <text class="s" x="720" y="136">the agent reads</text>
+
+  <rect class="card" x="704" y="164" width="224" height="76" rx="8"/>
+  <text class="b" x="720" y="190">Public tool repos</text>
+  <text class="s" x="720" y="210">fetched over https,</text>
+  <text class="s" x="720" y="228">pinned by commit</text>
+
+  <rect class="card" x="704" y="256" width="224" height="64" rx="8"/>
+  <text class="b" x="720" y="282">Package channels</text>
+  <text class="s" x="720" y="302">conda-forge, bioconda</text>
+
+  <line class="line" x1="646" y1="202" x2="702" y2="202" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+
+  <!-- Cluster -->
+  <rect class="zone" x="688" y="362" width="256" height="182" rx="10"/>
+  <text class="h" x="708" y="392">Compute cluster</text>
+  <text class="s" x="708" y="418">tophat writes a job folder;</text>
+  <text class="s" x="708" y="440">you copy it over, run it and</text>
+  <text class="s" x="708" y="462">bring the results back, where</text>
+  <text class="s" x="708" y="484">their hashes are checked.</text>
+  <text class="s" x="708" y="506">The agent never connects.</text>
+
+  <line class="line dash" x1="646" y1="443" x2="686" y2="443" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+</svg>
