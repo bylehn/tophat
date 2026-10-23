@@ -270,7 +270,7 @@ fn an_unreleased_pin_needs_a_development_binary() {
         .env_remove("TOPHAT_DEV_BINARY")
         .output()
         .unwrap();
-    assert!(!out.status.success());
+    assert_eq!(out.status.code(), Some(2));
     let err = stderr(&out);
     assert!(
         err.contains("no tophat release is pinned") && err.contains("TOPHAT_DEV_BINARY"),

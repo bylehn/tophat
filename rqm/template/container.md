@@ -58,7 +58,9 @@ machine, or in WSL2 on Windows.
 - Printed commands quote only the words that need it.
 
 - Unknown options are refused with the usage text, before anything runs.
-- Every refusal names its cause and exits non-zero before any container starts.
+- Every refusal names its cause and exits 2 before any container starts. Exit 1 is left to
+  `tophat check` finding errors, so a caller of `--check` (such as the pre-commit hook) can tell a
+  check that failed from one that could not run.
 - On first launch the launcher writes a new random UUID to `.tophat/project-id`; later launches
   read it. A malformed ID is refused. Image, volume and state names include it, so projects never
   share them.
@@ -270,7 +272,7 @@ Feature: Dev container and launcher
     Given .tophat/managed/tophat-release.yaml holds "version: unreleased"
     And TOPHAT_DEV_BINARY is unset
     When "th.sh --dry-run" is run
-    Then it exits non-zero saying no tophat release is pinned and naming TOPHAT_DEV_BINARY
+    Then it exits 2 saying no tophat release is pinned and naming TOPHAT_DEV_BINARY
 
   @rq-bcd5b8bd
   Scenario: A missing development binary is refused

@@ -7674,6 +7674,18 @@
     "title": "Out of Scope",
     "type": "section"
   },
+  "rq-c0d8a5d1": {
+    "decl": "Scenario: The hook says when the check could not run",
+    "file": "template/project",
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The hook says when the check could not run",
+    "type": "scenario"
+  },
   "rq-c0f8402d": {
     "decl": "Scenario: A failed job is refused",
     "file": "pipeline/external",

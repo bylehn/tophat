@@ -212,8 +212,10 @@ sha256:
 - Commits are made on the host (see `rqm/template/container.md`), where `tophat` is usually not
   installed. The hook runs `tophat check` from the project root when `tophat` is on `PATH`, and
   otherwise `./th.sh --check`, which runs the check in a throwaway container. It prints the check's
-  output; when the check has errors, it ends with a line saying that CI will reject the commit until
-  they are fixed.
+  output; when the check has errors (exit 1), it ends with a line saying that CI will reject the
+  commit until they are fixed. When the check could not run (any other non-zero status, such as the
+  launcher refusing to start because no development binary is set), it ends with a line saying the
+  check could not run, with the status, and does not claim errors.
 - When neither `tophat` nor a container runtime is available, it prints one line saying the check
   was skipped.
 - It always exits 0: a half-written draft can be committed, and CI is the gate.
@@ -387,6 +389,16 @@ Feature: Generated project skeleton
     Then the hook runs "./th.sh --check"
     And the commit succeeds
     And the hook output contains the check's error
+
+  @rq-c0d8a5d1
+  Scenario: The hook says when the check could not run
+    Given a rendered project in a git repository with core.hooksPath set to .tophat/managed/hooks
+    And tophat is not on PATH and podman is
+    And "./th.sh --check" refuses to start and exits 2
+    When a commit is made on the host
+    Then the commit succeeds
+    And the hook output contains the launcher's message and says the check could not run
+    And it does not say that CI will reject the commit
 
   @rq-26afc755
   Scenario: The hook is skipped without tophat or a container runtime
