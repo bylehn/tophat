@@ -54,8 +54,12 @@ Plan mode writes only `STUDY.md`: no configuration, scripts or tests.
    if the human prefers them). Scenarios cover the endpoint computation, the data preparation that
    the result depends on, and anything else the result relies on.
 7. **Check.** Run `tophat check studies/<id>` and fix what it reports.
-8. **Hand over.** When the plan is complete, ask the human to commit it on the host and give them
-   the command to lock it themselves: `tophat study preregister <id>`. Explain what it does in
+8. **Hand over.** When the plan is complete, first follow the quiz policy in
+   `.tophat/user/skills/th-quiz/local.md`: by default offer `th-quiz`, a short quiz on the plan,
+   and run it only if the human accepts; under `always` run it without asking; under `never` do not
+   mention it. Then, whether or not the quiz was taken and whatever its answers were, ask the human
+   to commit the plan on the host and give them the command to lock it themselves:
+   `tophat study preregister <id>`. Explain what it does in
    plain words: it locks the Question, Primary endpoint, Decision rule and Scenarios, so the result
    is judged by the plan made before it was seen; the pipeline can still change. Only a human runs
    it.

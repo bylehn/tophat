@@ -11,11 +11,12 @@ mod common;
 
 use xtask::lint::{lint_skills, Finding};
 
-const SKILLS: [&str; 7] = [
+const SKILLS: [&str; 8] = [
     "th-adopt",
     "th-data",
     "th-next",
     "th-question",
+    "th-quiz",
     "th-run",
     "th-study",
     "th-tool",
@@ -396,6 +397,27 @@ fn local_extensions_survive_updates() {
             .contains("Newer skill text.")
     );
     let _ = fs::remove_dir_all(&base);
+}
+
+#[test] // rq-165e9913 rq-9139a849 rq-b0419763
+fn the_quiz_policy_file_shows_every_policy() {
+    if !common::copier() {
+        return;
+    }
+    let p = Project::render(&[]);
+    let local = p.read(".tophat/user/skills/th-quiz/local.md");
+    let (before, rest) = local.split_once("<!--").unwrap();
+    let (comment, after) = rest.split_once("-->").unwrap();
+    for policy in ["offer", "always", "never"] {
+        assert!(
+            comment.contains(&format!("- Quiz policy: {policy}\n")),
+            "{policy}"
+        );
+    }
+    assert!(
+        !format!("{before}{after}").contains("- Quiz policy:"),
+        "{local}"
+    );
 }
 
 fn copy_dir(from: &Path, to: &Path) {

@@ -63,6 +63,11 @@ scenarios are frozen; a later change is an amendment, dated and saying whether r
 seen. The pipeline itself can still change. Locking the plan before the deciding run is what makes
 the result evidence rather than a story told afterwards.
 
+Before you lock it, the agent offers a short quiz on the plan (`th-quiz`): how your decision rule
+decides an invented outcome, what the endpoint measures, what the study assumes and cannot show. It
+is for you alone: nothing is recorded, and you can lock the plan whatever your answers. A project
+can make it always run, or never be offered, in `.tophat/user/skills/th-quiz/local.md`.
+
 Trial results from the draft are kept apart and can never be reported: after locking, the real run
 computes everything again. Commit `EXPLORATION.md` with the locked `STUDY.md`; it is then part of
 the locked record and must not change.

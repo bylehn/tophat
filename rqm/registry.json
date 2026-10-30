@@ -899,7 +899,12 @@
   "rq-165e9913": {
     "decl": "Scenario: The quiz policy file shows every policy",
     "file": "template/skills",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The quiz policy file shows every policy",
     "type": "scenario"
   },
@@ -5757,7 +5762,12 @@
     "decl": "### th-quiz",
     "file": "template/skills",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "th-quiz",
     "type": "section"
   },
