@@ -581,6 +581,13 @@
     "title": "Ignore rules",
     "type": "section"
   },
+  "rq-0def1ada": {
+    "decl": "Scenario: A gap in the plan is reported instead of asked",
+    "file": "template/skills",
+    "refs": [],
+    "title": "A gap in the plan is reported instead of asked",
+    "type": "scenario"
+  },
   "rq-0df094cd": {
     "decl": "### Local tools",
     "file": "template/container",
@@ -887,6 +894,13 @@
     "file": "template/agents",
     "refs": [],
     "title": "Adapters are written for every selected agent",
+    "type": "scenario"
+  },
+  "rq-165e9913": {
+    "decl": "Scenario: The quiz policy file shows every policy",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The quiz policy file shows every policy",
     "type": "scenario"
   },
   "rq-167d5ad5": {
@@ -2177,6 +2191,13 @@
     "title": "Feature: Question Tree",
     "type": "file"
   },
+  "rq-369fc531": {
+    "decl": "Scenario: The quiz writes nothing",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The quiz writes nothing",
+    "type": "scenario"
+  },
   "rq-36a97588": {
     "decl": "Scenario: Prompts are refused on the host",
     "file": "template/container",
@@ -2653,6 +2674,13 @@
       }
     ],
     "title": "Tree as JSON",
+    "type": "scenario"
+  },
+  "rq-4221b4f7": {
+    "decl": "Scenario: th-next offers the quiz when pre-registration is next",
+    "file": "template/skills",
+    "refs": [],
+    "title": "th-next offers the quiz when pre-registration is next",
     "type": "scenario"
   },
   "rq-427db370": {
@@ -4121,6 +4149,13 @@
       }
     ],
     "title": "QC refused for a stage without a gate",
+    "type": "scenario"
+  },
+  "rq-6390f4f3": {
+    "decl": "Scenario: The quiz is offered at hand-over and the command follows either way",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The quiz is offered at hand-over and the command follows either way",
     "type": "scenario"
   },
   "rq-63eb6559": {
@@ -5718,6 +5753,14 @@
     "title": "The slug is derived from the project name",
     "type": "scenario"
   },
+  "rq-9139a849": {
+    "decl": "### th-quiz",
+    "file": "template/skills",
+    "level": 3,
+    "refs": [],
+    "title": "th-quiz",
+    "type": "section"
+  },
   "rq-91713e05": {
     "decl": "Scenario: Study with a malformed question field is left to the study rules",
     "file": "question-tree",
@@ -7090,6 +7133,13 @@
     "title": "Gaps in scenario numbers are allowed",
     "type": "scenario"
   },
+  "rq-af5ccfa3": {
+    "decl": "Scenario: The quiz mixes multiple-choice and open questions",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The quiz mixes multiple-choice and open questions",
+    "type": "scenario"
+  },
   "rq-af5ed3df": {
     "decl": "- `tophat data add <name> --root <root> --path <path> --source <text> [--date <YYYY-MM-DD>] [--license <text>] [--visibility public|private]`",
     "file": "data",
@@ -8086,6 +8136,13 @@
     "title": "Every project-owned file is skipped on update",
     "type": "scenario"
   },
+  "rq-caee68ef": {
+    "decl": "Scenario: The quiz never draws on results",
+    "file": "template/skills",
+    "refs": [],
+    "title": "The quiz never draws on results",
+    "type": "scenario"
+  },
   "rq-cafa162c": {
     "decl": "## Ownership",
     "file": "template/project",
@@ -8204,6 +8261,13 @@
     ],
     "title": "resolve_pin",
     "type": "api-item"
+  },
+  "rq-cd2d7d3d": {
+    "decl": "Scenario: Policy \"always\" runs the quiz without asking",
+    "file": "template/skills",
+    "refs": [],
+    "title": "Policy \"always\" runs the quiz without asking",
+    "type": "scenario"
   },
   "rq-cd345094": {
     "decl": "Scenario: An unmatched agent question fails the eval",
@@ -8418,6 +8482,13 @@
     "refs": [],
     "title": "Assumptions",
     "type": "section"
+  },
+  "rq-d094f463": {
+    "decl": "Scenario: Policy \"never\" skips the offer",
+    "file": "template/skills",
+    "refs": [],
+    "title": "Policy \"never\" skips the offer",
+    "type": "scenario"
   },
   "rq-d0c8b971": {
     "decl": "- `explore(root: &Path, study: &str) -> Result<Exploration, StudyError>` — computes the exploration",
@@ -9163,6 +9234,13 @@
     "title": "Local stages keep their keys",
     "type": "scenario"
   },
+  "rq-def0bedb": {
+    "decl": "Scenario: An incomplete plan is not quizzed",
+    "file": "template/skills",
+    "refs": [],
+    "title": "An incomplete plan is not quizzed",
+    "type": "scenario"
+  },
   "rq-df0c42b9": {
     "decl": "Scenario: Git refuses to commit inside the container",
     "file": "template/container",
@@ -9731,6 +9809,13 @@
       }
     ],
     "title": "Remote access and human-only commands are denied",
+    "type": "scenario"
+  },
+  "rq-ed854d9f": {
+    "decl": "Scenario: A wrong answer is explained from the plan",
+    "file": "template/skills",
+    "refs": [],
+    "title": "A wrong answer is explained from the plan",
     "type": "scenario"
   },
   "rq-eda3d443": {

@@ -61,7 +61,7 @@ Feature: Codex and OpenCode
   @rq-1652b11e
   Scenario: Adapters are written for every selected agent
     Given the template is rendered with agents ["claude-code", "codex", "opencode"]
-    Then .agents/skills and .opencode/skills each contain an adapter SKILL.md for each of the seven skills
+    Then .agents/skills and .opencode/skills each contain an adapter SKILL.md for each of the eight skills
     And the skill lint reports no "skill.adapter-missing"
 
   @rq-3ca62dea
