@@ -128,7 +128,8 @@ without credentials (see `rqm/template/container.md`).
 - `.tophat/user/skills/th-<name>/local.md` is project-owned: written once with a short explanation
   and commented-out examples, and never changed by `copier update`.
 - Its instructions extend the skill and win on conflict. Typical content: domain conventions, the
-  project's rule for new study vs amendment vs variant, naming conventions for datasets.
+  project's rule for new study vs amendment vs variant, naming conventions for datasets, the quiz
+  policy of `th-quiz`.
 
 ## Skill Lint Rules <!-- rq-4a032ea7 -->
 
@@ -146,7 +147,7 @@ Template tooling (see `rqm/testing.md`) checks the rendered skills for every ans
 
 ## Skills <!-- rq-acd69936 -->
 
-Seven skills. Each contract lists the skill's purpose, its modes, the CLI commands it uses, and the
+Eight skills. Each contract lists the skill's purpose, its modes, the CLI commands it uses, and the
 rules it must state.
 
 ### th-next <!-- rq-22f4fd98 -->
@@ -158,7 +159,8 @@ Starting point of a session.
 - Points the human to `.tophat/managed/GUIDE.md` when they ask how a study works.
 - Routes by next-action row (see `rqm/workflow.md`): row 2 → fix the reported errors with the skill
   owning the file (`th-study`, `th-data`, `th-tool`, `th-question`); row 3 → `th-study` (plan);
-  rows 4, 7 and 9 → tell the human the exact command and stop; row 5 → `th-study` (build); row 6 → ask
+  row 4 → offer `th-quiz` as `th-study`'s hand-over does, then tell the human the exact command and
+  stop; rows 7 and 9 → tell the human the exact command and stop; row 5 → `th-study` (build); row 6 → ask
   the human for the `results` location and write it to `.tophat/roots.local.yaml`; row 8 → `th-run` (external hand-off); rows 10 to 13 → `th-run`; row 14 →
   `th-question` (answer).
 - With an empty question tree and no studies (a new project), explains the path of a study in a
@@ -203,8 +205,12 @@ A study's plan and pipeline. Two modes; the skill says which one it is in.
   or primary endpoint is a new study (linked both ways, the old one superseded with
   `tophat study supersede` once the new one is pre-registered); a fix that does not change what is
   measured is an amendment; a different setting under the same endpoint is a variant.
-- Ends with `tophat check studies/<id>` and, when the plan is complete, gives the human the command
-  `tophat study preregister <id>`.
+- Ends with `tophat check studies/<id>` and, when the plan is complete, hands over:
+  - follows the quiz policy in `.tophat/user/skills/th-quiz/local.md`: by default it offers
+    `th-quiz` and runs it only if the human accepts; under `always` it runs `th-quiz` without
+    asking; under `never` it does not mention the quiz;
+  - then gives the human the command `tophat study preregister <id>`, whether or not a quiz was
+    taken and whatever its answers were.
 
 **Build** implements the pipeline of a `draft` study (for trial runs only) or a `preregistered`
 one:
@@ -224,6 +230,41 @@ one:
   commit the code on the host before the run whose results will be reported.
 - Uses `tophat study new`, `tophat check`, `tophat pipeline keys`, `tophat data used-by`,
   `tophat tools list`.
+
+### th-quiz <!-- rq-9139a849 -->
+
+A short quiz on a study's plan, so the human locks a plan they understand. It is advice, never a
+condition for pre-registration.
+
+- Works on a study whose Question, Primary endpoint and Decision rule are filled; it is offered for
+  `draft` studies. When one of them is empty, it says the plan is incomplete, asks no question, and
+  points to `th-study`.
+- Draws every question from the study's `STUDY.md` and its question in `PROJECT.md` (`tophat
+  question tree`). Never reads or mentions results, `SUMMARY.md`, provenance records, or the
+  outputs of trial runs.
+- Asks about five questions, one at a time, waiting for each answer:
+  - three or four **multiple-choice** questions with four options, exactly one of which follows from
+    the plan's text. Together they cover applying the decision rule to an invented outcome
+    (including a boundary case, such as a value exactly at a threshold or an interval that touches
+    it), what the primary endpoint measures and over which unit, what a variant changes, and what
+    the study can conclude when the rule gives "no difference";
+  - one or two **open** questions, asking the human in their own words for the assumptions the
+    study relies on, its limitations, or the population and setting its answer extends to.
+- Labels every invented outcome as invented, and never presents one as an expected result.
+- After a wrong multiple-choice answer, explains the right one, quoting the plan's wording that
+  decides it. Open answers are discussed, never marked right or wrong; the discussion may name
+  what the plan leaves unstated.
+- When writing a question shows that the plan does not decide it (an outcome the decision rule
+  does not cover, or wording with two readings), reports that as a gap instead of asking a question
+  whose answer is arguable.
+- Ends with a short list of the gaps found, or says there were none. For each gap, offers to return
+  to `th-study`, where the human decides any change: plan mode for a `draft` study, an amendment for
+  a pre-registered one.
+- Writes nothing: no file is created or changed, and no record of the quiz is kept.
+- Quiz policy: `.tophat/user/skills/th-quiz/local.md` holds the policy `th-study` and `th-next`
+  follow at hand-over: `offer` (the default when it says nothing), `always` or `never`. Its
+  commented-out examples show each policy.
+- Uses `tophat question tree` and `tophat status`.
 
 ### th-run <!-- rq-ad0b00cd -->
 
@@ -335,6 +376,8 @@ never placed in `studies/` by the template.
 - Skills that run or schedule compute themselves, or that interact with batch systems.
 - Notebook tooling in `exploration/` beyond the rule that it is never cited.
 - Verifying in `tophat check` that skills or adapters are unmodified.
+- Making pre-registration depend on a quiz, or recording a quiz's questions, answers or score: an
+  agent marks the quiz, so it cannot be a guarantee.
 
 ## Gherkin Scenarios <!-- rq-e24d98f9 -->
 
@@ -346,12 +389,12 @@ Feature: Agent skills (render and lint)
 
   @rq-42fba780
   Scenario: Every skill has a canonical text and a local extension
-    Then .tophat/managed/skills/ contains th-next, th-question, th-study, th-run, th-data, th-tool and th-adopt, each with SKILL.md
+    Then .tophat/managed/skills/ contains th-next, th-question, th-study, th-quiz, th-run, th-data, th-tool and th-adopt, each with SKILL.md
     And .tophat/user/skills/<skill>/local.md exists for each of them
 
   @rq-2b638c5b
   Scenario: Adapters are written for every selected agent
-    Then .claude/skills contains an adapter SKILL.md for each of the seven skills
+    Then .claude/skills contains an adapter SKILL.md for each of the eight skills
     And the skill lint reports no "skill.adapter-missing"
 
   @rq-ec2d3828
@@ -391,6 +434,11 @@ Feature: Agent skills (render and lint)
     When the project is updated to a newer template version
     Then the edited local.md is unchanged
 
+  @rq-165e9913
+  Scenario: The quiz policy file shows every policy
+    Then .tophat/user/skills/th-quiz/local.md contains commented-out examples of the policies "offer", "always" and "never"
+    And it sets no policy outside a comment
+
   @rq-38e5cf5f
   Scenario: The example validates what code can check and reviews what needs judgment
     Then the example's "generate" and "score" stages have a "validate" command and the "filter" stage has a "review" question
@@ -400,7 +448,7 @@ Feature: Agent skills (render and lint)
   Scenario: Agent entry points read the managed rules
     Then AGENTS.md starts by telling the agent to read .tophat/managed/AGENTS.md
     And CLAUDE.md contains "@.tophat/managed/AGENTS.md" and "@AGENTS.md"
-    And .tophat/managed/AGENTS.md lists the nine hard rules and the seven skills
+    And .tophat/managed/AGENTS.md lists the nine hard rules and the eight skills
 
   @rq-ed65c3a5
   Scenario: Remote access and human-only commands are denied
@@ -519,4 +567,75 @@ Feature: Agent skills (behaviour evals, not a CI gate)
     Given a study that the agent has just reported
     Then its Interpretation section is unchanged
     And the agent has told the human what the decision rule gives and asked them to write the interpretation
+
+  # --- th-quiz ---
+
+  @rq-6390f4f3
+  Scenario: The quiz is offered at hand-over and the command follows either way
+    Given a draft study whose plan is complete and a th-quiz local.md that sets no policy
+    When the human asks the agent to finish the plan
+    Then the agent offers th-quiz before giving the pre-registration command
+    When the human declines
+    Then the agent gives the command "tophat study preregister <id>"
+
+  @rq-d094f463
+  Scenario: Policy "never" skips the offer
+    Given a draft study whose plan is complete and a th-quiz local.md with policy "never"
+    When the human asks the agent to finish the plan
+    Then the agent does not mention the quiz
+    And the agent gives the command "tophat study preregister <id>"
+
+  @rq-cd2d7d3d
+  Scenario: Policy "always" runs the quiz without asking
+    Given a draft study whose plan is complete and a th-quiz local.md with policy "always"
+    When the human asks the agent to finish the plan
+    Then the agent asks the first quiz question without asking whether to take the quiz
+    And after the quiz the agent gives the command "tophat study preregister <id>"
+
+  @rq-4221b4f7
+  Scenario: th-next offers the quiz when pre-registration is next
+    Given a draft study whose next action is row 4 and a th-quiz local.md that sets no policy
+    When the human starts the agent with th-next
+    Then the agent offers th-quiz before giving the command "tophat study preregister <id>"
+
+  @rq-369fc531
+  Scenario: The quiz writes nothing
+    Given a draft study whose plan is complete
+    When the human takes the quiz and answers every question
+    Then no file in the project was created or changed
+    And the study is still a draft
+
+  @rq-af5ccfa3
+  Scenario: The quiz mixes multiple-choice and open questions
+    Given a draft study whose plan is complete
+    When the human takes the quiz
+    Then three or four questions have four options and one or two ask for an answer in the human's own words
+    And one multiple-choice question applies the decision rule to an outcome labelled as invented
+
+  @rq-ed854d9f
+  Scenario: A wrong answer is explained from the plan
+    Given a draft study whose decision rule needs the interval to lie entirely above 0
+    When the quiz asks what the rule gives for an invented interval from -0.1 to 0.3 and the human answers "better"
+    Then the agent explains that the rule gives "no difference", quoting the decision rule
+
+  @rq-0def1ada
+  Scenario: A gap in the plan is reported instead of asked
+    Given a draft study whose decision rule says what an interval above 0 and below 0 mean but not one containing 0
+    When the human takes the quiz
+    Then the agent reports the uncovered outcome as a gap
+    And it offers to return to th-study
+    And STUDY.md is unchanged
+
+  @rq-def0bedb
+  Scenario: An incomplete plan is not quizzed
+    Given a draft study whose Decision rule section is empty
+    When the human asks for th-quiz
+    Then the agent says the plan is incomplete and points to th-study
+    And it asks no quiz question
+
+  @rq-caee68ef
+  Scenario: The quiz never draws on results
+    Given a draft study with trial-run outputs and an EXPLORATION.md
+    When the human takes the quiz
+    Then no question or explanation mentions a value from the trial runs
 ```
