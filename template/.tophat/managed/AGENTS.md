@@ -47,6 +47,7 @@ yourself.
 - `th-next`: find the next action with `tophat status` and carry it out (start here).
 - `th-question`: write, stamp, answer or drop questions in `PROJECT.md`.
 - `th-study`: plan a study in `STUDY.md` (plan mode) or build its pipeline (build mode).
+- `th-quiz`: quiz the human on a study's plan before they pre-register it; advice only.
 - `th-run`: run a study's pipeline, hand QC and external jobs to the human, and report results.
 - `th-data`: data roots and datasets: register, declare, publish, verify, retire.
 - `th-tool`: declare tools and pin stages to tool commits.

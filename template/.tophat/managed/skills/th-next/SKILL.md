@@ -29,7 +29,7 @@ Run `tophat status --json`. For each study it gives `next`: the `row` of the nex
 | 1 | The study is superseded | Nothing; say which study replaced it |
 | 2 | `tophat check` reports errors in the study's scope | Run `tophat check studies/<id>` and fix the errors with the skill that owns the file: `th-study` for a study, `th-data` for a dataset, `th-tool` for tools, `th-question` for `PROJECT.md` |
 | 3 | The draft's plan is incomplete | `th-study`, plan mode |
-| 4 | The plan is ready for pre-registration | Give the human `tophat study preregister <id>` and stop |
+| 4 | The plan is ready for pre-registration | Offer `th-quiz` as `th-study`'s hand-over does (following the quiz policy in `.tophat/user/skills/th-quiz/local.md`), then give the human `tophat study preregister <id>` and stop |
 | 5 | The study has no stages | `th-study`, build mode |
 | 6 | The configured `results` location does not exist | Tell the human; ask whether to create that directory or to change the location in `.tophat/roots.local.yaml` (see `th-data`) |
 | 7 | Tool code is not on this machine | Give the human `tophat tools sync` and stop |
