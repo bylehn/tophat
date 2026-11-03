@@ -5,8 +5,9 @@
 #   ./th.sh --check    run `tophat check` in a throwaway container
 #   ./th.sh --dry-run  print the build and session commands without running them
 #
-# The container gets the workspace, the data roots and its own volumes, and nothing else from the
-# host: no SSH keys or agent sockets, no git or cloud credentials, no git identity.
+# The container gets the workspace, the data roots, its own volumes and the human's personal skills,
+# and nothing else from the host: no SSH keys or agent sockets, no git or cloud credentials, no git
+# identity.
 
 set -eu
 
@@ -219,6 +220,52 @@ $tools
 TOOLS
 }
 
+# --- Personal skills ----------------------------------------------------------------------------
+
+# rq-c490844e
+# Sets skill_mounts to one "<host path>:<name>" per line for the skills in the human's personal
+# skills folder, which the session mounts read-only in Claude Code's skills directory, one by one.
+# Entries that cannot be mounted only warn. Without the folder it does nothing.
+read_skills() {
+  skill_mounts=""
+  config=${XDG_CONFIG_HOME:-}
+  if [ -z "$config" ]; then
+    [ -n "${HOME:-}" ] || return 0
+    config=$HOME/.config
+  fi
+  folder=$config/tophat/skills
+  [ -d "$folder" ] || return 0
+  for entry in "$folder"/*; do
+    [ -e "$entry" ] || continue
+    name=${entry##*/}
+    skip=""
+    if [ ! -d "$entry" ]; then
+      skip="it is not a folder"
+    elif [ ! -f "$entry/SKILL.md" ]; then
+      skip="it has no SKILL.md"
+    else
+      case "$name" in
+        *[!a-z0-9-]*) skip="its name is not lowercase letters, digits and hyphens" ;;
+      esac
+    fi
+    if [ -z "$skip" ] && [ -e ".claude/skills/$name" ]; then
+      skip="it has the name of a project skill"
+    fi
+    if [ -z "$skip" ]; then
+      # A symbolic link is followed: its target is what gets mounted.
+      path=$(cd -P "$entry" && pwd -P)
+      case "$path" in *[:,]* | *'
+'*) skip="its path $path contains ':' or ','" ;; esac
+    fi
+    if [ -n "$skip" ]; then
+      printf "th.sh: warning: personal skill '%s' in %s is not mounted: %s\n" "$name" "$folder" "$skip" >&2
+      continue
+    fi
+    skill_mounts="$skill_mounts$path:$name
+"
+  done
+}
+
 # --- Git hooks ----------------------------------------------------------------------------------
 
 set_hooks() {
@@ -267,12 +314,14 @@ case "$mode" in
       fail "no image of this project exists yet; launch once first (./th.sh), then use --dry-run"
     read_roots
     read_tools
+    read_skills
     ;;
   session)
     set_hooks
     build
     read_roots
     read_tools
+    read_skills
     ;;
 esac
 
@@ -282,6 +331,11 @@ command=$(
     -v "tophat-$id-claude:/opt/tophat/home/.claude"
   printf '%s' "$tool_mounts" | while IFS= read -r path; do
     [ -n "$path" ] && printf '%s\n' -v "$(host_path "$path"):$path:ro"
+  done
+  # rq-c490844e
+  printf '%s' "$skill_mounts" | while IFS= read -r mount; do
+    [ -n "$mount" ] || continue
+    printf '%s\n' -v "$(host_path "${mount%:*}"):/opt/tophat/home/.claude/skills/${mount##*:}:ro"
   done
 )
 set -f

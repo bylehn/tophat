@@ -199,6 +199,15 @@ credentials. When it is your turn, the agent stops and gives you the exact comma
 To run a command in the container while the agent is busy, open another terminal and run `./th.sh`
 there.
 
+### Your own agent skills
+
+To have skills of your own (a writing style guide, say) in every TopHat project without adding them
+to any project, put each in its own folder under `~/.config/tophat/skills/`, for example
+`~/.config/tophat/skills/writing-clearly/SKILL.md`. `./th.sh` mounts them read-only into the
+container's Claude Code. They are never committed, so your collaborators don't get them. A skill
+with the same name as a project skill is skipped with a warning. Edits show up at once; adding or
+removing a skill takes effect at the next `./th.sh`.
+
 ### Keeping a project up to date
 
 ```sh

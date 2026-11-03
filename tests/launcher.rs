@@ -116,7 +116,8 @@ impl Env {
     }
 
     /// The launcher's command: `./th.sh <args>` with the fake podman first on PATH, the workspace's
-    /// tophat as the development binary, and no host root, git or email variables.
+    /// tophat as the development binary, a home of its own (so the human's personal skills stay
+    /// out), and no host root, git, email or XDG_CONFIG_HOME variables.
     fn launcher(&self, args: &[&str]) -> Command {
         let mut cmd = Command::new("sh");
         cmd.arg("./th.sh").args(args).current_dir(self.project());
@@ -126,11 +127,16 @@ impl Env {
             std::env::var("PATH").unwrap_or_default()
         );
         for (key, _) in std::env::vars() {
-            if key.starts_with("TOPHAT_ROOT_") || key.starts_with("GIT_") || key == "EMAIL" {
+            if key.starts_with("TOPHAT_ROOT_")
+                || key.starts_with("GIT_")
+                || key == "EMAIL"
+                || key == "XDG_CONFIG_HOME"
+            {
                 cmd.env_remove(key);
             }
         }
         cmd.env("PATH", path)
+            .env("HOME", self.path("home"))
             .env("FAKE_PODMAN_LOG", self.path("podman.log"))
             .env("FAKE_TOPHAT", env!("CARGO_BIN_EXE_tophat"))
             .env("TOPHAT_DEV_BINARY", env!("CARGO_BIN_EXE_tophat"));
@@ -180,6 +186,22 @@ fn stdout(out: &Output) -> String {
 
 fn stderr(out: &Output) -> String {
     String::from_utf8_lossy(&out.stderr).into_owned()
+}
+
+/// Writes a skill `<dir>/<name>/SKILL.md` and returns the skill's folder.
+fn skill(dir: &Path, name: &str) -> PathBuf {
+    let folder = dir.join(name);
+    fs::create_dir_all(&folder).unwrap();
+    fs::write(folder.join("SKILL.md"), format!("---\nname: {name}\n---\n")).unwrap();
+    folder
+}
+
+/// The binds the session command makes in Claude Code's skills directory.
+fn skill_binds(session: &str) -> Vec<&str> {
+    session
+        .split(' ')
+        .filter(|word| word.contains(":/opt/tophat/home/.claude/skills"))
+        .collect()
 }
 
 /// Declares the roots `raw` and `results` in the project.
@@ -523,6 +545,153 @@ fn a_missing_local_tool_repository_is_reported_not_fatal() {
         "{err}"
     );
     assert!(!session.contains("/nonexistent"), "{session}");
+}
+
+#[test] // rq-e5151256 rq-c490844e
+fn personal_skills_are_mounted_read_only_one_by_one() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let folder = skill(&env.path("home/.config/tophat/skills"), "writing-clearly");
+    let session = env.session(&env.run(&["--dry-run"]));
+    assert_eq!(
+        skill_binds(&session),
+        [format!(
+            "{}:/opt/tophat/home/.claude/skills/writing-clearly:ro",
+            folder.display()
+        )],
+        "{session}"
+    );
+}
+
+#[test] // rq-7be133fa rq-c490844e
+fn xdg_config_home_locates_the_personal_skills_folder() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let folder = skill(&env.path("cfg/tophat/skills"), "writing-clearly");
+    skill(&env.path("home/.config/tophat/skills"), "other");
+    let out = env
+        .launcher(&["--dry-run"])
+        .env("XDG_CONFIG_HOME", env.path("cfg"))
+        .output()
+        .unwrap();
+    let session = env.session(&out);
+    assert_eq!(
+        skill_binds(&session),
+        [format!(
+            "{}:/opt/tophat/home/.claude/skills/writing-clearly:ro",
+            folder.display()
+        )],
+        "{session}"
+    );
+    assert!(!session.contains("other"), "{session}");
+}
+
+#[test] // rq-29a38dbc rq-c490844e
+fn without_a_personal_skills_folder_nothing_changes() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let out = env.run(&["--dry-run"]);
+    let session = env.session(&out);
+    assert!(skill_binds(&session).is_empty(), "{session}");
+    assert!(!stderr(&out).contains("personal skill"), "{}", stderr(&out));
+}
+
+#[test] // rq-59aee61f rq-c490844e
+fn a_personal_skill_does_not_shadow_a_project_skill() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let dir = env.path("home/.config/tophat/skills");
+    skill(&dir, "th-study");
+    let folder = skill(&dir, "writing-clearly");
+    let out = env.run(&["--dry-run"]);
+    let session = env.session(&out);
+    let err = stderr(&out);
+    assert!(
+        err.contains("'th-study'") && err.contains("name of a project skill"),
+        "{err}"
+    );
+    assert_eq!(
+        skill_binds(&session),
+        [format!(
+            "{}:/opt/tophat/home/.claude/skills/writing-clearly:ro",
+            folder.display()
+        )],
+        "{session}"
+    );
+}
+
+#[test] // rq-75ce0958 rq-c490844e
+fn entries_that_are_not_skills_are_skipped_with_a_warning() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let dir = env.path("home/.config/tophat/skills");
+    let folder = skill(&dir, "writing-clearly");
+    skill(&dir, "My Skill");
+    fs::create_dir_all(dir.join("drafts")).unwrap();
+    fs::write(dir.join("notes.txt"), "notes\n").unwrap();
+    let out = env.run(&["--dry-run"]);
+    let session = env.session(&out);
+    let err = stderr(&out);
+    for name in ["'notes.txt'", "'drafts'", "'My Skill'"] {
+        assert!(err.contains(name), "{name} in {err}");
+    }
+    assert_eq!(
+        skill_binds(&session),
+        [format!(
+            "{}:/opt/tophat/home/.claude/skills/writing-clearly:ro",
+            folder.display()
+        )],
+        "{session}"
+    );
+}
+
+#[cfg(unix)]
+#[test] // rq-6f6a1986 rq-c490844e
+fn a_symbolic_link_to_a_skill_is_followed() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let target = skill(&env.path("src"), "writing-clearly");
+    let dir = env.path("home/.config/tophat/skills");
+    fs::create_dir_all(&dir).unwrap();
+    std::os::unix::fs::symlink(&target, dir.join("writing-clearly")).unwrap();
+    let session = env.session(&env.run(&["--dry-run"]));
+    let target = fs::canonicalize(&target).unwrap();
+    assert_eq!(
+        skill_binds(&session),
+        [format!(
+            "{}:/opt/tophat/home/.claude/skills/writing-clearly:ro",
+            target.display()
+        )],
+        "{session}"
+    );
+}
+
+#[test] // rq-42f6f9ba rq-c490844e
+fn the_check_mounts_no_personal_skills() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    skill(&env.path("home/.config/tophat/skills"), "writing-clearly");
+    env.run(&["--check"]);
+    let log = env.log();
+    let check = log
+        .lines()
+        .find(|l| l.starts_with("run ") && l.ends_with(" tophat check"))
+        .unwrap_or_else(|| panic!("{log}"));
+    assert!(!check.contains(".claude/skills"), "{check}");
 }
 
 #[test] // rq-3c33f183 rq-2b0ca72f
