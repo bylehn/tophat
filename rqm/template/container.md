@@ -110,6 +110,7 @@ The session runs `podman run --rm -it` with exactly these mounts and variables:
 | `TOPHAT_ROOT_<NAME>` | passed through when set on the host (see `rqm/data.md`) |
 | each local tool repository, read-only, at the same path (see *Local tools*) | so `tophat tools sync` can fetch from it |
 | each personal skill, read-only, in the agent's skills directory (see *Personal skills*) | the human's own skills, in every project |
+| the personal instructions file, read-only, as the agent's user-level instructions (see *Personal instructions*) | the human's own standing instructions, in every project |
 | `.tophat/user/podman/run-options` | appended last, so the project's options win |
 
 Nothing else from the host enters the container. In particular the session never mounts `~/.ssh`,
@@ -195,6 +196,34 @@ committed, so a project never imposes one human's skills on another.
 - `--check` mounts no personal skills: the check runs no agent.
 - Personal skills are mounted for every selected agent that reads Claude Code's skill format; with
   `claude-code` the only agent the template offers, that is Claude Code alone.
+
+### Personal instructions <!-- rq-59768c6a -->
+
+A human can keep standing instructions of their own (which personal skill to apply when, for
+example) on the host and have Claude Code read them in every TopHat session they start, without
+adding them to any project. Like personal skills, nothing about them is committed.
+
+- The personal instructions file is `CLAUDE.md` in the folder that holds the personal skills folder:
+  `$XDG_CONFIG_HOME/tophat/CLAUDE.md`, or `~/.config/tophat/CLAUDE.md` when `XDG_CONFIG_HOME` is
+  unset or empty. When the file does not exist, the launcher mounts nothing and prints nothing. It is
+  independent of the skills folder: either can exist without the other.
+- The launcher binds it **read-only** at `/opt/tophat/home/.claude/CLAUDE.md`, the user-level
+  instructions file of Claude Code in the container (`HOME` is `/opt/tophat/home`). Claude Code
+  reads it at the start of every session alongside the project's `CLAUDE.md`; where the two
+  conflict, Claude Code gives the project's instructions precedence, so personal instructions never
+  override TopHat's rules.
+- A symbolic link is followed and its target mounted.
+- These cases are skipped with a warning naming the path and the reason, and the session still
+  starts:
+  - the path is a directory or other non-regular file;
+  - the resolved path contains `:` or `,`, which a mount option cannot express.
+- While the file is mounted, a `CLAUDE.md` the agent volume already holds is hidden but left
+  unchanged, and writes to the user-level instructions from inside the container fail: the human
+  edits the file on the host.
+- The file is read when Claude Code starts, so an edit on the host takes effect at the next agent
+  session; a file created or removed on the host takes effect only after the human exits and runs
+  `./th.sh` again.
+- `--check` does not mount it: the check runs no agent.
 
 ### Commits happen on the host <!-- rq-9f886d87 -->
 
@@ -421,6 +450,49 @@ Feature: Dev container and launcher
     Given the personal skills folder holds writing-clearly/SKILL.md
     When "th.sh --check" is run
     Then its podman run command binds nothing under /opt/tophat/home/.claude/skills
+
+  @rq-97a969e1
+  Scenario: Personal instructions are mounted read-only
+    Given XDG_CONFIG_HOME is unset
+    And ~/.config/tophat/CLAUDE.md exists
+    And ~/.config/tophat/skills does not exist
+    When "th.sh --dry-run" is run
+    Then the podman run command binds ~/.config/tophat/CLAUDE.md at /opt/tophat/home/.claude/CLAUDE.md read-only
+
+  @rq-8f775172
+  Scenario: XDG_CONFIG_HOME locates the personal instructions
+    Given XDG_CONFIG_HOME is /cfg
+    And /cfg/tophat/CLAUDE.md exists
+    And ~/.config/tophat/CLAUDE.md exists
+    When "th.sh --dry-run" is run
+    Then the podman run command binds /cfg/tophat/CLAUDE.md at /opt/tophat/home/.claude/CLAUDE.md read-only
+    And it binds nothing from ~/.config/tophat
+
+  @rq-972c7f77
+  Scenario: Without personal instructions nothing changes
+    Given ~/.config/tophat/CLAUDE.md does not exist
+    When "th.sh --dry-run" is run
+    Then the podman run command binds nothing at /opt/tophat/home/.claude/CLAUDE.md
+    And the launcher prints no warning about personal instructions
+
+  @rq-b18523ab
+  Scenario: A personal instructions path that is not a file is skipped with a warning
+    Given ~/.config/tophat/CLAUDE.md is a directory
+    When "th.sh --dry-run" is run
+    Then the launcher warns naming ~/.config/tophat/CLAUDE.md
+    And the podman run command binds nothing at /opt/tophat/home/.claude/CLAUDE.md
+
+  @rq-039ad741
+  Scenario: A symbolic link to personal instructions is followed
+    Given ~/.config/tophat/CLAUDE.md is a symbolic link to /src/notes/CLAUDE.md, a file
+    When "th.sh --dry-run" is run
+    Then the podman run command binds /src/notes/CLAUDE.md at /opt/tophat/home/.claude/CLAUDE.md read-only
+
+  @rq-b9501494
+  Scenario: The check mounts no personal instructions
+    Given ~/.config/tophat/CLAUDE.md exists
+    When "th.sh --check" is run
+    Then its podman run command binds nothing at /opt/tophat/home/.claude/CLAUDE.md
 
   @rq-6de57a60
   Scenario: Local tool repositories are mounted read-only
