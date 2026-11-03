@@ -156,6 +156,13 @@
     "title": "Tools not fetched on this machine",
     "type": "scenario"
   },
+  "rq-039ad741": {
+    "decl": "Scenario: A symbolic link to personal instructions is followed",
+    "file": "template/container",
+    "refs": [],
+    "title": "A symbolic link to personal instructions is followed",
+    "type": "scenario"
+  },
   "rq-03cab891": {
     "decl": "# Feature: Snakemake Pipelines, QC Gates and Summaries",
     "file": "pipeline/snakemake",
@@ -3693,6 +3700,14 @@
     "title": "Cases newer than the binary are skipped",
     "type": "scenario"
   },
+  "rq-59768c6a": {
+    "decl": "### Personal instructions",
+    "file": "template/container",
+    "level": 3,
+    "refs": [],
+    "title": "Personal instructions",
+    "type": "section"
+  },
   "rq-597bb615": {
     "decl": "### Full verification",
     "file": "data",
@@ -5790,6 +5805,13 @@
     "title": "parse_summary",
     "type": "api-item"
   },
+  "rq-8f775172": {
+    "decl": "Scenario: XDG_CONFIG_HOME locates the personal instructions",
+    "file": "template/container",
+    "refs": [],
+    "title": "XDG_CONFIG_HOME locates the personal instructions",
+    "type": "scenario"
+  },
   "rq-8fd5db8d": {
     "decl": "### `cargo xtask render`",
     "file": "tooling",
@@ -6044,6 +6066,13 @@
     "title": "Seal a fan-out item and the stage",
     "type": "scenario"
   },
+  "rq-972c7f77": {
+    "decl": "Scenario: Without personal instructions nothing changes",
+    "file": "template/container",
+    "refs": [],
+    "title": "Without personal instructions nothing changes",
+    "type": "scenario"
+  },
   "rq-973f9875": {
     "decl": "Scenario: Verify reports extra files",
     "file": "data",
@@ -6054,6 +6083,13 @@
       }
     ],
     "title": "Verify reports extra files",
+    "type": "scenario"
+  },
+  "rq-97a969e1": {
+    "decl": "Scenario: Personal instructions are mounted read-only",
+    "file": "template/container",
+    "refs": [],
+    "title": "Personal instructions are mounted read-only",
     "type": "scenario"
   },
   "rq-97bc377b": {
@@ -7302,6 +7338,13 @@
     "title": "An error fails the check",
     "type": "scenario"
   },
+  "rq-b18523ab": {
+    "decl": "Scenario: A personal instructions path that is not a file is skipped with a warning",
+    "file": "template/container",
+    "refs": [],
+    "title": "A personal instructions path that is not a file is skipped with a warning",
+    "type": "scenario"
+  },
   "rq-b1a89dcb": {
     "decl": "Scenario: Stale summary means run again",
     "file": "workflow",
@@ -7561,6 +7604,13 @@
       }
     ],
     "title": "Orphan test reference in a draft warns",
+    "type": "scenario"
+  },
+  "rq-b9501494": {
+    "decl": "Scenario: The check mounts no personal instructions",
+    "file": "template/container",
+    "refs": [],
+    "title": "The check mounts no personal instructions",
     "type": "scenario"
   },
   "rq-b9512459": {

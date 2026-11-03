@@ -45,7 +45,7 @@ same absence of credentials as under Podman (see `rqm/template/container.md`).
   `env HOME=/opt/tophat/home .tophat/managed/launch/enter.sh`.
 - `--run-sif` mounts the personal skills of the human running it, from the cluster host's own
   personal skills folder, following *Personal skills* in `rqm/template/container.md` (`--bind`
-  with `:ro`).
+  with `:ro`), and likewise its personal instructions file, following *Personal instructions*.
 
 ## Assumptions <!-- rq-16024bf5 -->
 
