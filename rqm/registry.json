@@ -159,7 +159,12 @@
   "rq-039ad741": {
     "decl": "Scenario: A symbolic link to personal instructions is followed",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A symbolic link to personal instructions is followed",
     "type": "scenario"
   },
@@ -3704,7 +3709,12 @@
     "decl": "### Personal instructions",
     "file": "template/container",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Personal instructions",
     "type": "section"
   },
@@ -5808,7 +5818,12 @@
   "rq-8f775172": {
     "decl": "Scenario: XDG_CONFIG_HOME locates the personal instructions",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "XDG_CONFIG_HOME locates the personal instructions",
     "type": "scenario"
   },
@@ -6069,7 +6084,12 @@
   "rq-972c7f77": {
     "decl": "Scenario: Without personal instructions nothing changes",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Without personal instructions nothing changes",
     "type": "scenario"
   },
@@ -6088,7 +6108,12 @@
   "rq-97a969e1": {
     "decl": "Scenario: Personal instructions are mounted read-only",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Personal instructions are mounted read-only",
     "type": "scenario"
   },
@@ -7341,7 +7366,12 @@
   "rq-b18523ab": {
     "decl": "Scenario: A personal instructions path that is not a file is skipped with a warning",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A personal instructions path that is not a file is skipped with a warning",
     "type": "scenario"
   },
@@ -7609,7 +7639,12 @@
   "rq-b9501494": {
     "decl": "Scenario: The check mounts no personal instructions",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The check mounts no personal instructions",
     "type": "scenario"
   },
