@@ -1726,6 +1726,13 @@
     "title": "PipelineError",
     "type": "api-item"
   },
+  "rq-29a38dbc": {
+    "decl": "Scenario: Without a personal skills folder nothing changes",
+    "file": "template/container",
+    "refs": [],
+    "title": "Without a personal skills folder nothing changes",
+    "type": "scenario"
+  },
   "rq-29ee60f1": {
     "decl": "Scenario: Outside a git repository records are unclean",
     "file": "pipeline/provenance",
@@ -2725,6 +2732,13 @@
     "title": "An unexpected returned file is refused",
     "type": "scenario"
   },
+  "rq-42f6f9ba": {
+    "decl": "Scenario: The check mounts no personal skills",
+    "file": "template/container",
+    "refs": [],
+    "title": "The check mounts no personal skills",
+    "type": "scenario"
+  },
   "rq-42fba780": {
     "decl": "Scenario: Every skill has a canonical text and a local extension",
     "file": "template/skills",
@@ -3698,6 +3712,13 @@
     "title": "An uncommitted lock makes the record unclean",
     "type": "scenario"
   },
+  "rq-59aee61f": {
+    "decl": "Scenario: A personal skill does not shadow a project skill",
+    "file": "template/container",
+    "refs": [],
+    "title": "A personal skill does not shadow a project skill",
+    "type": "scenario"
+  },
   "rq-59d28b94": {
     "decl": "Scenario: Key text follows the specified construction",
     "file": "pipeline/provenance",
@@ -4614,6 +4635,13 @@
     "title": "Changing a script changes its key and every downstream key",
     "type": "scenario"
   },
+  "rq-6f6a1986": {
+    "decl": "Scenario: A symbolic link to a skill is followed",
+    "file": "template/container",
+    "refs": [],
+    "title": "A symbolic link to a skill is followed",
+    "type": "scenario"
+  },
   "rq-6fc05e55": {
     "decl": "### `cargo xtask lock`",
     "file": "tooling",
@@ -4858,6 +4886,13 @@
       }
     ],
     "title": "An external stage cannot validate",
+    "type": "scenario"
+  },
+  "rq-75ce0958": {
+    "decl": "Scenario: Entries that are not skills are skipped with a warning",
+    "file": "template/container",
+    "refs": [],
+    "title": "Entries that are not skills are skipped with a warning",
     "type": "scenario"
   },
   "rq-765490e4": {
@@ -5114,6 +5149,13 @@
     ],
     "title": "QuestionError",
     "type": "api-item"
+  },
+  "rq-7be133fa": {
+    "decl": "Scenario: XDG_CONFIG_HOME locates the personal skills folder",
+    "file": "template/container",
+    "refs": [],
+    "title": "XDG_CONFIG_HOME locates the personal skills folder",
+    "type": "scenario"
   },
   "rq-7d26723f": {
     "decl": "Scenario: Every YAML form tophat accepts is understood",
@@ -7891,6 +7933,14 @@
     "title": "Feature API",
     "type": "section"
   },
+  "rq-c490844e": {
+    "decl": "### Personal skills",
+    "file": "template/container",
+    "level": 3,
+    "refs": [],
+    "title": "Personal skills",
+    "type": "section"
+  },
   "rq-c5416f0d": {
     "decl": "## Assumptions",
     "file": "study/format",
@@ -9442,6 +9492,13 @@
       }
     ],
     "title": "An invalid checklist number",
+    "type": "scenario"
+  },
+  "rq-e5151256": {
+    "decl": "Scenario: Personal skills are mounted read-only, one by one",
+    "file": "template/container",
+    "refs": [],
+    "title": "Personal skills are mounted read-only, one by one",
     "type": "scenario"
   },
   "rq-e5152739": {

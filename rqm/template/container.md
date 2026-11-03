@@ -109,6 +109,7 @@ The session runs `podman run --rm -it` with exactly these mounts and variables:
 | volume `tophat-<project-id>-<agent>` at each selected agent's configuration home | the agent's own login and session state |
 | `TOPHAT_ROOT_<NAME>` | passed through when set on the host (see `rqm/data.md`) |
 | each local tool repository, read-only, at the same path (see *Local tools*) | so `tophat tools sync` can fetch from it |
+| each personal skill, read-only, in the agent's skills directory (see *Personal skills*) | the human's own skills, in every project |
 | `.tophat/user/podman/run-options` | appended last, so the project's options win |
 
 Nothing else from the host enters the container. In particular the session never mounts `~/.ssh`,
@@ -162,6 +163,38 @@ mounted:
   mounted only after the human exits the container and runs `./th.sh` again; restarting the agent
   inside the container is not enough.
 - `--check` mounts no tools: the check reads only the tool cache.
+
+### Personal skills <!-- rq-c490844e -->
+
+A human can keep agent skills of their own (a writing style guide, for example) on the host and have
+them in every TopHat session they start, without adding them to any project. Nothing about them is
+committed, so a project never imposes one human's skills on another.
+
+- The personal skills folder is `$XDG_CONFIG_HOME/tophat/skills`, or `~/.config/tophat/skills` when
+  `XDG_CONFIG_HOME` is unset or empty. When the folder does not exist, the launcher mounts nothing
+  and prints nothing: the feature is opt-in per human.
+- Each direct subdirectory holding a `SKILL.md` is one skill, named after the subdirectory. The
+  launcher binds it **read-only** at `/opt/tophat/home/.claude/skills/<name>`, inside the Claude Code
+  configuration volume. Skills are mounted one by one, never the folder as a whole, so the agent's own
+  skills directory in the volume (for example skills synced from the human's account) stays visible.
+- A subdirectory that is a symbolic link is followed and its target mounted. Symbolic links inside a
+  skill that point outside it do not resolve in the container.
+- These entries are skipped with a warning naming the entry and the reason, and the session still
+  starts:
+  - a file, or a subdirectory without a `SKILL.md`;
+  - a name that is not lowercase letters, digits and hyphens;
+  - a name used by a skill in the project's `.claude/skills/` (such as `th-study`): a personal skill
+    never shadows a project or managed skill;
+  - a path containing `:` or `,`, which a mount option cannot express.
+- Mounts are made when the launcher starts the container: edits to the files of a mounted skill show
+  up in the session at once, but a skill added or removed on the host takes effect only after the
+  human exits and runs `./th.sh` again.
+- The skill is mounted read-only, so nothing in the container can change it. The empty directory a
+  mount leaves in the agent volume when the skill is later removed from the host is harmless: without
+  a `SKILL.md`, the agent ignores it.
+- `--check` mounts no personal skills: the check runs no agent.
+- Personal skills are mounted for every selected agent that reads Claude Code's skill format; with
+  `claude-code` the only agent the template offers, that is Claude Code alone.
 
 ### Commits happen on the host <!-- rq-9f886d87 -->
 
@@ -338,6 +371,56 @@ Feature: Dev container and launcher
     Given .tophat/roots.local.yaml locates "results" at the relative path "data/results"
     When "th.sh --dry-run" is run
     Then it exits non-zero with the message of "tophat data roots"
+
+  @rq-e5151256
+  Scenario: Personal skills are mounted read-only, one by one
+    Given XDG_CONFIG_HOME is unset
+    And ~/.config/tophat/skills/writing-clearly/SKILL.md exists
+    When "th.sh --dry-run" is run
+    Then the podman run command binds ~/.config/tophat/skills/writing-clearly at /opt/tophat/home/.claude/skills/writing-clearly read-only
+    And it binds nothing else under /opt/tophat/home/.claude/skills
+
+  @rq-7be133fa
+  Scenario: XDG_CONFIG_HOME locates the personal skills folder
+    Given XDG_CONFIG_HOME is /cfg
+    And /cfg/tophat/skills/writing-clearly/SKILL.md exists
+    And ~/.config/tophat/skills/other/SKILL.md exists
+    When "th.sh --dry-run" is run
+    Then the podman run command binds /cfg/tophat/skills/writing-clearly
+    And it mounts nothing for "other"
+
+  @rq-29a38dbc
+  Scenario: Without a personal skills folder nothing changes
+    Given the personal skills folder does not exist
+    When "th.sh --dry-run" is run
+    Then the podman run command binds nothing under /opt/tophat/home/.claude/skills
+    And the launcher prints no warning about personal skills
+
+  @rq-59aee61f
+  Scenario: A personal skill does not shadow a project skill
+    Given the personal skills folder holds th-study/SKILL.md and writing-clearly/SKILL.md
+    When "th.sh --dry-run" is run
+    Then the launcher warns that the personal skill "th-study" has the name of a project skill and is not mounted
+    And the podman run command binds writing-clearly and not th-study
+
+  @rq-75ce0958
+  Scenario: Entries that are not skills are skipped with a warning
+    Given the personal skills folder holds notes.txt, a directory "drafts" without SKILL.md, a directory "My Skill" with SKILL.md, and writing-clearly/SKILL.md
+    When "th.sh --dry-run" is run
+    Then the launcher warns naming "notes.txt", "drafts" and "My Skill"
+    And the podman run command binds only writing-clearly from the personal skills folder
+
+  @rq-6f6a1986
+  Scenario: A symbolic link to a skill is followed
+    Given the personal skills folder holds a symbolic link "writing-clearly" to /src/writing-clearly, which holds SKILL.md
+    When "th.sh --dry-run" is run
+    Then the podman run command binds /src/writing-clearly at /opt/tophat/home/.claude/skills/writing-clearly read-only
+
+  @rq-42f6f9ba
+  Scenario: The check mounts no personal skills
+    Given the personal skills folder holds writing-clearly/SKILL.md
+    When "th.sh --check" is run
+    Then its podman run command binds nothing under /opt/tophat/home/.claude/skills
 
   @rq-6de57a60
   Scenario: Local tool repositories are mounted read-only
