@@ -43,6 +43,9 @@ same absence of credentials as under Podman (see `rqm/template/container.md`).
   under `.tophat/state/apptainer/agents/` (created with mode `0700`) at the agents' configuration
   homes, followed by the GPU options and `.tophat/user/apptainer/run-options`, and runs
   `env HOME=/opt/tophat/home .tophat/managed/launch/enter.sh`.
+- `--run-sif` mounts the personal skills of the human running it, from the cluster host's own
+  personal skills folder, following *Personal skills* in `rqm/template/container.md` (`--bind`
+  with `:ro`).
 
 ## Assumptions <!-- rq-16024bf5 -->
 
