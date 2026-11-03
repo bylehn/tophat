@@ -1729,7 +1729,12 @@
   "rq-29a38dbc": {
     "decl": "Scenario: Without a personal skills folder nothing changes",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Without a personal skills folder nothing changes",
     "type": "scenario"
   },
@@ -2735,7 +2740,12 @@
   "rq-42f6f9ba": {
     "decl": "Scenario: The check mounts no personal skills",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The check mounts no personal skills",
     "type": "scenario"
   },
@@ -3715,7 +3725,12 @@
   "rq-59aee61f": {
     "decl": "Scenario: A personal skill does not shadow a project skill",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A personal skill does not shadow a project skill",
     "type": "scenario"
   },
@@ -4638,7 +4653,12 @@
   "rq-6f6a1986": {
     "decl": "Scenario: A symbolic link to a skill is followed",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A symbolic link to a skill is followed",
     "type": "scenario"
   },
@@ -4891,7 +4911,12 @@
   "rq-75ce0958": {
     "decl": "Scenario: Entries that are not skills are skipped with a warning",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Entries that are not skills are skipped with a warning",
     "type": "scenario"
   },
@@ -5153,7 +5178,12 @@
   "rq-7be133fa": {
     "decl": "Scenario: XDG_CONFIG_HOME locates the personal skills folder",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "XDG_CONFIG_HOME locates the personal skills folder",
     "type": "scenario"
   },
@@ -7937,7 +7967,12 @@
     "decl": "### Personal skills",
     "file": "template/container",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Personal skills",
     "type": "section"
   },
@@ -9497,7 +9532,12 @@
   "rq-e5151256": {
     "decl": "Scenario: Personal skills are mounted read-only, one by one",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Personal skills are mounted read-only, one by one",
     "type": "scenario"
   },
