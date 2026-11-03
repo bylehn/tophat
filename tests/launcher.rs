@@ -694,6 +694,156 @@ fn the_check_mounts_no_personal_skills() {
     assert!(!check.contains(".claude/skills"), "{check}");
 }
 
+/// The binds the session command makes at Claude Code's user-level instructions.
+fn instruction_binds(session: &str) -> Vec<&str> {
+    session
+        .split(' ')
+        .filter(|word| word.contains(":/opt/tophat/home/.claude/CLAUDE.md"))
+        .collect()
+}
+
+#[test] // rq-97a969e1 rq-59768c6a
+fn personal_instructions_are_mounted_read_only() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let file = env.path("home/.config/tophat/CLAUDE.md");
+    fs::create_dir_all(file.parent().unwrap()).unwrap();
+    fs::write(&file, "Apply the honey skill.\n").unwrap();
+    let session = env.session(&env.run(&["--dry-run"]));
+    assert_eq!(
+        instruction_binds(&session),
+        [format!(
+            "{}:/opt/tophat/home/.claude/CLAUDE.md:ro",
+            file.display()
+        )],
+        "{session}"
+    );
+}
+
+#[test] // rq-8f775172 rq-59768c6a
+fn xdg_config_home_locates_the_personal_instructions() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let file = env.path("cfg/tophat/CLAUDE.md");
+    fs::create_dir_all(file.parent().unwrap()).unwrap();
+    fs::write(&file, "mine\n").unwrap();
+    let home = env.path("home/.config/tophat");
+    fs::create_dir_all(&home).unwrap();
+    fs::write(home.join("CLAUDE.md"), "other\n").unwrap();
+    let out = env
+        .launcher(&["--dry-run"])
+        .env("XDG_CONFIG_HOME", env.path("cfg"))
+        .output()
+        .unwrap();
+    let session = env.session(&out);
+    assert_eq!(
+        instruction_binds(&session),
+        [format!(
+            "{}:/opt/tophat/home/.claude/CLAUDE.md:ro",
+            file.display()
+        )],
+        "{session}"
+    );
+    assert!(!session.contains(&home.display().to_string()), "{session}");
+}
+
+#[test] // rq-972c7f77 rq-59768c6a
+fn without_personal_instructions_nothing_changes() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let out = env.run(&["--dry-run"]);
+    let session = env.session(&out);
+    assert!(instruction_binds(&session).is_empty(), "{session}");
+    assert!(
+        !stderr(&out).contains("personal instructions"),
+        "{}",
+        stderr(&out)
+    );
+}
+
+#[test] // rq-b18523ab rq-59768c6a
+fn a_personal_instructions_path_that_is_not_a_file_is_skipped_with_a_warning() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let dir = env.path("home/.config/tophat/CLAUDE.md");
+    fs::create_dir_all(&dir).unwrap();
+    let out = env.run(&["--dry-run"]);
+    let session = env.session(&out);
+    let err = stderr(&out);
+    assert!(
+        err.contains(&dir.display().to_string()) && err.contains("not a file"),
+        "{err}"
+    );
+    assert!(instruction_binds(&session).is_empty(), "{session}");
+}
+
+#[cfg(unix)]
+#[test] // rq-039ad741 rq-59768c6a
+fn a_symbolic_link_to_personal_instructions_is_followed() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let target = env.path("src/notes/CLAUDE.md");
+    fs::create_dir_all(target.parent().unwrap()).unwrap();
+    fs::write(&target, "notes\n").unwrap();
+    let dir = env.path("home/.config/tophat");
+    fs::create_dir_all(&dir).unwrap();
+    std::os::unix::fs::symlink(&target, dir.join("CLAUDE.md")).unwrap();
+    let session = env.session(&env.run(&["--dry-run"]));
+    let target = fs::canonicalize(&target).unwrap();
+    assert_eq!(
+        instruction_binds(&session),
+        [format!(
+            "{}:/opt/tophat/home/.claude/CLAUDE.md:ro",
+            target.display()
+        )],
+        "{session}"
+    );
+}
+
+#[cfg(unix)]
+#[test] // rq-59768c6a
+fn a_symbolic_link_loop_is_skipped_with_a_warning() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let dir = env.path("home/.config/tophat");
+    fs::create_dir_all(&dir).unwrap();
+    std::os::unix::fs::symlink(dir.join("CLAUDE.md"), dir.join("CLAUDE.md")).unwrap();
+    let out = env.run(&["--dry-run"]);
+    let session = env.session(&out);
+    assert!(stderr(&out).contains("loop"), "{}", stderr(&out));
+    assert!(instruction_binds(&session).is_empty(), "{session}");
+}
+
+#[test] // rq-b9501494 rq-59768c6a
+fn the_check_mounts_no_personal_instructions() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let dir = env.path("home/.config/tophat");
+    fs::create_dir_all(&dir).unwrap();
+    fs::write(dir.join("CLAUDE.md"), "mine\n").unwrap();
+    env.run(&["--check"]);
+    let log = env.log();
+    let check = log
+        .lines()
+        .find(|l| l.starts_with("run ") && l.ends_with(" tophat check"))
+        .unwrap_or_else(|| panic!("{log}"));
+    assert!(!check.contains("CLAUDE.md"), "{check}");
+}
+
 #[test] // rq-3c33f183 rq-2b0ca72f
 fn project_run_options_are_appended_and_validated() {
     if !common::copier() {

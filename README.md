@@ -208,6 +208,11 @@ container's Claude Code. They are never committed, so your collaborators don't g
 with the same name as a project skill is skipped with a warning. Edits show up at once; adding or
 removing a skill takes effect at the next `./th.sh`.
 
+Standing instructions of your own (for example, which of your skills to apply when) go in
+`~/.config/tophat/CLAUDE.md`. `./th.sh` mounts it read-only as Claude Code's user-level
+instructions in the container. The project's own instructions take precedence over it. Edit it on
+your computer; changes apply from the next agent session.
+
 ### Keeping a project up to date
 
 ```sh

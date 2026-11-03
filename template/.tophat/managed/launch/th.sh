@@ -5,9 +5,9 @@
 #   ./th.sh --check    run `tophat check` in a throwaway container
 #   ./th.sh --dry-run  print the build and session commands without running them
 #
-# The container gets the workspace, the data roots, its own volumes and the human's personal skills,
-# and nothing else from the host: no SSH keys or agent sockets, no git or cloud credentials, no git
-# identity.
+# The container gets the workspace, the data roots, its own volumes and the human's personal skills
+# and instructions, and nothing else from the host: no SSH keys or agent sockets, no git or cloud
+# credentials, no git identity.
 
 set -eu
 
@@ -220,7 +220,17 @@ $tools
 TOOLS
 }
 
-# --- Personal skills ----------------------------------------------------------------------------
+# --- Personal skills and instructions -----------------------------------------------------------
+
+# Prints the human's TopHat configuration folder, or nothing when neither XDG_CONFIG_HOME nor HOME
+# is set.
+personal_config() {
+  if [ -n "${XDG_CONFIG_HOME:-}" ]; then
+    printf '%s\n' "$XDG_CONFIG_HOME/tophat"
+  elif [ -n "${HOME:-}" ]; then
+    printf '%s\n' "$HOME/.config/tophat"
+  fi
+}
 
 # rq-c490844e
 # Sets skill_mounts to one "<host path>:<name>" per line for the skills in the human's personal
@@ -228,12 +238,9 @@ TOOLS
 # Entries that cannot be mounted only warn. Without the folder it does nothing.
 read_skills() {
   skill_mounts=""
-  config=${XDG_CONFIG_HOME:-}
-  if [ -z "$config" ]; then
-    [ -n "${HOME:-}" ] || return 0
-    config=$HOME/.config
-  fi
-  folder=$config/tophat/skills
+  config=$(personal_config)
+  [ -n "$config" ] || return 0
+  folder=$config/skills
   [ -d "$folder" ] || return 0
   for entry in "$folder"/*; do
     [ -e "$entry" ] || continue
@@ -264,6 +271,44 @@ read_skills() {
     skill_mounts="$skill_mounts$path:$name
 "
   done
+}
+
+# rq-59768c6a
+# Sets instructions_mount to the host path of the human's personal CLAUDE.md, which the session
+# mounts read-only as Claude Code's user-level instructions, or to nothing when there is none or it
+# cannot be mounted (which only warns).
+read_instructions() {
+  instructions_mount=""
+  config=$(personal_config)
+  [ -n "$config" ] || return 0
+  file=$config/CLAUDE.md
+  [ -e "$file" ] || [ -L "$file" ] || return 0
+  # A symbolic link is followed: its target is what gets mounted.
+  target=$file
+  hops=0
+  while [ -L "$target" ] && [ "$hops" -lt 40 ]; do
+    hops=$((hops + 1))
+    link=$(readlink "$target")
+    case "$link" in
+      /*) target=$link ;;
+      *) target=$(dirname "$target")/$link ;;
+    esac
+  done
+  skip=""
+  if [ -L "$target" ]; then
+    skip="its symbolic links form a loop"
+  elif [ ! -f "$target" ]; then
+    skip="it is not a file"
+  else
+    target=$(cd -P "$(dirname "$target")" && pwd -P)/$(basename "$target")
+    case "$target" in *[:,]* | *'
+'*) skip="its path $target contains ':' or ','" ;; esac
+  fi
+  if [ -n "$skip" ]; then
+    printf 'th.sh: warning: personal instructions %s are not mounted: %s\n' "$file" "$skip" >&2
+    return 0
+  fi
+  instructions_mount=$target
 }
 
 # --- Git hooks ----------------------------------------------------------------------------------
@@ -315,6 +360,7 @@ case "$mode" in
     read_roots
     read_tools
     read_skills
+    read_instructions
     ;;
   session)
     set_hooks
@@ -322,6 +368,7 @@ case "$mode" in
     read_roots
     read_tools
     read_skills
+    read_instructions
     ;;
 esac
 
@@ -337,6 +384,10 @@ command=$(
     [ -n "$mount" ] || continue
     printf '%s\n' -v "$(host_path "${mount%:*}"):/opt/tophat/home/.claude/skills/${mount##*:}:ro"
   done
+  # rq-59768c6a
+  if [ -n "$instructions_mount" ]; then
+    printf '%s\n' -v "$(host_path "$instructions_mount"):/opt/tophat/home/.claude/CLAUDE.md:ro"
+  fi
 )
 set -f
 IFS='
