@@ -61,7 +61,7 @@ stays green.
 - [x] `cargo xtask lock` (regenerate and `--check` the pre-solved pixi locks).
 - [x] `cargo xtask conformance` plus the committed cases: 5 valid and 13 broken, per
   `rqm/testing.md` §Required cases, with deterministic git replay and `since:` versioning.
-- [ ] `cargo xtask render-test`: render checks, `tophat check --strict`, skill lint,
+- [x] `cargo xtask render-test`: render checks, `tophat check --strict`, skill lint,
   `pixi install --frozen`, image build, launcher and GPU scenarios.
 - [ ] `cargo xtask adoption` plus the 5 fixtures (`scripts-notebooks`, `conda-env`,
   `julia-project`, `snakemake-pipeline`, `make-pipeline`).

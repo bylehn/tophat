@@ -218,3 +218,115 @@ fn lock_check_detects_a_stale_pre_solved_lock() {
         )
     );
 }
+
+fn copy_dir(from: &Path, to: &Path) {
+    fs::create_dir_all(to).unwrap();
+    for entry in fs::read_dir(from).unwrap() {
+        let entry = entry.unwrap();
+        let target = to.join(entry.file_name());
+        if entry.file_type().unwrap().is_dir() {
+            copy_dir(&entry.path(), &target);
+        } else {
+            fs::copy(entry.path(), target).unwrap();
+        }
+    }
+}
+
+/// A copy of the repository's template and answer sets, so a test can break the template.
+fn template_repo() -> Temp {
+    let repo = Temp::new("template-repo");
+    let root = repo_root();
+    fs::copy(root.join("copier.yml"), repo.join("copier.yml")).unwrap();
+    copy_dir(&root.join("template"), &repo.join("template"));
+    copy_dir(&root.join("xtask/answers"), &repo.join("xtask/answers"));
+    for args in [
+        vec!["init", "-q"],
+        vec!["add", "-A"],
+        vec![
+            "-c",
+            "user.name=T",
+            "-c",
+            "user.email=t@example.org",
+            "commit",
+            "-qm",
+            "init",
+        ],
+    ] {
+        assert!(Command::new("git")
+            .args(args)
+            .current_dir(&repo.path)
+            .status()
+            .unwrap()
+            .success());
+    }
+    repo
+}
+
+#[test] // rq-5040a08a
+fn render_test_names_an_unknown_answer_set() {
+    let err = xtask::render_test::run(
+        &repo_root(),
+        &xtask::render_test::Options {
+            answers: vec!["no-such-set".to_string()],
+            no_image: true,
+        },
+    )
+    .unwrap_err();
+    assert!(err.contains("no-such-set"), "{err}");
+}
+
+#[test] // rq-cb8f92b1
+fn a_failing_render_check_names_the_answer_set_and_step() {
+    if !common::copier() {
+        return;
+    }
+    let repo = template_repo();
+    let ignore = repo.join("template/.tophat/.gitignore");
+    let text = fs::read_to_string(&ignore)
+        .unwrap()
+        .lines()
+        .filter(|line| *line != "/cache/")
+        .collect::<Vec<_>>()
+        .join("\n");
+    fs::write(&ignore, format!("{text}\n")).unwrap();
+    let report = xtask::render_test::run(
+        &repo.path,
+        &xtask::render_test::Options {
+            answers: vec!["minimal-claude".to_string()],
+            no_image: true,
+        },
+    )
+    .unwrap();
+    assert!(report.failed, "{:?}", report.lines);
+    let all = report.lines.join("\n");
+    assert!(all.contains("minimal-claude"), "{all}");
+    assert!(all.contains("ignore-rules"), "{all}");
+}
+
+#[test] // rq-5fa25ddc
+fn a_julia_project_has_julia_in_its_image() {
+    if !common::copier() {
+        return;
+    }
+    let podman = Command::new("podman")
+        .arg("--version")
+        .output()
+        .is_ok_and(|o| o.status.success());
+    let pixi = Command::new("pixi")
+        .arg("--version")
+        .output()
+        .is_ok_and(|o| o.status.success());
+    if !podman || !pixi {
+        eprintln!("skipped: install Podman and pixi to run the image render test");
+        return;
+    }
+    let report = xtask::render_test::run(
+        &repo_root(),
+        &xtask::render_test::Options {
+            answers: vec!["julia-all-agents".to_string()],
+            no_image: false,
+        },
+    )
+    .unwrap();
+    assert!(!report.failed, "{:?}", report.lines);
+}
