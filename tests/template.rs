@@ -219,15 +219,19 @@ fn has_package(urls: &[String], name: &str) -> bool {
 fn path_with(scratch: &Scratch, name: &str, programs: &[&str]) -> PathBuf {
     let dir = scratch.path(name);
     fs::create_dir_all(&dir).unwrap();
-    let path = std::env::var_os("PATH").unwrap_or_default();
-    for program in programs {
-        let found = std::env::split_paths(&path)
-            .map(|d| d.join(program))
-            .find(|p| p.is_file())
-            .unwrap_or_else(|| panic!("{program} is not on PATH"));
-        #[cfg(unix)]
-        std::os::unix::fs::symlink(found, dir.join(program)).unwrap();
+    #[cfg(unix)]
+    {
+        let path = std::env::var_os("PATH").unwrap_or_default();
+        for program in programs {
+            let found = std::env::split_paths(&path)
+                .map(|d| d.join(program))
+                .find(|p| p.is_file())
+                .unwrap_or_else(|| panic!("{program} is not on PATH"));
+            std::os::unix::fs::symlink(found, dir.join(program)).unwrap();
+        }
     }
+    #[cfg(not(unix))]
+    let _ = programs;
     dir
 }
 

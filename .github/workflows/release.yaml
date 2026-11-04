@@ -53,7 +53,9 @@ jobs:
   gates:
     name: Release gates
     needs: build
-    runs-on: ubuntu-latest
+    # Julia's conda-forge libopenlibm still requests an executable stack, which glibc >= 2.41
+    # refuses to load. Pin the runner until conda-forge ships openlibm >= 0.8.4.
+    runs-on: ubuntu-24.04
     env:
       TOPHAT_TEST_BINARY: ${{ github.workspace }}/dist/tophat-x86_64-unknown-linux-musl
     steps:

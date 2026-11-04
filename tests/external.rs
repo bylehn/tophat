@@ -47,6 +47,7 @@ const BASE: &str = "stages:
 
 const LOCK: &str = "version: 6\nenvironments:\n  default:\n    packages:\n      linux-64:\n      - conda: https://x/python.conda\n";
 
+#[cfg(unix)]
 const FAKE_PIXI: &str = "#!/bin/sh\nwhile [ \"$#\" -gt 0 ] && [ \"$1\" != \"--\" ]; do shift; done\nshift\nexec \"$@\"\n";
 
 /// Standard utilities the job script and the test commands may use on the stand-in cluster.
