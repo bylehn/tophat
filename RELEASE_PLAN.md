@@ -56,7 +56,7 @@ stays green.
 
 ### Phase 2 — Test and release tooling (`rqm/tooling.md`)
 
-- [ ] `cargo xtask render` and committed answer sets in `xtask/answers/` (`minimal-claude`,
+- [x] `cargo xtask render` and committed answer sets in `xtask/answers/` (`minimal-claude`,
   `minimal-codex`, `minimal-opencode`, `julia-all-agents`, `gpu-off`).
 - [ ] `cargo xtask lock` (regenerate and `--check` the pre-solved pixi locks).
 - [ ] `cargo xtask conformance` plus the committed cases: 5 valid and 13 broken, per
