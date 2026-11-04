@@ -286,7 +286,12 @@
   "rq-067bd77a": {
     "decl": "Scenario: Replayed commits are reproducible",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/conformance.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Replayed commits are reproducible",
     "type": "scenario"
   },
@@ -1515,7 +1520,12 @@
   "rq-23b93182": {
     "decl": "Scenario: A missing expected diagnostic fails the case",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/conformance.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A missing expected diagnostic fails the case",
     "type": "scenario"
   },
@@ -3138,7 +3148,12 @@
   "rq-4c6f3b16": {
     "decl": "Scenario: A valid case passes",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/conformance.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A valid case passes",
     "type": "scenario"
   },
@@ -3348,7 +3363,12 @@
   "rq-513a430f": {
     "decl": "Scenario: Commands other than check are compared by exit code and output",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/conformance.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Commands other than check are compared by exit code and output",
     "type": "scenario"
   },
@@ -3721,7 +3741,12 @@
   "rq-58513972": {
     "decl": "Scenario: Messages are not compared",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/conformance.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Messages are not compared",
     "type": "scenario"
   },
@@ -3740,7 +3765,12 @@
   "rq-5958144d": {
     "decl": "Scenario: Cases newer than the binary are skipped",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/conformance.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Cases newer than the binary are skipped",
     "type": "scenario"
   },
@@ -6184,7 +6214,12 @@
   "rq-97bc377b": {
     "decl": "Scenario: The required cases are present",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/conformance.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The required cases are present",
     "type": "scenario"
   },
@@ -7051,7 +7086,12 @@
   "rq-a819acba": {
     "decl": "Scenario: An unexpected diagnostic fails the case",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/conformance.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An unexpected diagnostic fails the case",
     "type": "scenario"
   },

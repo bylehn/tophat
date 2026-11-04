@@ -1,0 +1,10 @@
+description: frozen-section-edited
+since: 0.1.0
+git:
+  - commit: initial
+  - write: {path: studies/x-vs-docking/STUDY.md, content: "---\nstudy: x-vs-docking\ntitle: \"x-vs-docking\"\nquestion: q-1a2b3c4d\nstatus: preregistered\nvisibility: public\nvariants: [base]\npreregistered:\n  date: \"2026-01-01\"\n  frozen_hash: \"sha256:af9db24ee914948c0c4377091dbe1d83d05b3f8fbc1d1e627b4a548765f5b6fb\"\n---\n\n# x-vs-docking\n\n## Question\n\nDoes X definitely work?\n\n## Primary endpoint\n\nA positive result.\n\n## Decision rule\n\nPositive means X works.\n\n## Scenarios\n\n```gherkin\nFeature: x\n\n  @S1\n  Scenario: X works\n    Given a variant \"base\"\n    When the analyse stage completes\n    Then the result is positive\n```\n\n## Variants\n\n- base\n\n## Stages\n\nanalyse\n\n## Result\n\n\n\n## Interpretation\n\nIt works.\n\n## Amendments\n\n"}
+command: [check, --json]
+expect:
+  exit: 1
+  diagnostics:
+    - {rule: study.frozen-modified, severity: error, path: studies/x-vs-docking/STUDY.md}

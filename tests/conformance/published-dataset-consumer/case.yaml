@@ -1,0 +1,8 @@
+description: published-dataset-consumer
+since: 0.1.0
+git:
+  - commit: initial
+command: [check, --json]
+expect:
+  exit: 0
+  diagnostics: []

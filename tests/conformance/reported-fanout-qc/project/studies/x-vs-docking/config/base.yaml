@@ -1,0 +1,17 @@
+stages:
+  - name: prepare
+    run: sh scripts/prepare.sh {out}
+    code: [scripts/prepare.sh]
+    validate: test -s {out}/items.txt
+  - name: score
+    run: sh scripts/score.sh {item} {out}
+    code: [scripts/score.sh]
+    inputs: {structures: stage:prepare}
+    foreach: structures
+    validate: test -s {out}/score.txt
+    review: Do the scores look plausible?
+  - name: analyse
+    run: sh scripts/analyse.sh {in.scores} {out}
+    code: [scripts/analyse.sh]
+    inputs: {scores: stage:score}
+    result: result.txt

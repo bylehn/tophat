@@ -1,0 +1,9 @@
+description: visibility-leak
+since: 0.1.0
+git:
+  - commit: initial
+command: [check, --json]
+expect:
+  exit: 1
+  diagnostics:
+    - {rule: data.visibility-leak, severity: error, path: studies/x-vs-docking/config/base.yaml}

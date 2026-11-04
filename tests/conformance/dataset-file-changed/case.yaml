@@ -1,0 +1,9 @@
+description: dataset-file-changed
+since: 0.1.0
+git:
+  - commit: initial
+command: [check, --json]
+expect:
+  exit: 1
+  diagnostics:
+    - {rule: data.file-changed, severity: error, path: datasets/benchmark-set/v1.yaml}

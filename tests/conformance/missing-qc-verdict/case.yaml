@@ -1,0 +1,8 @@
+description: missing-qc-verdict
+since: 0.1.0
+git:
+  - commit: initial
+command: [stage, qc-status, x-vs-docking, score, --key, sk-0000000000000000]
+expect:
+  exit: 2
+  stdout_contains: 'no QC verdict'

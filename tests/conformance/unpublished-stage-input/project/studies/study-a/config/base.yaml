@@ -1,0 +1,3 @@
+stages:
+  - name: secret
+    run: sh scripts/secret.sh {out}

@@ -1,0 +1,53 @@
+{
+  "clean": true,
+  "code": [
+    {
+      "path": "scripts/md.sh",
+      "sha256": "5a7d6958673d6e4ef70a1fb9c25bcfa1db68150798009dc114ab2814d5d572a7"
+    }
+  ],
+  "commit": "601a242d7c2d4309ae0d562f79247bd57476dd06",
+  "env": null,
+  "external": {
+    "end": "2026-11-04T20:21:36Z",
+    "host": "0eb04fd7f69d",
+    "job": "-",
+    "kept": [],
+    "modules": [],
+    "receipt_sha256": "82d8ec2b80b185aaab224fb37d6617e77d90a16e96686c835439d4536c09ea12",
+    "script_sha256": "b865307775f6b4dfb1474e1d8424d7abd53416c569eecb28dca699dbb19848c6",
+    "setup": [],
+    "start": "2026-11-04T20:21:36Z"
+  },
+  "format_version": 1,
+  "host": "0eb04fd7f69d",
+  "inputs": [
+    {
+      "key": "sk-ade1cbe3d2e1b89b",
+      "kind": "stage",
+      "name": "system",
+      "stage": "prepare"
+    }
+  ],
+  "item": null,
+  "items": null,
+  "key": "sk-37ff266a46ae1a06",
+  "outputs": [
+    {
+      "path": "md.edr",
+      "sha256": "1c14b3d31319dc221ad98f34b7e49a7a846ad3afc3a7cec71fdfbd5858e7cb66",
+      "size": 7
+    }
+  ],
+  "params": {},
+  "platform": "linux-64",
+  "run": "sh scripts/md.sh 'out'",
+  "sealed": "2026-11-04T20:21:36Z",
+  "stage": "md",
+  "study": "external-study",
+  "tool": null,
+  "tophat_version": "0.1.0",
+  "trial": false,
+  "unclean_files": [],
+  "validate": null
+}

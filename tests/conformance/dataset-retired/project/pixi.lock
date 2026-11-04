@@ -1,0 +1,6 @@
+version: 6
+environments:
+  default:
+    packages:
+      linux-64:
+      - conda: https://example.org/python.conda

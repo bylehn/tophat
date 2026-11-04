@@ -499,6 +499,10 @@ dependencies = [
 [[package]]
 name = "xtask"
 version = "0.0.0"
+dependencies = [
+ "serde_json",
+ "yaml-rust2",
+]
 
 [[package]]
 name = "yaml-rust2"
