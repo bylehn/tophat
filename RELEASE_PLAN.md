@@ -51,7 +51,7 @@ stays green.
   (`rqm/template/container.md` §Session).
 - [x] **GPU passthrough** (`rqm/template/gpu.md`): NVIDIA/AMD detection against simulated hosts,
   CDI fallback, `auto`/`on`/`off` and host override, CPU fallback, Podman and Apptainer options.
-- [ ] **Apptainer** (`rqm/template/apptainer.md`): `--export-sif` / `--run-sif`, GPU options,
+- [x] **Apptainer** (`rqm/template/apptainer.md`): `--export-sif` / `--run-sif`, GPU options,
   project-id label check, atomic export, host isolation and personal mounts.
 
 ### Phase 2 — Test and release tooling (`rqm/tooling.md`)

@@ -3591,14 +3591,24 @@
   "rq-55cac2c5": {
     "decl": "Scenario: Apptainer runs isolated from the host",
     "file": "template/apptainer",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Apptainer runs isolated from the host",
     "type": "scenario"
   },
   "rq-55e2e7f7": {
     "decl": "Scenario: An image of another project is refused",
     "file": "template/apptainer",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An image of another project is refused",
     "type": "scenario"
   },
@@ -3964,7 +3974,12 @@
   "rq-5cf97dd8": {
     "decl": "Scenario: Apptainer GPU options",
     "file": "template/apptainer",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Apptainer GPU options",
     "type": "scenario"
   },
@@ -8286,7 +8301,12 @@
   "rq-c8022e42": {
     "decl": "Scenario: A missing image names its expected path",
     "file": "template/apptainer",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A missing image names its expected path",
     "type": "scenario"
   },
@@ -10130,7 +10150,12 @@
   "rq-ef1935b3": {
     "decl": "Scenario: Export writes the image atomically",
     "file": "template/apptainer",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Export writes the image atomically",
     "type": "scenario"
   },

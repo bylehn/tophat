@@ -48,6 +48,39 @@ esac
 exit 0
 "#;
 
+/// A fake apptainer: logs its arguments, prints the label in `FAKE_APPTAINER_LABEL`, fails `build`
+/// when asked, and runs the `tophat` command of an `exec` in the directory bound at /work.
+const FAKE_APPTAINER: &str = r#"#!/bin/sh
+printf '%s\n' "$*" >> "$FAKE_APPTAINER_LOG"
+case "$1" in
+  inspect) printf 'org.tophat.project-id: %s\n' "${FAKE_APPTAINER_LABEL:-}" ;;
+  build) exit "${FAKE_APPTAINER_BUILD_EXIT:-0}" ;;
+  exec)
+    shift
+    work=""
+    while [ "$#" -gt 0 ]; do
+      case "$1" in
+        --bind)
+          case "$2" in *:/work:ro) work=${2%:/work:ro} ;; esac
+          shift 2 ;;
+        --pwd | --env) shift 2 ;;
+        --containall | --no-home | --cleanenv | --writable-tmpfs) shift ;;
+        *.sif) shift; break ;;
+        *) shift ;;
+      esac
+    done
+    [ "$1" = tophat ] || exit 0
+    shift
+    cd "$work" || exit 125
+    "$FAKE_TOPHAT" "$@" > "$FAKE_APPTAINER_LOG.out" 2>&1
+    status=$?
+    sed "s#$(pwd)#/work#g" "$FAKE_APPTAINER_LOG.out"
+    exit "$status"
+    ;;
+esac
+exit 0
+"#;
+
 struct Env {
     base: PathBuf,
 }
@@ -138,6 +171,7 @@ impl Env {
         for (key, _) in std::env::vars() {
             if key.starts_with("TOPHAT_ROOT_")
                 || key.starts_with("GIT_")
+                || key.starts_with("FAKE_APPTAINER_")
                 || key == "EMAIL"
                 || key == "TOPHAT_GPU"
                 || key == "XDG_CONFIG_HOME"
@@ -148,6 +182,7 @@ impl Env {
         cmd.env("PATH", path)
             .env("HOME", self.path("home"))
             .env("FAKE_PODMAN_LOG", self.path("podman.log"))
+            .env("FAKE_APPTAINER_LOG", self.path("apptainer.log"))
             .env("FAKE_TOPHAT", env!("CARGO_BIN_EXE_tophat"))
             .env("TOPHAT_DEV_BINARY", env!("CARGO_BIN_EXE_tophat"));
         cmd
@@ -1205,6 +1240,159 @@ fn an_invalid_gpu_setting_is_refused() {
         assert!(err.contains(allowed), "{allowed} missing from {err}");
     }
     assert!(!stdout(&out).contains("podman run --rm -it"), "{err}");
+}
+
+// --- Apptainer ----------------------------------------------------------------------------------
+
+fn install_fake_apptainer(env: &Env) {
+    executable(&env.base.join("bin/apptainer"), FAKE_APPTAINER);
+}
+
+fn set_project_id(env: &Env) -> String {
+    let id = "11111111-1111-4111-8111-111111111111".to_string();
+    env.write(".tophat/project-id", &format!("{id}\n"));
+    id
+}
+
+fn exported_image(env: &Env) -> PathBuf {
+    let path = env
+        .project()
+        .join(format!(".tophat/state/apptainer/tophat-{}.sif", env.id()));
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(&path, "sif\n").unwrap();
+    path
+}
+
+fn apptainer_session(out: &Output) -> String {
+    assert!(out.status.success(), "{}", stderr(out));
+    String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .find(|l| l.starts_with("apptainer exec --containall"))
+        .unwrap_or_else(|| panic!("no apptainer session command in:\n{}", stdout(out)))
+        .to_string()
+}
+
+#[test] // rq-5cf97dd8
+fn apptainer_gpu_options() {
+    if !common::copier() {
+        return;
+    }
+    for (detected, option) in [
+        ("nvidia", "--nv"),
+        ("nvidia-no-cdi", "--nv"),
+        ("amd", "--rocm"),
+    ] {
+        let env = Env::new();
+        let id = set_project_id(&env);
+        install_fake_apptainer(&env);
+        exported_image(&env);
+        stub_gpu_detection(&env, detected);
+        let out = env
+            .launcher(&["--dry-run", "--run-sif"])
+            .env("FAKE_APPTAINER_LABEL", &id)
+            .output()
+            .unwrap();
+        let session = apptainer_session(&out);
+        assert!(session.contains(option), "{option} missing from {session}");
+    }
+}
+
+#[test] // rq-ef1935b3
+fn export_writes_the_image_atomically() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let id = set_project_id(&env);
+    install_fake_apptainer(&env);
+    let path = env
+        .project()
+        .join(format!(".tophat/state/apptainer/tophat-{id}.sif"));
+    let out = env
+        .launcher(&["--export-sif"])
+        .env("FAKE_APPTAINER_BUILD_EXIT", "1")
+        .output()
+        .unwrap();
+    assert!(!out.status.success(), "{}", stdout(&out));
+    assert!(!path.exists(), "{}", path.display());
+}
+
+#[test] // rq-55e2e7f7
+fn an_image_of_another_project_is_refused() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let id = set_project_id(&env);
+    install_fake_apptainer(&env);
+    exported_image(&env);
+    let other = "22222222-2222-4222-8222-222222222222";
+    let out = env
+        .launcher(&["--run-sif"])
+        .env("FAKE_APPTAINER_LABEL", other)
+        .output()
+        .unwrap();
+    assert!(!out.status.success());
+    let err = stderr(&out);
+    assert!(err.contains(other), "{err}");
+    assert!(err.contains(&id), "{err}");
+}
+
+#[test] // rq-c8022e42
+fn a_missing_image_names_its_expected_path() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let id = set_project_id(&env);
+    install_fake_apptainer(&env);
+    let out = env.run(&["--run-sif"]);
+    assert!(!out.status.success());
+    let err = stderr(&out);
+    let path = format!(".tophat/state/apptainer/tophat-{id}.sif");
+    assert!(err.contains(&path), "{err}");
+    assert!(err.contains("th.sh --export-sif"), "{err}");
+}
+
+#[test] // rq-55cac2c5
+fn apptainer_runs_isolated_from_the_host() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let id = set_project_id(&env);
+    install_fake_apptainer(&env);
+    exported_image(&env);
+    env.write(".tophat/roots.yaml", "roots:\n  raw: {}\n  results: {}\n");
+    let raw = env.path("scratch/raw");
+    fs::create_dir_all(&raw).unwrap();
+    env.write(
+        ".tophat/roots.local.yaml",
+        &format!("roots:\n  raw: {}\n", raw.display()),
+    );
+    stub_gpu_detection(&env, "none");
+    let out = env
+        .launcher(&["--dry-run", "--run-sif"])
+        .env("FAKE_APPTAINER_LABEL", &id)
+        .output()
+        .unwrap();
+    let session = apptainer_session(&out);
+    for expected in [
+        "--containall",
+        "--no-home",
+        "--cleanenv",
+        &format!("--bind {}:/work", env.project().display()),
+        &format!("--bind {}:{}", raw.display(), raw.display()),
+    ] {
+        assert!(
+            session.contains(expected),
+            "{expected} missing from {session}"
+        );
+    }
+    assert!(
+        !session.contains(&env.path("home").display().to_string()),
+        "{session}"
+    );
 }
 
 // --- Git hooks ----------------------------------------------------------------------------------
