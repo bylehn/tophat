@@ -1,0 +1,2 @@
+# Extra `apptainer exec` options for the dev container, one per line (for example --memory=8g).
+# This file belongs to the project: `copier update` never changes it.

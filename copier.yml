@@ -22,6 +22,7 @@ _skip_if_exists:
   - .tophat/user/container/Containerfile
   - .tophat/user/container/gpu
   - .tophat/user/podman/run-options
+  - .tophat/user/apptainer/run-options
   - .tophat/user/skills/*/local.md
   - AGENTS.md
   - CLAUDE.md

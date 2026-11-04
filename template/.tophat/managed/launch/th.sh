@@ -1,9 +1,11 @@
 #!/bin/sh
 # TopHat-managed: the dev container launcher. Run it through ./th.sh from the project root.
 #
-#   ./th.sh            build the image (when needed) and start an interactive session
-#   ./th.sh --check    run `tophat check` in a throwaway container
-#   ./th.sh --dry-run  print the build and session commands without running them
+#   ./th.sh             build the image (when needed) and start an interactive session
+#   ./th.sh --check     run `tophat check` in a throwaway container
+#   ./th.sh --dry-run   print the commands without building or starting anything
+#   ./th.sh --export-sif  build the image and export it as an Apptainer SIF file
+#   ./th.sh --run-sif     start a session from the exported SIF file under Apptainer
 #
 # The container gets the workspace, the data roots, its own volumes and the human's personal skills
 # and instructions, and nothing else from the host: no SSH keys or agent sockets, no git or cloud
@@ -13,11 +15,13 @@ set -eu
 
 usage() {
   cat <<'USAGE'
-Usage: ./th.sh [--check | --dry-run]
+Usage: ./th.sh [--check | --dry-run] [--export-sif | --run-sif]
 
-  (no option)  Build the dev container image and start a session
-  --check      Run `tophat check` in a throwaway container (the project is mounted read-only)
-  --dry-run    Print the build and session commands without building or starting anything
+  (no option)   Build the dev container image and start a Podman session
+  --check       Run `tophat check` in a throwaway container (the project is mounted read-only)
+  --dry-run     Print the commands without building or starting anything
+  --export-sif  Build the image and export it as an Apptainer SIF file
+  --run-sif     Start a session from the exported SIF file under Apptainer
 USAGE
 }
 
@@ -27,21 +31,28 @@ fail() {
 }
 
 mode=session
-case $# in
-  0) ;;
-  1)
-    case "$1" in
-      --check) mode=check ;;
-      --dry-run) mode=dry ;;
-      -h | --help) usage; exit 0 ;;
-      *) usage >&2; exit 2 ;;
-    esac
-    ;;
-  *) usage >&2; exit 2 ;;
-esac
+dry=0
+for argument in "$@"; do
+  case "$argument" in
+    --check | --export-sif | --run-sif)
+      if [ "$mode" = session ]; then
+        mode=${argument#--}
+      else
+        usage >&2
+        exit 2
+      fi
+      ;;
+    --dry-run) dry=1 ;;
+    -h | --help) usage; exit 0 ;;
+    *) usage >&2; exit 2 ;;
+  esac
+done
+[ "$mode" = check ] && [ "$dry" = 1 ] && { usage >&2; exit 2; }
 
 [ -d .tophat/managed ] || fail "run the launcher from the project root (./th.sh)"
-command -v podman >/dev/null 2>&1 || fail "podman is not on PATH; install Podman 4.4 or later"
+if [ "$mode" != run-sif ]; then
+  command -v podman >/dev/null 2>&1 || fail "podman is not on PATH; install Podman 4.4 or later"
+fi
 
 # A word printed in a command: quoted only when it needs it.
 quote() {
@@ -53,7 +64,7 @@ quote() {
 
 # Runs a command, or prints it on one line in a dry run.
 run() {
-  if [ "$mode" = dry ]; then
+  if [ "$dry" = 1 ]; then
     line=""
     for word in "$@"; do line="$line${line:+ }$(quote "$word")"; done
     printf '%s\n' "$line"
@@ -81,11 +92,17 @@ printf '%s\n' "$id" | grep -Eq '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}
 base_image="localhost/tophat-$id-base:latest"
 agent_image="localhost/tophat-$id-agent:latest"
 project_image="localhost/tophat-$id-project:latest"
+sif=.tophat/state/apptainer/tophat-$id.sif
 
 # --- Run options --------------------------------------------------------------------------------
 
 . .tophat/managed/launch/run-options.sh
-run_options=$(emit_run_options .tophat/user/podman/run-options) || exit 2
+if [ "$mode" = run-sif ]; then
+  run_options_file=.tophat/user/apptainer/run-options
+else
+  run_options_file=.tophat/user/podman/run-options
+fi
+run_options=$(emit_run_options "$run_options_file") || exit 2
 
 # --- GPU ----------------------------------------------------------------------------------------
 
@@ -120,33 +137,47 @@ detect_gpu() {
   fi
 }
 
-# rq-4cf7a956
-# Sets gpu_options from the setting and the detected GPU, refusing or explaining when no usable GPU
-# can be passed through.
+# rq-4cf7a956 rq-5cf97dd8
+# Sets gpu_options for the runtime (podman or apptainer) from the setting and the detected GPU,
+# refusing or explaining when no usable GPU can be passed through.
 prepare_gpu() {
+  runtime=$1
   resolve_gpu_setting
   gpu_options=
   [ "$gpu_setting" = off ] && return 0
   detected=$(detect_gpu) || fail "the GPU could not be detected"
   case "$detected" in
     nvidia)
-      gpu_options="--device nvidia.com/gpu=all"
+      if [ "$runtime" = apptainer ]; then
+        gpu_options=--nv
+      else
+        gpu_options="--device nvidia.com/gpu=all"
+      fi
       ;;
     amd)
-      gpu_options="--device /dev/kfd --device /dev/dri --group-add keep-groups"
+      if [ "$runtime" = apptainer ]; then
+        gpu_options=--rocm
+      else
+        gpu_options="--device /dev/kfd --device /dev/dri --group-add keep-groups"
+      fi
+      ;;
+    nvidia-no-cdi)
+      # Apptainer's --nv needs no CDI specification.
+      if [ "$runtime" = apptainer ]; then
+        gpu_options=--nv
+        return 0
+      fi
+      message="the NVIDIA GPU needs a CDI specification; create one with: sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml"
+      if [ "$gpu_setting" = on ]; then
+        fail "$message"
+      fi
+      printf 'th.sh: %s; the session runs on CPU\n' "$message" >&2
       ;;
     none)
       if [ "$gpu_setting" = on ]; then
         fail "the GPU setting is 'on', but no usable GPU was found; use auto or off to run on CPU"
       fi
       printf 'th.sh: no usable GPU was found; the session runs on CPU\n' >&2
-      ;;
-    nvidia-no-cdi)
-      message="the NVIDIA GPU needs a CDI specification; create one with: sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml"
-      if [ "$gpu_setting" = on ]; then
-        fail "$message"
-      fi
-      printf 'th.sh: %s; the session runs on CPU\n' "$message" >&2
       ;;
     *)
       fail "gpu-detect.sh printed '$detected', which is not a known GPU kind"
@@ -172,6 +203,7 @@ root_vars=$(env | sed -n 's/^\(TOPHAT_ROOT_[A-Z0-9_]*\)=.*/\1/p' | sort)
 
 # --- Build context ------------------------------------------------------------------------------
 
+if [ "$mode" != run-sif ]; then
 case "$(uname -m)" in
   x86_64 | amd64) arch=x86_64 ;;
   aarch64 | arm64) arch=aarch64 ;;
@@ -227,6 +259,7 @@ build() {
     --build-arg "PIXI_ARCH=$arch" \
     --build-arg "COPIER_VERSION=$copier_version" \
     --build-arg "TOPHAT_DEV_BUILD=$dev_build" \
+    --build-arg "TOPHAT_PROJECT_ID=$id" \
     "$context" || fail "the base image could not be built; the previous image is unchanged"
   run podman build -t "$agent_image" -f "$context/Agent.Containerfile" \
     --build-arg "TOPHAT_BASE_IMAGE=$base_image" \
@@ -242,16 +275,14 @@ build() {
     --build-arg "TOPHAT_AGENT_IMAGE=$agent_image" \
     "$context" || fail "the project image could not be built (see .tophat/user/container/Containerfile)"
 }
+fi
 
 # --- Data roots ---------------------------------------------------------------------------------
 
-# Asks tophat, in a throwaway container, where the data roots are, and sets root_mounts to one
-# "<location>" per line for the configured ones. Read-only: the workspace is mounted ro.
-read_roots() {
-  set -- podman run --rm -v "$workspace:/work:ro" -w /work
-  for var in $root_vars; do set -- "$@" -e "$var"; done
-  roots=$("$@" "$project_image" tophat data roots 2>&1) ||
-    fail "the data roots cannot be read: $roots"
+# Turns the output of `tophat data roots` into root_mounts, one "<location>" per line for the
+# configured roots outside the workspace.
+collect_roots() {
+  roots=$1
   root_mounts=""
   tab=$(printf '\t')
   while IFS="$tab" read -r name location; do
@@ -265,6 +296,29 @@ read_roots() {
   done <<ROOTS
 $roots
 ROOTS
+}
+
+# Asks tophat, in a throwaway container, where the data roots are. Read-only: the workspace is
+# mounted ro.
+read_roots() {
+  set -- podman run --rm -v "$workspace:/work:ro" -w /work
+  for var in $root_vars; do set -- "$@" -e "$var"; done
+  roots=$("$@" "$project_image" tophat data roots 2>&1) ||
+    fail "the data roots cannot be read: $roots"
+  collect_roots "$roots"
+}
+
+# Reads the data roots from the exported SIF image, without building anything.
+read_roots_sif() {
+  set -- apptainer exec --containall --no-home --cleanenv --writable-tmpfs \
+    --bind "$workspace:/work:ro" --pwd /work
+  for var in $root_vars; do
+    eval "value=\${$var-}"
+    set -- "$@" --env "$var=$value"
+  done
+  roots=$("$@" "$sif" tophat data roots 2>&1) ||
+    fail "the data roots cannot be read from $sif: $roots"
+  collect_roots "$roots"
 }
 
 # --- Local tools ------------------------------------------------------------------------------
@@ -344,6 +398,28 @@ agent_volume_mounts() {
         ;;
     esac
     printf '%s\n' -v "tophat-$id-$name:$home"
+  done
+}
+
+# rq-4f95e12e
+# Prints one "--bind host:home" per line for each selected agent's Apptainer configuration home,
+# a directory under .tophat/state/apptainer/agents that belongs to the invoking user alone.
+agent_state_mounts() {
+  selected_agents | while IFS= read -r agent; do
+    [ -n "$agent" ] || continue
+    case "$agent" in
+      claude-code) home=/opt/tophat/home/.claude ;;
+      codex) home=/opt/tophat/home/.codex ;;
+      opencode) home=/opt/tophat/home/.local/share/opencode ;;
+      *)
+        printf 'th.sh: warning: agent %s is unknown; no configuration home is mounted for it\n' "$agent" >&2
+        continue
+        ;;
+    esac
+    directory=.tophat/state/apptainer/agents/$agent
+    mkdir -p "$directory"
+    chmod 700 "$directory"
+    printf '%s\n' --bind "$(pwd)/$directory:$home"
   done
 }
 
@@ -484,52 +560,128 @@ case "$mode" in
     set +f
     exec "$@" "$project_image" tophat check
     ;;
-  dry)
+  export-sif)
+    command -v apptainer >/dev/null 2>&1 ||
+      fail "apptainer is not on PATH; install Apptainer 1.2 or later"
     set_hooks
     build
-    podman image exists "$project_image" ||
-      fail "no image of this project exists yet; launch once first (./th.sh), then use --dry-run"
-    read_roots
-    read_tools
+    mkdir -p .tophat/state/apptainer
+    archive=.tophat/state/apptainer/tophat-$id.oci.tar
+    temporary=$sif.tmp.$$
+    if [ "$dry" = 1 ]; then
+      run podman save --format oci-archive -o "$archive" "$project_image"
+      run apptainer build "$temporary" "oci-archive:$archive"
+      exit 0
+    fi
+    rm -f "$archive" "$temporary"
+    if ! podman save --format oci-archive -o "$archive" "$project_image"; then
+      rm -f "$archive" "$temporary"
+      fail "the image could not be saved as an OCI archive; $sif is unchanged"
+    fi
+    if ! apptainer build "$temporary" "oci-archive:$archive"; then
+      rm -f "$archive" "$temporary"
+      fail "the SIF image could not be built; $sif is unchanged"
+    fi
+    rm -f "$archive"
+    mv "$temporary" "$sif"
+    exit 0
+    ;;
+  run-sif)
+    [ -f "$sif" ] ||
+      fail "no exported image at $sif; create one with './th.sh --export-sif' on a build host and copy it to the same path"
+    command -v apptainer >/dev/null 2>&1 ||
+      fail "apptainer is not on PATH; install Apptainer 1.2 or later"
+    labels=$(apptainer inspect --labels "$sif" 2>&1) ||
+      fail "the image labels cannot be read from $sif: $labels"
+    project_label=$(printf '%s\n' "$labels" |
+      sed -n 's/^org\.tophat\.project-id:[[:space:]]*//p' | head -n 1 | tr -d '\r')
+    if [ -z "$project_label" ]; then
+      project_label=$(printf '%s\n' "$labels" |
+        sed -n 's/^org\.tophat\.project-id=[[:space:]]*//p' | head -n 1 | tr -d '\r')
+    fi
+    if [ "$project_label" != "$id" ]; then
+      fail "the image $sif is labelled for project '${project_label:-none}', not '$id'; export it from this project with './th.sh --export-sif'"
+    fi
+    set_hooks
+    read_roots_sif
     read_skills
     read_instructions
+    agent_state_binds=$(agent_state_mounts)
+    prepare_gpu apptainer
     ;;
   session)
     set_hooks
     build
+    if [ "$dry" = 1 ]; then
+      podman image exists "$project_image" ||
+        fail "no image of this project exists yet; launch once first (./th.sh), then use --dry-run"
+    fi
     read_roots
     read_tools
     read_skills
     read_instructions
+    prepare_gpu podman
     ;;
 esac
 
 case "$mode" in
-  dry | session) prepare_gpu ;;
-esac
-
-command=$(
-  with_roots "" podman run --rm -it -v "$workspace:/work" -w /work \
-    -v "tophat-$id-pixi-cache:/opt/tophat/cache/pixi"
-  agent_volume_mounts
-  printf '%s' "$tool_mounts" | while IFS= read -r path; do
-    [ -n "$path" ] && printf '%s\n' -v "$(host_path "$path"):$path:ro"
-  done
-  # rq-c490844e
-  printf '%s' "$skill_mounts" | while IFS= read -r mount; do
-    [ -n "$mount" ] || continue
-    printf '%s\n' -v "$(host_path "${mount%:*}"):/opt/tophat/home/.claude/skills/${mount##*:}:ro"
-  done
-  # rq-59768c6a
-  if [ -n "$instructions_mount" ]; then
-    printf '%s\n' -v "$(host_path "$instructions_mount"):/opt/tophat/home/.claude/CLAUDE.md:ro"
-  fi
-)
-set -f
-IFS='
+  session)
+    command=$(
+      with_roots "" podman run --rm -it -v "$workspace:/work" -w /work \
+        -v "tophat-$id-pixi-cache:/opt/tophat/cache/pixi"
+      agent_volume_mounts
+      printf '%s' "$tool_mounts" | while IFS= read -r path; do
+        [ -n "$path" ] && printf '%s\n' -v "$(host_path "$path"):$path:ro"
+      done
+      # rq-c490844e
+      printf '%s' "$skill_mounts" | while IFS= read -r mount; do
+        [ -n "$mount" ] || continue
+        printf '%s\n' -v "$(host_path "${mount%:*}"):/opt/tophat/home/.claude/skills/${mount##*:}:ro"
+      done
+      # rq-59768c6a
+      if [ -n "$instructions_mount" ]; then
+        printf '%s\n' -v "$(host_path "$instructions_mount"):/opt/tophat/home/.claude/CLAUDE.md:ro"
+      fi
+    )
+    set -f
+    IFS='
 '
-# shellcheck disable=SC2086
-set -- $command $gpu_options $run_options
-unset IFS
-set +f
-run "$@" "$project_image" /work/.tophat/managed/launch/enter.sh
+    # shellcheck disable=SC2086
+    set -- $command $gpu_options $run_options
+    unset IFS
+    set +f
+    run "$@" "$project_image" /work/.tophat/managed/launch/enter.sh
+    ;;
+  run-sif)
+    command=$(
+      printf '%s\n' apptainer exec --containall --no-home --cleanenv --writable-tmpfs \
+        --bind "$workspace:/work" --pwd /work
+      printf '%s' "$root_mounts" | while IFS= read -r location; do
+        [ -n "$location" ] || continue
+        printf '%s\n' --bind "$(host_path "$location"):$location"
+      done
+      for var in $root_vars; do
+        eval "value=\${$var-}"
+        printf '%s\n' --env "$var=$value"
+      done
+      printf '%s\n' "$agent_state_binds"
+      # rq-c490844e
+      printf '%s' "$skill_mounts" | while IFS= read -r mount; do
+        [ -n "$mount" ] || continue
+        printf '%s\n' --bind "$(host_path "${mount%:*}"):/opt/tophat/home/.claude/skills/${mount##*:}:ro"
+      done
+      # rq-59768c6a
+      if [ -n "$instructions_mount" ]; then
+        printf '%s\n' --bind "$(host_path "$instructions_mount"):/opt/tophat/home/.claude/CLAUDE.md:ro"
+      fi
+    )
+    set -f
+    IFS='
+'
+    # shellcheck disable=SC2086
+    set -- $command $gpu_options $run_options
+    unset IFS
+    set +f
+    run "$@" "$sif" env HOME=/opt/tophat/home /work/.tophat/managed/launch/enter.sh
+    ;;
+esac
