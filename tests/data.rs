@@ -217,6 +217,11 @@ fn data_problems(ds: &[Diagnostic]) -> Vec<&Diagnostic> {
         .collect()
 }
 
+#[cfg(windows)]
+const ABS_ELSEWHERE: &str = "C:/data/elsewhere";
+#[cfg(not(windows))]
+const ABS_ELSEWHERE: &str = "/data/elsewhere";
+
 const KEY_A: &str = "sk-00000000000000aa";
 const KEY_B: &str = "sk-00000000000000bb";
 
@@ -229,10 +234,10 @@ fn environment_variable_overrides_the_local_roots_file() {
     fs::create_dir_all(elsewhere.join("set")).unwrap();
     fs::write(elsewhere.join("set/a.txt"), "a").unwrap();
     let roots = load_roots_with(&env.root(), &|v| {
-        (v == "TOPHAT_ROOT_RAW").then(|| "/data/elsewhere".to_string())
+        (v == "TOPHAT_ROOT_RAW").then(|| ABS_ELSEWHERE.to_string())
     })
     .unwrap();
-    assert_eq!(roots.location("raw"), Some(Path::new("/data/elsewhere")));
+    assert_eq!(roots.location("raw"), Some(Path::new(ABS_ELSEWHERE)));
 
     let (code, stdout, stderr) = env.tophat(
         &[
@@ -266,15 +271,12 @@ fn relative_local_location_is_rejected() {
 #[test] // rq-b4146a69 rq-531eebf2
 fn list_the_roots_and_their_locations() {
     let env = Env::new();
-    let (code, out, err) = env.tophat(
-        &["data", "roots"],
-        &[("TOPHAT_ROOT_RAW", "/data/elsewhere")],
-    );
+    let (code, out, err) = env.tophat(&["data", "roots"], &[("TOPHAT_ROOT_RAW", ABS_ELSEWHERE)]);
     assert_eq!(code, 0, "{err}");
     assert_eq!(
         out,
         format!(
-            "archer\t-\nraw\t/data/elsewhere\nresults\t{}\n",
+            "archer\t-\nraw\t{ABS_ELSEWHERE}\nresults\t{}\n",
             env.data_dir("results").display()
         )
     );

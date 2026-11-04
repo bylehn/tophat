@@ -13,10 +13,11 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use tophat::check::{Diagnostic, Project, Severity};
 use tophat::pipeline::{
-    ExternalError, KeyContext, ProvenanceRecord, SealRequest, ingest, load_pipeline, parse_receipt,
-    pipeline_rules, seal, stage_key_text, stub, waiting_jobs, write_job_folder,
-    write_job_folder_with,
+    ExternalError, KeyContext, SealRequest, load_pipeline, parse_receipt, pipeline_rules, seal,
+    stage_key_text, stub, write_job_folder, write_job_folder_with,
 };
+#[cfg(unix)]
+use tophat::pipeline::{ProvenanceRecord, ingest, waiting_jobs};
 
 // --- Fixtures -------------------------------------------------------------------------------
 
@@ -51,6 +52,7 @@ const LOCK: &str = "version: 6\nenvironments:\n  default:\n    packages:\n      
 const FAKE_PIXI: &str = "#!/bin/sh\nwhile [ \"$#\" -gt 0 ] && [ \"$1\" != \"--\" ]; do shift; done\nshift\nexec \"$@\"\n";
 
 /// Standard utilities the job script and the test commands may use on the stand-in cluster.
+#[cfg(unix)]
 const POSIX_TOOLS: [&str; 15] = [
     "sh",
     "sha256sum",
@@ -237,6 +239,7 @@ impl Env {
         self.tophat(&["stage", "external", "x-vs-docking", "md", "--key", &key])
     }
 
+    #[cfg(unix)]
     /// The stand-in cluster's copy of the job folder.
     /// On the cluster the folder is named after the study, stage and key.
     fn remote(&self) -> PathBuf {
@@ -245,12 +248,14 @@ impl Env {
             .join(format!("x-vs-docking.md.{}", self.key("md")))
     }
 
+    #[cfg(unix)]
     /// Copies the job folder to the stand-in cluster (step 1).
     fn copy_to_cluster(&self) {
         let _ = fs::remove_dir_all(self.remote());
         copy_dir(&self.folder(), &self.remote(), &|_| false);
     }
 
+    #[cfg(unix)]
     /// A directory of links to the POSIX tools only.
     fn posix_path(&self) -> PathBuf {
         let dir = self.base.join("posix-bin");
@@ -270,6 +275,7 @@ impl Env {
         dir
     }
 
+    #[cfg(unix)]
     /// Runs `sh job.sh` on the stand-in cluster with only POSIX tools on `PATH` (step 2).
     fn run_job(&self) -> i32 {
         let status = Command::new(self.posix_path().join("sh"))
@@ -282,6 +288,7 @@ impl Env {
         status.code().unwrap()
     }
 
+    #[cfg(unix)]
     /// Copies the folder back, leaving `out/*.trr` on the cluster unless `with_kept` (step 3).
     fn copy_back(&self, with_kept: bool) {
         copy_dir(&self.remote(), &self.folder(), &|rel: &str| {
@@ -289,6 +296,7 @@ impl Env {
         });
     }
 
+    #[cfg(unix)]
     /// Writes the job folder, runs it on the stand-in cluster, and copies it back.
     fn round_trip(&self, edit_remote: &dyn Fn(&Path)) {
         let (code, _, err) = self.stage_external();
@@ -299,6 +307,7 @@ impl Env {
         self.copy_back(false);
     }
 
+    #[cfg(unix)]
     fn receipt(&self) -> String {
         fs::read_to_string(self.folder().join("receipt.txt")).unwrap()
     }
@@ -312,6 +321,7 @@ impl Drop for Env {
 
 /// Copies a directory recursively (like `rsync -a`), skipping files for which `exclude` holds
 /// (given the `/`-separated path relative to `from`).
+#[cfg(unix)]
 fn copy_dir(from: &Path, to: &Path, exclude: &dyn Fn(&str) -> bool) {
     fn walk(from: &Path, to: &Path, prefix: &str, exclude: &dyn Fn(&str) -> bool) {
         fs::create_dir_all(to).unwrap();
@@ -680,6 +690,7 @@ fn large_inputs_are_copied_with_a_warning() {
     assert!(env.folder().join("inputs/system/system.gro").is_file());
 }
 
+#[cfg(unix)]
 #[test] // rq-c8a251ef rq-fd86ea5e
 fn code_files_travel_with_the_job_folder() {
     let env = Env::with_md(
@@ -703,6 +714,7 @@ fn code_files_travel_with_the_job_folder() {
 
 // --- Job script and receipt -------------------------------------------------------------------
 
+#[cfg(unix)]
 #[test] // rq-52e5c665 rq-13602cac rq-52dc4a39
 fn the_job_script_writes_a_receipt() {
     let env = Env::new();
@@ -729,6 +741,7 @@ fn the_job_script_writes_a_receipt() {
     assert_eq!(parsed.script, tophat::pipeline::script_sha256(&job));
 }
 
+#[cfg(unix)]
 #[test] // rq-bfa261cf rq-13602cac
 fn the_job_refuses_changed_inputs() {
     let env = Env::new();
@@ -741,6 +754,7 @@ fn the_job_refuses_changed_inputs() {
     assert_eq!(fs::read_dir(env.remote().join("out")).unwrap().count(), 0);
 }
 
+#[cfg(unix)]
 #[test] // rq-bfa261cf rq-13602cac
 fn the_job_refuses_changed_code_and_extra_inputs() {
     let env = Env::new();
@@ -763,6 +777,7 @@ fn the_job_refuses_changed_code_and_extra_inputs() {
     );
 }
 
+#[cfg(unix)]
 #[test] // rq-1b912496 rq-13602cac
 fn the_receipt_is_written_when_the_command_fails() {
     let env = Env::with_md("sh -c 'echo partial > {out}/md.log; exit 7'", "");
@@ -774,6 +789,7 @@ fn the_receipt_is_written_when_the_command_fails() {
     assert!(parse_receipt(&receipt).unwrap().outputs[0].path == "md.log");
 }
 
+#[cfg(unix)]
 #[test] // rq-13602cac
 fn a_job_that_already_ran_is_not_run_again() {
     let env = Env::new();
@@ -805,6 +821,7 @@ fn receipts_are_parsed_strictly() {
 
 // --- Ingest -----------------------------------------------------------------------------------
 
+#[cfg(unix)]
 #[test] // rq-afe4a64f rq-a1948f0a rq-0ab3c68d rq-530610d9
 fn ingest_a_returned_job_folder() {
     let env = Env::new();
@@ -845,6 +862,7 @@ fn ingest_a_returned_job_folder() {
     assert!(record.clean, "{:?}", record.unclean_files);
 }
 
+#[cfg(unix)]
 #[test] // rq-add5fac2 rq-a1948f0a
 fn edited_sbatch_lines_are_accepted() {
     let env = Env::new();
@@ -859,6 +877,7 @@ fn edited_sbatch_lines_are_accepted() {
     assert!(ProvenanceRecord::read(&env.out_dir("md")).is_some());
 }
 
+#[cfg(unix)]
 #[test] // rq-3727b411 rq-a1948f0a
 fn any_other_edit_to_the_job_script_is_refused() {
     let env = Env::new();
@@ -870,6 +889,7 @@ fn any_other_edit_to_the_job_script_is_refused() {
     assert!(!env.out_dir("md").join("provenance.json").exists());
 }
 
+#[cfg(unix)]
 #[test] // rq-1d95d762 rq-a1948f0a
 fn a_receipt_for_another_key_is_refused() {
     let env = Env::new();
@@ -888,6 +908,7 @@ fn a_receipt_for_another_key_is_refused() {
     ));
 }
 
+#[cfg(unix)]
 #[test] // rq-c0f8402d rq-a1948f0a
 fn a_failed_job_is_refused() {
     let env = Env::new();
@@ -905,6 +926,7 @@ fn a_failed_job_is_refused() {
     assert!(err.contains("`7`"), "{err}");
 }
 
+#[cfg(unix)]
 #[test] // rq-d571140f rq-a1948f0a
 fn a_changed_returned_file_is_refused() {
     let env = Env::new();
@@ -922,6 +944,7 @@ fn a_changed_returned_file_is_refused() {
     assert!(!env.out_dir("md").join("provenance.json").exists());
 }
 
+#[cfg(unix)]
 #[test] // rq-42c672ac rq-a1948f0a
 fn an_unexpected_returned_file_is_refused() {
     let env = Env::new();
@@ -938,6 +961,7 @@ fn an_unexpected_returned_file_is_refused() {
     }
 }
 
+#[cfg(unix)]
 #[test] // rq-4865c985 rq-a1948f0a
 fn kept_files_copied_back_anyway_are_accepted() {
     let env = Env::new();
@@ -949,6 +973,7 @@ fn kept_files_copied_back_anyway_are_accepted() {
     assert!(record.outputs.iter().all(|o| o.path != "md.trr"));
 }
 
+#[cfg(unix)]
 #[test] // rq-a1948f0a
 fn an_interrupted_ingest_can_be_repeated() {
     let env = Env::new();
@@ -978,6 +1003,7 @@ fn external_stages_are_sealed_only_by_ingest() {
     assert!(err.contains("tophat stage external"), "{err}");
 }
 
+#[cfg(unix)]
 #[test] // rq-9f1e97a5
 fn a_written_job_folder_is_waiting_until_it_returns() {
     let env = Env::new();
@@ -995,6 +1021,7 @@ fn a_written_job_folder_is_waiting_until_it_returns() {
 
 // --- End to end -------------------------------------------------------------------------------
 
+#[cfg(unix)]
 #[test] // rq-5cf6fbfe rq-4acafba4
 fn the_pipeline_stops_at_an_external_stage_and_resumes_after_the_return() {
     let env = Env::new();

@@ -602,6 +602,10 @@ fn public_and_local_locations_are_accepted() {
     ] {
         assert_eq!(url_problem(ok), None, "{ok}");
     }
+    #[cfg(windows)]
+    for ok in ["C:/repos/method-x.git", r"C:\repos\method-x.git"] {
+        assert_eq!(url_problem(ok), None, "{ok}");
+    }
     for bad in [
         "http://example.org/x.git",
         "git://example.org/x.git",
