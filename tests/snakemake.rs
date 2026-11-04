@@ -299,7 +299,15 @@ impl Env {
             std::env::var("PATH").unwrap_or_default()
         );
         let out = Command::new(snakemake)
-            .args(["-s", "studies/x-vs-docking/Snakefile", "--cores", "2"])
+            .args([
+                "-s",
+                "studies/x-vs-docking/Snakefile",
+                "--cores",
+                "2",
+                // Keep independent jobs running after one fails, so the two variants and the
+                // items within a fan-out reach the same state on every scheduler interleaving.
+                "--keep-going",
+            ])
             .env("PATH", path)
             .envs(extra_env.iter().map(|(k, v)| (*k, v.as_os_str())))
             .current_dir(self.root())
