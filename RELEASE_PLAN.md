@@ -65,9 +65,9 @@ stays green.
   `pixi install --frozen`, image build, launcher and GPU scenarios.
 - [x] `cargo xtask adoption` plus the 5 fixtures (`scripts-notebooks`, `conda-env`,
   `julia-project`, `snakemake-pipeline`, `make-pipeline`).
-- [ ] `cargo xtask eval` plus `evals/*.yaml` covering every behaviour scenario of
+- [x] `cargo xtask eval` plus `evals/*.yaml` covering every behaviour scenario of
   `rqm/template/skills.md` (including the `th-quiz` scenarios).
-- [ ] `cargo xtask release-pin`: hash the binaries, write `tophat-release.yaml`, refuse missing
+- [x] `cargo xtask release-pin`: hash the binaries, write `tophat-release.yaml`, refuse missing
   targets and version mismatches.
 
 ### Phase 3 — CI gates (`rqm/testing.md` §CI Workflows)

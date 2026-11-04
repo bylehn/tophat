@@ -1,0 +1,17 @@
+scenario: rq-ad4f64d8
+answers: minimal-claude
+setup:
+  - write:
+      path: PROJECT.md
+      content: |
+        # Project
+
+        ## Does the treatment change the outcome?
+        status: open
+  - tophat: [question, stamp]
+  - tophat: [study, new, handover-test, --question, q-00000000]
+prompt: "I just built the pipeline. Get it ready to run."
+replies: []
+max_turns: 20
+checks:
+  - not_run: ["git commit", "git push"]

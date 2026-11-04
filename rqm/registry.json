@@ -2039,7 +2039,12 @@
   "rq-2ed82bd1": {
     "decl": "Scenario: The release pin refuses a version mismatch",
     "file": "tooling",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/release_pin.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The release pin refuses a version mismatch",
     "type": "scenario"
   },
@@ -2409,7 +2414,12 @@
   "rq-39d23d3d": {
     "decl": "Scenario: The release pin is written from the binaries",
     "file": "tooling",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/release_pin.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The release pin is written from the binaries",
     "type": "scenario"
   },
@@ -4787,7 +4797,12 @@
   "rq-6fcb1f55": {
     "decl": "Scenario: An eval passes only if every repetition passes",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/eval.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An eval passes only if every repetition passes",
     "type": "scenario"
   },
@@ -4930,7 +4945,12 @@
   "rq-7238187f": {
     "decl": "Scenario: Every behaviour scenario has an eval",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/eval.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Every behaviour scenario has an eval",
     "type": "scenario"
   },
@@ -7319,7 +7339,12 @@
   "rq-ac4f41eb": {
     "decl": "Scenario: The release pin refuses a missing target",
     "file": "tooling",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/release_pin.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The release pin refuses a missing target",
     "type": "scenario"
   },
@@ -8616,7 +8641,12 @@
   "rq-cd345094": {
     "decl": "Scenario: An unmatched agent question fails the eval",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/eval.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An unmatched agent question fails the eval",
     "type": "scenario"
   },
@@ -10799,7 +10829,12 @@
   "rq-fd2bf270": {
     "decl": "Scenario: Forbidden commands are detected from the transcript",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/eval.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Forbidden commands are detected from the transcript",
     "type": "scenario"
   },

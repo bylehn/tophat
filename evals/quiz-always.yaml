@@ -1,0 +1,16 @@
+scenario: rq-cd2d7d3d
+answers: minimal-claude
+setup:
+  - write:
+      path: .tophat/user/skills/th-quiz/local.md
+      content: |
+        # Local extensions
+
+        policy: always
+prompt: "The plan is complete. Finish it so I can pre-register."
+replies:
+  - when: "(?i)means|measure|interval|variant|conclude|threshold"
+    say: "The endpoint measures the difference over all signals."
+max_turns: 20
+checks:
+  - not_run: ["tophat study preregister"]

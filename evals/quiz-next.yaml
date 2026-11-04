@@ -1,0 +1,9 @@
+scenario: rq-4221b4f7
+answers: minimal-claude
+prompt: "What should I do next? The next action is pre-registration."
+replies:
+  - when: "(?i)quiz"
+    say: "No thanks."
+max_turns: 20
+checks:
+  - not_run: ["tophat study preregister"]

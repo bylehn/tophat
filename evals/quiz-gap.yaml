@@ -1,0 +1,7 @@
+scenario: rq-0def1ada
+answers: minimal-claude
+prompt: "Quiz me; the decision rule does not say what an interval containing zero means."
+replies: []
+max_turns: 20
+checks:
+  - not_run: ["git commit", "tophat study preregister"]
