@@ -2088,7 +2088,12 @@
   "rq-31265ce2": {
     "decl": "Scenario: An NVIDIA GPU is passed through",
     "file": "template/gpu",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An NVIDIA GPU is passed through",
     "type": "scenario"
   },
@@ -2435,7 +2440,12 @@
   "rq-3a78943e": {
     "decl": "Scenario: An invalid GPU setting is refused",
     "file": "template/gpu",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An invalid GPU setting is refused",
     "type": "scenario"
   },
@@ -2544,6 +2554,10 @@
     "decl": "Scenario: No adapters for unselected agents",
     "file": "template/agents",
     "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      },
       {
         "file": "tests/skills.rs",
         "kind": "code"
@@ -2919,7 +2933,12 @@
   "rq-46b1f245": {
     "decl": "Scenario: No GPU falls back to CPU",
     "file": "template/gpu",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "No GPU falls back to CPU",
     "type": "scenario"
   },
@@ -3976,7 +3995,12 @@
   "rq-5dc40f24": {
     "decl": "Scenario: An NVIDIA GPU without CDI falls back with instructions",
     "file": "template/gpu",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An NVIDIA GPU without CDI falls back with instructions",
     "type": "scenario"
   },
@@ -5338,7 +5362,12 @@
   "rq-7fb69dfd": {
     "decl": "Scenario: GPU detection from simulated hosts",
     "file": "template/gpu",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "GPU detection from simulated hosts",
     "type": "scenario"
   },
@@ -6026,7 +6055,12 @@
   "rq-96018e0c": {
     "decl": "Scenario: GPU on without a GPU refuses to launch",
     "file": "template/gpu",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "GPU on without a GPU refuses to launch",
     "type": "scenario"
   },
@@ -6137,7 +6171,12 @@
   "rq-98385f5d": {
     "decl": "Scenario: The host variable overrides the project default",
     "file": "template/gpu",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The host variable overrides the project default",
     "type": "scenario"
   },
@@ -7193,7 +7232,12 @@
   "rq-abe5670e": {
     "decl": "Scenario: An AMD GPU is passed through",
     "file": "template/gpu",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An AMD GPU is passed through",
     "type": "scenario"
   },
@@ -10397,7 +10441,12 @@
   "rq-f6dc88ee": {
     "decl": "Scenario: GPU off passes nothing through",
     "file": "template/gpu",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "GPU off passes nothing through",
     "type": "scenario"
   },
