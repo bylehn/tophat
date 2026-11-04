@@ -1,6 +1,6 @@
 //! `cargo xtask <command>`: development tooling for the TopHat template (see the library).
 
-use xtask::{lint, render, scenarios};
+use xtask::{lint, lock, render, scenarios};
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -11,6 +11,7 @@ Usage: cargo xtask <command>
 Commands:
   render --answers <name|file> --out <dir> [--set <question>=<value>]...
                                               Render a project from the working tree
+  lock [--check]                              Regenerate or check the pre-solved pixi locks
   scenarios                                   Check that every Gherkin scenario in rqm/ is referenced by a test
   lint-skills <project dir> [--tophat <bin>]  Lint the agent skills of a rendered project
 ";
@@ -73,6 +74,30 @@ fn main() -> ExitCode {
                 }
                 Err(e) => {
                     eprintln!("cargo xtask render: {e}");
+                    ExitCode::from(2)
+                }
+            }
+        }
+        ["lock"] | ["lock", "--check"] => {
+            let check = args.get(1).is_some_and(|arg| arg == "--check");
+            match lock::lock(&repo_root(), check) {
+                Ok(outcomes) => {
+                    for outcome in &outcomes {
+                        println!(
+                            "lock {}: {} ({})",
+                            outcome.selection,
+                            outcome.status.as_str(),
+                            outcome.lock.display()
+                        );
+                    }
+                    if lock::any_stale(&outcomes) {
+                        ExitCode::from(1)
+                    } else {
+                        ExitCode::SUCCESS
+                    }
+                }
+                Err(e) => {
+                    eprintln!("cargo xtask lock: {e}");
                     ExitCode::from(2)
                 }
             }

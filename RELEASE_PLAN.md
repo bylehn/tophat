@@ -58,7 +58,7 @@ stays green.
 
 - [x] `cargo xtask render` and committed answer sets in `xtask/answers/` (`minimal-claude`,
   `minimal-codex`, `minimal-opencode`, `julia-all-agents`, `gpu-off`).
-- [ ] `cargo xtask lock` (regenerate and `--check` the pre-solved pixi locks).
+- [x] `cargo xtask lock` (regenerate and `--check` the pre-solved pixi locks).
 - [ ] `cargo xtask conformance` plus the committed cases: 5 valid and 13 broken, per
   `rqm/testing.md` §Required cases, with deterministic git replay and `since:` versioning.
 - [ ] `cargo xtask render-test`: render checks, `tophat check --strict`, skill lint,

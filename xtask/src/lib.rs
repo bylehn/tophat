@@ -2,5 +2,6 @@
 //! `rqm/tooling.md`; never published or shipped to generated projects.
 
 pub mod lint;
+pub mod lock;
 pub mod render;
 pub mod scenarios;

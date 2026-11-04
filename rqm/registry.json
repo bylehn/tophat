@@ -8451,7 +8451,12 @@
   "rq-cb49acfd": {
     "decl": "Scenario: Lock check detects a stale pre-solved lock",
     "file": "tooling",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tooling.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Lock check detects a stale pre-solved lock",
     "type": "scenario"
   },
