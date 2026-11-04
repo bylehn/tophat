@@ -217,6 +217,19 @@ pub fn load_roots_with(
 mod tests {
     use super::*;
 
+    #[cfg(windows)]
+    const ABS_LOCAL: &str = "C:/data/local";
+    #[cfg(not(windows))]
+    const ABS_LOCAL: &str = "/data/local";
+    #[cfg(windows)]
+    const ABS_ELSEWHERE: &str = "C:/data/elsewhere";
+    #[cfg(not(windows))]
+    const ABS_ELSEWHERE: &str = "/data/elsewhere";
+    #[cfg(windows)]
+    const ABS_RESULTS: &str = "C:/data/results";
+    #[cfg(not(windows))]
+    const ABS_RESULTS: &str = "/data/results";
+
     fn project(roots: Option<&str>, local: Option<&str>) -> PathBuf {
         static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
         let dir = std::env::temp_dir().join(format!(
@@ -237,17 +250,15 @@ mod tests {
 
     #[test] // rq-7ec07143
     fn environment_overrides_local_file() {
-        let dir = project(
-            Some("roots:\n  raw:\n    description: x\n"),
-            Some("roots:\n  raw: /data/local\n"),
-        );
+        let local = format!("roots:\n  raw: {ABS_LOCAL}\n");
+        let dir = project(Some("roots:\n  raw:\n    description: x\n"), Some(&local));
         let roots = load_roots_with(&dir, &|var| {
-            (var == "TOPHAT_ROOT_RAW").then(|| "/data/elsewhere".to_string())
+            (var == "TOPHAT_ROOT_RAW").then(|| ABS_ELSEWHERE.to_string())
         })
         .unwrap();
-        assert_eq!(roots.location("raw"), Some(Path::new("/data/elsewhere")));
+        assert_eq!(roots.location("raw"), Some(Path::new(ABS_ELSEWHERE)));
         let roots = load_roots_with(&dir, &|_| None).unwrap();
-        assert_eq!(roots.location("raw"), Some(Path::new("/data/local")));
+        assert_eq!(roots.location("raw"), Some(Path::new(ABS_LOCAL)));
         fs::remove_dir_all(&dir).unwrap();
     }
 
@@ -261,13 +272,10 @@ mod tests {
         );
         assert!(roots.results_defaulted);
         let configured = load_roots_with(&dir, &|var| {
-            (var == "TOPHAT_ROOT_RESULTS").then(|| "/data/results".to_string())
+            (var == "TOPHAT_ROOT_RESULTS").then(|| ABS_RESULTS.to_string())
         })
         .unwrap();
-        assert_eq!(
-            configured.location("results"),
-            Some(Path::new("/data/results"))
-        );
+        assert_eq!(configured.location("results"), Some(Path::new(ABS_RESULTS)));
         assert!(!configured.results_defaulted);
         fs::remove_dir_all(&dir).unwrap();
     }
