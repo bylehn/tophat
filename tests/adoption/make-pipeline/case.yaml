@@ -1,0 +1,16 @@
+description: A Makefile pipeline with processed measurements in results
+question: Do the Make-era measurements still support the claim?
+dataset:
+  name: make-measurements
+  path: processed
+  statement: Measurements produced by the old Makefile before TopHat was adopted.
+study:
+  id: old-make-analysis
+  title: The Make-era measurements
+  endpoint: The mean measured effect.
+  decision: The effect is supported when the mean is above zero.
+  result: The mean measured effect was 2.5.
+  interpretation: The measurements support the original claim.
+  stage: measure
+  output_file: mean.txt
+  output_content: "2.5\n"

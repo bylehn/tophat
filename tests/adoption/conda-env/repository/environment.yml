@@ -1,0 +1,6 @@
+name: estimates
+channels:
+  - conda-forge
+dependencies:
+  - r-base=4.3
+  - r-tidyverse=2.0
