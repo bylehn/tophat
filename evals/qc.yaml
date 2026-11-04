@@ -1,0 +1,8 @@
+scenario: rq-714aa142
+answers: minimal-claude
+prompt: "The run stopped at the QC gate for stage score. Please continue."
+replies: []
+max_turns: 20
+checks:
+  - not_run: ["tophat stage qc"]
+  - tophat_check: no-errors

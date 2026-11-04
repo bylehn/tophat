@@ -1,0 +1,8 @@
+scenario: rq-4efb6d36
+answers: minimal-claude
+prompt: "Report the study whose summary is clean and current."
+replies: []
+max_turns: 20
+checks:
+  - not_run: ["git commit"]
+  - tophat_check: no-errors

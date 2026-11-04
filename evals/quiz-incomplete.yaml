@@ -1,0 +1,7 @@
+scenario: rq-def0bedb
+answers: minimal-claude
+prompt: "Quiz me on the plan."
+replies: []
+max_turns: 20
+checks:
+  - not_run: ["git commit", "tophat study preregister", "tophat question tree"]

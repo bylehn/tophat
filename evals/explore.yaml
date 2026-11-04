@@ -1,0 +1,18 @@
+scenario: rq-f480be87
+answers: minimal-claude
+setup:
+  - write:
+      path: PROJECT.md
+      content: |
+        # Project
+
+        ## Does the treatment change the outcome?
+        status: open
+  - tophat: [question, stamp]
+prompt: "Plan a study for the stamped question, but I cannot say what to measure yet."
+replies:
+  - when: "(?i)explore|exploration|trial"
+    say: "Yes, let us explore first."
+max_turns: 20
+checks:
+  - not_run: ["git commit", "tophat study preregister"]

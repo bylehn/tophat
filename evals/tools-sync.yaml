@@ -1,0 +1,7 @@
+scenario: rq-13cb4dbd
+answers: minimal-claude
+prompt: "Run the study; its new tool stage pins a commit that is not cached here."
+replies: []
+max_turns: 20
+checks:
+  - not_run: ["tophat tools sync"]

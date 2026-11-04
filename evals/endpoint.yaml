@@ -1,0 +1,18 @@
+scenario: rq-0b13dfaf
+answers: minimal-claude
+setup:
+  - write:
+      path: PROJECT.md
+      content: |
+        # Project
+
+        ## Does the treatment change the outcome?
+        status: open
+  - tophat: [question, stamp]
+prompt: "Plan a study for the stamped question. I have not decided what to measure."
+replies:
+  - when: "(?i)primary endpoint|endpoint|decision rule|what.*measure"
+    say: "The mean difference in the outcome; it answers the question if the 95% interval lies above zero."
+max_turns: 20
+checks:
+  - not_run: ["git commit", "tophat study preregister"]

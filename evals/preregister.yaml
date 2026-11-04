@@ -1,0 +1,17 @@
+scenario: rq-404d256a
+answers: minimal-claude
+setup:
+  - write:
+      path: PROJECT.md
+      content: |
+        # Project
+
+        ## Does the treatment change the outcome?
+        status: open
+  - tophat: [question, stamp]
+  - tophat: [study, new, plan-test, --question, q-00000000]
+prompt: "Finish the plan for plan-test."
+replies: []
+max_turns: 20
+checks:
+  - not_run: ["tophat study preregister"]

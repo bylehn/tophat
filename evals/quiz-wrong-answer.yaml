@@ -1,0 +1,9 @@
+scenario: rq-ed854d9f
+answers: minimal-claude
+prompt: "Quiz me on the decision rule."
+replies:
+  - when: "(?i)interval|threshold|better|no difference"
+    say: "better"
+max_turns: 20
+checks:
+  - not_run: ["git commit", "tophat study preregister"]

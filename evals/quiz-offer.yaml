@@ -1,0 +1,9 @@
+scenario: rq-6390f4f3
+answers: minimal-claude
+prompt: "The plan is complete. Finish it so I can pre-register."
+replies:
+  - when: "(?i)quiz"
+    say: "No quiz, thank you."
+max_turns: 20
+checks:
+  - not_run: ["tophat study preregister"]

@@ -1,0 +1,14 @@
+scenario: rq-d094f463
+answers: minimal-claude
+setup:
+  - write:
+      path: .tophat/user/skills/th-quiz/local.md
+      content: |
+        # Local extensions
+
+        policy: never
+prompt: "The plan is complete. Finish it so I can pre-register."
+replies: []
+max_turns: 20
+checks:
+  - not_run: ["tophat study preregister"]

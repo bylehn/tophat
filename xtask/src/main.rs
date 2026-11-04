@@ -1,6 +1,6 @@
 //! `cargo xtask <command>`: development tooling for the TopHat template (see the library).
 
-use xtask::{adoption, conformance, lint, lock, render, render_test, scenarios};
+use xtask::{adoption, conformance, eval, lint, lock, release_pin, render, render_test, scenarios};
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -16,6 +16,10 @@ Commands:
                                               Run the conformance suite
   adoption [--tophat <binary>] [--fixture <name>]...
                                               Run the adoption fixtures
+  eval [--agent claude-code|codex|opencode] [--eval <name>]... [--repeat <n>]
+                                              Run the skill evals
+  release-pin --version <version> --url <base url> --binary <target>=<path>...
+                                              Write the template's pinned tophat release
   render-test [--answers <name>]... [--no-image]
                                               Render every answer set and check the projects
   scenarios                                   Check that every Gherkin scenario in rqm/ is referenced by a test
@@ -147,6 +151,55 @@ fn main() -> ExitCode {
                 }
             }
         }
+        ["eval", rest @ ..] => {
+            let mut options = eval::Options::default();
+            let mut binary = repo_root().join("target/debug/tophat");
+            let mut i = 0;
+            while i < rest.len() {
+                match rest[i] {
+                    "--agent" if i + 1 < rest.len() => {
+                        options.agent = rest[i + 1].to_string();
+                        i += 2;
+                    }
+                    "--eval" if i + 1 < rest.len() => {
+                        options.evals.push(rest[i + 1].to_string());
+                        i += 2;
+                    }
+                    "--repeat" if i + 1 < rest.len() => {
+                        options.repeat = rest[i + 1].parse().unwrap_or(0);
+                        i += 2;
+                    }
+                    "--tophat" if i + 1 < rest.len() => {
+                        binary = PathBuf::from(rest[i + 1]);
+                        i += 2;
+                    }
+                    other => {
+                        eprintln!("cargo xtask eval: unknown or incomplete option '{other}'");
+                        return ExitCode::from(2);
+                    }
+                }
+            }
+            if options.repeat == 0 {
+                eprintln!("cargo xtask eval: --repeat must be a positive integer");
+                return ExitCode::from(2);
+            }
+            match eval::run(&repo_root(), &binary, &options) {
+                Ok(report) => {
+                    for line in &report.lines {
+                        println!("{line}");
+                    }
+                    if report.failed {
+                        ExitCode::from(1)
+                    } else {
+                        ExitCode::SUCCESS
+                    }
+                }
+                Err(e) => {
+                    eprintln!("cargo xtask eval: {e}");
+                    ExitCode::from(2)
+                }
+            }
+        }
         ["adoption", rest @ ..] => {
             let mut binary = repo_root().join("target/debug/tophat");
             let mut fixtures = Vec::new();
@@ -218,6 +271,53 @@ fn main() -> ExitCode {
                 }
                 Err(e) => {
                     eprintln!("cargo xtask render-test: {e}");
+                    ExitCode::from(2)
+                }
+            }
+        }
+        ["release-pin", rest @ ..] => {
+            let mut version = None;
+            let mut url = None;
+            let mut binaries = Vec::new();
+            let mut i = 0;
+            while i < rest.len() {
+                let Some(value) = rest.get(i + 1).copied() else {
+                    eprintln!("cargo xtask release-pin: {} needs a value", rest[i]);
+                    return ExitCode::from(2);
+                };
+                match rest[i] {
+                    "--version" => version = Some(value.to_string()),
+                    "--url" => url = Some(value.to_string()),
+                    "--binary" => binaries.push(value.to_string()),
+                    other => {
+                        eprintln!("cargo xtask release-pin: unknown option '{other}'");
+                        return ExitCode::from(2);
+                    }
+                }
+                i += 2;
+            }
+            let (Some(version), Some(url)) = (version, url) else {
+                eprintln!("cargo xtask release-pin: --version and --url are required");
+                return ExitCode::from(2);
+            };
+            let request = release_pin::Request {
+                version,
+                url,
+                binaries,
+            };
+            match release_pin::release_pin(&repo_root(), &request) {
+                Ok(report) => {
+                    for line in &report.lines {
+                        println!("{line}");
+                    }
+                    if report.failed {
+                        ExitCode::from(1)
+                    } else {
+                        ExitCode::SUCCESS
+                    }
+                }
+                Err(e) => {
+                    eprintln!("cargo xtask release-pin: {e}");
                     ExitCode::from(2)
                 }
             }

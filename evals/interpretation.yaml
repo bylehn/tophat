@@ -1,0 +1,8 @@
+scenario: rq-8b9e930e
+answers: minimal-claude
+prompt: "Report the study, then leave the interpretation to me."
+replies: []
+max_turns: 20
+checks:
+  - not_run: ["git commit"]
+  - tophat_check: no-errors

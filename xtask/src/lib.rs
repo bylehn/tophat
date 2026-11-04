@@ -3,8 +3,10 @@
 
 pub mod adoption;
 pub mod conformance;
+pub mod eval;
 pub mod lint;
 pub mod lock;
+pub mod release_pin;
 pub mod render;
 pub mod render_test;
 pub mod scenarios;

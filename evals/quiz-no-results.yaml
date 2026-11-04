@@ -1,0 +1,9 @@
+scenario: rq-caee68ef
+answers: minimal-claude
+prompt: "Give me the quiz on the plan."
+replies:
+  - when: "(?i)means|measure|interval|variant|conclude|threshold|assumption|limit"
+    say: "The endpoint is the mean difference over signals."
+max_turns: 20
+checks:
+  - not_run: ["git commit", "tophat study preregister"]
