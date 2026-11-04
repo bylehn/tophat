@@ -1,0 +1,60 @@
+# TopHat-managed: the agent layer of the dev container image.
+ARG TOPHAT_BASE_IMAGE
+FROM ${TOPHAT_BASE_IMAGE}
+
+ARG CLAUDE_VERSION
+ARG CODEX_VERSION
+ARG CODEX_SHA256
+ARG CODEX_ARCH
+ARG OPENCODE_VERSION
+ARG OPENCODE_SHA256
+ARG OPENCODE_ARCH
+
+# Self-updaters are disabled: agents are installed at the versions in versions.yaml and change only
+# when the template does. Their configuration homes are left empty: they are mount points for the
+# session's agent volumes.
+{% if 'claude-code' in agents %}
+
+# Claude Code at the pinned version, with its self-updater disabled. Its configuration home is
+# left empty: the session mounts the project's own volume there.
+ENV DISABLE_AUTOUPDATER=1
+ENV CLAUDE_CONFIG_DIR=/opt/tophat/home/.claude
+RUN set -eu; \
+    test -n "$CLAUDE_VERSION"; \
+    curl -fsSL https://claude.ai/install.sh | bash -s -- "$CLAUDE_VERSION"; \
+    rm -rf "$HOME/.claude" "$HOME/.claude.json"; \
+    claude --version
+{% endif %}
+{% if 'codex' in agents %}
+
+# Codex at the pinned version: the musl release for the image's architecture, verified by hash.
+# CODEX_HOME is left empty: the session mounts the project's own volume there.
+ENV CODEX_HOME=/opt/tophat/home/.codex
+RUN set -eu; \
+    test -n "$CODEX_VERSION"; \
+    curl -fsSL -o /tmp/codex.tar.gz \
+      "https://github.com/openai/codex/releases/download/rust-v${CODEX_VERSION}/codex-${CODEX_ARCH}-unknown-linux-musl.tar.gz"; \
+    echo "${CODEX_SHA256}  /tmp/codex.tar.gz" | sha256sum -c - || \
+      { echo "codex ${CODEX_VERSION}: checksum mismatch" >&2; exit 1; }; \
+    tar -xzf /tmp/codex.tar.gz -C /tmp "codex-${CODEX_ARCH}-unknown-linux-musl"; \
+    install -m 0755 "/tmp/codex-${CODEX_ARCH}-unknown-linux-musl" /opt/tophat/bin/codex; \
+    rm -rf /tmp/codex.tar.gz "/tmp/codex-${CODEX_ARCH}-unknown-linux-musl"; \
+    codex --version
+{% endif %}
+{% if 'opencode' in agents %}
+
+# OpenCode at the pinned version: the release for the image's architecture, verified by hash.
+RUN set -eu; \
+    test -n "$OPENCODE_VERSION"; \
+    curl -fsSL -o /tmp/opencode.tar.gz \
+      "https://github.com/anomalyco/opencode/releases/download/v${OPENCODE_VERSION}/opencode-linux-${OPENCODE_ARCH}.tar.gz"; \
+    echo "${OPENCODE_SHA256}  /tmp/opencode.tar.gz" | sha256sum -c - || \
+      { echo "opencode ${OPENCODE_VERSION}: checksum mismatch" >&2; exit 1; }; \
+    tar -xzf /tmp/opencode.tar.gz -C /tmp opencode; \
+    install -m 0755 /tmp/opencode /opt/tophat/bin/opencode; \
+    rm -rf /tmp/opencode.tar.gz /tmp/opencode; \
+    opencode --version
+{% endif %}
+
+RUN chmod -R a+rX /opt/tophat; \
+    find /opt/tophat/home -type d -exec chmod 1777 {} +

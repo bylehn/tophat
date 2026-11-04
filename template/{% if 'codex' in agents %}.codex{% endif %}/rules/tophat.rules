@@ -1,0 +1,127 @@
+# TopHat-managed: Codex command rules. `copier update` changes this file; put project conventions in
+# AGENTS.md instead. Each rule is a command prefix. Commands not listed here need approval.
+#
+# Deny entries are command prefixes, so `tophat stage qc-status` begins with `tophat stage qc` and is
+# forbidden too. Deny lists can be evaded by wrapping a command; they are a backstop to the hard rules
+# in .tophat/managed/AGENTS.md, the CLI's refusal to run interactive commands without a terminal, and
+# a container without credentials.
+
+prefix_rule(
+    pattern = ["ssh"],
+    decision = "forbidden",
+    justification = "TopHat: agents never connect to remote machines; the human runs cluster steps.",
+)
+
+prefix_rule(
+    pattern = ["scp"],
+    decision = "forbidden",
+    justification = "TopHat: agents never transfer data; the human copies cluster files.",
+)
+
+prefix_rule(
+    pattern = ["sftp"],
+    decision = "forbidden",
+    justification = "TopHat: agents never transfer data; the human copies cluster files.",
+)
+
+prefix_rule(
+    pattern = ["rsync"],
+    decision = "forbidden",
+    justification = "TopHat: agents never transfer data; the human copies cluster files.",
+)
+
+prefix_rule(
+    pattern = ["sbatch"],
+    decision = "forbidden",
+    justification = "TopHat: agents never submit jobs; the human runs the job folder on the cluster.",
+)
+
+prefix_rule(
+    pattern = ["srun"],
+    decision = "forbidden",
+    justification = "TopHat: agents never submit jobs; the human runs the job folder on the cluster.",
+)
+
+prefix_rule(
+    pattern = ["salloc"],
+    decision = "forbidden",
+    justification = "TopHat: agents never submit jobs; the human runs the job folder on the cluster.",
+)
+
+prefix_rule(
+    pattern = ["git", "commit"],
+    decision = "forbidden",
+    justification = "TopHat: the container has no git identity; the human commits on the host.",
+)
+
+prefix_rule(
+    pattern = ["git", "push"],
+    decision = "forbidden",
+    justification = "TopHat: the human reviews and pushes on the host.",
+)
+
+prefix_rule(
+    pattern = ["tophat", "study", "preregister"],
+    decision = "forbidden",
+    justification = "TopHat: freezing the plan is the scientist's decision. Give them the command.",
+)
+
+prefix_rule(
+    pattern = ["tophat", "stage", "qc"],
+    decision = "forbidden",
+    justification = "TopHat: only the scientist gives a QC verdict. Give them the command.",
+)
+
+prefix_rule(
+    pattern = ["tophat", "tools", "sync"],
+    decision = "forbidden",
+    justification = "TopHat: fetching tool code is the human's decision. Give them the command.",
+)
+
+prefix_rule(
+    pattern = ["tophat", "status"],
+    decision = "allow",
+    justification = "TopHat: read-only status query.",
+)
+
+prefix_rule(
+    pattern = ["tophat", "check"],
+    decision = "allow",
+    justification = "TopHat: read-only project check.",
+)
+
+prefix_rule(
+    pattern = ["tophat", "question", "tree"],
+    decision = "allow",
+    justification = "TopHat: read-only question tree query.",
+)
+
+prefix_rule(
+    pattern = ["tophat", "pipeline", "keys"],
+    decision = "allow",
+    justification = "TopHat: read-only stage-key query.",
+)
+
+prefix_rule(
+    pattern = ["tophat", "tools", "list"],
+    decision = "allow",
+    justification = "TopHat: read-only tool listing.",
+)
+
+prefix_rule(
+    pattern = ["tophat", "data", "lineage"],
+    decision = "allow",
+    justification = "TopHat: read-only lineage query.",
+)
+
+prefix_rule(
+    pattern = ["tophat", "data", "used-by"],
+    decision = "allow",
+    justification = "TopHat: read-only dataset usage query.",
+)
+
+prefix_rule(
+    pattern = ["tophat", "stage", "instructions"],
+    decision = "allow",
+    justification = "TopHat: read-only external-stage instructions.",
+)

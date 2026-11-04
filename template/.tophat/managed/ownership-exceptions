@@ -7,3 +7,9 @@
 th.sh
 .claude/settings.json
 .claude/skills/**
+.codex/hooks.json
+.codex/rules/**
+.agents/skills/**
+.opencode/plugins/**
+.opencode/skills/**
+opencode.json
