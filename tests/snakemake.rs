@@ -61,6 +61,7 @@ wc -c < "$1" > "$2/score.txt"; echo "$3" >> "$2/score.txt"
 const ANALYSE: &str = r#"n=$(ls "$1"/items | wc -l); echo "n=$n level=$(tail -1 "$1"/items/1abc/score.txt)" > "$2/result.txt"
 "#;
 
+#[cfg(unix)]
 const FAKE_PIXI: &str = "#!/bin/sh\nwhile [ \"$#\" -gt 0 ] && [ \"$1\" != \"--\" ]; do shift; done\nshift\nexec \"$@\"\n";
 
 struct Env {

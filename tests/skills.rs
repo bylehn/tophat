@@ -809,14 +809,16 @@ fn the_examples_external_stage_needs_only_posix_tools() {
     let tmp = p.base.join("posix");
     let bin = tmp.join("bin");
     fs::create_dir_all(&bin).unwrap();
-    let system = std::env::var_os("PATH").unwrap_or_default();
-    for tool in ["sh", "awk", "mkdir"] {
-        let found = std::env::split_paths(&system)
-            .map(|d| d.join(tool))
-            .find(|p| p.is_file())
-            .unwrap();
-        #[cfg(unix)]
-        std::os::unix::fs::symlink(found, bin.join(tool)).unwrap();
+    #[cfg(unix)]
+    {
+        let system = std::env::var_os("PATH").unwrap_or_default();
+        for tool in ["sh", "awk", "mkdir"] {
+            let found = std::env::split_paths(&system)
+                .map(|d| d.join(tool))
+                .find(|p| p.is_file())
+                .unwrap();
+            std::os::unix::fs::symlink(found, bin.join(tool)).unwrap();
+        }
     }
     let signals = tmp.join("signals");
     fs::create_dir_all(&signals).unwrap();
