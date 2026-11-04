@@ -1,0 +1,72 @@
+# Skill evals: reported weekly and on demand, never a required pull-request check
+# (rqm/testing.md §CI Workflows).
+# rq-068b6895
+name: Skill evals
+
+on:
+  schedule:
+    - cron: "41 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evals-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+jobs:
+  eval:
+    name: Eval (${{ matrix.agent }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        agent: [claude-code, codex, opencode]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Copier
+        run: |
+          version=$(sed -n 's/^copier_version: *//p' template/.tophat/managed/container/versions.yaml)
+          python -m pip install "copier==${version}"
+      - name: Install the agents
+        run: |
+          versions=template/.tophat/managed/container/versions.yaml
+          claude_version=$(sed -n 's/^claude_version: *//p' "$versions")
+          curl -fsSL https://claude.ai/install.sh | bash -s -- "$claude_version"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+          codex_version=$(sed -n 's/^codex_version: *//p' "$versions")
+          codex_sha=$(sed -n 's/^codex_sha256_x86_64: *//p' "$versions")
+          curl -fsSL -o "$RUNNER_TEMP/codex.tar.gz" \
+            "https://github.com/openai/codex/releases/download/rust-v${codex_version}/codex-x86_64-unknown-linux-musl.tar.gz"
+          echo "${codex_sha}  $RUNNER_TEMP/codex.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/codex.tar.gz" -C "$RUNNER_TEMP" codex-x86_64-unknown-linux-musl
+          sudo install -m 0755 "$RUNNER_TEMP/codex-x86_64-unknown-linux-musl" /usr/local/bin/codex
+
+          opencode_version=$(sed -n 's/^opencode_version: *//p' "$versions")
+          opencode_sha=$(sed -n 's/^opencode_sha256_x86_64: *//p' "$versions")
+          curl -fsSL -o "$RUNNER_TEMP/opencode.tar.gz" \
+            "https://github.com/anomalyco/opencode/releases/download/v${opencode_version}/opencode-linux-x86_64.tar.gz"
+          echo "${opencode_sha}  $RUNNER_TEMP/opencode.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/opencode.tar.gz" -C "$RUNNER_TEMP" opencode
+          sudo install -m 0755 "$RUNNER_TEMP/opencode" /usr/local/bin/opencode
+
+          claude --version
+          codex --version
+          opencode --version
+      - name: Run the evals
+        run: |
+          cargo build --bin tophat
+          cargo xtask eval --agent "${{ matrix.agent }}"

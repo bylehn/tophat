@@ -299,7 +299,12 @@
     "decl": "## CI Workflows",
     "file": "testing",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/ci.rs",
+        "kind": "code"
+      }
+    ],
     "title": "CI Workflows",
     "type": "section"
   },
@@ -1980,7 +1985,12 @@
   "rq-2e07e31f": {
     "decl": "Scenario: Skill lint reports findings with their rule",
     "file": "tooling",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tooling.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Skill lint reports findings with their rule",
     "type": "scenario"
   },

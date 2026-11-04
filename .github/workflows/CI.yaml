@@ -1,0 +1,227 @@
+# The required pull-request and main gates (rqm/testing.md §CI Workflows).
+# rq-068b6895
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  cli:
+    name: CLI (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Format
+        run: cargo fmt --all --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Test
+        run: cargo test --workspace
+      - name: Install coverage tool
+        if: matrix.os == 'ubuntu-latest'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+      - name: Coverage
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo llvm-cov --workspace --all-targets --lcov --output-path lcov.info
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: lcov.info
+
+  snakemake:
+    name: Snakemake tests
+    runs-on: ubuntu-latest
+    env:
+      TOPHAT_REQUIRE_SNAKEMAKE: "1"
+      TOPHAT_TEST_SNAKEMAKE: snakemake
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Snakemake
+        run: python -m pip install "snakemake-minimal>=9,<10"
+      - name: Test with Snakemake
+        run: cargo test --workspace
+
+  template:
+    name: Template tests
+    runs-on: ubuntu-latest
+    env:
+      TOPHAT_REQUIRE_COPIER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Copier
+        run: |
+          version=$(sed -n 's/^copier_version: *//p' template/.tophat/managed/container/versions.yaml)
+          python -m pip install "copier==${version}"
+      - name: Test the rendered template and launcher
+        run: cargo test -p tophat --test template --test launcher --test skills --test tooling
+
+  image:
+    name: Launcher image tests
+    runs-on: ubuntu-latest
+    env:
+      TOPHAT_REQUIRE_COPIER: "1"
+      TOPHAT_TEST_PODMAN: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Copier
+        run: |
+          version=$(sed -n 's/^copier_version: *//p' template/.tophat/managed/container/versions.yaml)
+          python -m pip install "copier==${version}"
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+      - name: Test the launcher against a real image
+        run: cargo test -p tophat --test launcher
+
+  traceability:
+    name: Traceability
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Copier and pixi
+        run: |
+          version=$(sed -n 's/^copier_version: *//p' template/.tophat/managed/container/versions.yaml)
+          python -m pip install "copier==${version}"
+          pixi_version=$(sed -n 's/^pixi_version: *//p' template/.tophat/managed/container/versions.yaml)
+          pixi_sha=$(sed -n 's/^pixi_sha256_x86_64: *//p' template/.tophat/managed/container/versions.yaml)
+          curl -fsSL -o "$RUNNER_TEMP/pixi.tar.gz" \
+            "https://github.com/prefix-dev/pixi/releases/download/v${pixi_version}/pixi-x86_64-unknown-linux-musl.tar.gz"
+          echo "${pixi_sha}  $RUNNER_TEMP/pixi.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/pixi.tar.gz" -C "$RUNNER_TEMP" pixi
+          sudo install -m 0755 "$RUNNER_TEMP/pixi" /usr/local/bin/pixi
+      - name: Check scenario traceability
+        run: cargo xtask scenarios
+      - name: Check the pre-solved locks
+        run: cargo xtask lock --check
+
+  render:
+    name: Render tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Copier, pixi and Podman
+        run: |
+          version=$(sed -n 's/^copier_version: *//p' template/.tophat/managed/container/versions.yaml)
+          python -m pip install "copier==${version}"
+          pixi_version=$(sed -n 's/^pixi_version: *//p' template/.tophat/managed/container/versions.yaml)
+          pixi_sha=$(sed -n 's/^pixi_sha256_x86_64: *//p' template/.tophat/managed/container/versions.yaml)
+          curl -fsSL -o "$RUNNER_TEMP/pixi.tar.gz" \
+            "https://github.com/prefix-dev/pixi/releases/download/v${pixi_version}/pixi-x86_64-unknown-linux-musl.tar.gz"
+          echo "${pixi_sha}  $RUNNER_TEMP/pixi.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/pixi.tar.gz" -C "$RUNNER_TEMP" pixi
+          sudo install -m 0755 "$RUNNER_TEMP/pixi" /usr/local/bin/pixi
+          sudo apt-get update
+          sudo apt-get install -y podman
+      - name: Render and check every answer set
+        run: |
+          cargo build --bin tophat
+          cargo xtask render-test
+
+  conformance:
+    name: Conformance suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Run the conformance suite
+        run: |
+          cargo build --bin tophat
+          cargo xtask conformance
+
+  e2e:
+    name: End-to-end example study
+    runs-on: ubuntu-latest
+    env:
+      TOPHAT_TEST_E2E: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Copier and pixi
+        run: |
+          version=$(sed -n 's/^copier_version: *//p' template/.tophat/managed/container/versions.yaml)
+          python -m pip install "copier==${version}"
+          pixi_version=$(sed -n 's/^pixi_version: *//p' template/.tophat/managed/container/versions.yaml)
+          pixi_sha=$(sed -n 's/^pixi_sha256_x86_64: *//p' template/.tophat/managed/container/versions.yaml)
+          curl -fsSL -o "$RUNNER_TEMP/pixi.tar.gz" \
+            "https://github.com/prefix-dev/pixi/releases/download/v${pixi_version}/pixi-x86_64-unknown-linux-musl.tar.gz"
+          echo "${pixi_sha}  $RUNNER_TEMP/pixi.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/pixi.tar.gz" -C "$RUNNER_TEMP" pixi
+          sudo install -m 0755 "$RUNNER_TEMP/pixi" /usr/local/bin/pixi
+      - name: Run the worked example
+        run: cargo test -p tophat --test e2e
+
+  adoption:
+    name: Adoption tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Copier
+        run: |
+          version=$(sed -n 's/^copier_version: *//p' template/.tophat/managed/container/versions.yaml)
+          python -m pip install "copier==${version}"
+      - name: Run the adoption fixtures
+        run: |
+          cargo build --bin tophat
+          cargo xtask adoption
