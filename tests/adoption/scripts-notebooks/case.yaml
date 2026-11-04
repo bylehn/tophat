@@ -1,0 +1,16 @@
+description: Python scripts, notebooks and a requirements file with processed outputs
+question: Does the notebook analysis still hold after adoption?
+dataset:
+  name: notebook-outputs
+  path: processed
+  statement: Tables produced by the 2023 notebooks, with no recorded environment.
+study:
+  id: old-notebook-analysis
+  title: The 2023 notebook analysis
+  endpoint: The mean difference between the two groups.
+  decision: The effect is positive when the mean difference is above zero.
+  result: The mean difference was 0.4, with no interval recorded.
+  interpretation: The old analysis suggests a positive effect.
+  stage: summarise
+  output_file: result.txt
+  output_content: "0.4\n"

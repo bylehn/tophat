@@ -1,0 +1,10 @@
+rule all:
+    input:
+        "results/processed/calls.csv"
+
+
+rule call:
+    output:
+        "results/processed/calls.csv"
+    shell:
+        "printf 'variant\\n' > {output}"

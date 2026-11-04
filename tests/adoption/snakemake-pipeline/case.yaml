@@ -1,0 +1,16 @@
+description: An existing Snakemake pipeline with its own ignore rules and processed calls
+question: Do the old Snakemake calls still hold?
+dataset:
+  name: snakemake-calls
+  path: processed
+  statement: Variant calls produced by the old Snakemake pipeline before TopHat.
+study:
+  id: old-snakemake-analysis
+  title: The old Snakemake pipeline
+  endpoint: The number of called variants.
+  decision: The old pipeline is considered correct when it calls at least one variant.
+  result: The old pipeline called three variants.
+  interpretation: The old pipeline found variants worth re-examining.
+  stage: call
+  output_file: count.txt
+  output_content: "3\n"

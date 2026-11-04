@@ -63,7 +63,7 @@ stays green.
   `rqm/testing.md` §Required cases, with deterministic git replay and `since:` versioning.
 - [x] `cargo xtask render-test`: render checks, `tophat check --strict`, skill lint,
   `pixi install --frozen`, image build, launcher and GPU scenarios.
-- [ ] `cargo xtask adoption` plus the 5 fixtures (`scripts-notebooks`, `conda-env`,
+- [x] `cargo xtask adoption` plus the 5 fixtures (`scripts-notebooks`, `conda-env`,
   `julia-project`, `snakemake-pipeline`, `make-pipeline`).
 - [ ] `cargo xtask eval` plus `evals/*.yaml` covering every behaviour scenario of
   `rqm/template/skills.md` (including the `th-quiz` scenarios).

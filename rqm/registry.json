@@ -10471,7 +10471,12 @@
   "rq-f54f3fe1": {
     "decl": "Scenario: Adoption overwrites no user file",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/adoption.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Adoption overwrites no user file",
     "type": "scenario"
   },
@@ -10704,7 +10709,12 @@
   "rq-fb67f0df": {
     "decl": "Scenario: Adopted content is labelled legacy",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/adoption.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Adopted content is labelled legacy",
     "type": "scenario"
   },

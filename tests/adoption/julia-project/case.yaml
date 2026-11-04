@@ -1,0 +1,16 @@
+description: A Julia project with a manifest and processed predictions
+question: Do the Julia predictions still support the original conclusion?
+dataset:
+  name: julia-predictions
+  path: processed
+  statement: Predictions written by the Julia analysis, with a manifest but no recording of the run.
+study:
+  id: old-julia-analysis
+  title: The Julia prediction analysis
+  endpoint: The mean prediction error.
+  decision: The model is useful when the mean error is below one.
+  result: The mean prediction error was 0.7, with no interval recorded.
+  interpretation: The old model appears useful.
+  stage: predict
+  output_file: error.txt
+  output_content: "0.7\n"

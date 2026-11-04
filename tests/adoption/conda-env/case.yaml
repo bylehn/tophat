@@ -1,0 +1,16 @@
+description: A conda environment file with R scripts and processed estimates
+question: Are the conda-era estimates reproducible?
+dataset:
+  name: conda-estimates
+  path: processed
+  statement: Estimates written by the R scripts under an unrecorded conda environment.
+study:
+  id: old-conda-analysis
+  title: The conda-era estimate
+  endpoint: The estimated group difference.
+  decision: A difference above zero is treated as an effect.
+  result: The estimated difference was 1.1, as printed by the old R script.
+  interpretation: The old estimate is consistent with an effect.
+  stage: estimate
+  output_file: estimate.txt
+  output_content: "1.1\n"
