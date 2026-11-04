@@ -4,6 +4,12 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::Path;
 
+/// The path as text with `/` separators, for instructions and generated text that must mean the
+/// same thing on every platform.
+pub(crate) fn path_text(path: &Path) -> String {
+    path.to_string_lossy().replace('\\', "/")
+}
+
 /// Writes `contents` to `path` atomically: writes a temporary file in the same directory, then
 /// renames it over `path`. On failure `path` is unchanged.
 pub fn write_atomic(path: &Path, contents: &str) -> io::Result<()> {
@@ -44,4 +50,15 @@ pub fn write_atomic_unique(path: &Path, contents: &str) -> io::Result<()> {
         let _ = fs::remove_file(&tmp);
     }
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn paths_use_forward_slashes() {
+        assert_eq!(path_text(Path::new(r"C:\work\job")), "C:/work/job");
+        assert_eq!(path_text(Path::new("a/b/job")), "a/b/job");
+    }
 }
