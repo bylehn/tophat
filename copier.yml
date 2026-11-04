@@ -69,6 +69,8 @@ agents:
   multiselect: true
   choices:
     - claude-code
+    - codex
+    - opencode
   default: [claude-code]
   validator: "{% if not agents %}Select at least one agent{% endif %}"
 

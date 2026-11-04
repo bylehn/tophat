@@ -546,6 +546,140 @@ fn the_human_only_commands_are_denied_with_their_arguments() {
     }
 }
 
+// --- Codex and OpenCode (rqm/template/agents.md) ------------------------------------------------
+
+/// The command prefixes a Claude settings permission list denies or allows.
+fn claude_prefixes(p: &Project, list: &str) -> Vec<String> {
+    let mut out: Vec<String> = entries(&settings(p), list)
+        .iter()
+        .map(|e| {
+            e.strip_prefix("Bash(")
+                .and_then(|e| e.strip_suffix(":*)"))
+                .unwrap()
+                .to_string()
+        })
+        .collect();
+    out.sort();
+    out
+}
+
+/// The `(command prefix, decision)` pairs of a Codex rules file.
+fn codex_rules(text: &str) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    for block in text.split("prefix_rule(").skip(1) {
+        let pattern = block
+            .split("pattern = [")
+            .nth(1)
+            .and_then(|r| r.split(']').next())
+            .unwrap_or("");
+        let words: Vec<String> = pattern
+            .split(',')
+            .map(|w| w.trim().trim_matches(['"', '\'']).to_string())
+            .filter(|w| !w.is_empty())
+            .collect();
+        let decision = block
+            .split("decision = ")
+            .nth(1)
+            .and_then(|r| r.split('"').nth(1))
+            .unwrap_or_else(|| panic!("no decision in rule block:\n{block}"))
+            .to_string();
+        out.push((words.join(" "), decision));
+    }
+    out
+}
+
+#[test] // rq-1652b11e rq-a70e0d9d
+fn codex_and_opencode_adapters_are_written_for_every_selected_agent() {
+    if !common::copier() {
+        return;
+    }
+    let p = Project::render(&[("agents", "[claude-code, codex, opencode]")]);
+    for dir in [".claude/skills", ".agents/skills", ".opencode/skills"] {
+        for skill in SKILLS {
+            assert!(
+                p.root().join(format!("{dir}/{skill}/SKILL.md")).is_file(),
+                "{dir}/{skill}"
+            );
+        }
+    }
+    assert!(
+        rules(&p.lint(), "skill.adapter-missing").is_empty(),
+        "{:?}",
+        p.lint()
+    );
+}
+
+#[test] // rq-3ca62dea
+fn no_adapters_for_unselected_agents() {
+    if !common::copier() {
+        return;
+    }
+    let p = Project::render(&[("agents", "[codex]")]);
+    assert!(p.root().join(".agents/skills/th-study/SKILL.md").is_file());
+    for rel in [".claude", ".opencode", "CLAUDE.md", "opencode.json"] {
+        assert!(!p.root().join(rel).exists(), "{rel} exists");
+    }
+}
+
+#[test] // rq-a4edf228
+fn remote_access_and_human_only_commands_are_denied_for_every_agent() {
+    if !common::copier() {
+        return;
+    }
+    let p = Project::render(&[("agents", "[claude-code, codex, opencode]")]);
+    let claude_deny = claude_prefixes(&p, "deny");
+    let claude_allow = claude_prefixes(&p, "allow");
+
+    let rules = codex_rules(&p.read(".codex/rules/tophat.rules"));
+    let mut codex_deny: Vec<String> = rules
+        .iter()
+        .filter(|(_, d)| d == "forbidden")
+        .map(|(c, _)| c.clone())
+        .collect();
+    let mut codex_allow: Vec<String> = rules
+        .iter()
+        .filter(|(_, d)| d == "allow")
+        .map(|(c, _)| c.clone())
+        .collect();
+    codex_deny.sort();
+    codex_allow.sort();
+    assert_eq!(codex_deny, claude_deny);
+    assert_eq!(codex_allow, claude_allow);
+
+    let opencode: serde_json::Value = serde_json::from_str(&p.read("opencode.json")).unwrap();
+    let bash = opencode["permission"]["bash"].as_object().unwrap();
+    // OpenCode keys are globs whose `*` matches zero or more characters, so "tophat status*" denies
+    // and allows the same commands as Claude's "tophat status:*" prefix.
+    let mut opencode_deny: Vec<String> = bash
+        .iter()
+        .filter(|(_, v)| v.as_str() == Some("deny"))
+        .map(|(k, _)| k.trim_end_matches('*').to_string())
+        .collect();
+    let mut opencode_allow: Vec<String> = bash
+        .iter()
+        .filter(|(_, v)| v.as_str() == Some("allow"))
+        .map(|(k, _)| k.trim_end_matches('*').to_string())
+        .collect();
+    opencode_deny.sort();
+    opencode_allow.sort();
+    assert_eq!(opencode_deny, claude_deny);
+    assert_eq!(opencode_allow, claude_allow);
+}
+
+#[test] // rq-d4406141
+fn the_container_check_runs_before_every_prompt() {
+    if !common::copier() {
+        return;
+    }
+    let p = Project::render(&[("agents", "[codex, opencode]")]);
+    assert!(p
+        .read(".codex/hooks.json")
+        .contains(".tophat/managed/hooks/check-container.sh"));
+    assert!(p
+        .read(".opencode/plugins/check-container.js")
+        .contains(".tophat/managed/hooks/check-container.sh"));
+}
+
 // --- Worked example -----------------------------------------------------------------------------
 
 #[test] // rq-78cc426d rq-428f178b

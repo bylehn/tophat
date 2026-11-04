@@ -904,7 +904,12 @@
   "rq-1652b11e": {
     "decl": "Scenario: Adapters are written for every selected agent",
     "file": "template/agents",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Adapters are written for every selected agent",
     "type": "scenario"
   },
@@ -2538,7 +2543,12 @@
   "rq-3ca62dea": {
     "decl": "Scenario: No adapters for unselected agents",
     "file": "template/agents",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "No adapters for unselected agents",
     "type": "scenario"
   },
@@ -6844,7 +6854,12 @@
   "rq-a4edf228": {
     "decl": "Scenario: Remote access and human-only commands are denied for every agent",
     "file": "template/agents",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Remote access and human-only commands are denied for every agent",
     "type": "scenario"
   },
@@ -6916,7 +6931,12 @@
   "rq-a70e0d9d": {
     "decl": "# Feature: Codex and OpenCode",
     "file": "template/agents",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Feature: Codex and OpenCode",
     "type": "file"
   },
@@ -7204,7 +7224,12 @@
     "decl": "## Image",
     "file": "template/agents",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Image",
     "type": "section"
   },
@@ -8824,7 +8849,12 @@
   "rq-d4406141": {
     "decl": "Scenario: The container check runs before every prompt",
     "file": "template/agents",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The container check runs before every prompt",
     "type": "scenario"
   },
@@ -10249,7 +10279,12 @@
   "rq-f419a09b": {
     "decl": "Scenario: Only selected agents are installed",
     "file": "template/agents",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Only selected agents are installed",
     "type": "scenario"
   },

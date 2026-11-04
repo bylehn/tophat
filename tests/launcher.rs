@@ -55,6 +55,11 @@ struct Env {
 impl Env {
     /// A rendered project in a git repository, with the fake podman on PATH.
     fn new() -> Env {
+        Env::with_answers(&[])
+    }
+
+    /// A rendered project with the default answers plus `answers`.
+    fn with_answers(answers: &[(&str, &str)]) -> Env {
         static N: AtomicUsize = AtomicUsize::new(0);
         let base = std::env::temp_dir().join(format!(
             "tophat-launcher-{}-{}",
@@ -64,8 +69,8 @@ impl Env {
         let _ = fs::remove_dir_all(&base);
         fs::create_dir_all(base.join("bin")).unwrap();
         let env = Env { base };
-        let out = Command::new("copier")
-            .args(["copy", "--defaults", "--quiet", "--vcs-ref", "HEAD"])
+        let mut cmd = Command::new("copier");
+        cmd.args(["copy", "--defaults", "--quiet", "--vcs-ref", "HEAD"])
             .args(["-d", "project_name=Method X"])
             .args(["-d", "project_description=Does method X work?"])
             .args([
@@ -73,7 +78,11 @@ impl Env {
                 "author_name=A. Scientist",
                 "-d",
                 "author_email=a@example.org",
-            ])
+            ]);
+        for (key, value) in answers {
+            cmd.arg("-d").arg(format!("{key}={value}"));
+        }
+        let out = cmd
             .arg(env!("CARGO_MANIFEST_DIR"))
             .arg(env.project())
             .output()
@@ -353,6 +362,32 @@ fn the_development_binary_goes_into_the_build_context() {
     );
 }
 
+#[test] // rq-ad167d22 rq-f419a09b
+fn the_agent_image_build_passes_every_agents_pinned_version() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let out = env.run(&["--dry-run"]);
+    let builds: Vec<String> = stdout(&out)
+        .lines()
+        .filter(|l| l.starts_with("podman build"))
+        .map(str::to_string)
+        .collect();
+    let agent = &builds[1];
+    for expected in [
+        "--build-arg CLAUDE_VERSION=2.1.301",
+        "--build-arg CODEX_VERSION=0.166.0",
+        "--build-arg OPENCODE_VERSION=1.19.5",
+        "--build-arg CODEX_SHA256=",
+        "--build-arg OPENCODE_SHA256=",
+        "--build-arg CODEX_ARCH=",
+        "--build-arg OPENCODE_ARCH=",
+    ] {
+        assert!(agent.contains(expected), "{expected} missing from {agent}");
+    }
+}
+
 // --- Session ------------------------------------------------------------------------------------
 
 #[test] // rq-1cc9f489 rq-5fb69e3a
@@ -393,6 +428,60 @@ fn the_session_mounts_only_the_workspace_roots_and_its_own_volumes() {
     }
     // Exactly the workspace, the root and the two volumes are mounted.
     assert_eq!(session.matches(" -v ").count(), 4, "{session}");
+}
+
+#[test] // rq-1cc9f489
+fn one_volume_per_selected_agent() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::with_answers(&[("agents", "[claude-code, codex, opencode]")]);
+    let out = env.run(&["--dry-run"]);
+    let session = env.session(&out);
+    let id = env.id();
+    for expected in [
+        format!("-v tophat-{id}-pixi-cache:/opt/tophat/cache/pixi"),
+        format!("-v tophat-{id}-claude:/opt/tophat/home/.claude"),
+        format!("-v tophat-{id}-codex:/opt/tophat/home/.codex"),
+        format!("-v tophat-{id}-opencode:/opt/tophat/home/.local/share/opencode"),
+    ] {
+        assert!(
+            session.contains(&expected),
+            "{expected} missing from {session}"
+        );
+    }
+    // Exactly the workspace, the pixi cache and one volume per agent are mounted.
+    assert_eq!(session.matches(" -v ").count(), 5, "{session}");
+}
+
+#[test] // rq-1cc9f489 rq-3ca62dea
+fn no_volume_or_personal_mounts_for_unselected_agents() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::with_answers(&[("agents", "[codex]")]);
+    // Personal skills and instructions exist on the host but mount for Claude Code alone.
+    let config = env.path("home/.config/tophat");
+    fs::create_dir_all(config.join("skills/my-skill")).unwrap();
+    fs::write(
+        config.join("skills/my-skill/SKILL.md"),
+        "---\nname: my-skill\n---\n",
+    )
+    .unwrap();
+    fs::write(config.join("CLAUDE.md"), "Personal note.\n").unwrap();
+    let out = env.run(&["--dry-run"]);
+    let session = env.session(&out);
+    let id = env.id();
+    assert!(
+        session.contains(&format!("-v tophat-{id}-codex:/opt/tophat/home/.codex")),
+        "{session}"
+    );
+    assert!(
+        !session.contains(&format!("-v tophat-{id}-claude:")),
+        "{session}"
+    );
+    assert!(!session.contains("/opt/tophat/home/.claude"), "{session}");
+    assert_eq!(session.matches(" -v ").count(), 3, "{session}");
 }
 
 #[test] // rq-6026766d rq-9f886d87
@@ -1145,6 +1234,54 @@ fn claude_code_is_installed_in_the_image() {
     let env = Env::new();
     let image = build_image(&env);
     assert!(in_image(&env, &image, "claude --version").status.success());
+}
+
+#[test] // rq-f419a09b rq-ad167d22
+fn the_agent_layer_installs_only_the_selected_agents() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::with_answers(&[("agents", "[codex]")]);
+    let file = fs::read_to_string(
+        env.project()
+            .join(".tophat/managed/container/Agent.Containerfile"),
+    )
+    .unwrap();
+    assert!(file.contains("/opt/tophat/bin/codex"), "{file}");
+    assert!(
+        file.contains("ENV CODEX_HOME=/opt/tophat/home/.codex"),
+        "{file}"
+    );
+    assert!(!file.contains("claude.ai/install.sh"), "{file}");
+    assert!(!file.contains("CLAUDE_CONFIG_DIR"), "{file}");
+    assert!(!file.contains("opencode-linux"), "{file}");
+
+    let env = Env::new();
+    let file = fs::read_to_string(
+        env.project()
+            .join(".tophat/managed/container/Agent.Containerfile"),
+    )
+    .unwrap();
+    assert!(file.contains("claude.ai/install.sh"), "{file}");
+    assert!(!file.contains("ENV CODEX_HOME"), "{file}");
+}
+
+#[test] // rq-f419a09b rq-ad167d22
+fn only_selected_agents_are_installed() {
+    if !podman_enabled() {
+        return;
+    }
+    let env = Env::with_answers(&[("agents", "[codex]")]);
+    let image = build_image(&env);
+    assert!(in_image(&env, &image, "codex --version").status.success());
+    let out = in_image(
+        &env,
+        &image,
+        "command -v claude || true; command -v opencode || true",
+    );
+    let text = stdout(&out);
+    assert!(!text.contains("claude"), "{text}");
+    assert!(!text.contains("opencode"), "{text}");
 }
 
 #[test] // rq-df0c42b9 rq-9f886d87

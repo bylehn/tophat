@@ -141,6 +141,14 @@ pixi_version=$(version_of pixi_version)
 pixi_sha256=$(version_of "pixi_sha256_$arch")
 copier_version=$(version_of copier_version)
 claude_version=$(version_of claude_version)
+codex_version=$(version_of codex_version)
+codex_sha256=$(version_of "codex_sha256_$arch")
+opencode_version=$(version_of opencode_version)
+opencode_sha256=$(version_of "opencode_sha256_$arch")
+case "$arch" in
+  x86_64) opencode_arch=x64 ;;
+  aarch64) opencode_arch=arm64 ;;
+esac
 cp .tophat/managed/container/Containerfile "$context/Containerfile"
 cp .tophat/managed/container/Agent.Containerfile "$context/Agent.Containerfile"
 cp .tophat/user/container/Containerfile "$context/Project.Containerfile"
@@ -156,6 +164,12 @@ build() {
   run podman build -t "$agent_image" -f "$context/Agent.Containerfile" \
     --build-arg "TOPHAT_BASE_IMAGE=$base_image" \
     --build-arg "CLAUDE_VERSION=$claude_version" \
+    --build-arg "CODEX_VERSION=$codex_version" \
+    --build-arg "CODEX_SHA256=$codex_sha256" \
+    --build-arg "CODEX_ARCH=$arch" \
+    --build-arg "OPENCODE_VERSION=$opencode_version" \
+    --build-arg "OPENCODE_SHA256=$opencode_sha256" \
+    --build-arg "OPENCODE_ARCH=$opencode_arch" \
     "$context" || fail "the agent image could not be built; the previous image is unchanged"
   run podman build -t "$project_image" -f "$context/Project.Containerfile" \
     --build-arg "TOPHAT_AGENT_IMAGE=$agent_image" \
@@ -220,6 +234,52 @@ $tools
 TOOLS
 }
 
+# --- Selected agents -----------------------------------------------------------------------------
+
+# The agents the `agents` Copier question selected, one per line. Copier records the answers in
+# the project's .copier-answers.yml; without that file no agent is selected.
+selected_agents() {
+  answers=.copier-answers.yml
+  if [ ! -f "$answers" ]; then
+    printf 'th.sh: warning: %s does not exist, so no agent is selected\n' "$answers" >&2
+    return 0
+  fi
+  # Copier writes the list either inline ([a, b]) or as one YAML line per entry (- a).
+  inline=$(sed -n 's/^agents: *//p' "$answers" | head -n 1)
+  case "$inline" in
+    \[*\])
+      printf '%s\n' "$inline" | tr -d '[]"' | tr ',' '\n' | sed 's/^ *//;s/ *$//'
+      ;;
+    '')
+      sed -n '/^agents:$/,/^[^ -]/p' "$answers" | sed -n 's/^ *- *//p' | tr -d '"'
+      ;;
+  esac
+}
+
+# Whether the `agents` Copier question selected the agent named by the argument.
+agent_selected() {
+  selected_agents | grep -qx "$1"
+}
+
+# rq-1cc9f489
+# Prints one "-v name:home" per line: a named volume at each selected agent's configuration home,
+# holding that agent's own login and session state across sessions. Unknown agents only warn.
+agent_volume_mounts() {
+  selected_agents | while IFS= read -r agent; do
+    [ -n "$agent" ] || continue
+    case "$agent" in
+      claude-code) name=claude; home=/opt/tophat/home/.claude ;;
+      codex) name=codex; home=/opt/tophat/home/.codex ;;
+      opencode) name=opencode; home=/opt/tophat/home/.local/share/opencode ;;
+      *)
+        printf 'th.sh: warning: agent %s is unknown; no volume is mounted for it\n' "$agent" >&2
+        continue
+        ;;
+    esac
+    printf '%s\n' -v "tophat-$id-$name:$home"
+  done
+}
+
 # --- Personal skills and instructions -----------------------------------------------------------
 
 # Prints the human's TopHat configuration folder, or nothing when neither XDG_CONFIG_HOME nor HOME
@@ -238,6 +298,9 @@ personal_config() {
 # Entries that cannot be mounted only warn. Without the folder it does nothing.
 read_skills() {
   skill_mounts=""
+  # Personal skills are mounted for the selected agents that read Claude Code's skill format;
+  # that is Claude Code alone (rqm/template/container.md, Personal skills).
+  agent_selected claude-code || return 0
   config=$(personal_config)
   [ -n "$config" ] || return 0
   folder=$config/skills
@@ -279,6 +342,8 @@ read_skills() {
 # cannot be mounted (which only warns).
 read_instructions() {
   instructions_mount=""
+  # Personal instructions mount as Claude Code's user-level instructions; Claude Code alone.
+  agent_selected claude-code || return 0
   config=$(personal_config)
   [ -n "$config" ] || return 0
   file=$config/CLAUDE.md
@@ -374,8 +439,8 @@ esac
 
 command=$(
   with_roots "" podman run --rm -it -v "$workspace:/work" -w /work \
-    -v "tophat-$id-pixi-cache:/opt/tophat/cache/pixi" \
-    -v "tophat-$id-claude:/opt/tophat/home/.claude"
+    -v "tophat-$id-pixi-cache:/opt/tophat/cache/pixi"
+  agent_volume_mounts
   printf '%s' "$tool_mounts" | while IFS= read -r path; do
     [ -n "$path" ] && printf '%s\n' -v "$(host_path "$path"):$path:ro"
   done

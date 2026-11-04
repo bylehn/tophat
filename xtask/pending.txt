@@ -6,6 +6,5 @@ rqm/template/project.md
 rqm/template/skills.md
 rqm/testing.md
 rqm/tooling.md
-rqm/template/agents.md
 rqm/template/apptainer.md
 rqm/template/gpu.md
