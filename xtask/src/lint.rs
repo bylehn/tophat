@@ -421,9 +421,10 @@ mod tests {
     fn usage_is_read_into_commands() {
         let c = usage_commands(USAGE);
         assert!(c.contains("status") && c.contains("study new") && c.contains("check"));
-        assert!(!c
-            .iter()
-            .any(|x| x.starts_with('-') || x.contains("Continued")));
+        assert!(
+            !c.iter()
+                .any(|x| x.starts_with('-') || x.contains("Continued"))
+        );
     }
 
     #[test]

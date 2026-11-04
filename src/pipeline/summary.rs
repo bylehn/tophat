@@ -6,12 +6,12 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+use super::PipelineError;
 use super::config::StageInput;
 use super::provenance::{ProvenanceRecord, ResolvedStage};
-use super::PipelineError;
 use crate::fsutil::write_atomic;
 use crate::study::{
-    parse_study_text, ResultLine, Study, Summary, STUDIES_DIR, STUDY_FILE, SUMMARY_FILE,
+    ResultLine, STUDIES_DIR, STUDY_FILE, SUMMARY_FILE, Study, Summary, parse_study_text,
 };
 
 /// Reads and parses a study's `STUDY.md`.
@@ -124,7 +124,7 @@ pub fn summarize(root: &Path, study: &str) -> Result<Summary, PipelineError> {
                 (true, _) => {
                     return Err(PipelineError::BadResult(format!(
                         "the result file of {label} must contain exactly one non-empty line"
-                    )))
+                    )));
                 }
                 (false, _) => missing.push(label),
             }

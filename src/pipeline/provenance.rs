@@ -5,15 +5,15 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
-use super::config::{load_pipeline, PipelineConfig, StageConfig, StageInput};
-use super::keys::{
-    compute_keys, input_dir, items_of, output_dir, params_file, render_run, results_root,
-    KeyContext, RunPaths, StageKeys,
-};
 use super::PipelineError;
-use crate::data::{content_hash, hash_files, load_roots, HashCache, Roots, RESULTS_ROOT};
+use super::config::{PipelineConfig, StageConfig, StageInput, load_pipeline};
+use super::keys::{
+    KeyContext, RunPaths, StageKeys, compute_keys, input_dir, items_of, output_dir, params_file,
+    render_run, results_root,
+};
+use crate::data::{HashCache, RESULTS_ROOT, Roots, content_hash, hash_files, load_roots};
 use crate::fsutil::write_atomic;
 use crate::study::STUDIES_DIR;
 
@@ -276,10 +276,10 @@ pub(crate) fn determining_files(
         // Only a project-supplied environment counts; the tool's own is fixed by its commit.
         let supplied = ctx.root().join("envs").join(&tool.pin.name);
         for env_file in [&tool.manifest, &tool.lock] {
-            if let Ok(rel) = env_file.strip_prefix(ctx.root()) {
-                if env_file.starts_with(&supplied) {
-                    files.push(rel.to_string_lossy().replace('\\', "/"));
-                }
+            if let Ok(rel) = env_file.strip_prefix(ctx.root())
+                && env_file.starts_with(&supplied)
+            {
+                files.push(rel.to_string_lossy().replace('\\', "/"));
             }
         }
     }

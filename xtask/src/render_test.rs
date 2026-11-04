@@ -113,12 +113,12 @@ impl Drop for Temp {
 /// The `tophat` binary beside this one, built from the workspace.
 fn tophat_binary(repo_root: &Path) -> Result<PathBuf, String> {
     let mut candidates = Vec::new();
-    if let Ok(exe) = std::env::current_exe() {
-        if let Some(dir) = exe.parent() {
-            candidates.push(dir.join("tophat"));
-            if let Some(parent) = dir.parent() {
-                candidates.push(parent.join("tophat"));
-            }
+    if let Ok(exe) = std::env::current_exe()
+        && let Some(dir) = exe.parent()
+    {
+        candidates.push(dir.join("tophat"));
+        if let Some(parent) = dir.parent() {
+            candidates.push(parent.join("tophat"));
         }
     }
     candidates.push(repo_root.join("target/debug/tophat"));
@@ -210,10 +210,10 @@ fn walk(dir: &Path) -> Result<Vec<String>, String> {
             let path = entry.path();
             if path.is_dir() {
                 visit(root, &path, out)?;
-            } else if path.is_file() {
-                if let Ok(rel) = path.strip_prefix(root) {
-                    out.push(rel.to_string_lossy().replace('\\', "/"));
-                }
+            } else if path.is_file()
+                && let Ok(rel) = path.strip_prefix(root)
+            {
+                out.push(rel.to_string_lossy().replace('\\', "/"));
             }
         }
         Ok(())
@@ -244,10 +244,10 @@ fn path_matches(pattern: &str, path: &str) -> bool {
 /// Whether a managed file carries the marker in its first five content lines.
 fn has_marker(text: &str) -> bool {
     let mut lines: Vec<&str> = text.lines().collect();
-    if lines.first() == Some(&"---") {
-        if let Some(end) = lines.iter().skip(1).position(|l| *l == "---") {
-            lines.drain(..=end + 1);
-        }
+    if lines.first() == Some(&"---")
+        && let Some(end) = lines.iter().skip(1).position(|l| *l == "---")
+    {
+        lines.drain(..=end + 1);
     }
     lines
         .iter()
@@ -511,9 +511,14 @@ fn check_pixi(project: &Path) -> Result<(), String> {
 
 /// The environment a launcher run gets: a home of its own and the workspace binary.
 fn launcher_env(command: &mut Command, temp: &Path, tophat: &Path) {
+    // The release workflow points TOPHAT_TEST_BINARY at the binary it built, so the same render
+    // checks run against the release instead of the workspace build.
+    let binary = std::env::var_os("TOPHAT_TEST_BINARY")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| tophat.to_path_buf());
     command
         .env("HOME", temp.join("home"))
-        .env("TOPHAT_DEV_BINARY", tophat);
+        .env("TOPHAT_DEV_BINARY", binary);
     for (key, _) in std::env::vars() {
         if key.starts_with("TOPHAT_ROOT_")
             || key.starts_with("GIT_")
@@ -856,10 +861,10 @@ pub fn run(repo_root: &Path, options: &Options) -> Result<Report, String> {
         }
     }
 
-    if !report.failed {
-        if let Some(message) = report.cannot_run.first() {
-            return Err(message.clone());
-        }
+    if !report.failed
+        && let Some(message) = report.cannot_run.first()
+    {
+        return Err(message.clone());
     }
     Ok(report)
 }

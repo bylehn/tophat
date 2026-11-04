@@ -1,6 +1,0 @@
-# Requirements files that are specified but not implemented yet (see rqm/tooling.md).
-# `cargo xtask scenarios` skips their scenarios, and fails once a listed file is fully tested,
-# so remove a line when its file is implemented.
-rqm/template/container.md
-rqm/template/project.md
-rqm/testing.md

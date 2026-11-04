@@ -16,15 +16,15 @@ use sha2::{Digest, Sha256};
 
 pub use cache::HashCache;
 pub use commands::{
-    add, declare, lineage, publish, retire, used_by, verify, LineageNode, RegisterOptions, UsedBy,
-    VerifyReport,
+    LineageNode, RegisterOptions, UsedBy, VerifyReport, add, declare, lineage, publish, retire,
+    used_by, verify,
 };
 pub use manifest::{
-    content_hash, list_manifests, parse_manifest, DatasetKind, FileEntry, Manifest, ManifestFile,
-    Origin, ProducedBy, Retired,
+    DatasetKind, FileEntry, Manifest, ManifestFile, Origin, ProducedBy, Retired, content_hash,
+    list_manifests, parse_manifest,
 };
-pub use refs::{study_dataset_refs, unreported_dependencies, ConfigRef};
-pub use roots::{load_roots, load_roots_with, render_roots, Roots};
+pub use refs::{ConfigRef, study_dataset_refs, unreported_dependencies};
+pub use roots::{Roots, load_roots, load_roots_with, render_roots};
 pub use rules::{data_rules, data_rules_with};
 
 pub(crate) use manifest::is_safe_relative_path;
@@ -128,12 +128,17 @@ impl fmt::Display for DataError {
             }
             DataError::NoFiles(p) => write!(f, "`{p}` contains no files"),
             DataError::SymbolicLink(p) => {
-                write!(f, "`{p}` is a symbolic link; datasets must contain only regular files")
+                write!(
+                    f,
+                    "`{p}` is a symbolic link; datasets must contain only regular files"
+                )
             }
             DataError::DatasetNotFound(r) => write!(f, "dataset `{r}` does not exist"),
             DataError::AlreadyRetired(r) => write!(f, "dataset `{r}` is already retired"),
             DataError::NotSealed(m) => write!(f, "stage output is not sealed: {m}"),
-            DataError::NotClean(m) => write!(f, "stage output was produced from uncommitted code: {m}"),
+            DataError::NotClean(m) => {
+                write!(f, "stage output was produced from uncommitted code: {m}")
+            }
             DataError::OutputMismatch(files) => write!(
                 f,
                 "stage output files differ from their provenance record: {}",
@@ -188,13 +193,15 @@ pub(crate) fn hash_files(paths: &[std::path::PathBuf]) -> Vec<io::Result<(u64, S
     let slots = std::sync::Mutex::new(&mut results);
     std::thread::scope(|scope| {
         for _ in 0..workers {
-            scope.spawn(|| loop {
-                let i = next.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                if i >= paths.len() {
-                    break;
+            scope.spawn(|| {
+                loop {
+                    let i = next.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    if i >= paths.len() {
+                        break;
+                    }
+                    let result = hash_file(&paths[i]);
+                    slots.lock().expect("no panics while holding the lock")[i] = Some(result);
                 }
-                let result = hash_file(&paths[i]);
-                slots.lock().expect("no panics while holding the lock")[i] = Some(result);
             });
         }
     });

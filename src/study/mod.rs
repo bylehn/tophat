@@ -14,18 +14,18 @@ use std::fmt;
 use crate::check::Diagnostic;
 
 pub use crate::markdown::Section;
-pub use commands::{new_study, preregister, record_exploration, report, supersede, Console};
+pub use commands::{Console, new_study, preregister, record_exploration, report, supersede};
 pub use document::{
-    parse_study, parse_study_text, Amendment, Field, FrontMatter, Preregistration, Scenario, Study,
-    TagIssue,
+    Amendment, Field, FrontMatter, Preregistration, Scenario, Study, TagIssue, parse_study,
+    parse_study_text,
 };
 pub use exploration::{
-    exploration_hash, explore, parse_exploration, write_exploration, Exploration, TrialResult,
-    EXPLORATION_FILE,
+    EXPLORATION_FILE, Exploration, TrialResult, exploration_hash, explore, parse_exploration,
+    write_exploration,
 };
 pub use fingerprint::frozen_fingerprint;
 pub use rules::{study_rules, study_rules_at};
-pub use summary::{parse_summary, ResultLine, Summary};
+pub use summary::{ResultLine, Summary, parse_summary};
 
 /// Directory, relative to the project root, that holds one subdirectory per study.
 pub const STUDIES_DIR: &str = "studies";

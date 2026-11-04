@@ -2,7 +2,7 @@
 
 use sha2::{Digest, Sha256};
 
-use super::{Study, FROZEN_SECTIONS};
+use super::{FROZEN_SECTIONS, Study};
 
 /// Strips trailing whitespace from each line and removes leading and trailing blank lines.
 fn normalize(content: &[(u32, String)]) -> Vec<&str> {

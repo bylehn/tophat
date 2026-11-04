@@ -7,10 +7,10 @@ use std::hash::{BuildHasher, Hasher};
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
-use super::rules::{load_studies, load_tree, StudyEntry};
-use super::{heading_id, parse_project, HeadingId, QuestionError, QuestionTree, PROJECT_FILE};
+use super::rules::{StudyEntry, load_studies, load_tree};
+use super::{HeadingId, PROJECT_FILE, QuestionError, QuestionTree, heading_id, parse_project};
 use crate::check::Project;
 use crate::fsutil::write_atomic;
 use crate::markdown::atx_heading;
@@ -64,10 +64,10 @@ fn unresolved_ids(text: &str, tree: &QuestionTree) -> Vec<String> {
             Some(HeadingId::Stamped { id, .. }) if counts[id] > 1 => Some(id),
             _ => None,
         };
-        if let Some(token) = token {
-            if !out.iter().any(|t| t == token) {
-                out.push(token.to_string());
-            }
+        if let Some(token) = token
+            && !out.iter().any(|t| t == token)
+        {
+            out.push(token.to_string());
         }
     }
     out

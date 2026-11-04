@@ -6,9 +6,9 @@ mod rules;
 
 use std::fmt;
 
-use crate::markdown::{atx_heading, numbered_lines, FenceState, FenceTracker};
+use crate::markdown::{FenceState, FenceTracker, atx_heading, numbered_lines};
 
-pub use commands::{render_tree, render_tree_json, stamp, stamp_outcome, StampOutcome};
+pub use commands::{StampOutcome, render_tree, render_tree_json, stamp, stamp_outcome};
 pub use rules::question_rules;
 
 /// File name of the project document, at the project root.
@@ -208,60 +208,60 @@ pub fn parse_project(text: &str) -> QuestionTree {
 
     for (no, line) in numbered_lines(text) {
         let state = fences.next(line);
-        if state == FenceState::Outside {
-            if let Some((level, heading_text)) = atx_heading(line) {
-                if level == 1 {
-                    current = None;
-                    continue;
-                }
-                let skipped = match previous_level {
-                    None => level != 2,
-                    Some(prev) => level > prev + 1,
-                };
-                if skipped {
-                    tree.issues.push(HeadingIssue::LevelSkip { line: no });
-                }
-                previous_level = Some(level);
-                while stack.last().is_some_and(|&(l, _)| l >= level) {
-                    stack.pop();
-                }
-                let parent = stack.last().map(|&(_, i)| i);
-                let (id, question_text) = match heading_id(heading_text) {
-                    HeadingId::Stamped { id, text } => {
-                        if text.is_empty() {
-                            tree.issues.push(HeadingIssue::TextEmpty { line: no });
-                        }
-                        (Some(id.to_string()), text.to_string())
-                    }
-                    HeadingId::Malformed { token, text } => {
-                        tree.issues.push(HeadingIssue::MalformedId {
-                            line: no,
-                            token: token.to_string(),
-                        });
-                        (None, text.to_string())
-                    }
-                    HeadingId::Unstamped => {
-                        tree.issues.push(HeadingIssue::Unstamped { line: no });
-                        (None, heading_text.to_string())
-                    }
-                };
-                let index = tree.questions.len();
-                tree.questions.push(Question {
-                    id,
-                    text: question_text,
-                    level,
-                    heading_line: no,
-                    parent,
-                    status: None,
-                    answer: None,
-                    reason: None,
-                    evidence: None,
-                });
-                stack.push((level, index));
-                current = Some(index);
-                seen_first_body_line = false;
+        if state == FenceState::Outside
+            && let Some((level, heading_text)) = atx_heading(line)
+        {
+            if level == 1 {
+                current = None;
                 continue;
             }
+            let skipped = match previous_level {
+                None => level != 2,
+                Some(prev) => level > prev + 1,
+            };
+            if skipped {
+                tree.issues.push(HeadingIssue::LevelSkip { line: no });
+            }
+            previous_level = Some(level);
+            while stack.last().is_some_and(|&(l, _)| l >= level) {
+                stack.pop();
+            }
+            let parent = stack.last().map(|&(_, i)| i);
+            let (id, question_text) = match heading_id(heading_text) {
+                HeadingId::Stamped { id, text } => {
+                    if text.is_empty() {
+                        tree.issues.push(HeadingIssue::TextEmpty { line: no });
+                    }
+                    (Some(id.to_string()), text.to_string())
+                }
+                HeadingId::Malformed { token, text } => {
+                    tree.issues.push(HeadingIssue::MalformedId {
+                        line: no,
+                        token: token.to_string(),
+                    });
+                    (None, text.to_string())
+                }
+                HeadingId::Unstamped => {
+                    tree.issues.push(HeadingIssue::Unstamped { line: no });
+                    (None, heading_text.to_string())
+                }
+            };
+            let index = tree.questions.len();
+            tree.questions.push(Question {
+                id,
+                text: question_text,
+                level,
+                heading_line: no,
+                parent,
+                status: None,
+                answer: None,
+                reason: None,
+                evidence: None,
+            });
+            stack.push((level, index));
+            current = Some(index);
+            seen_first_body_line = false;
+            continue;
         }
 
         let Some(index) = current else { continue };
@@ -281,28 +281,28 @@ pub fn parse_project(text: &str) -> QuestionTree {
         if state != FenceState::Outside {
             continue;
         }
-        if question.answer.is_none() {
-            if let Some(value) = line_value(line, "**Answer:**") {
-                question.answer = Some((value.to_string(), no));
-                continue;
-            }
+        if question.answer.is_none()
+            && let Some(value) = line_value(line, "**Answer:**")
+        {
+            question.answer = Some((value.to_string(), no));
+            continue;
         }
-        if question.reason.is_none() {
-            if let Some(value) = line_value(line, "**Reason:**") {
-                question.reason = Some((value.to_string(), no));
-                continue;
-            }
+        if question.reason.is_none()
+            && let Some(value) = line_value(line, "**Reason:**")
+        {
+            question.reason = Some((value.to_string(), no));
+            continue;
         }
-        if question.evidence.is_none() {
-            if let Some(value) = line_value(line, "Evidence:") {
-                let citations = value
-                    .split(',')
-                    .map(str::trim)
-                    .filter(|c| !c.is_empty())
-                    .map(str::to_string)
-                    .collect();
-                question.evidence = Some((citations, no));
-            }
+        if question.evidence.is_none()
+            && let Some(value) = line_value(line, "Evidence:")
+        {
+            let citations = value
+                .split(',')
+                .map(str::trim)
+                .filter(|c| !c.is_empty())
+                .map(str::to_string)
+                .collect();
+            question.evidence = Some((citations, no));
         }
     }
     tree

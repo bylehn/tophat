@@ -6,7 +6,7 @@ use std::path::Path;
 use yaml_rust2::Yaml;
 
 use super::document::load_front_matter;
-use super::{matches_id_pattern, StudyError};
+use super::{StudyError, matches_id_pattern};
 use crate::markdown::{meaningful_lines, numbered_lines, sections, split_front_matter};
 
 /// One result line: `- <variant>/<stage>: <text>`.
@@ -98,7 +98,7 @@ pub(super) fn parse_summary_text(text: &str) -> Result<Summary, String> {
                             _ => {
                                 return Err(
                                     "field `keys` must map `<variant>/<stage>` to keys".into()
-                                )
+                                );
                             }
                         }
                     }

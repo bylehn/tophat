@@ -12,11 +12,11 @@ use std::time::{Duration, SystemTime};
 use chrono::NaiveDate;
 use tophat::check::{Diagnostic, Project, Severity};
 use tophat::data::{
-    add, content_hash, data_rules_with, declare, hash_file, lineage, load_roots_with,
-    parse_manifest, retire, used_by, verify, DataError, DatasetKind, FileEntry, Manifest, Origin,
-    ProducedBy, RegisterOptions,
+    DataError, DatasetKind, FileEntry, Manifest, Origin, ProducedBy, RegisterOptions, add,
+    content_hash, data_rules_with, declare, hash_file, lineage, load_roots_with, parse_manifest,
+    retire, used_by, verify,
 };
-use tophat::study::{report, StudyError};
+use tophat::study::{StudyError, report};
 
 // --- Fixtures -------------------------------------------------------------------------------
 
@@ -588,10 +588,12 @@ fn verify_skips_unconfigured_roots() {
     archer_datasets(&env);
     let report = verify(&env.root(), None).unwrap();
     assert_eq!(report.skipped, 2);
-    assert!(report
-        .lines
-        .iter()
-        .any(|l| l.starts_with("SKIPPED") && l.contains("traj-set@v1")));
+    assert!(
+        report
+            .lines
+            .iter()
+            .any(|l| l.starts_with("SKIPPED") && l.contains("traj-set@v1"))
+    );
 }
 
 #[test] // rq-33c3cc6a

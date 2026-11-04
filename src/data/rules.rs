@@ -2,13 +2,13 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::cache::{mtime_ns, HashCache};
+use super::cache::{HashCache, mtime_ns};
 use super::manifest::list_manifests;
 use super::refs::{accepts, config_occurrences, manifests_by_ref, study_status};
-use super::roots::{load_roots_lenient, ROOTS_FILE};
-use super::{DatasetKind, DatasetRef, DATASETS_DIR};
+use super::roots::{ROOTS_FILE, load_roots_lenient};
+use super::{DATASETS_DIR, DatasetKind, DatasetRef};
 use crate::check::{Diagnostic, Project, Severity};
-use crate::study::{parse_study_text, Status, STUDIES_DIR, STUDY_FILE};
+use crate::study::{STUDIES_DIR, STUDY_FILE, Status, parse_study_text};
 
 fn diag(
     rule: &'static str,
@@ -169,20 +169,21 @@ fn check_manifests(project: &Project, roots: &super::Roots, out: &mut Vec<Diagno
                 continue;
             }
             let rel = format!("{}/{}", manifest.path, entry.path);
-            if let Some(cached) = cache.get(&manifest.root, &rel) {
-                if cached.size == entry.size && Some(cached.mtime_ns) != mtime_ns(&path) {
-                    out.push(diag(
-                        "data.unverified",
-                        Severity::Warning,
-                        &file.path,
-                        None,
-                        format!(
-                            "File `{}` was modified since it was last verified",
-                            entry.path
-                        ),
-                        &format!("Run `tophat data verify {}`", manifest.reference()),
-                    ));
-                }
+            if let Some(cached) = cache.get(&manifest.root, &rel)
+                && cached.size == entry.size
+                && Some(cached.mtime_ns) != mtime_ns(&path)
+            {
+                out.push(diag(
+                    "data.unverified",
+                    Severity::Warning,
+                    &file.path,
+                    None,
+                    format!(
+                        "File `{}` was modified since it was last verified",
+                        entry.path
+                    ),
+                    &format!("Run `tophat data verify {}`", manifest.reference()),
+                ));
             }
         }
     }

@@ -3,7 +3,7 @@
 //! [`run`] takes its environment (arguments, working directory, rule families, terminal streams)
 //! as parameters so every command can be exercised in tests.
 
-use crate::check::{find_project_root, resolve_scope, run_families, CheckError, RuleFamily};
+use crate::check::{CheckError, RuleFamily, find_project_root, resolve_scope, run_families};
 use crate::data::{self, DataError, Origin, RegisterOptions};
 use crate::pipeline;
 use crate::question::{self, QuestionError};
@@ -97,7 +97,7 @@ fn parse_check_args(args: &[String]) -> Result<CheckArgs, String> {
             "--json" => parsed.json = true,
             "--strict" => parsed.strict = true,
             flag if flag.starts_with('-') && flag.len() > 1 => {
-                return Err(format!("unknown option `{flag}` for `tophat check`"))
+                return Err(format!("unknown option `{flag}` for `tophat check`"));
             }
             path => parsed.paths.push(PathBuf::from(path)),
         }
@@ -221,7 +221,7 @@ fn parse_study_args(args: &[String]) -> Result<StudyCommand, String> {
                 other => {
                     return Err(format!(
                         "--visibility must be public or private, not `{other}`"
-                    ))
+                    ));
                 }
             };
             Ok(StudyCommand::New {
@@ -900,11 +900,7 @@ fn run_tools_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
                 for line in &report.lines {
                     let _ = writeln!(io.out, "{line}");
                 }
-                if report.ok {
-                    EXIT_OK
-                } else {
-                    EXIT_FAILED
-                }
+                if report.ok { EXIT_OK } else { EXIT_FAILED }
             }
             Err(e) => {
                 let _ = writeln!(io.err, "tophat tools sync: {e}");
@@ -1088,15 +1084,17 @@ mod tests {
             Ok(StudyCommand::Supersede { .. })
         ));
         assert!(parse_study_args(&args(&["new", "abc"])).is_err());
-        assert!(parse_study_args(&args(&[
-            "new",
-            "abc",
-            "--visibility",
-            "secret",
-            "--question",
-            "q"
-        ]))
-        .is_err());
+        assert!(
+            parse_study_args(&args(&[
+                "new",
+                "abc",
+                "--visibility",
+                "secret",
+                "--question",
+                "q"
+            ]))
+            .is_err()
+        );
         assert!(parse_study_args(&args(&["report"])).is_err());
         assert!(parse_study_args(&args(&["report", "a", "b"])).is_err());
         assert!(parse_study_args(&args(&["frobnicate", "a"])).is_err());

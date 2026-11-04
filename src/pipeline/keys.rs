@@ -7,10 +7,10 @@ use std::path::{Component, Path, PathBuf};
 use sha2::{Digest, Sha256};
 use yaml_rust2::{Yaml, YamlLoader};
 
-use super::config::{parse_template, PipelineConfig, StageConfig, StageInput, TemplatePart};
 use super::PipelineError;
+use super::config::{PipelineConfig, StageConfig, StageInput, TemplatePart, parse_template};
 use crate::check::Project;
-use crate::data::{hash_file, DatasetRef, Manifest, Roots, RESULTS_ROOT};
+use crate::data::{DatasetRef, Manifest, RESULTS_ROOT, Roots, hash_file};
 use crate::study::STUDIES_DIR;
 
 /// Version line at the start of every key text.

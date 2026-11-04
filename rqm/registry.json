@@ -1405,7 +1405,12 @@
   "rq-21bea60c": {
     "decl": "Scenario: A binary with the wrong checksum fails the build",
     "file": "template/container",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A binary with the wrong checksum fails the build",
     "type": "scenario"
   },
@@ -3976,6 +3981,10 @@
     "refs": [
       {
         "file": "tests/launcher.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/template.rs",
         "kind": "code"
       }
     ],
@@ -9947,7 +9956,12 @@
   "rq-e6ed00d3": {
     "decl": "Scenario: A release is published only after the gates pass",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/ci.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A release is published only after the gates pass",
     "type": "scenario"
   },
@@ -10401,7 +10415,12 @@
   "rq-f2b4f4cc": {
     "decl": "Scenario: The release pin is complete",
     "file": "template/project",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/template.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The release pin is complete",
     "type": "scenario"
   },

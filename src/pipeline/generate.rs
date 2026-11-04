@@ -3,11 +3,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-use super::config::StageInput;
-use super::provenance::{ResolvedStage, RECORD_FILE};
-use super::summary::read_study;
 use super::PipelineError;
-use crate::study::{Status, STUDIES_DIR};
+use super::config::StageInput;
+use super::provenance::{RECORD_FILE, ResolvedStage};
+use super::summary::read_study;
+use crate::study::{STUDIES_DIR, Status};
 
 // rq-3c19a18d rq-fbc524b4
 /// The exact `Snakefile` stub of a study.
@@ -51,11 +51,7 @@ fn pattern(path: &Path) -> String {
 fn rule_name(stage: &str, key: &str, trial: bool) -> String {
     let hex = key.trim_start_matches("sk-");
     let base = format!("{}_{hex}", stage.replace('-', "_"));
-    if trial {
-        format!("trial_{base}")
-    } else {
-        base
-    }
+    if trial { format!("trial_{base}") } else { base }
 }
 
 /// The target rule name of a variant.

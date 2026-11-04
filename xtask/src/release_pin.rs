@@ -115,13 +115,13 @@ pub fn release_pin(repo_root: &Path, request: &Request) -> Result<Report, String
     for target in TARGETS {
         let path = &paths[target];
         hashes.insert(target.to_string(), sha256(path)?);
-        if let Some(found) = reported_version(path) {
-            if found != request.version {
-                problems.push(format!(
-                    "{} reports version {found}, not {}",
-                    target, request.version
-                ));
-            }
+        if let Some(found) = reported_version(path)
+            && found != request.version
+        {
+            problems.push(format!(
+                "{} reports version {found}, not {}",
+                target, request.version
+            ));
         }
         lines.push(format!("{target} {}", hashes[target]));
     }

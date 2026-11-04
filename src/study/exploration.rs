@@ -8,9 +8,9 @@ use std::path::Path;
 
 use sha2::{Digest, Sha256};
 
-use super::{StudyError, STUDIES_DIR};
+use super::{STUDIES_DIR, StudyError};
 use crate::pipeline::{
-    compute_keys, load_pipeline, output_dir, KeyContext, ProvenanceRecord, StageInput,
+    KeyContext, ProvenanceRecord, StageInput, compute_keys, load_pipeline, output_dir,
 };
 
 /// File name of the exploration record, in the study directory.
@@ -55,10 +55,11 @@ fn trial_records(results: &Path, study: &str) -> Vec<ProvenanceRecord> {
             continue;
         };
         for key in keys.flatten() {
-            if let Some(record) = ProvenanceRecord::read(&key.path()) {
-                if record.trial && record.study == study {
-                    records.push(record);
-                }
+            if let Some(record) = ProvenanceRecord::read(&key.path())
+                && record.trial
+                && record.study == study
+            {
+                records.push(record);
             }
         }
     }
@@ -120,13 +121,13 @@ pub fn explore(root: &Path, study: &str) -> Result<Exploration, StudyError> {
     let mut datasets_used: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     for record in &records {
         for input in &record.inputs {
-            if input["kind"] == "dataset" {
-                if let Some(r) = input["ref"].as_str() {
-                    datasets_used
-                        .entry(r.to_string())
-                        .or_default()
-                        .insert(record.stage.clone());
-                }
+            if input["kind"] == "dataset"
+                && let Some(r) = input["ref"].as_str()
+            {
+                datasets_used
+                    .entry(r.to_string())
+                    .or_default()
+                    .insert(record.stage.clone());
             }
         }
     }
@@ -332,7 +333,7 @@ pub fn parse_exploration(text: &str) -> Result<(String, bool), String> {
                 other => {
                     return Err(format!(
                         "`deciding_data_seen: {other}` is not true or false"
-                    ))
+                    ));
                 }
             };
         }

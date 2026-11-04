@@ -11,7 +11,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 mod common;
 
-use tophat::pipeline::{compute_keys, load_pipeline, KeyContext};
+use tophat::pipeline::{KeyContext, compute_keys, load_pipeline};
+use xtask::release_pin::{self, Request};
 use yaml_rust2::{Yaml, YamlLoader};
 
 /// The Background answers of the scenarios.
@@ -401,10 +402,10 @@ fn managed_files_carry_the_marker() {
         let text = read(&p, f);
         let mut lines: Vec<&str> = text.lines().collect();
         // A file that begins with front matter carries the marker after it.
-        if lines.first() == Some(&"---") {
-            if let Some(end) = lines.iter().skip(1).position(|l| *l == "---") {
-                lines.drain(..=end + 1);
-            }
+        if lines.first() == Some(&"---")
+            && let Some(end) = lines.iter().skip(1).position(|l| *l == "---")
+        {
+            lines.drain(..=end + 1);
         }
         let head: Vec<String> = lines
             .iter()
@@ -697,6 +698,103 @@ fn an_unreleased_pin_says_so() {
     );
 }
 
+#[test] // rq-f2b4f4cc rq-56d220b5
+fn the_release_pin_is_complete_after_release_pin_writes_it() {
+    if !common::copier() {
+        return;
+    }
+    let scratch = Scratch::new();
+    let tpl = scratch.path("tpl");
+    template_repo(&tpl);
+    let x86 = scratch.path("tophat-x86_64-unknown-linux-musl");
+    let arm = scratch.path("tophat-aarch64-unknown-linux-musl");
+    executable(&x86, "#!/bin/sh\nprintf 'tophat 0.1.0\\n'\n");
+    executable(&arm, "#!/bin/sh\nprintf 'tophat 0.1.0\\n'\n");
+    let report = release_pin::release_pin(
+        &tpl,
+        &Request {
+            version: "0.1.0".into(),
+            url: "https://github.com/bylehn/tophat/releases/download/v0.1.0".into(),
+            binaries: vec![
+                format!("x86_64-unknown-linux-musl={}", x86.display()),
+                format!("aarch64-unknown-linux-musl={}", arm.display()),
+            ],
+        },
+    )
+    .unwrap();
+    assert!(!report.failed, "{:?}", report.lines);
+    git_ok(&tpl, &["add", "-A"]);
+    git_ok(&tpl, &["commit", "-qm", "pin"]);
+
+    let p = scratch.path("p");
+    let out = copier_copy(&tpl, "HEAD", &p, &[]);
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let pin = yaml(&read(&p, ".tophat/managed/tophat-release.yaml"));
+    assert_eq!(pin["version"].as_str(), Some("0.1.0"));
+    assert_eq!(
+        pin["url"].as_str(),
+        Some("https://github.com/bylehn/tophat/releases/download/v0.1.0")
+    );
+    for target in ["x86_64-unknown-linux-musl", "aarch64-unknown-linux-musl"] {
+        let hash = pin["sha256"][target].as_str().unwrap_or_default();
+        assert_eq!(hash.len(), 64, "{target}: {hash}");
+        assert!(
+            hash.chars()
+                .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()),
+            "{target}: {hash}"
+        );
+    }
+}
+
+#[test] // rq-21bea60c rq-5c404476
+fn a_binary_with_the_wrong_checksum_fails_the_build() {
+    if !common::copier() {
+        return;
+    }
+    let scratch = Scratch::new();
+    let p = scratch.path("p");
+    render(&p, &[]);
+    let containerfile = read(&p, ".tophat/managed/container/Containerfile");
+    assert!(containerfile.contains("$TOPHAT_SHA256"), "{containerfile}");
+    assert!(containerfile.contains("sha256sum -c -"), "{containerfile}");
+    assert!(
+        containerfile.contains("tophat: checksum mismatch"),
+        "{containerfile}"
+    );
+
+    // The hash the launcher writes comes from the pin; a wrong one cannot match the download.
+    let release = scratch.path("release");
+    fs::create_dir_all(&release).unwrap();
+    let binary = release.join("tophat-x86_64-unknown-linux-musl");
+    fs::write(&binary, "a binary\n").unwrap();
+    let (_, actual) = tophat::data::hash_file(&binary).unwrap();
+    let pin = format!(
+        "# TopHat-managed\nversion: 0.1.0\nurl: file://{}\nsha256:\n  x86_64-unknown-linux-musl: {}\n  aarch64-unknown-linux-musl: {}\n",
+        release.display(),
+        "0".repeat(64),
+        "0".repeat(64)
+    );
+    write(&p, ".tophat/managed/tophat-release.yaml", &pin);
+    let wrong = "0".repeat(64);
+    assert_ne!(actual, wrong);
+    let checksum_file = scratch.path("checksums");
+    fs::write(&checksum_file, format!("{wrong}  {}\n", binary.display())).unwrap();
+    let check = Command::new("sha256sum")
+        .arg("-c")
+        .arg(&checksum_file)
+        .output()
+        .unwrap();
+    assert!(!check.status.success());
+    assert!(
+        String::from_utf8_lossy(&check.stdout).contains("FAILED"),
+        "{actual}"
+    );
+}
+
 // --- Hook and CI --------------------------------------------------------------------------------
 
 #[test] // rq-05e3b95c rq-a35593b1
@@ -832,9 +930,11 @@ fn ci_verifies_the_binary_before_running_the_check() {
     );
     let installed = runner.join("tophat-bin/tophat");
     assert!(installed.is_file());
-    assert!(fs::read_to_string(runner.join("github_path"))
-        .unwrap()
-        .contains("tophat-bin"));
+    assert!(
+        fs::read_to_string(runner.join("github_path"))
+            .unwrap()
+            .contains("tophat-bin")
+    );
 
     // A wrong hash stops the job before the check.
     write(
@@ -988,9 +1088,11 @@ fn updating_keeps_project_owned_files_and_stage_keys() {
     );
     let stamped = String::from_utf8_lossy(&tophat(&p, &["question", "stamp"]).stdout).into_owned();
     let id = stamped.split_whitespace().next().unwrap().to_string();
-    assert!(tophat(&p, &["study", "new", "x-study", "--question", &id])
-        .status
-        .success());
+    assert!(
+        tophat(&p, &["study", "new", "x-study", "--question", &id])
+            .status
+            .success()
+    );
     write(
         &p,
         "studies/x-study/config/base.yaml",

@@ -67,7 +67,7 @@ fn check_output(out: &Path) -> Result<(), Error> {
             return Err(error(format!(
                 "the output directory {} cannot be read: {e}",
                 out.display()
-            )))
+            )));
         }
     }
     Ok(())
@@ -85,7 +85,7 @@ fn copier(path: Option<&OsStr>) -> Result<Command, Error> {
             return Err(error(format!(
                 "copier --version failed: {}",
                 String::from_utf8_lossy(&out.stderr).trim()
-            )))
+            )));
         }
         Err(_) => return Err(error("copier is not on PATH; install Copier 9")),
     }

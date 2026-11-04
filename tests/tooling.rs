@@ -78,12 +78,14 @@ fn mini_template() -> Temp {
             "init",
         ],
     ] {
-        assert!(Command::new("git")
-            .args(args)
-            .current_dir(&repo.path)
-            .status()
-            .unwrap()
-            .success());
+        assert!(
+            Command::new("git")
+                .args(args)
+                .current_dir(&repo.path)
+                .status()
+                .unwrap()
+                .success()
+        );
     }
     repo
 }
@@ -252,12 +254,14 @@ fn template_repo() -> Temp {
             "init",
         ],
     ] {
-        assert!(Command::new("git")
-            .args(args)
-            .current_dir(&repo.path)
-            .status()
-            .unwrap()
-            .success());
+        assert!(
+            Command::new("git")
+                .args(args)
+                .current_dir(&repo.path)
+                .status()
+                .unwrap()
+                .success()
+        );
     }
     repo
 }

@@ -1,7 +1,7 @@
 [package]
 name = "xtask"
 version = "0.0.0"
-edition = "2021"
+edition = "2024"
 description = "Development tooling for the TopHat template; never published or shipped"
 license = "BSD-3-Clause"
 publish = false

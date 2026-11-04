@@ -8,12 +8,12 @@ use chrono::NaiveDate;
 
 use super::edit::EditableDoc;
 use super::exploration::{
-    exploration_hash, exploration_text, explore, write_exploration, Exploration, EXPLORATION_FILE,
+    EXPLORATION_FILE, Exploration, exploration_hash, exploration_text, explore, write_exploration,
 };
-use super::rules::{check_study, Context};
+use super::rules::{Context, check_study};
 use super::{
+    FROZEN_SECTIONS, STUDIES_DIR, STUDY_FILE, SUMMARY_FILE, Status, Study, StudyError,
     frozen_fingerprint, is_valid_question_id, is_valid_study_id, parse_study_text, parse_summary,
-    Status, Study, StudyError, FROZEN_SECTIONS, STUDIES_DIR, STUDY_FILE, SUMMARY_FILE,
 };
 use crate::check::{Project, Severity};
 use crate::fsutil::write_atomic;
@@ -351,12 +351,12 @@ pub fn report(root: &Path, id: &str) -> Result<(), StudyError> {
                 return Err(StudyError::Summary(format!(
                     "the summary is stale: {} no longer match the configuration; run the pipeline again",
                     stale.join(", ")
-                )))
+                )));
             }
             Err(e) => {
                 return Err(StudyError::Summary(format!(
                     "cannot check whether the summary is current: {e}"
-                )))
+                )));
             }
         }
     }

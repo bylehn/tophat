@@ -9,17 +9,17 @@ use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use yaml_rust2::{Yaml, YamlLoader};
 
-use super::config::{ExternalConfig, StageConfig, StageInput};
-use super::keys::{render_run, shell_quote, RunPaths};
-use super::provenance::{
-    write_record, OutputFile, ProvenanceRecord, RecordContent, ResolvedStage, SealRequest,
-    RECORD_FILE,
-};
 use super::PipelineError;
+use super::config::{ExternalConfig, StageConfig, StageInput};
+use super::keys::{RunPaths, render_run, shell_quote};
+use super::provenance::{
+    OutputFile, ProvenanceRecord, RECORD_FILE, RecordContent, ResolvedStage, SealRequest,
+    write_record,
+};
 use crate::data::{hash_files, is_safe_relative_path, to_hex};
 use crate::study::Status;
 
@@ -354,7 +354,7 @@ pub fn slurm_defaults(root: &Path) -> Result<Vec<String>, String> {
                     return Err(format!(
                         "`sbatch` entry {other:?} must be an option starting with `--`, such as \
                          `--account=e123`"
-                    ))
+                    ));
                 }
             }
         }
@@ -731,11 +731,7 @@ fn shell_word(s: &str) -> String {
     let plain = !s.is_empty()
         && s.bytes()
             .all(|b| b.is_ascii_alphanumeric() || b"/._-+:@=,".contains(&b));
-    if plain {
-        s.to_string()
-    } else {
-        shell_quote(s)
-    }
+    if plain { s.to_string() } else { shell_quote(s) }
 }
 
 /// The name of the job folder inside a stage's output directory.
@@ -989,11 +985,7 @@ pub fn write_job_folder_with(
         Err(e) => {
             let _ = fs::remove_dir_all(&tmp);
             // Another process may have written the folder first.
-            if folder.is_dir() {
-                Ok(folder)
-            } else {
-                Err(e)
-            }
+            if folder.is_dir() { Ok(folder) } else { Err(e) }
         }
     }
 }

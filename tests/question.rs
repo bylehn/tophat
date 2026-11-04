@@ -5,10 +5,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use tophat::check::{run_check, Diagnostic, Project, Severity};
+use tophat::check::{Diagnostic, Project, Severity, run_check};
 use tophat::question::{
-    parse_project, question_rules, render_tree, render_tree_json, stamp, stamp_outcome,
-    QuestionError,
+    QuestionError, parse_project, question_rules, render_tree, render_tree_json, stamp,
+    stamp_outcome,
 };
 
 // --- Fixtures -------------------------------------------------------------------------------
@@ -412,11 +412,13 @@ fn citing_a_superseded_study() {
     let ds = diagnostics(&p);
     let found = with_rule(&ds, "question.evidence-superseded");
     assert_eq!(found.len(), 1);
-    assert!(found[0]
-        .hint
-        .as_deref()
-        .unwrap()
-        .contains("x-energy-accuracy-v2"));
+    assert!(
+        found[0]
+            .hint
+            .as_deref()
+            .unwrap()
+            .contains("x-energy-accuracy-v2")
+    );
 }
 
 #[test] // rq-db0d11c1 rq-ef5ab539
@@ -548,9 +550,10 @@ fn study_with_a_malformed_question_field_is_left_to_the_study_rules() {
     let p = TempProject::with_project(&three(OPEN, OPEN, OPEN));
     p.study("x-vs-docking", "Q1", "draft", &[]);
     let ds = run_check(p.root(), &[]).unwrap();
-    assert!(ds
-        .iter()
-        .any(|d| d.rule == "study.field-invalid" && d.message.contains("question")));
+    assert!(
+        ds.iter()
+            .any(|d| d.rule == "study.field-invalid" && d.message.contains("question"))
+    );
     assert!(with_rule(&ds, "question.unknown-reference").is_empty());
 }
 
@@ -656,8 +659,7 @@ fn stamp_leaves_duplicated_ids_for_the_user() {
 
 #[test] // rq-a9a0b08d rq-1513da11
 fn stamp_preserves_unrelated_content() {
-    let original =
-        "# Title\r\n\r\nPreamble <!-- note -->\r\n\r\n```text\r\n## Not a question\r\n```\r\n\r\n\
+    let original = "# Title\r\n\r\nPreamble <!-- note -->\r\n\r\n```text\r\n## Not a question\r\n```\r\n\r\n\
                     ## First?\r\nBody text.\r\n\r\n### q-1a2b3c4d · Second?\r\nstatus: open\r\n";
     let p = TempProject::with_project(original);
     let outcome = stamp_outcome(p.root()).unwrap();

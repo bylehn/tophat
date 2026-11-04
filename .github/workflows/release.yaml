@@ -1,0 +1,130 @@
+# Publish a TopHat release: build both musl binaries, run the gates against them, write the
+# release pin, re-run the render and end-to-end tests with that pin, and only then publish
+# (rqm/testing.md §CI Workflows, rq-e6ed00d3).
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-unknown-linux-musl
+          - aarch64-unknown-linux-musl
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+      - name: Install cross
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cross
+      - name: Build the release binary
+        run: cross build --release --locked --target ${{ matrix.target }}
+      - name: Stage the binary
+        run: |
+          mkdir -p dist
+          cp "target/${{ matrix.target }}/release/tophat" "dist/tophat-${{ matrix.target }}"
+          chmod +x "dist/tophat-${{ matrix.target }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tophat-${{ matrix.target }}
+          path: dist/tophat-${{ matrix.target }}
+          if-no-files-found: error
+
+  gates:
+    name: Release gates
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      TOPHAT_TEST_BINARY: ${{ github.workspace }}/dist/tophat-x86_64-unknown-linux-musl
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tophat-*
+          path: dist
+          merge-multiple: true
+      - name: Install Copier, pixi and Podman
+        run: |
+          version=$(sed -n 's/^copier_version: *//p' template/.tophat/managed/container/versions.yaml)
+          python -m pip install "copier==${version}"
+          pixi_version=$(sed -n 's/^pixi_version: *//p' template/.tophat/managed/container/versions.yaml)
+          pixi_sha=$(sed -n 's/^pixi_sha256_x86_64: *//p' template/.tophat/managed/container/versions.yaml)
+          curl -fsSL -o "$RUNNER_TEMP/pixi.tar.gz" \
+            "https://github.com/prefix-dev/pixi/releases/download/v${pixi_version}/pixi-x86_64-unknown-linux-musl.tar.gz"
+          echo "${pixi_sha}  $RUNNER_TEMP/pixi.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/pixi.tar.gz" -C "$RUNNER_TEMP" pixi
+          sudo install -m 0755 "$RUNNER_TEMP/pixi" /usr/local/bin/pixi
+          sudo apt-get update
+          sudo apt-get install -y podman
+      - name: Make the binaries executable
+        run: chmod +x dist/tophat-*
+      - name: Run the conformance suite against the x86_64 binary
+        run: cargo xtask conformance --tophat "$TOPHAT_TEST_BINARY"
+      - name: Write the release pin
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          cargo xtask release-pin \
+            --version "$version" \
+            --url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}" \
+            --binary "x86_64-unknown-linux-musl=dist/tophat-x86_64-unknown-linux-musl" \
+            --binary "aarch64-unknown-linux-musl=dist/tophat-aarch64-unknown-linux-musl"
+      - name: Render every answer set with the release pin
+        run: |
+          cargo build --bin tophat
+          cargo xtask render-test
+      - name: Run the worked example with the release binary
+        env:
+          TOPHAT_TEST_E2E: "1"
+        run: cargo test -p tophat --test e2e
+
+  publish:
+    name: Publish the release
+    needs: gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tophat-*
+          path: dist
+          merge-multiple: true
+      - name: Write the SHA-256 checksums
+        run: |
+          cd dist
+          sha256sum tophat-x86_64-unknown-linux-musl tophat-aarch64-unknown-linux-musl > SHA256SUMS
+      - name: Publish the binaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            dist/tophat-x86_64-unknown-linux-musl \
+            dist/tophat-aarch64-unknown-linux-musl \
+            dist/SHA256SUMS \
+            --verify-tag \
+            --title "TopHat ${GITHUB_REF_NAME#v}" \
+            --notes "TopHat ${GITHUB_REF_NAME#v}. Downloaded binaries are checked against SHA256SUMS."

@@ -2,14 +2,14 @@
 
 use std::collections::BTreeSet;
 
-use super::config::{config_path, load_base, load_variant, ConfigProblem};
+use super::config::{ConfigProblem, config_path, load_base, load_variant};
 use super::generate::{snakefile_path, stub};
 use super::keys::KeyContext;
 use super::qc::qc_file_problems;
 use super::summary::stale_entries;
 use crate::check::{Diagnostic, Project, Severity};
 use crate::study::{
-    parse_study_text, parse_summary, Status, STUDIES_DIR, STUDY_FILE, SUMMARY_FILE,
+    STUDIES_DIR, STUDY_FILE, SUMMARY_FILE, Status, parse_study_text, parse_summary,
 };
 
 fn diagnostic(rule: &'static str, problem: ConfigProblem, hint: &str) -> Diagnostic {
@@ -148,18 +148,18 @@ pub fn pipeline_rules(project: &Project) -> Vec<Diagnostic> {
                 d.severity = Severity::Warning;
                 out.push(d);
             }
-            if let Err(message) = ctx.code_files(&study, stage) {
-                if reported.insert((stage.file.clone(), stage.name.clone(), "code")) {
-                    out.push(diagnostic(
-                        "pipeline.code-missing",
-                        ConfigProblem {
-                            file: stage.file.clone(),
-                            line: stage.line,
-                            message: format!("stage `{}`: {message}", stage.name),
-                        },
-                        "List files or directories that exist inside the project",
-                    ));
-                }
+            if let Err(message) = ctx.code_files(&study, stage)
+                && reported.insert((stage.file.clone(), stage.name.clone(), "code"))
+            {
+                out.push(diagnostic(
+                    "pipeline.code-missing",
+                    ConfigProblem {
+                        file: stage.file.clone(),
+                        line: stage.line,
+                        message: format!("stage `{}`: {message}", stage.name),
+                    },
+                    "List files or directories that exist inside the project",
+                ));
             }
             if !reported.insert((stage.file.clone(), stage.name.clone(), "env")) {
                 continue;
@@ -315,7 +315,7 @@ fn tool_diagnostics(
     declared: &Option<std::collections::BTreeMap<String, String>>,
     at: &dyn Fn(String) -> ConfigProblem,
 ) -> Vec<Diagnostic> {
-    use crate::tools::{resolve_pin, tool_checkout, ToolPin, ToolsError};
+    use crate::tools::{ToolPin, ToolsError, resolve_pin, tool_checkout};
     let one = |rule, severity, message: String, hint: &str| {
         let mut d = diagnostic(rule, at(message), hint);
         d.severity = severity;
@@ -361,7 +361,12 @@ fn tool_diagnostics(
             e.to_string(),
             "Tool code is never changed from a study; change it through the tool's own repository",
         ),
-        Err(e) => one("pipeline.tools-invalid", Severity::Error, e.to_string(), "Run `tophat tools sync`"),
+        Err(e) => one(
+            "pipeline.tools-invalid",
+            Severity::Error,
+            e.to_string(),
+            "Run `tophat tools sync`",
+        ),
         Ok(_) => match ctx.stage_environment_hash(stage) {
             Ok(_) => Vec::new(),
             Err(message) => one(
