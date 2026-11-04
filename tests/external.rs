@@ -349,6 +349,11 @@ fn errors<'a>(ds: &'a [Diagnostic], rule: &str) -> Vec<&'a Diagnostic> {
         .collect()
 }
 
+/// A path as the instructions write it: with `/` separators on every platform.
+fn path_text(path: &Path) -> String {
+    path.to_string_lossy().replace('\\', "/")
+}
+
 fn edit_file(path: &Path, from: &str, to: &str) {
     let text = fs::read_to_string(path).unwrap();
     assert!(text.contains(from), "{} lacks {from:?}", path.display());
@@ -543,7 +548,7 @@ fn reaching_an_external_stage_writes_the_job_folder_and_waits() {
         serde_json::from_str(&fs::read_to_string(folder.join("stage.json")).unwrap()).unwrap();
     assert_eq!(stage["key"], env.key("md"));
     assert_eq!(stage["keep"], serde_json::json!(["*.trr"]));
-    assert!(out.contains(&folder.display().to_string()), "{out}");
+    assert!(out.contains(&path_text(&folder)), "{out}");
     assert!(out.contains("sbatch job.sh"), "{out}");
 }
 
@@ -583,7 +588,7 @@ fn the_steps_contain_no_connection_details() {
     let (code, instructions, err) = env.tophat(&["stage", "instructions", "x-vs-docking", "md"]);
     assert_eq!(code, 0, "{err}");
     assert!(instructions.contains("<you>@<cluster>:<directory>"));
-    assert!(instructions.contains(&env.folder().display().to_string()));
+    assert!(instructions.contains(&path_text(&env.folder())));
     // Nothing was written into the project: no host names or remote paths can be there.
     let status = Command::new("git")
         .args(["status", "--porcelain", "--untracked-files=all"])
@@ -609,7 +614,7 @@ fn return_steps_leave_kept_files_on_the_cluster() {
         "<you>@<cluster>:<directory>/x-vs-docking.md.{}/",
         env.key("md")
     );
-    let local = format!("{}/", env.folder().display());
+    let local = format!("{}/", path_text(&env.folder()));
     let returned = out
         .lines()
         .skip_while(|l| !l.starts_with("# 3."))

@@ -754,9 +754,11 @@ fn steps(
     folder: &Path,
     trial: bool,
 ) -> String {
-    // Locally the folder is `job/`; on the cluster it carries the study, stage and key.
+    // Locally the folder is `job/`; on the cluster it carries the study, stage and key. Paths in
+    // the steps use `/` so the commands read the same on every platform.
     let name = job_folder_name(study, stage, key);
-    let local = format!("{}/", shell_word(&folder.display().to_string()));
+    let folder = crate::fsutil::path_text(folder);
+    let local = format!("{}/", shell_word(&folder));
     let back = local.clone();
     let copy_back = if external.keep.is_empty() {
         format!(
@@ -798,7 +800,7 @@ If the job fails for a reason outside the configuration (a time limit, a node fa
 {RECEIPT_FILE} and the contents of out/ in the folder on the cluster and submit it again. If the
 configuration must change, the next run writes a new job folder.
 ",
-        folder = folder.display(),
+        folder = folder,
     )
 }
 

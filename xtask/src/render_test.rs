@@ -543,6 +543,17 @@ fn th(temp: &Path, project: &Path, tophat: &Path, args: &[&str]) -> Result<Outpu
         .map_err(|e| format!("cannot run th.sh: {e}"))
 }
 
+/// Runs `podman` with the launcher environment, so it uses the same rootless image storage as the
+/// `th.sh` that built the image.
+fn podman(temp: &Path, project: &Path, tophat: &Path, args: &[&str]) -> Result<Output, String> {
+    let mut command = Command::new("podman");
+    command.args(args).current_dir(project);
+    launcher_env(&mut command, temp, tophat);
+    command
+        .output()
+        .map_err(|e| format!("cannot run podman: {e}"))
+}
+
 /// The image name of the project.
 fn image_name(project: &Path) -> Result<String, String> {
     let id = read(project, ".tophat/project-id")?;
@@ -556,11 +567,11 @@ fn check_image(
     tophat: &Path,
     answers: &yaml_rust2::Yaml,
 ) -> Result<(), String> {
-    let podman = output(OsStr::new("podman"), &["--version"], project)?;
-    if !podman.status.success() {
+    let version = output(OsStr::new("podman"), &["--version"], project)?;
+    if !version.status.success() {
         return Err(format!(
             "`podman --version` failed: {}",
-            text(&podman.stderr)
+            text(&version.stderr)
         ));
     }
     let build = th(temp, project, tophat, &["--check"])?;
@@ -573,10 +584,11 @@ fn check_image(
     }
     let image = image_name(project)?;
     let in_image = |script: &str| -> Result<String, String> {
-        let out = output(
-            OsStr::new("podman"),
-            &["run", "--rm", &image, "sh", "-c", script],
+        let out = podman(
+            temp,
             project,
+            tophat,
+            &["run", "--rm", &image, "sh", "-c", script],
         )?;
         if !out.status.success() {
             return Err(format!(

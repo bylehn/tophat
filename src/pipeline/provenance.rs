@@ -14,7 +14,7 @@ use super::keys::{
     render_run, results_root,
 };
 use crate::data::{HashCache, RESULTS_ROOT, Roots, content_hash, hash_files, load_roots};
-use crate::fsutil::write_atomic;
+use crate::fsutil::{path_text, write_atomic};
 use crate::study::STUDIES_DIR;
 
 /// File name of a provenance record.
@@ -279,7 +279,7 @@ pub(crate) fn determining_files(
             if let Ok(rel) = env_file.strip_prefix(ctx.root())
                 && env_file.starts_with(&supplied)
             {
-                files.push(rel.to_string_lossy().replace('\\', "/"));
+                files.push(path_text(rel));
             }
         }
     }
@@ -720,7 +720,7 @@ pub(crate) fn write_record(
     let mut cache = HashCache::load(root);
     for (output, path) in &content.outputs {
         if let Ok(rel) = path.strip_prefix(results) {
-            let rel = rel.to_string_lossy().replace('\\', "/");
+            let rel = path_text(rel);
             cache.record(RESULTS_ROOT, &rel, path, output.size, &output.sha256);
         }
     }
