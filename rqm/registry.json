@@ -4825,7 +4825,12 @@
   "rq-71619977": {
     "decl": "Scenario: Render from the working tree",
     "file": "tooling",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tooling.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Render from the working tree",
     "type": "scenario"
   },
@@ -6324,7 +6329,12 @@
   "rq-9b4b5f1e": {
     "decl": "Scenario: A missing external program is named",
     "file": "tooling",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tooling.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A missing external program is named",
     "type": "scenario"
   },
@@ -7431,7 +7441,12 @@
   "rq-b0f89137": {
     "decl": "Scenario: Render refuses a non-empty output directory",
     "file": "tooling",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tooling.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Render refuses a non-empty output directory",
     "type": "scenario"
   },
@@ -10131,7 +10146,12 @@
   "rq-eeadb8c2": {
     "decl": "Scenario: Answers can be overridden",
     "file": "tooling",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tooling.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Answers can be overridden",
     "type": "scenario"
   },
