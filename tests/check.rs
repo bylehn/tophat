@@ -289,6 +289,10 @@ fn an_unparseable_file_does_not_stop_other_files_being_checked() {
 }
 
 /// Path → (contents, modification time) for every file and directory under `root`.
+///
+/// Directory modification times are deliberately not recorded: Windows updates them as a side
+/// effect of unrelated filesystem activity, so they are not a reliable signal that the check
+/// changed the working tree. Added or removed entries are still detected by the key set.
 fn snapshot(root: &Path) -> BTreeMap<PathBuf, (Vec<u8>, Option<SystemTime>)> {
     let mut map = BTreeMap::new();
     let mut stack = vec![root.to_path_buf()];
@@ -299,7 +303,7 @@ fn snapshot(root: &Path) -> BTreeMap<PathBuf, (Vec<u8>, Option<SystemTime>)> {
             let meta = entry.metadata().unwrap();
             if meta.is_dir() {
                 stack.push(path.clone());
-                map.insert(path, (Vec::new(), meta.modified().ok()));
+                map.insert(path, (Vec::new(), None));
             } else {
                 map.insert(
                     path.clone(),
