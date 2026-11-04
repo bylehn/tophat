@@ -5,6 +5,8 @@ ARG CLAUDE_VERSION
 
 
 
+ARG OPENCODE_VERSION
+
 ARG TOOLING_IMAGE_ID
 # The project image is based on this image and inherits these labels, so an
 # exported image reports its agent releases and the project it belongs to
@@ -12,5 +14,6 @@ ARG TOOLING_IMAGE_ID
 # release label, because the image installs no such agent.
 ARG RIPRAP_PROJECT_ID
 LABEL io.riprap.claude-version="${CLAUDE_VERSION}" \
+      io.riprap.opencode-version="${OPENCODE_VERSION}" \
       io.riprap.tooling-image-id="${TOOLING_IMAGE_ID}" \
       io.riprap.project-id="${RIPRAP_PROJECT_ID}"

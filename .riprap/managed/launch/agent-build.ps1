@@ -7,7 +7,7 @@ $versionPattern = '^[0-9]+\.[0-9]+\.[0-9]+$'
 # Every supported agent name is recognized so a typo is reported as unknown, but only the
 # agents this project installs may be pinned.
 $recognizedNames = @("CLAUDE_VERSION", "CODEX_VERSION", "OPENCODE_VERSION")
-$installedNames = @("CLAUDE_VERSION")
+$installedNames = @("CLAUDE_VERSION", "OPENCODE_VERSION")
 
 function Fail([string]$Message) {
     # An uncaught exception is reformatted and line-wrapped by Windows PowerShell, making
@@ -33,6 +33,8 @@ function Prepare-AgentBuild {
     $claudeVersion = "latest"
 
 
+
+    $opencodeVersion = "latest"
 
 
     $refresh = Get-IsoWeekStamp
@@ -62,14 +64,16 @@ function Prepare-AgentBuild {
 
 
 
+        if ($seen.OPENCODE_VERSION) { $opencodeVersion = $seen.OPENCODE_VERSION }
+
         # While every installed agent is pinned, the build key is fixed rather than tracking the
         # week, so pinned releases are not reinstalled week after week.
-        if ($seen.Count -eq 1) { $refresh = "pinned" }
+        if ($seen.Count -eq 2) { $refresh = "pinned" }
     }
 
     $temporary = "$candidateFile.tmp.$PID"
     try {
-        $contents = "CLAUDE_VERSION=$claudeVersion`nREFRESH=$refresh`n"
+        $contents = "CLAUDE_VERSION=$claudeVersion`nOPENCODE_VERSION=$opencodeVersion`nREFRESH=$refresh`n"
         [IO.File]::WriteAllText($temporary, $contents, [Text.UTF8Encoding]::new($false))
         Move-Item -LiteralPath $temporary -Destination $candidateFile -Force
     } finally { Remove-Item $temporary -ErrorAction SilentlyContinue }
@@ -79,13 +83,15 @@ switch ($args[0]) {
     { $_ -in @($null, "", "prepare") } { Prepare-AgentBuild; break }
     "promote" {
         if (-not (Test-Path -LiteralPath $candidateFile -PathType Leaf)) { Fail "no agent build candidate exists" }
-        if (-not $args[1] -or $false) { Fail "promote requires an exact release version for each installed agent" }
+        if (-not $args[1] -or -not $args[3] -or $false) { Fail "promote requires an exact release version for each installed agent" }
         $contents = (Get-Content -LiteralPath $candidateFile | Where-Object { $_ -notmatch '^INSTALLED_' }) -join "`n"
         $installed = ""
 
         $installed += "INSTALLED_CLAUDE_VERSION=$($args[1])`n"
 
 
+
+        $installed += "INSTALLED_OPENCODE_VERSION=$($args[3])`n"
 
         $contents += "`n" + $installed
         [IO.File]::WriteAllText($keyFile, $contents, [Text.UTF8Encoding]::new($false))
