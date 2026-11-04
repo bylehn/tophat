@@ -28,6 +28,8 @@ prepare() {
 
 
 
+    opencode_version=latest
+
 
     refresh="$(iso_week)"
 
@@ -39,6 +41,8 @@ prepare() {
         seen_claude=0
 
 
+
+        seen_opencode=0
 
         while IFS= read -r raw || [ -n "$raw" ]; do
             line=$(printf '%s' "$raw" | tr -d '\r')
@@ -61,7 +65,7 @@ prepare() {
 
                 OPENCODE_VERSION)
 
-                    die "$pin_file: OPENCODE_VERSION names the OpenCode agent, which this project does not install" ;;
+                    [ "$seen_opencode" -eq 0 ] || die "$pin_file contains duplicate OPENCODE_VERSION assignments" ;;
 
                 *) die "$pin_file contains unknown assignment '$name'" ;;
             esac
@@ -74,18 +78,20 @@ prepare() {
 
 
 
+                OPENCODE_VERSION) opencode_version=$value; seen_opencode=1 ;;
+
             esac
             seen=$((seen + 1))
         done < "$pin_file"
         [ "$seen" -gt 0 ] || die "$pin_file is empty"
         # While every installed agent is pinned, the build key is fixed rather than tracking the
         # week, so pinned releases are not reinstalled week after week.
-        if [ "$seen_claude" -eq 1 ] && true; then refresh=pinned; fi
+        if [ "$seen_claude" -eq 1 ] && [ "$seen_opencode" -eq 1 ] && true; then refresh=pinned; fi
     fi
 
     tmp=$candidate_file.tmp.$$
     trap 'rm -f "$tmp"' EXIT HUP INT TERM
-    printf 'CLAUDE_VERSION=%s\nREFRESH=%s\n' "$claude_version" "$refresh" > "$tmp"
+    printf 'CLAUDE_VERSION=%s\nOPENCODE_VERSION=%s\nREFRESH=%s\n' "$claude_version" "$opencode_version" "$refresh" > "$tmp"
     mv "$tmp" "$candidate_file"
     trap - EXIT HUP INT TERM
 }
@@ -94,12 +100,12 @@ case "${1:-prepare}" in
     prepare) prepare ;;
     promote)
         [ -f "$candidate_file" ] || die 'no agent build candidate exists'
-        [ "${2:-}" ] && true ||
+        [ "${2:-}" ] && [ "${4:-}" ] && true ||
             die 'promote requires an exact release version for each installed agent'
         tmp=$candidate_file.promote.$$
         trap 'rm -f "$tmp"' EXIT HUP INT TERM
         sed '/^INSTALLED_/d' "$candidate_file" > "$tmp"
-        printf 'INSTALLED_CLAUDE_VERSION=%s\n' "$2" >> "$tmp"
+        printf 'INSTALLED_CLAUDE_VERSION=%s\nINSTALLED_OPENCODE_VERSION=%s\n' "$2" "$4" >> "$tmp"
         mv "$tmp" "$key_file"
         rm -f "$candidate_file"
         trap - EXIT HUP INT TERM ;;

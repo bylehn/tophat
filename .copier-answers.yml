@@ -3,11 +3,12 @@ _commit: v0.4.5
 _src_path: gh:MolSSI/riprap
 agents:
 - Claude Code
+- OpenCode
 author_email: bylehn@pm.me
 author_name: Fabian Byléhn
 base_image: ubuntu:24.04
 copyright_year: '2026'
-include_rust_skeleton: true
+include_rust_skeleton: false
 language: rust
 open_source_license: BSD-3-Clause
 project_description: An LLM skill/structure based on riprap applied to science workflows

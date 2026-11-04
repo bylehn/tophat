@@ -6,6 +6,8 @@ ARG CLAUDE_VERSION
 
 
 
+ARG OPENCODE_VERSION
+
 
 # The installers place files beneath HOME, which the tooling image sets to an
 # image-owned path outside /root. Each agent's own configuration home under that
@@ -20,6 +22,17 @@ RUN set -eu; \
 
 
 
+RUN set -eu; \
+    test -n "$OPENCODE_VERSION"; \
+    if [ "$OPENCODE_VERSION" = latest ]; then version_args=; else version_args="--version $OPENCODE_VERSION"; fi; \
+    curl -fsSL https://opencode.ai/install | bash -s -- $version_args --no-modify-path; \
+    mkdir -p /opt/opencode/bin; \
+    mv "$HOME/.opencode/bin/opencode" /opt/opencode/bin/opencode; \
+    rm -rf "$HOME/.opencode"
+
+COPY opencode /usr/local/bin/opencode
+RUN chmod 0755 /usr/local/bin/opencode
+
 
 
 ENV DISABLE_AUTOUPDATER=1
@@ -28,4 +41,4 @@ ENV DISABLE_AUTOUPDATER=1
 # image installed. Every directory beneath the home directory is made sticky world-writable so any
 # runtime user can create the scratch and configuration directories the agents write at startup --
 # an agent installed as root leaves directories there that the runtime user must write into.
-RUN chmod -R a+rX /opt/riprap && find /opt/riprap/home -type d -exec chmod 1777 {} +
+RUN chmod -R a+rX /opt/riprap /opt/opencode && find /opt/riprap/home -type d -exec chmod 1777 {} +
