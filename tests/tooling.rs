@@ -173,3 +173,48 @@ fn a_missing_external_program_is_named() {
     .to_string();
     assert!(err.contains("copier"), "{err}");
 }
+
+#[cfg(unix)]
+#[test] // rq-cb49acfd
+fn lock_check_detects_a_stale_pre_solved_lock() {
+    use std::os::unix::fs::PermissionsExt;
+
+    if !common::copier() {
+        return;
+    }
+    let bin = Temp::new("pixi-bin");
+    let pixi = bin.join("pixi");
+    fs::write(
+        &pixi,
+        "#!/bin/sh\ncase \"$1\" in\n  --version) echo 'pixi 0.82.1' ;;\n  lock)\n    if [ \"$2\" = --check ] && grep -q julia pixi.toml; then exit 1; fi ;;\nesac\nexit 0\n",
+    )
+    .unwrap();
+    fs::set_permissions(&pixi, fs::Permissions::from_mode(0o755)).unwrap();
+    let path = std::env::join_paths(std::iter::once(bin.path.clone()).chain(
+        std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default()),
+    ))
+    .unwrap();
+    let root = repo_root();
+    let before = (
+        fs::read(root.join("template/.locks/python.lock")).unwrap(),
+        fs::read(root.join("template/.locks/python-julia.lock")).unwrap(),
+    );
+    let outcomes = xtask::lock::lock_with_path(&root, true, Some(path.as_os_str())).unwrap();
+    let status = |name: &str| {
+        outcomes
+            .iter()
+            .find(|o| o.selection == name)
+            .unwrap()
+            .status
+    };
+    assert_eq!(status("none"), xtask::lock::Status::Ok);
+    assert_eq!(status("julia"), xtask::lock::Status::Stale);
+    assert!(xtask::lock::any_stale(&outcomes));
+    assert_eq!(
+        before,
+        (
+            fs::read(root.join("template/.locks/python.lock")).unwrap(),
+            fs::read(root.join("template/.locks/python-julia.lock")).unwrap(),
+        )
+    );
+}
