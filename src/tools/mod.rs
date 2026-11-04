@@ -145,7 +145,7 @@ pub fn url_problem(url: &str) -> Option<String> {
             )
         });
     }
-    if url.starts_with("file://") || url.starts_with('/') {
+    if url.starts_with("file://") || url.starts_with('/') || Path::new(url).is_absolute() {
         return None;
     }
     if url.starts_with("ssh://") || url.starts_with("git+ssh://") {

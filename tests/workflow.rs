@@ -648,6 +648,7 @@ fn stages_left_to_run() {
     );
 }
 
+#[cfg(unix)]
 #[test] // rq-b1a89dcb rq-956cc0ad
 fn stale_summary_means_run_again() {
     let env = Env::preregistered();
@@ -851,6 +852,7 @@ fn unparseable_study() {
 
 // --- tophat run -------------------------------------------------------------------------------
 
+#[cfg(unix)]
 #[test] // rq-c8940b0d rq-cdc39471
 fn run_a_preregistered_study() {
     let env = Env::preregistered();
@@ -872,6 +874,7 @@ fn run_a_preregistered_study() {
     );
 }
 
+#[cfg(unix)]
 #[test] // rq-a3466977 rq-cdc39471
 fn run_one_variant() {
     let env = Env::preregistered();
@@ -879,6 +882,7 @@ fn run_one_variant() {
     assert_eq!(env.pixi_args().unwrap().last().unwrap(), "variant_pbe");
 }
 
+#[cfg(unix)]
 #[test] // rq-24702b2d rq-cdc39471
 fn default_cores() {
     let env = Env::preregistered();
@@ -894,6 +898,7 @@ fn default_cores() {
     );
 }
 
+#[cfg(unix)]
 #[test] // rq-a9d102bf rq-cdc39471
 fn extra_snakemake_arguments_are_passed_through() {
     let env = Env::preregistered();
@@ -909,6 +914,7 @@ fn extra_snakemake_arguments_are_passed_through() {
     );
 }
 
+#[cfg(unix)]
 #[test] // rq-d1d30204 rq-cdc39471
 fn snakemakes_exit_code_is_returned() {
     let env = Env::preregistered();
@@ -917,6 +923,7 @@ fn snakemakes_exit_code_is_returned() {
     assert!(out.contains("next (anyone):"), "{out}");
 }
 
+#[cfg(unix)]
 #[test] // rq-5e257285 rq-cdc39471
 fn stopped_at_a_qc_gate() {
     let env = Env::preregistered();
@@ -943,6 +950,7 @@ fn draft_refused_without_draft_flag() {
     assert!(env.pixi_args().is_none());
 }
 
+#[cfg(unix)]
 #[test] // rq-23d4abbf rq-cdc39471 rq-0d5e77fe
 fn trial_run_of_a_draft() {
     let env = Env::draft();
@@ -952,6 +960,7 @@ fn trial_run_of_a_draft() {
     assert!(out.contains("can never be reported"), "{out}");
 }
 
+#[cfg(unix)]
 #[test] // rq-eb7be7fe rq-cdc39471
 fn trial_run_of_one_variant() {
     let env = Env::draft();
@@ -994,6 +1003,7 @@ fn check_errors_are_refused() {
     assert!(env.pixi_args().is_none());
 }
 
+#[cfg(unix)]
 #[test] // rq-2e3b70f6 rq-cdc39471
 fn warnings_do_not_block_a_run() {
     let env = Env::preregistered();
