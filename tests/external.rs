@@ -13,9 +13,9 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use tophat::check::{Diagnostic, Project, Severity};
 use tophat::pipeline::{
-    ingest, load_pipeline, parse_receipt, pipeline_rules, seal, stage_key_text, stub, waiting_jobs,
-    write_job_folder, write_job_folder_with, ExternalError, KeyContext, ProvenanceRecord,
-    SealRequest,
+    ExternalError, KeyContext, ProvenanceRecord, SealRequest, ingest, load_pipeline, parse_receipt,
+    pipeline_rules, seal, stage_key_text, stub, waiting_jobs, write_job_folder,
+    write_job_folder_with,
 };
 
 // --- Fixtures -------------------------------------------------------------------------------
@@ -455,9 +455,10 @@ fn an_empty_external_mapping_is_valid() {
         &format!("{}    external: {{}}\n{}", &text[..start], &text[end..]),
     );
     assert!(errors(&env.diagnostics(), "pipeline.config-invalid").is_empty());
-    assert!(env
-        .key_text("md")
-        .contains("\nexternal {\"keep\":[],\"setup\":[]}\n"));
+    assert!(
+        env.key_text("md")
+            .contains("\nexternal {\"keep\":[],\"setup\":[]}\n")
+    );
 }
 
 #[test] // rq-254e43a2 rq-23d21623
@@ -632,9 +633,11 @@ fn an_existing_job_folder_is_never_overwritten() {
     edit_file(&job, "#SBATCH --time=24:00:00", "#SBATCH --time=30:00:00");
     let (code, _, _) = env.stage_external();
     assert_eq!(code, 3);
-    assert!(fs::read_to_string(&job)
-        .unwrap()
-        .contains("#SBATCH --time=30:00:00\n"));
+    assert!(
+        fs::read_to_string(&job)
+            .unwrap()
+            .contains("#SBATCH --time=30:00:00\n")
+    );
 }
 
 #[test] // rq-172dd12a rq-964a4533 rq-13602cac
@@ -744,15 +747,19 @@ fn the_job_refuses_changed_code_and_extra_inputs() {
     env.copy_to_cluster();
     fs::write(env.remote().join("inputs/system/extra.gro"), "x\n").unwrap();
     assert_ne!(env.run_job(), 0);
-    assert!(fs::read_to_string(env.remote().join("receipt.txt"))
-        .unwrap()
-        .contains("\nexit input-mismatch\n"));
+    assert!(
+        fs::read_to_string(env.remote().join("receipt.txt"))
+            .unwrap()
+            .contains("\nexit input-mismatch\n")
+    );
     env.copy_to_cluster();
     fs::write(env.remote().join("params.json"), "{\"x\": 1}\n").unwrap();
     assert_ne!(env.run_job(), 0);
-    assert!(fs::read_to_string(env.remote().join("receipt.txt"))
-        .unwrap()
-        .contains("\nexit input-mismatch\n"));
+    assert!(
+        fs::read_to_string(env.remote().join("receipt.txt"))
+            .unwrap()
+            .contains("\nexit input-mismatch\n")
+    );
 }
 
 #[test] // rq-1b912496 rq-13602cac

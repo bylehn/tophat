@@ -12,11 +12,11 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use tophat::check::{Diagnostic, Project, Severity};
 use tophat::data::{
-    add, parse_manifest, publish, verify, DataError, DatasetKind, Origin, RegisterOptions,
+    DataError, DatasetKind, Origin, RegisterOptions, add, parse_manifest, publish, verify,
 };
 use tophat::pipeline::{
-    compute_keys, key_status, load_pipeline, pipeline_rules, seal, stage_key, stage_key_text,
-    KeyContext, PipelineError, ProvenanceRecord, SealRequest,
+    KeyContext, PipelineError, ProvenanceRecord, SealRequest, compute_keys, key_status,
+    load_pipeline, pipeline_rules, seal, stage_key, stage_key_text,
 };
 
 // --- Fixtures -------------------------------------------------------------------------------
@@ -334,9 +334,11 @@ fn a_stage_cannot_be_both_a_tool_stage_and_an_external_stage() {
         "    env: chem\n    tool: method-x@a1b2c3d\n    external: {}\n",
     );
     let ds = env.diagnostics();
-    assert!(with_rule(&ds, "pipeline.config-invalid")
-        .iter()
-        .any(|d| d.message.contains("`tool`") && d.message.contains("`external`")));
+    assert!(
+        with_rule(&ds, "pipeline.config-invalid")
+            .iter()
+            .any(|d| d.message.contains("`tool`") && d.message.contains("`external`"))
+    );
 }
 
 #[test] // rq-a5ab4b78 rq-081e737a
@@ -829,9 +831,11 @@ fn untracked_config_makes_the_record_unclean() {
     let path = env.seal_variant("score", "pbe", Some("1abc")).unwrap();
     let record = ProvenanceRecord::parse(&fs::read_to_string(path).unwrap()).unwrap();
     assert!(!record.clean);
-    assert!(record
-        .unclean_files
-        .contains(&"studies/x-vs-docking/config/pbe.yaml".to_string()));
+    assert!(
+        record
+            .unclean_files
+            .contains(&"studies/x-vs-docking/config/pbe.yaml".to_string())
+    );
 }
 
 #[test] // rq-c85070d7 rq-9f3a6366
@@ -949,10 +953,10 @@ fn keys_command_with_the_default_results_root() {
     env.configure(false);
     let status = key_status(&env.root(), "x-vs-docking", "base").unwrap();
     let results = std::path::absolute(env.root()).unwrap().join("results");
-    assert!(status
-        .iter()
-        .all(|s| s.key.starts_with("sk-")
-            && s.output.as_ref().is_some_and(|o| o.starts_with(&results))));
+    assert!(
+        status.iter().all(|s| s.key.starts_with("sk-")
+            && s.output.as_ref().is_some_and(|o| o.starts_with(&results)))
+    );
 }
 
 // --- Publishing (rqm/data.md) -----------------------------------------------------------------
@@ -983,10 +987,12 @@ fn publish_a_clean_stage_output() {
     assert_eq!(manifest.visibility, "public");
     let record = ProvenanceRecord::read(&dir).unwrap();
     for output in &record.outputs {
-        assert!(manifest
-            .files
-            .iter()
-            .any(|f| f.path == output.path && f.sha256 == output.sha256));
+        assert!(
+            manifest
+                .files
+                .iter()
+                .any(|f| f.path == output.path && f.sha256 == output.sha256)
+        );
     }
     assert_eq!(
         verify(&env.root(), Some("prepared-set@v1"))
@@ -1047,10 +1053,12 @@ fn publish_a_fan_out_stage_includes_items() {
     let manifest =
         parse_manifest(&fs::read_to_string(env.root().join("datasets/scores/v1.yaml")).unwrap())
             .unwrap();
-    assert!(manifest
-        .files
-        .iter()
-        .any(|f| f.path == "items/1abc/score.json"));
+    assert!(
+        manifest
+            .files
+            .iter()
+            .any(|f| f.path == "items/1abc/score.json")
+    );
     assert_eq!(verify(&env.root(), Some("scores@v1")).unwrap().problems, 0);
 }
 

@@ -4,13 +4,13 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use chrono::NaiveDate;
 
-use super::exploration::{exploration_hash, parse_exploration, EXPLORATION_FILE};
+use super::exploration::{EXPLORATION_FILE, exploration_hash, parse_exploration};
 use super::fingerprint::is_fingerprint_format;
 use super::summary::parse_summary_text;
 use super::{
-    frozen_fingerprint, is_valid_question_id, is_valid_study_id, matches_id_pattern,
-    parse_study_text, Status, Study, StudyError, TagIssue, FROZEN_SECTIONS, GOVERNED_SECTIONS,
-    STUDIES_DIR, STUDY_FILE, SUMMARY_FILE,
+    FROZEN_SECTIONS, GOVERNED_SECTIONS, STUDIES_DIR, STUDY_FILE, SUMMARY_FILE, Status, Study,
+    StudyError, TagIssue, frozen_fingerprint, is_valid_question_id, is_valid_study_id,
+    matches_id_pattern, parse_study_text,
 };
 use crate::check::{Diagnostic, Project, Severity};
 
@@ -234,58 +234,59 @@ fn check_front_matter(r: &mut Reporter<'_>, study: &Study) {
         }
     }
 
-    if let Some(field) = &f.study {
-        if field.value != study.id {
-            r.error(
-                "study.id-mismatch",
-                Some(field.line),
-                format!(
-                    "Front matter says `study: {}` but the directory is `{}`",
-                    field.value, study.id
-                ),
-                "Make `study` equal the directory name",
-            );
-        }
+    if let Some(field) = &f.study
+        && field.value != study.id
+    {
+        r.error(
+            "study.id-mismatch",
+            Some(field.line),
+            format!(
+                "Front matter says `study: {}` but the directory is `{}`",
+                field.value, study.id
+            ),
+            "Make `study` equal the directory name",
+        );
     }
-    if let Some(field) = &f.title {
-        if field.value.trim().is_empty() || field.value.contains('\n') {
-            r.error(
-                "study.field-invalid",
-                Some(field.line),
-                "`title` must be non-empty and on one line",
-                "Give the study a one-line title",
-            );
-        }
+    if let Some(field) = &f.title
+        && (field.value.trim().is_empty() || field.value.contains('\n'))
+    {
+        r.error(
+            "study.field-invalid",
+            Some(field.line),
+            "`title` must be non-empty and on one line",
+            "Give the study a one-line title",
+        );
     }
-    if let Some(field) = &f.question {
-        if !is_valid_question_id(&field.value) {
-            r.error(
-                "study.field-invalid",
-                Some(field.line),
-                format!("`question: {}` is not a valid question ID", field.value),
-                "Use `q-` followed by 8 lowercase hex characters",
-            );
-        }
+    if let Some(field) = &f.question
+        && !is_valid_question_id(&field.value)
+    {
+        r.error(
+            "study.field-invalid",
+            Some(field.line),
+            format!("`question: {}` is not a valid question ID", field.value),
+            "Use `q-` followed by 8 lowercase hex characters",
+        );
     }
-    if let Some(field) = &f.status {
-        if Status::parse(&field.value).is_none() {
-            r.error(
-                "study.field-invalid",
-                Some(field.line),
-                format!("`status: {}` is not a valid status", field.value),
-                "Use draft, preregistered, reported, superseded or retrospective",
-            );
-        }
+    if let Some(field) = &f.status
+        && Status::parse(&field.value).is_none()
+    {
+        r.error(
+            "study.field-invalid",
+            Some(field.line),
+            format!("`status: {}` is not a valid status", field.value),
+            "Use draft, preregistered, reported, superseded or retrospective",
+        );
     }
-    if let Some(field) = &f.visibility {
-        if field.value != "public" && field.value != "private" {
-            r.error(
-                "study.field-invalid",
-                Some(field.line),
-                format!("`visibility: {}` is not a valid visibility", field.value),
-                "Use public or private",
-            );
-        }
+    if let Some(field) = &f.visibility
+        && field.value != "public"
+        && field.value != "private"
+    {
+        r.error(
+            "study.field-invalid",
+            Some(field.line),
+            format!("`visibility: {}` is not a valid visibility", field.value),
+            "Use public or private",
+        );
     }
     if let Some(field) = &f.variants {
         let mut seen = BTreeSet::new();
@@ -333,45 +334,46 @@ fn check_front_matter(r: &mut Reporter<'_>, study: &Study) {
         _ => {}
     }
     if let Some(block) = &f.preregistered {
-        if let Some(date) = &block.value.date {
-            if parse_date(date).is_none() {
-                r.error(
-                    "study.field-invalid",
-                    Some(block.line),
-                    format!("`preregistered.date: {date}` is not a valid YYYY-MM-DD date"),
-                    "Pre-registration fields are written by `tophat study preregister`",
-                );
-            }
+        if let Some(date) = &block.value.date
+            && parse_date(date).is_none()
+        {
+            r.error(
+                "study.field-invalid",
+                Some(block.line),
+                format!("`preregistered.date: {date}` is not a valid YYYY-MM-DD date"),
+                "Pre-registration fields are written by `tophat study preregister`",
+            );
         }
-        if let Some(hash) = &block.value.frozen_hash {
-            if !is_fingerprint_format(hash) {
-                r.error(
-                    "study.field-invalid",
-                    Some(block.line),
-                    "`preregistered.frozen_hash` is not a valid fingerprint",
-                    "Pre-registration fields are written by `tophat study preregister`",
-                );
-            }
+        if let Some(hash) = &block.value.frozen_hash
+            && !is_fingerprint_format(hash)
+        {
+            r.error(
+                "study.field-invalid",
+                Some(block.line),
+                "`preregistered.frozen_hash` is not a valid fingerprint",
+                "Pre-registration fields are written by `tophat study preregister`",
+            );
         }
-        if let Some(hash) = &block.value.exploration_hash {
-            if !is_fingerprint_format(hash) {
-                r.error(
-                    "study.field-invalid",
-                    Some(block.line),
-                    "`preregistered.exploration_hash` is not a valid `sha256:<hex>` hash",
-                    "Pre-registration fields are written by `tophat study preregister`",
-                );
-            }
+        if let Some(hash) = &block.value.exploration_hash
+            && !is_fingerprint_format(hash)
+        {
+            r.error(
+                "study.field-invalid",
+                Some(block.line),
+                "`preregistered.exploration_hash` is not a valid `sha256:<hex>` hash",
+                "Pre-registration fields are written by `tophat study preregister`",
+            );
         }
-        if let Some(seen) = &block.value.deciding_data_seen {
-            if seen != "true" && seen != "false" {
-                r.error(
-                    "study.field-invalid",
-                    Some(block.line),
-                    format!("`preregistered.deciding_data_seen: {seen}` is not true or false"),
-                    "Pre-registration fields are written by `tophat study preregister`",
-                );
-            }
+        if let Some(seen) = &block.value.deciding_data_seen
+            && seen != "true"
+            && seen != "false"
+        {
+            r.error(
+                "study.field-invalid",
+                Some(block.line),
+                format!("`preregistered.deciding_data_seen: {seen}` is not true or false"),
+                "Pre-registration fields are written by `tophat study preregister`",
+            );
         }
         for key in &block.value.unknown {
             r.push(
@@ -440,15 +442,15 @@ fn check_scenario_tags(r: &mut Reporter<'_>, study: &Study) {
     }
     let mut seen = BTreeSet::new();
     for scenario in &study.scenarios {
-        if let Some(n) = scenario.number {
-            if !seen.insert(n) {
-                r.error(
-                    "study.scenario-duplicate",
-                    Some(scenario.line),
-                    format!("Scenario number S{n} is used more than once"),
-                    "Give each scenario its own number",
-                );
-            }
+        if let Some(n) = scenario.number
+            && !seen.insert(n)
+        {
+            r.error(
+                "study.scenario-duplicate",
+                Some(scenario.line),
+                format!("Scenario number S{n} is used more than once"),
+                "Give each scenario its own number",
+            );
         }
     }
 }
@@ -582,20 +584,18 @@ fn check_lifecycle(ctx: &Context<'_>, r: &mut Reporter<'_>, study: &Study, statu
         ),
         _ => {}
     }
-    if needs_block {
-        if let Some(hash) = block
+    if needs_block
+        && let Some(hash) = block
             .and_then(|b| b.value.frozen_hash.as_ref())
             .filter(|h| is_fingerprint_format(h))
-        {
-            if *hash != frozen_fingerprint(study) {
-                r.error(
-                    "study.frozen-modified",
-                    block.map(|b| b.line),
-                    "Frozen sections changed after pre-registration",
-                    "Revert the change and record it under Amendments, or start a new study",
-                );
-            }
-        }
+        && *hash != frozen_fingerprint(study)
+    {
+        r.error(
+            "study.frozen-modified",
+            block.map(|b| b.line),
+            "Frozen sections changed after pre-registration",
+            "Revert the change and record it under Amendments, or start a new study",
+        );
     }
 
     // Non-empty frozen sections and scenarios.
@@ -605,15 +605,15 @@ fn check_lifecycle(ctx: &Context<'_>, r: &mut Reporter<'_>, study: &Study, statu
         _ => &[],
     };
     for name in must_be_filled {
-        if let Some(section) = study.section(name) {
-            if study.section_is_empty(name) {
-                r.error(
-                    "study.section-empty",
-                    Some(section.heading_line),
-                    format!("Section `## {name}` is empty"),
-                    format!("Fill in `## {name}`"),
-                );
-            }
+        if let Some(section) = study.section(name)
+            && study.section_is_empty(name)
+        {
+            r.error(
+                "study.section-empty",
+                Some(section.heading_line),
+                format!("Section `## {name}` is empty"),
+                format!("Fill in `## {name}`"),
+            );
         }
     }
     if needs_block && study.scenarios.is_empty() {
@@ -760,21 +760,21 @@ fn check_exploration(ctx: &Context<'_>, r: &mut Reporter<'_>, study: &Study) {
             .read_to_string(&summary_file)
             .ok()
             .and_then(|t| parse_summary_text(&t).ok());
-        if let Some(summary) = summary {
-            if summary.deciding_data_seen != (seen == "true") {
-                r.out.push(Diagnostic {
-                    rule: "study.exploration-label-mismatch",
-                    severity: Severity::Error,
-                    path: summary_file,
-                    line: None,
-                    message: format!(
-                        "SUMMARY.md has `deciding_data_seen: {}`, but the study was pre-registered \
+        if let Some(summary) = summary
+            && summary.deciding_data_seen != (seen == "true")
+        {
+            r.out.push(Diagnostic {
+                rule: "study.exploration-label-mismatch",
+                severity: Severity::Error,
+                path: summary_file,
+                line: None,
+                message: format!(
+                    "SUMMARY.md has `deciding_data_seen: {}`, but the study was pre-registered \
                          with `deciding_data_seen: {seen}`",
-                        summary.deciding_data_seen
-                    ),
-                    hint: Some("Regenerate SUMMARY.md with `tophat study summarize`".into()),
-                });
-            }
+                    summary.deciding_data_seen
+                ),
+                hint: Some("Regenerate SUMMARY.md with `tophat study summarize`".into()),
+            });
         }
     }
 }
@@ -886,13 +886,14 @@ fn test_references(bytes: &[u8]) -> Vec<(u32, u32)> {
             let boundary = bytes
                 .get(end)
                 .is_none_or(|b| !(b.is_ascii_alphanumeric() || *b == b'_'));
-            if digits > 0 && bytes[start] != b'0' && boundary {
-                if let Ok(n) = std::str::from_utf8(&bytes[start..end])
+            if digits > 0
+                && bytes[start] != b'0'
+                && boundary
+                && let Ok(n) = std::str::from_utf8(&bytes[start..end])
                     .unwrap_or("")
                     .parse::<u32>()
-                {
-                    refs.entry(n).or_insert(line);
-                }
+            {
+                refs.entry(n).or_insert(line);
             }
             i = end.max(i + 1);
             continue;

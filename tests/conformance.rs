@@ -120,9 +120,11 @@ fn messages_are_not_compared() {
     let cases = repo_root().join("tests/conformance");
     let report = run(&cases, &["dataset-file-changed"]);
     assert!(!report.failed, "{:?}", report.lines);
-    assert!(report
-        .lines
-        .contains(&"dataset-file-changed ok".to_string()));
+    assert!(
+        report
+            .lines
+            .contains(&"dataset-file-changed ok".to_string())
+    );
 }
 
 #[test] // rq-067bd77a
@@ -154,9 +156,11 @@ fn commands_other_than_check_are_compared_by_exit_code_and_output() {
     let cases = repo_root().join("tests/conformance");
     let report = run(&cases, &["external-key-mismatch"]);
     assert!(!report.failed, "{:?}", report.lines);
-    assert!(report
-        .lines
-        .contains(&"external-key-mismatch ok".to_string()));
+    assert!(
+        report
+            .lines
+            .contains(&"external-key-mismatch ok".to_string())
+    );
 }
 
 #[test] // rq-97bc377b

@@ -5,16 +5,16 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use std::process::Command;
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
-use crate::check::{run_check, Diagnostic, Project, Severity};
+use crate::check::{Diagnostic, Project, Severity, run_check};
 use crate::pipeline::{
-    key_status, load_pipeline, qc_status, stale_entries, variant_target, StageInput, Verdict,
+    StageInput, Verdict, key_status, load_pipeline, qc_status, stale_entries, variant_target,
 };
-use crate::question::{parse_project, QuestionStatus, PROJECT_FILE};
+use crate::question::{PROJECT_FILE, QuestionStatus, parse_project};
 use crate::study::{
-    parse_study_text, parse_summary, Status, Study, StudyError, STUDIES_DIR, STUDY_FILE,
-    SUMMARY_FILE,
+    STUDIES_DIR, STUDY_FILE, SUMMARY_FILE, Status, Study, StudyError, parse_study_text,
+    parse_summary,
 };
 
 /// Who may take a next action.
@@ -387,21 +387,20 @@ fn evaluate(root: &Path, view: &ProjectView, study_id: &str) -> Result<StudyStat
         // Row 6: a results location the human configured that is not there. The default
         // `results/` folder is created when the first output is written.
         let roots = crate::data::load_roots(root).ok();
-        if let Some(roots) = roots.as_ref().filter(|r| !r.results_defaulted) {
-            if let Some(location) = roots
+        if let Some(roots) = roots.as_ref().filter(|r| !r.results_defaulted)
+            && let Some(location) = roots
                 .location(crate::data::RESULTS_ROOT)
                 .filter(|l| !l.is_dir())
-            {
-                return Some(NextAction::new(
-                    6,
-                    Who::Anyone,
-                    format!(
-                        "Create {}, or fix the results entry of .tophat/roots.local.yaml",
-                        location.display()
-                    ),
-                    None,
-                ));
-            }
+        {
+            return Some(NextAction::new(
+                6,
+                Who::Anyone,
+                format!(
+                    "Create {}, or fix the results entry of .tophat/roots.local.yaml",
+                    location.display()
+                ),
+                None,
+            ));
         }
         if !missing_tools(root, &variants, id).is_empty() {
             let cmd = "tophat tools sync".to_string();
@@ -587,7 +586,7 @@ pub fn run_command(root: &Path, study: &str, options: &RunOptions) -> Result<Vec
         Ok(None) => {
             return refuse(format!(
                 "{STUDIES_DIR}/{study}/{STUDY_FILE} cannot be parsed; run `tophat check`"
-            ))
+            ));
         }
         Ok(Some(doc)) => doc,
     };
@@ -608,19 +607,19 @@ pub fn run_command(root: &Path, study: &str, options: &RunOptions) -> Result<Vec
                 "study `{study}` is a draft. Results seen before pre-registration cannot be reported, so \
                  pre-register first (`tophat study preregister {study}`), or pass --draft for a trial run \
                  whose results are kept apart and can never be reported"
-            ))
+            ));
         }
         (false, true) => {
             return refuse(format!(
                 "--draft is only for draft studies; study `{study}` is not a draft"
-            ))
+            ));
         }
         _ => {}
     }
-    if let Some(v) = &options.variant {
-        if !doc.variants().contains(v) {
-            return refuse(format!("variant `{v}` is not listed in STUDY.md"));
-        }
+    if let Some(v) = &options.variant
+        && !doc.variants().contains(v)
+    {
+        return refuse(format!("variant `{v}` is not listed in STUDY.md"));
     }
     let missing = missing_tools(root, doc.variants(), study);
     if !missing.is_empty() {

@@ -83,7 +83,13 @@ impl Env {
         let _ = fs::remove_dir_all(&base);
         fs::create_dir_all(base.join("bin")).unwrap();
         #[cfg(unix)]
-        std::os::unix::fs::symlink(env!("CARGO_BIN_EXE_tophat"), base.join("bin/tophat")).unwrap();
+        {
+            // The release workflow sets TOPHAT_TEST_BINARY so the worked example runs with the
+            // binary it built instead of the workspace build.
+            let binary = std::env::var_os("TOPHAT_TEST_BINARY")
+                .unwrap_or_else(|| env!("CARGO_BIN_EXE_tophat").into());
+            std::os::unix::fs::symlink(binary, base.join("bin/tophat")).unwrap();
+        }
         let posix = base.join("posix");
         fs::create_dir_all(&posix).unwrap();
         for tool in POSIX_TOOLS {

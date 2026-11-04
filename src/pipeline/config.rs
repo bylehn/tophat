@@ -8,7 +8,7 @@ use yaml_rust2::{Yaml, YamlLoader};
 use super::PipelineError;
 use crate::check::Project;
 use crate::data::DatasetRef;
-use crate::study::{matches_id_pattern, STUDIES_DIR};
+use crate::study::{STUDIES_DIR, matches_id_pattern};
 
 // rq-5cd91e7d
 /// Where a stage input comes from.
@@ -273,7 +273,7 @@ fn parse_trial(value: Yaml) -> Result<TrialOverride, String> {
             Some(other) => {
                 return Err(format!(
                     "unknown key `{other}`; a trial mapping holds only `inputs` and `params`"
-                ))
+                ));
             }
             None => return Err("keys must be text".into()),
         }
@@ -584,7 +584,7 @@ fn parse_external(value: Yaml) -> Result<ExternalConfig, String> {
                 return Err(format!(
                     "unknown key `{other}`; allowed keys are setup, slurm and keep. Connection \
                      details (hosts, remote paths, credentials) never go in the project"
-                ))
+                ));
             }
         }
     }
@@ -638,12 +638,12 @@ fn build_stage(
             ))),
         }
     }
-    if let Some(result) = &fields.result {
-        if !crate::data::is_safe_relative_path(result) {
-            problems.push(problem(format!(
-                "stage `{name}`: `result` must be a relative file path"
-            )));
-        }
+    if let Some(result) = &fields.result
+        && !crate::data::is_safe_relative_path(result)
+    {
+        problems.push(problem(format!(
+            "stage `{name}`: `result` must be a relative file path"
+        )));
     }
     let env = fields.env.clone().unwrap_or_else(|| "default".into());
     Some(StageConfig {
@@ -687,18 +687,17 @@ fn validate(
             )));
         }
         for (input, source) in &stage.inputs {
-            if let StageInput::Stage(upstream) = source {
-                if upstream == &stage.name
+            if let StageInput::Stage(upstream) = source
+                && (upstream == &stage.name
                     || !stages
                         .iter()
                         .take_while(|s| s.name != stage.name)
-                        .any(|s| &s.name == upstream)
-                {
-                    problems.push(problem(format!(
+                        .any(|s| &s.name == upstream))
+            {
+                problems.push(problem(format!(
                         "stage `{}`: input `{input}` references `stage:{upstream}`, which is not an earlier stage",
                         stage.name
                     )));
-                }
             }
         }
         if let Some(f) = &stage.foreach {

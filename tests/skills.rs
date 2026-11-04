@@ -9,7 +9,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 mod common;
 
-use xtask::lint::{lint_skills, Finding};
+use xtask::lint::{Finding, lint_skills};
 
 const SKILLS: [&str; 8] = [
     "th-adopt",
@@ -213,10 +213,11 @@ fn adapters_are_written_for_every_selected_agent() {
     }
     let p = Project::render(&[]);
     for skill in SKILLS {
-        assert!(p
-            .root()
-            .join(format!(".claude/skills/{skill}/SKILL.md"))
-            .is_file());
+        assert!(
+            p.root()
+                .join(format!(".claude/skills/{skill}/SKILL.md"))
+                .is_file()
+        );
     }
     let findings = p.lint();
     assert!(
@@ -441,9 +442,10 @@ fn agent_entry_points_read_the_managed_rules() {
         return;
     }
     let p = Project::render(&[]);
-    assert!(p
-        .read("AGENTS.md")
-        .starts_with("Read `.tophat/managed/AGENTS.md` first"));
+    assert!(
+        p.read("AGENTS.md")
+            .starts_with("Read `.tophat/managed/AGENTS.md` first")
+    );
     let claude = p.read("CLAUDE.md");
     assert!(claude.contains("@.tophat/managed/AGENTS.md") && claude.contains("@AGENTS.md"));
     let rules = p.read(".tophat/managed/AGENTS.md");
@@ -672,12 +674,14 @@ fn the_container_check_runs_before_every_prompt() {
         return;
     }
     let p = Project::render(&[("agents", "[codex, opencode]")]);
-    assert!(p
-        .read(".codex/hooks.json")
-        .contains(".tophat/managed/hooks/check-container.sh"));
-    assert!(p
-        .read(".opencode/plugins/check-container.js")
-        .contains(".tophat/managed/hooks/check-container.sh"));
+    assert!(
+        p.read(".codex/hooks.json")
+            .contains(".tophat/managed/hooks/check-container.sh")
+    );
+    assert!(
+        p.read(".opencode/plugins/check-container.js")
+            .contains(".tophat/managed/hooks/check-container.sh")
+    );
 }
 
 // --- Worked example -----------------------------------------------------------------------------
@@ -854,11 +858,13 @@ fn the_example_uses_julia_when_selected() {
         config.contains("run: julia scripts/score.jl {item} {out}"),
         "{config}"
     );
-    assert!(julia
-        .root()
-        .join(EXAMPLE)
-        .join("scripts/score.jl")
-        .is_file());
+    assert!(
+        julia
+            .root()
+            .join(EXAMPLE)
+            .join("scripts/score.jl")
+            .is_file()
+    );
     assert!(!julia.root().join(EXAMPLE).join("scripts/score.py").exists());
 
     let python = Project::render(&[]);
@@ -867,14 +873,18 @@ fn the_example_uses_julia_when_selected() {
         config.contains("run: python scripts/score.py {item} {out}"),
         "{config}"
     );
-    assert!(python
-        .root()
-        .join(EXAMPLE)
-        .join("scripts/score.py")
-        .is_file());
-    assert!(!python
-        .root()
-        .join(EXAMPLE)
-        .join("scripts/score.jl")
-        .exists());
+    assert!(
+        python
+            .root()
+            .join(EXAMPLE)
+            .join("scripts/score.py")
+            .is_file()
+    );
+    assert!(
+        !python
+            .root()
+            .join(EXAMPLE)
+            .join("scripts/score.jl")
+            .exists()
+    );
 }

@@ -1,7 +1,7 @@
 //! Rendering of check results in the human-readable and JSON formats.
 
 use crate::check::{Diagnostic, Severity};
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 
 /// Version of the JSON output structure; changes only on incompatible changes.
 pub const JSON_FORMAT_VERSION: u32 = 1;

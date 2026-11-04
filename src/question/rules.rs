@@ -2,11 +2,11 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use super::{parse_project, HeadingIssue, QuestionStatus, QuestionTree, PROJECT_FILE};
+use super::{HeadingIssue, PROJECT_FILE, QuestionStatus, QuestionTree, parse_project};
 use crate::check::{Diagnostic, Project, Severity};
 use crate::study::{
-    is_valid_question_id, is_valid_study_id, parse_study_text, Status, Study, STUDIES_DIR,
-    STUDY_FILE,
+    STUDIES_DIR, STUDY_FILE, Status, Study, is_valid_question_id, is_valid_study_id,
+    parse_study_text,
 };
 
 /// A study as seen from the question tree.
@@ -88,7 +88,7 @@ pub fn question_rules(project: &Project) -> Vec<Diagnostic> {
                 None,
                 format!("{PROJECT_FILE} cannot be read: {message}"),
                 "Save PROJECT.md as UTF-8 text",
-            )]
+            )];
         }
     };
     let studies = load_studies(project);

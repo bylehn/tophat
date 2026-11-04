@@ -169,15 +169,15 @@ pub fn sections(body: &[NumberedLine<'_>]) -> Vec<Section> {
     let mut fences = FenceTracker::default();
     for &(no, line) in body {
         let state = fences.next(line);
-        if state == FenceState::Outside {
-            if let Some(name) = h2_name(line) {
-                out.push(Section {
-                    name: name.to_string(),
-                    heading_line: no,
-                    content: Vec::new(),
-                });
-                continue;
-            }
+        if state == FenceState::Outside
+            && let Some(name) = h2_name(line)
+        {
+            out.push(Section {
+                name: name.to_string(),
+                heading_line: no,
+                content: Vec::new(),
+            });
+            continue;
         }
         if let Some(section) = out.last_mut() {
             section.content.push((no, line.to_string()));

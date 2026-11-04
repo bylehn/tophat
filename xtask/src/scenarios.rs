@@ -283,9 +283,11 @@ mod tests {
             vec![format!("unreferenced {b} rqm/a.md: Case 1")]
         );
         assert_eq!(report.referenced, 1);
-        assert!(report
-            .render()
-            .ends_with("1 scenarios referenced, 0 pending, 1 problem(s)\n"));
+        assert!(
+            report
+                .render()
+                .ends_with("1 scenarios referenced, 0 pending, 1 problem(s)\n")
+        );
     }
 
     #[test] // rq-59f0f637 rq-04882df1

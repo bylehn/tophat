@@ -11,7 +11,7 @@ use yaml_rust2::{Yaml, YamlLoader};
 use super::manifest::list_manifests;
 use super::{DatasetKind, DatasetRef, Manifest};
 use crate::check::Project;
-use crate::study::{parse_study_text, Status, Study, STUDIES_DIR, STUDY_FILE};
+use crate::study::{STUDIES_DIR, STUDY_FILE, Status, Study, parse_study_text};
 
 /// One dataset reference in a study configuration.
 #[derive(Debug, Clone, PartialEq, Eq)]

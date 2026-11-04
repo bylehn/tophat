@@ -6,8 +6,8 @@ use std::path::{Path, PathBuf};
 use chrono::NaiveDate;
 use yaml_rust2::{Yaml, YamlLoader};
 
-use super::provenance::{ProvenanceRecord, ResolvedStage};
 use super::PipelineError;
+use super::provenance::{ProvenanceRecord, ResolvedStage};
 use crate::fsutil::write_atomic;
 use crate::markdown::{numbered_lines, split_front_matter};
 use crate::study::{Console, STUDIES_DIR};
@@ -180,7 +180,7 @@ pub fn qc(
         other => {
             return Err(PipelineError::Qc(format!(
                 "unrecognised verdict `{other}`; nothing was written"
-            )))
+            )));
         }
     };
     write!(console.out, "Note (one line): ").map_err(io)?;

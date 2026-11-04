@@ -11,7 +11,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::SystemTime;
 
 use tophat::check::{Diagnostic, Project, RuleFamily, Severity};
-use tophat::cli::{run, Streams, EXIT_FAILED, EXIT_OK, EXIT_UNABLE};
+use tophat::cli::{EXIT_FAILED, EXIT_OK, EXIT_UNABLE, Streams, run};
 
 // --- Fixtures -------------------------------------------------------------------------------
 
@@ -192,9 +192,10 @@ fn check_runs_from_the_project_root() {
     let p = project();
     let out = tophat_binary(p.path(), &["check"]);
     assert_eq!(out.code, EXIT_OK, "stderr: {}", out.stderr);
-    assert!(out
-        .stdout
-        .ends_with("0 error(s), 0 warning(s), 0 legacy item(s)\n"));
+    assert!(
+        out.stdout
+            .ends_with("0 error(s), 0 warning(s), 0 legacy item(s)\n")
+    );
 }
 
 #[test] // rq-8889d0ed rq-abbd00cd
@@ -239,9 +240,10 @@ fn a_warning_does_not_fail_the_check_by_default() {
     let p = project();
     study(&p, "a", "WARNING\n");
     let out = tophat(p.path(), &["check"]);
-    assert!(out
-        .stdout
-        .contains("studies/a/STUDY.md:1: warning[test.warning]: test.warning found"));
+    assert!(
+        out.stdout
+            .contains("studies/a/STUDY.md:1: warning[test.warning]: test.warning found")
+    );
     assert_eq!(out.code, EXIT_OK);
 }
 
@@ -278,9 +280,11 @@ fn an_unparseable_file_does_not_stop_other_files_being_checked() {
         .collect();
     assert_eq!(for_a.len(), 1);
     assert_eq!(for_a[0]["rule"], "study.parse-error");
-    assert!(diags
-        .iter()
-        .any(|d| d["path"] == "studies/b/STUDY.md" && d["rule"] == "study.frozen-modified"));
+    assert!(
+        diags
+            .iter()
+            .any(|d| d["path"] == "studies/b/STUDY.md" && d["rule"] == "study.frozen-modified")
+    );
     assert_eq!(out.code, EXIT_FAILED);
 }
 
@@ -330,9 +334,10 @@ fn scoped_check_reports_only_diagnostics_under_the_given_path() {
     let out = tophat(p.path(), &["check", "studies/a"]);
     assert!(out.stdout.contains("studies/a/STUDY.md"));
     assert!(!out.stdout.contains("studies/b/"));
-    assert!(out
-        .stdout
-        .ends_with("1 error(s), 0 warning(s), 0 legacy item(s)\n"));
+    assert!(
+        out.stdout
+            .ends_with("1 error(s), 0 warning(s), 0 legacy item(s)\n")
+    );
     assert_eq!(out.code, EXIT_FAILED);
 }
 

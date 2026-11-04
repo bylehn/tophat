@@ -6,10 +6,10 @@ use std::path::Path;
 
 use yaml_rust2::{Yaml, YamlLoader};
 
-use super::{Status, StudyError, STUDY_FILE};
+use super::{STUDY_FILE, Status, StudyError};
 use crate::markdown::{
-    meaningful_lines, numbered_lines, sections, split_front_matter, FenceState, FenceTracker,
-    NumberedLine, Section,
+    FenceState, FenceTracker, NumberedLine, Section, meaningful_lines, numbered_lines, sections,
+    split_front_matter,
 };
 
 /// A front-matter value with the 1-based line of its key.
@@ -246,7 +246,7 @@ pub(super) fn load_front_matter(
             return Err((
                 Some(open_line + 1),
                 "the front matter must be a mapping of fields".into(),
-            ))
+            ));
         }
     };
     let mut lines = BTreeMap::new();
@@ -285,7 +285,7 @@ fn parse_preregistration(value: &Yaml) -> Result<Preregistration, String> {
         _ => {
             return Err(
                 "field `preregistered` must be a mapping with `date` and `frozen_hash`".into(),
-            )
+            );
         }
     };
     for (k, v) in hash {

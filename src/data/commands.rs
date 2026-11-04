@@ -5,15 +5,15 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use chrono::NaiveDate;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use super::cache::HashCache;
 use super::manifest::{is_safe_relative_path, list_manifests, retired_block};
 use super::refs::study_dataset_refs;
 use super::roots::load_roots;
 use super::{
-    content_hash, hash_files, is_valid_dataset_name, parse_manifest, DataError, DatasetKind,
-    DatasetRef, FileEntry, Manifest, Origin, RESULTS_ROOT,
+    DataError, DatasetKind, DatasetRef, FileEntry, Manifest, Origin, RESULTS_ROOT, content_hash,
+    hash_files, is_valid_dataset_name, parse_manifest,
 };
 use crate::check::Project;
 use crate::fsutil::write_atomic;
@@ -115,7 +115,7 @@ pub fn add(project_root: &Path, options: &RegisterOptions) -> Result<DatasetRef,
         Origin::Published => {
             return Err(DataError::InvalidArgument(
                 "published datasets are created with `tophat data publish`".into(),
-            ))
+            ));
         }
     };
     let roots = load_roots(project_root)?;
@@ -643,10 +643,10 @@ pub fn used_by(project_root: &Path, query: &str) -> Result<UsedBy, DataError> {
         for input in
             recorded_inputs(results.as_deref(), &p.study, &p.stage, &p.key).unwrap_or_default()
         {
-            if let RecordedInput::Dataset(consumed) = input {
-                if matches(&consumed) {
-                    result.datasets.push((published.to_string(), consumed));
-                }
+            if let RecordedInput::Dataset(consumed) = input
+                && matches(&consumed)
+            {
+                result.datasets.push((published.to_string(), consumed));
             }
         }
     }
@@ -666,7 +666,7 @@ pub fn publish(
     variant: Option<&str>,
     name: &str,
 ) -> Result<DatasetRef, DataError> {
-    use crate::pipeline::{PipelineError, ProvenanceRecord, ResolvedStage, RECORD_FILE};
+    use crate::pipeline::{PipelineError, ProvenanceRecord, RECORD_FILE, ResolvedStage};
 
     if !is_valid_dataset_name(name) {
         return Err(DataError::InvalidName(name.to_string()));

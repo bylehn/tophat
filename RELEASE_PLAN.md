@@ -79,11 +79,11 @@ stays green.
 
 ### Phase 4 — Release
 
-- [ ] `.github/workflows/release.yaml`: on a version tag, build `x86_64` and `aarch64` musl
+- [x] `.github/workflows/release.yaml`: on a version tag, build `x86_64` and `aarch64` musl
   binaries, run conformance against the x86_64 binary, write the pin with
   `cargo xtask release-pin`, re-run render and e2e with that pin, then publish the binaries with
   SHA-256 checksums.
-- [ ] Un-pend and test the release scenarios: `rqm/template/container.md`
+- [x] Un-pend and test the release scenarios: `rqm/template/container.md`
   (image holds the pinned tophat; wrong checksum fails the build) and `rqm/template/project.md`
   (the release pin is complete).
 - [ ] Tag `v0.1.0`, flip `tophat-release.yaml` from `unreleased` to the released pin, and confirm

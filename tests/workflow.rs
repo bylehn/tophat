@@ -12,17 +12,17 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use tophat::check::{run_check, Severity};
-use tophat::data::{add, Origin, RegisterOptions};
+use tophat::check::{Severity, run_check};
+use tophat::data::{Origin, RegisterOptions, add};
 use tophat::pipeline::{
-    compute_keys, generate_rules, load_pipeline, seal, summarize, write_summary, KeyContext,
-    ProvenanceRecord, SealRequest,
+    KeyContext, ProvenanceRecord, SealRequest, compute_keys, generate_rules, load_pipeline, seal,
+    summarize, write_summary,
 };
 use tophat::study::{
-    exploration_hash, new_study, parse_study_text, preregister, record_exploration, report,
-    supersede, Console, Status, StudyError,
+    Console, Status, StudyError, exploration_hash, new_study, parse_study_text, preregister,
+    record_exploration, report, supersede,
 };
-use tophat::workflow::{next_action, study_status, Who};
+use tophat::workflow::{Who, next_action, study_status};
 
 // --- Fixtures -------------------------------------------------------------------------------
 
@@ -460,10 +460,12 @@ fn check_errors_come_first() {
 fn errors_in_another_study_do_not_block_this_one() {
     let env = Env::draft();
     fs::create_dir_all(env.root().join("studies/other-study")).unwrap();
-    assert!(run_check(&env.root(), &[])
-        .unwrap()
-        .iter()
-        .any(|d| d.path == "studies/other-study"));
+    assert!(
+        run_check(&env.root(), &[])
+            .unwrap()
+            .iter()
+            .any(|d| d.path == "studies/other-study")
+    );
     assert_eq!(env.next().row, 4);
 }
 
@@ -658,10 +660,12 @@ fn stale_summary_means_run_again() {
     );
     assert_eq!(env.next().row, 11);
     // The stale summary is a check error, yet it does not stop the run that fixes it.
-    assert!(run_check(&env.root(), &[])
-        .unwrap()
-        .iter()
-        .any(|d| d.rule == "pipeline.summary-stale"));
+    assert!(
+        run_check(&env.root(), &[])
+            .unwrap()
+            .iter()
+            .any(|d| d.rule == "pipeline.summary-stale")
+    );
     assert_eq!(env.tophat(&["run", "x-vs-docking"], &[]).0, 0);
 }
 
@@ -896,11 +900,12 @@ fn extra_snakemake_arguments_are_passed_through() {
         &["run", "x-vs-docking", "--", "--dry-run", "--printshellcmds"],
         &[],
     );
-    assert!(env
-        .pixi_args()
-        .unwrap()
-        .join(" ")
-        .ends_with("summary --dry-run --printshellcmds"));
+    assert!(
+        env.pixi_args()
+            .unwrap()
+            .join(" ")
+            .ends_with("summary --dry-run --printshellcmds")
+    );
 }
 
 #[test] // rq-d1d30204 rq-cdc39471
@@ -1470,15 +1475,17 @@ fn editing_the_locked_exploration_is_an_error() {
         "## Trial results",
         "## Trial results\n\nNothing to see.",
     );
-    assert!(env
-        .rules()
-        .iter()
-        .any(|e| e.starts_with("study.exploration-modified")));
+    assert!(
+        env.rules()
+            .iter()
+            .any(|e| e.starts_with("study.exploration-modified"))
+    );
     fs::remove_file(env.root().join("studies/x-vs-docking/EXPLORATION.md")).unwrap();
-    assert!(env
-        .rules()
-        .iter()
-        .any(|e| e.starts_with("study.exploration-modified") && e.contains("missing")));
+    assert!(
+        env.rules()
+            .iter()
+            .any(|e| e.starts_with("study.exploration-modified") && e.contains("missing"))
+    );
 }
 
 #[test] // rq-647bcecc rq-4d6751e2
@@ -1488,15 +1495,17 @@ fn an_invalid_exploration_file_is_reported() {
         "studies/x-vs-docking/EXPLORATION.md",
         "---\nstudy: other-study\ndeciding_data_seen: false\n---\n",
     );
-    assert!(env
-        .rules()
-        .iter()
-        .any(|e| e.starts_with("study.exploration-invalid") && e.contains("other-study")));
+    assert!(
+        env.rules()
+            .iter()
+            .any(|e| e.starts_with("study.exploration-invalid") && e.contains("other-study"))
+    );
     env.write("studies/x-vs-docking/EXPLORATION.md", "no front matter\n");
-    assert!(env
-        .rules()
-        .iter()
-        .any(|e| e.starts_with("study.exploration-invalid")));
+    assert!(
+        env.rules()
+            .iter()
+            .any(|e| e.starts_with("study.exploration-invalid"))
+    );
 }
 
 #[test] // rq-643d82cb rq-3a21c28f
@@ -1506,9 +1515,10 @@ fn a_result_informed_by_its_deciding_data_is_labelled() {
     env.commit();
     env.preregister_output();
     env.complete();
-    assert!(env
-        .read("studies/x-vs-docking/SUMMARY.md")
-        .contains("\ndeciding_data_seen: true\n"));
+    assert!(
+        env.read("studies/x-vs-docking/SUMMARY.md")
+            .contains("\ndeciding_data_seen: true\n")
+    );
     let (code, out, err) = env.tophat(&["study", "report", "x-vs-docking"], &[]);
     assert_eq!(code, 0, "{err}");
     assert!(
@@ -1546,10 +1556,11 @@ fn the_summary_must_carry_the_studys_label() {
         "deciding_data_seen: true\n",
         "deciding_data_seen: false\n",
     );
-    assert!(env
-        .rules()
-        .iter()
-        .any(|e| e.starts_with("study.exploration-label-mismatch")));
+    assert!(
+        env.rules()
+            .iter()
+            .any(|e| e.starts_with("study.exploration-label-mismatch"))
+    );
 }
 
 #[test] // rq-2048dd2b rq-3a21c28f

@@ -3,7 +3,7 @@
 use sha2::{Digest, Sha256};
 use yaml_rust2::{Yaml, YamlLoader};
 
-use super::{is_valid_dataset_name, to_hex, DatasetRef, DATASETS_DIR};
+use super::{DATASETS_DIR, DatasetRef, is_valid_dataset_name, to_hex};
 use crate::check::Project;
 
 // rq-eab2ab92 rq-4c85d6f4
@@ -339,7 +339,7 @@ pub fn parse_manifest(text: &str) -> Result<Manifest, String> {
         }
         (DatasetKind::Published, None) => Origin::Published,
         (DatasetKind::Published, Some(_)) => {
-            return Err("a published dataset has `produced_by`, not `origin`".into())
+            return Err("a published dataset has `produced_by`, not `origin`".into());
         }
         (_, None) => return Err(format!("a {kind_text} dataset needs `origin`")),
     };
@@ -359,7 +359,7 @@ pub fn parse_manifest(text: &str) -> Result<Manifest, String> {
             Some(produced)
         }
         (DatasetKind::Published, None) => {
-            return Err("a published dataset needs `produced_by`".into())
+            return Err("a published dataset needs `produced_by`".into());
         }
         (_, Some(_)) => return Err("only published datasets have `produced_by`".into()),
         (_, None) => None,

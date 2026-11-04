@@ -126,7 +126,7 @@ impl Project {
                     return Err(io::Error::new(
                         io::ErrorKind::InvalidInput,
                         format!("path `{rel}` is not a relative path inside the project"),
-                    ))
+                    ));
                 }
             }
         }

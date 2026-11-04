@@ -1,7 +1,7 @@
 use std::io::{self, IsTerminal};
 use std::process::ExitCode;
 use tophat::check::RULE_FAMILIES;
-use tophat::cli::{run, Streams, EXIT_UNABLE};
+use tophat::cli::{EXIT_UNABLE, Streams, run};
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();

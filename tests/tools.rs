@@ -9,10 +9,10 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use tophat::check::{Diagnostic, Project, Severity};
 use tophat::pipeline::{
-    begin, compute_keys, load_pipeline, pipeline_rules, seal, stage_key_text, KeyContext,
-    ProvenanceRecord, SealRequest,
+    KeyContext, ProvenanceRecord, SealRequest, begin, compute_keys, load_pipeline, pipeline_rules,
+    seal, stage_key_text,
 };
-use tophat::tools::{sync, ToolPin};
+use tophat::tools::{ToolPin, sync};
 
 const LOCK: &str = "version: 6\nenvironments:\n  default:\n    packages:\n      linux-64:\n      - conda: https://x/{pkg}.conda\n";
 
@@ -419,9 +419,11 @@ fn the_tool_placeholder_is_only_for_tool_stages() {
     );
     env.write("studies/x-vs-docking/config/base.yaml", &text);
     let ds = env.diagnostics();
-    assert!(with_rule(&ds, "pipeline.config-invalid")
-        .iter()
-        .any(|d| d.message.contains("{tool}")));
+    assert!(
+        with_rule(&ds, "pipeline.config-invalid")
+            .iter()
+            .any(|d| d.message.contains("{tool}"))
+    );
 }
 
 // --- Keys and provenance ----------------------------------------------------------------------
@@ -436,9 +438,11 @@ fn the_key_records_the_resolved_commit() {
     let lines: Vec<&str> = text.lines().collect();
     assert!(lines[1].starts_with("run "));
     assert_eq!(lines[2], format!("tool method-x@{}", env.a));
-    assert!(!stage_key_text(&config, "prepare", &ctx)
-        .unwrap()
-        .contains("\ntool "));
+    assert!(
+        !stage_key_text(&config, "prepare", &ctx)
+            .unwrap()
+            .contains("\ntool ")
+    );
 }
 
 #[test] // rq-3b6d26cd rq-37a6119e

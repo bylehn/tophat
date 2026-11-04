@@ -11,7 +11,7 @@ use yaml_rust2::{Yaml, YamlLoader};
 
 use crate::check::Project;
 use crate::fsutil::write_atomic;
-use crate::study::{is_valid_study_id, STUDIES_DIR};
+use crate::study::{STUDIES_DIR, is_valid_study_id};
 
 /// The committed tool declarations.
 pub const TOOLS_FILE: &str = ".tophat/tools.yaml";
@@ -94,14 +94,23 @@ impl fmt::Display for ToolsError {
         match self {
             ToolsError::UnknownTool(t) => write!(f, "tool `{t}` is not declared in {TOOLS_FILE}"),
             ToolsError::InvalidPin(p) => {
-                write!(f, "`{p}` is not a tool pin: use <tool>@<7 to 40 lowercase hex characters>")
+                write!(
+                    f,
+                    "`{p}` is not a tool pin: use <tool>@<7 to 40 lowercase hex characters>"
+                )
             }
             ToolsError::Ambiguous { tool, pin } => {
-                write!(f, "{tool}@{pin} matches more than one commit; pin more characters")
+                write!(
+                    f,
+                    "{tool}@{pin} matches more than one commit; pin more characters"
+                )
             }
             ToolsError::NotFound { tool, pin } => write!(f, "{tool}@{pin} matches no commit"),
             ToolsError::Unlocked { tool, pin } => {
-                write!(f, "{tool}@{pin} is not resolved yet: run `tophat tools sync`")
+                write!(
+                    f,
+                    "{tool}@{pin} is not resolved yet: run `tophat tools sync`"
+                )
             }
             ToolsError::Fetch { tool, message } => write!(f, "cannot fetch `{tool}`: {message}"),
             ToolsError::NotCached { tool, commit } => write!(
@@ -676,9 +685,11 @@ mod tests {
         ] {
             assert_eq!(ToolPin::parse(bad), None, "{bad}");
         }
-        assert!(ToolPin::parse(&format!("method-x@{}", "a".repeat(40)))
-            .unwrap()
-            .is_full());
+        assert!(
+            ToolPin::parse(&format!("method-x@{}", "a".repeat(40)))
+                .unwrap()
+                .is_full()
+        );
         assert_eq!(
             ToolPin::parse(&format!("method-x@{}", "a".repeat(41))),
             None

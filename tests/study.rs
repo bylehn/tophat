@@ -8,11 +8,11 @@ use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use chrono::NaiveDate;
-use tophat::check::{Diagnostic, Project, Severity, RULE_FAMILIES};
-use tophat::cli::{run, Streams, EXIT_OK};
+use tophat::check::{Diagnostic, Project, RULE_FAMILIES, Severity};
+use tophat::cli::{EXIT_OK, Streams, run};
 use tophat::study::{
-    exploration_hash, frozen_fingerprint, new_study, parse_exploration, parse_study_text,
-    preregister, report, study_rules_at, supersede, Console, Status, StudyError, GOVERNED_SECTIONS,
+    Console, GOVERNED_SECTIONS, Status, StudyError, exploration_hash, frozen_fingerprint,
+    new_study, parse_exploration, parse_study_text, preregister, report, study_rules_at, supersede,
 };
 
 // --- Fixtures -------------------------------------------------------------------------------
@@ -301,9 +301,10 @@ fn create_a_new_study() {
     for name in GOVERNED_SECTIONS {
         assert!(study.section(name).is_some(), "missing ## {name}");
     }
-    assert!(p
-        .read("studies/x-vs-docking/config/base.yaml")
-        .contains("stages: []"));
+    assert!(
+        p.read("studies/x-vs-docking/config/base.yaml")
+            .contains("stages: []")
+    );
     assert_eq!(
         p.read("studies/x-vs-docking/Snakefile"),
         tophat::pipeline::stub("x-vs-docking")

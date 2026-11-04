@@ -15,13 +15,13 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use chrono::NaiveDate;
 use tophat::check::{Diagnostic, Project, Severity};
-use tophat::data::{add, retire, Origin, RegisterOptions};
+use tophat::data::{Origin, RegisterOptions, add, retire};
 use tophat::pipeline::{
-    compute_keys, generate_rules, items_of, load_pipeline, pipeline_rules, qc, qc_status, seal,
-    stub, summarize, write_summary, KeyContext, PipelineError, ProvenanceRecord, SealRequest,
-    Verdict,
+    KeyContext, PipelineError, ProvenanceRecord, SealRequest, Verdict, compute_keys,
+    generate_rules, items_of, load_pipeline, pipeline_rules, qc, qc_status, seal, stub, summarize,
+    write_summary,
 };
-use tophat::study::{new_study, parse_summary, report, Console, StudyError};
+use tophat::study::{Console, StudyError, new_study, parse_summary, report};
 
 // --- Fixtures -------------------------------------------------------------------------------
 
@@ -389,9 +389,10 @@ fn new_studies_get_the_stub() {
     env.write("PROJECT.md", "# P\n\n## q-1a2b3c4d · Q?\nstatus: open\n");
     new_study(&env.root(), "y-study", "q-1a2b3c4d", false).unwrap();
     assert_eq!(env.read("studies/y-study/Snakefile"), stub("y-study"));
-    assert!(env
-        .read("studies/y-study/config/base.yaml")
-        .contains("stages: []"));
+    assert!(
+        env.read("studies/y-study/config/base.yaml")
+            .contains("stages: []")
+    );
 }
 
 #[test] // rq-46470647 rq-7b0b2ae8
@@ -981,7 +982,9 @@ fn record_a_passing_verdict_interactively() {
     );
     assert_eq!(
         fs::read_to_string(&path).unwrap(),
-        format!("---\nstage: score\nkey: {key}\nverdict: pass\ndate: \"2026-10-20\"\n---\n\nDistributions look fine\n")
+        format!(
+            "---\nstage: score\nkey: {key}\nverdict: pass\ndate: \"2026-10-20\"\n---\n\nDistributions look fine\n"
+        )
     );
     assert!(output.contains("items:   2"));
     assert_eq!(

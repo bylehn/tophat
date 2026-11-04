@@ -462,11 +462,11 @@ fn collect(value: &Value, out: &mut Transcript) {
             if let Some(session) = map.get("session_id").and_then(Value::as_str) {
                 out.session = Some(session.to_string());
             }
-            if map.get("type").and_then(Value::as_str) == Some("text") {
-                if let Some(text) = map.get("text").and_then(Value::as_str) {
-                    out.text.push_str(text);
-                    out.text.push('\n');
-                }
+            if map.get("type").and_then(Value::as_str) == Some("text")
+                && let Some(text) = map.get("text").and_then(Value::as_str)
+            {
+                out.text.push_str(text);
+                out.text.push('\n');
             }
             if let Some(Value::Object(message)) = map.get("message") {
                 collect(&Value::Object(message.clone()), out);
