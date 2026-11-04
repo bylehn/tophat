@@ -435,15 +435,40 @@ personal_config() {
   fi
 }
 
+# Prints the container directories where the selected agents read personal skills, one per line
+# and without duplicates. Claude Code reads ~/.claude/skills; Codex and OpenCode both read
+# ~/.agents/skills (rqm/template/container.md, Personal skills).
+personal_skill_destinations() {
+  if agent_selected claude-code; then
+    printf '%s\n' /opt/tophat/home/.claude/skills
+  fi
+  if agent_selected codex || agent_selected opencode; then
+    printf '%s\n' /opt/tophat/home/.agents/skills
+  fi
+}
+
+# Prints each selected agent's user-level instructions file in the container, one per line.
+personal_instruction_destinations() {
+  if agent_selected claude-code; then
+    printf '%s\n' /opt/tophat/home/.claude/CLAUDE.md
+  fi
+  if agent_selected codex; then
+    printf '%s\n' /opt/tophat/home/.codex/AGENTS.md
+  fi
+  if agent_selected opencode; then
+    printf '%s\n' /opt/tophat/home/.config/opencode/AGENTS.md
+  fi
+}
+
 # rq-c490844e
-# Sets skill_mounts to one "<host path>:<name>" per line for the skills in the human's personal
-# skills folder, which the session mounts read-only in Claude Code's skills directory, one by one.
-# Entries that cannot be mounted only warn. Without the folder it does nothing.
+# Sets skill_mounts to one "<host path>:<container destination>" per line for the skills in the
+# human's personal skills folder, which the session mounts read-only in each selected agent's
+# user-level skills directory, one by one. Entries that cannot be mounted only warn. Without the
+# folder it does nothing.
 read_skills() {
   skill_mounts=""
-  # Personal skills are mounted for the selected agents that read Claude Code's skill format;
-  # that is Claude Code alone (rqm/template/container.md, Personal skills).
-  agent_selected claude-code || return 0
+  destinations=$(personal_skill_destinations)
+  [ -n "$destinations" ] || return 0
   config=$(personal_config)
   [ -n "$config" ] || return 0
   folder=$config/skills
@@ -461,8 +486,13 @@ read_skills() {
         *[!a-z0-9-]*) skip="its name is not lowercase letters, digits and hyphens" ;;
       esac
     fi
-    if [ -z "$skip" ] && [ -e ".claude/skills/$name" ]; then
-      skip="it has the name of a project skill"
+    if [ -z "$skip" ]; then
+      for project_skills in .claude/skills .agents/skills .opencode/skills; do
+        if [ -e "$project_skills/$name" ]; then
+          skip="it has the name of a project skill"
+          break
+        fi
+      done
     fi
     if [ -z "$skip" ]; then
       # A symbolic link is followed: its target is what gets mounted.
@@ -474,19 +504,21 @@ read_skills() {
       printf "th.sh: warning: personal skill '%s' in %s is not mounted: %s\n" "$name" "$folder" "$skip" >&2
       continue
     fi
-    skill_mounts="$skill_mounts$path:$name
+    for destination in $destinations; do
+      skill_mounts="$skill_mounts$path:$destination/$name
 "
+    done
   done
 }
 
 # rq-59768c6a
-# Sets instructions_mount to the host path of the human's personal CLAUDE.md, which the session
-# mounts read-only as Claude Code's user-level instructions, or to nothing when there is none or it
-# cannot be mounted (which only warns).
+# Sets instruction_mounts to one "<host path>:<container destination>" per line for the human's
+# personal CLAUDE.md, which the session mounts read-only as each selected agent's user-level
+# instructions, or to nothing when there is none or it cannot be mounted (which only warns).
 read_instructions() {
-  instructions_mount=""
-  # Personal instructions mount as Claude Code's user-level instructions; Claude Code alone.
-  agent_selected claude-code || return 0
+  instruction_mounts=""
+  destinations=$(personal_instruction_destinations)
+  [ -n "$destinations" ] || return 0
   config=$(personal_config)
   [ -n "$config" ] || return 0
   file=$config/CLAUDE.md
@@ -516,7 +548,10 @@ read_instructions() {
     printf 'th.sh: warning: personal instructions %s are not mounted: %s\n' "$file" "$skip" >&2
     return 0
   fi
-  instructions_mount=$target
+  for destination in $destinations; do
+    instruction_mounts="$instruction_mounts$target:$destination
+"
+  done
 }
 
 # --- Git hooks ----------------------------------------------------------------------------------
@@ -636,12 +671,13 @@ case "$mode" in
       # rq-c490844e
       printf '%s' "$skill_mounts" | while IFS= read -r mount; do
         [ -n "$mount" ] || continue
-        printf '%s\n' -v "$(host_path "${mount%:*}"):/opt/tophat/home/.claude/skills/${mount##*:}:ro"
+        printf '%s\n' -v "$(host_path "${mount%:*}"):${mount##*:}:ro"
       done
       # rq-59768c6a
-      if [ -n "$instructions_mount" ]; then
-        printf '%s\n' -v "$(host_path "$instructions_mount"):/opt/tophat/home/.claude/CLAUDE.md:ro"
-      fi
+      printf '%s' "$instruction_mounts" | while IFS= read -r mount; do
+        [ -n "$mount" ] || continue
+        printf '%s\n' -v "$(host_path "${mount%:*}"):${mount##*:}:ro"
+      done
     )
     set -f
     IFS='
@@ -668,12 +704,13 @@ case "$mode" in
       # rq-c490844e
       printf '%s' "$skill_mounts" | while IFS= read -r mount; do
         [ -n "$mount" ] || continue
-        printf '%s\n' --bind "$(host_path "${mount%:*}"):/opt/tophat/home/.claude/skills/${mount##*:}:ro"
+        printf '%s\n' --bind "$(host_path "${mount%:*}"):${mount##*:}:ro"
       done
       # rq-59768c6a
-      if [ -n "$instructions_mount" ]; then
-        printf '%s\n' --bind "$(host_path "$instructions_mount"):/opt/tophat/home/.claude/CLAUDE.md:ro"
-      fi
+      printf '%s' "$instruction_mounts" | while IFS= read -r mount; do
+        [ -n "$mount" ] || continue
+        printf '%s\n' --bind "$(host_path "${mount%:*}"):${mount##*:}:ro"
+      done
     )
     set -f
     IFS='

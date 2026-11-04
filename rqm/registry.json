@@ -190,6 +190,18 @@
     "title": "Feature: Template Tooling",
     "type": "file"
   },
+  "rq-04529493": {
+    "decl": "Scenario: Personal skills are mounted for OpenCode",
+    "file": "template/container",
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Personal skills are mounted for OpenCode",
+    "type": "scenario"
+  },
   "rq-04595081": {
     "decl": "### Scenarios",
     "file": "study/format",
@@ -2693,6 +2705,18 @@
     "title": "Large inputs are copied with a warning",
     "type": "scenario"
   },
+  "rq-3f41b27f": {
+    "decl": "Scenario: Codex and OpenCode share one personal skills mount",
+    "file": "template/container",
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Codex and OpenCode share one personal skills mount",
+    "type": "scenario"
+  },
   "rq-3f55f3e1": {
     "decl": "## Assumptions",
     "file": "template/skills",
@@ -2726,6 +2750,18 @@
     "file": "template/skills",
     "refs": [],
     "title": "The agent hands pre-registration to the human",
+    "type": "scenario"
+  },
+  "rq-406a9ba4": {
+    "decl": "Scenario: Personal instructions are mounted for OpenCode",
+    "file": "template/container",
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Personal instructions are mounted for OpenCode",
     "type": "scenario"
   },
   "rq-4151372b": {
@@ -5078,6 +5114,18 @@
     "title": "Entries that are not skills are skipped with a warning",
     "type": "scenario"
   },
+  "rq-762ac795": {
+    "decl": "Scenario: Every selected agent gets the personal instructions",
+    "file": "template/container",
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Every selected agent gets the personal instructions",
+    "type": "scenario"
+  },
   "rq-765490e4": {
     "decl": "Scenario: Supersede refuses a missing replacement",
     "file": "study/format",
@@ -5898,6 +5946,18 @@
     "title": "Partial output of a failed run is discarded",
     "type": "scenario"
   },
+  "rq-8ab5f8ee": {
+    "decl": "Scenario: Personal instructions are mounted for Codex",
+    "file": "template/container",
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Personal instructions are mounted for Codex",
+    "type": "scenario"
+  },
   "rq-8b9e930e": {
     "decl": "Scenario: The interpretation is left to the human",
     "file": "template/skills",
@@ -6185,6 +6245,18 @@
       }
     ],
     "title": "An existing job folder is never overwritten",
+    "type": "scenario"
+  },
+  "rq-96259871": {
+    "decl": "Scenario: Personal skills are mounted for Codex",
+    "file": "template/container",
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Personal skills are mounted for Codex",
     "type": "scenario"
   },
   "rq-964a4533": {
@@ -7096,6 +7168,18 @@
     "title": "Out of Scope",
     "type": "section"
   },
+  "rq-a7475e28": {
+    "decl": "Scenario: A personal skill does not shadow Codex's project skills",
+    "file": "template/container",
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A personal skill does not shadow Codex's project skills",
+    "type": "scenario"
+  },
   "rq-a7709a28": {
     "decl": "- `tophat data retire <name>@v<n> --reason <text>`",
     "file": "data",
@@ -7970,6 +8054,18 @@
     ],
     "title": "tophat",
     "type": "api-item"
+  },
+  "rq-bc93ff53": {
+    "decl": "Scenario: Every selected agent gets the personal skills",
+    "file": "template/container",
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Every selected agent gets the personal skills",
+    "type": "scenario"
   },
   "rq-bcb83d0a": {
     "decl": "- `tophat study preregister <study-id>`",

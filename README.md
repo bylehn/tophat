@@ -11,7 +11,8 @@
 
 ---
 
-TopHat sets up a research project in which you work with an AI coding agent, such as Claude Code.
+TopHat sets up a research project in which you work with an AI coding agent, such as Claude Code,
+Codex or OpenCode.
 You talk to the agent about what you want to find out; it writes and runs the analysis. TopHat
 makes sure that you, not the agent, make the scientific decisions, and that every result can be
 traced back to how it was made.
@@ -28,9 +29,9 @@ traced back to how it was made.
 Everything runs in a container that keeps the agent away from the rest of your computer. TopHat
 works in any scientific field and any language your analysis needs (Python, R, Julia, shell, …).
 
-> **Status: pre-release.** TopHat works end to end on its worked example, but no `tophat` binary
-> has been released yet, and the study format may still change before 1.0. See
-> [Getting started](#getting-started) for running it today.
+> **Status: 0.1.0.** The first `tophat` release is available, so a generated project installs a
+> prebuilt, checksum-verified binary. The study format may still change before 1.0. See
+> [Getting started](#getting-started) to create a project.
 
 ## How it works
 
@@ -105,6 +106,34 @@ container sees only what you give it:
 After adding a data location or a local tool, exit the container and run `./th.sh` again: the
 container's folders are set when it starts.
 
+### Graphics cards
+
+`./th.sh` passes a usable NVIDIA or AMD GPU into the container when it finds one, and otherwise runs
+on CPU and says so. The Copier question sets the project default in `.tophat/user/container/gpu`:
+`auto` (the default) passes a detected GPU through, `on` refuses to start without one, and `off`
+passes none. To override the default for one session, set `TOPHAT_GPU`, as in
+`TOPHAT_GPU=off ./th.sh`. The host supplies the driver; the GPU libraries come from the pixi
+environment.
+
+### On a cluster (Apptainer)
+
+Where Podman is not available, build the image on a machine that has both Podman and Apptainer:
+
+```sh
+./th.sh --export-sif
+```
+
+The launcher writes `.tophat/state/apptainer/tophat-<project-id>.sif`, where the project ID is in
+`.tophat/project-id`. Copy that file to the same path in the project's checkout on the cluster, then
+start the session there with:
+
+```sh
+./th.sh --run-sif
+```
+
+`--run-sif` builds nothing. It refuses an image exported from another project, because the image
+carries the project's ID.
+
 ### How safe is it?
 
 Safe-ish. An AI agent can be misled by text it reads (prompt injection) or simply make mistakes,
@@ -150,29 +179,32 @@ both. TopHat does not yet automate working this way, which means:
 
 ### What you need
 
-- [Podman](https://podman.io/docs/installation) (or Apptainer on a cluster)
+- [Podman](https://podman.io/docs/installation) 4.4 or later (or Apptainer 1.2 or later on a
+  cluster)
 - [Copier](https://copier.readthedocs.io/) 9 or later, which creates the project
-- A [Claude Code](https://claude.com/claude-code) account (the only supported agent so far)
+- An account with a supported agent: [Claude Code](https://claude.com/claude-code),
+  [Codex](https://github.com/openai/codex) or [OpenCode](https://opencode.ai). You choose which
+  agents to install when Copier asks.
 
 ### Create a project
 
 ```sh
-copier copy gh:<owner>/tophat my-project
+copier copy gh:bylehn/tophat my-project
 cd my-project
 ./th.sh       # builds and enters the container (the first build takes a few minutes)
-claude        # start the agent inside the container
+claude        # start your chosen agent: claude, codex or opencode
 ```
 
-Copier asks for the project's name, description and author, any languages to install besides
-Python, the default GPU setting, and a license for the project.
+Copier asks for the project's name, description and author, which agents to install, any languages
+to install besides Python, the default GPU setting, and a license for the project.
 
 ### Talk to the agent
 
 From here on you mostly talk to the agent, in your own words. It knows the TopHat workflow and
 runs the `tophat` commands itself. Some ways to begin:
 
-- *"What should I do next?"* It looks at the project and suggests the next step. In Claude Code,
-  `/th-next` does the same.
+- *"What should I do next?"* It looks at the project and suggests the next step. In Claude Code and
+  OpenCode, `/th-next` does the same; in Codex, `$th-next`.
 - *"Help me write the main question of this project."*
 - *"My measurements are in /data/lab/2026-run. Register them."*
 - *"I want to test whether method X beats docking on this benchmark. Let's plan a study."*
@@ -203,13 +235,13 @@ there.
 
 To have skills of your own (a writing style guide, say) in every TopHat project without adding them
 to any project, put each in its own folder under `~/.config/tophat/skills/`, for example
-`~/.config/tophat/skills/writing-clearly/SKILL.md`. `./th.sh` mounts them read-only into the
-container's Claude Code. They are never committed, so your collaborators don't get them. A skill
-with the same name as a project skill is skipped with a warning. Edits show up at once; adding or
-removing a skill takes effect at the next `./th.sh`.
+`~/.config/tophat/skills/writing-clearly/SKILL.md`. `./th.sh` mounts them read-only into every
+selected agent's user-level skills directory. They are never committed, so your collaborators don't
+get them. A skill with the same name as a project skill is skipped with a warning. Edits show up at
+once; adding or removing a skill takes effect at the next `./th.sh`.
 
 Standing instructions of your own (for example, which of your skills to apply when) go in
-`~/.config/tophat/CLAUDE.md`. `./th.sh` mounts it read-only as Claude Code's user-level
+`~/.config/tophat/CLAUDE.md`. `./th.sh` mounts it read-only as every selected agent's user-level
 instructions in the container. The project's own instructions take precedence over it. Edit it on
 your computer; changes apply from the next agent session.
 
@@ -222,19 +254,6 @@ copier update
 Updates bring in new agent skills, checks and container fixes. They never overwrite your
 `PROJECT.md`, studies, data, license or local skill extensions, and they never invalidate your
 results or make finished studies re-run.
-
-### Before the first release
-
-Until the first release, the container needs a `tophat` binary you build yourself. Run
-`cargo build --release` in this repository and point `TOPHAT_DEV_BINARY` at the result before
-running `./th.sh`.
-
-To create a project from a local checkout of this repository, give Copier its absolute path:
-`copier copy /path/to/tophat my-project`. Copier stores the path in `.copier-answers.yml` exactly as
-given, and `copier update` resolves it from the project folder, so a relative path like `tophat/`
-breaks later updates. If that has already happened, set `_src_path` in `.copier-answers.yml` to
-the absolute path and commit the change. To update from a local checkout, commit there first, then
-run `copier update --vcs-ref HEAD` in the project.
 
 ## Why "TopHat"?
 

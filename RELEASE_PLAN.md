@@ -91,9 +91,9 @@ stays green.
 
 ### Phase 5 — Go public
 
-- [ ] README: replace `gh:<owner>/tophat` with `gh:bylehn/tophat`, remove the "Before the first
+- [x] README: replace `gh:<owner>/tophat` with `gh:bylehn/tophat`, remove the "Before the first
   release" section, and update the status note.
-- [ ] Scan the (currently private) repository history before making it public.
+- [x] Scan the (currently private) repository history before making it public.
 - [ ] Make the repository public and verify `copier copy gh:bylehn/tophat` from a clean machine.
 
 ## Notes and caveats
@@ -108,9 +108,9 @@ stays green.
   `.codex`/`.agents`/`.opencode` template directories, `opencode.json` and this plan must be
   `git add`ed together with the modified files; a tracked-files-only commit would break the build
   and the template.
-- Personal skills and instructions mount for Claude Code alone: `rqm/template/container.md` wrote
-  that scope when `claude-code` was the only agent offered. Decide whether Codex and OpenCode
-  (whose skills use the same SKILL.md format) should mount them too, and revise that section.
+- Personal skills and instructions mount for every selected agent. Codex and OpenCode share the
+  `~/.agents/skills` mount; personal instructions are written as `AGENTS.md` in each agent's
+  user-level configuration location.
 - The Codex and OpenCode integration points follow the assumptions of `rqm/template/agents.md`
   (`.codex/rules` prefix rules, `.codex/hooks.json`, `opencode.json` permissions, the
   `.opencode/plugins` check). Phase 2's evals should confirm them against the real agents.
