@@ -249,6 +249,16 @@ fn skill_binds(session: &str) -> Vec<&str> {
         .collect()
 }
 
+/// The binds the session command makes at a container directory or file.
+fn binds_in(session: &str, destination: &str) -> Vec<String> {
+    let needle = format!(":{destination}");
+    session
+        .split(' ')
+        .filter(|word| word.contains(&needle))
+        .map(str::to_string)
+        .collect()
+}
+
 /// Declares the roots `raw` and `results` in the project.
 fn declare_raw(env: &Env) {
     env.write(".tophat/roots.yaml", "roots:\n  raw: {}\n  results: {}\n");
@@ -491,20 +501,11 @@ fn one_volume_per_selected_agent() {
 }
 
 #[test] // rq-1cc9f489 rq-3ca62dea
-fn no_volume_or_personal_mounts_for_unselected_agents() {
+fn no_volume_for_unselected_agents() {
     if !common::copier() {
         return;
     }
     let env = Env::with_answers(&[("agents", "[codex]")]);
-    // Personal skills and instructions exist on the host but mount for Claude Code alone.
-    let config = env.path("home/.config/tophat");
-    fs::create_dir_all(config.join("skills/my-skill")).unwrap();
-    fs::write(
-        config.join("skills/my-skill/SKILL.md"),
-        "---\nname: my-skill\n---\n",
-    )
-    .unwrap();
-    fs::write(config.join("CLAUDE.md"), "Personal note.\n").unwrap();
     let out = env.run(&["--dry-run"]);
     let session = env.session(&out);
     let id = env.id();
@@ -819,6 +820,109 @@ fn the_check_mounts_no_personal_skills() {
     assert!(!check.contains(".claude/skills"), "{check}");
 }
 
+#[test] // rq-96259871 rq-c490844e
+fn personal_skills_are_mounted_for_codex() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::with_answers(&[("agents", "[codex]")]);
+    let folder = skill(&env.path("home/.config/tophat/skills"), "writing-clearly");
+    let session = env.session(&env.run(&["--dry-run"]));
+    assert_eq!(
+        binds_in(&session, "/opt/tophat/home/.agents/skills"),
+        vec![format!(
+            "{}:/opt/tophat/home/.agents/skills/writing-clearly:ro",
+            folder.display()
+        )],
+        "{session}"
+    );
+}
+
+#[test] // rq-04529493 rq-c490844e
+fn personal_skills_are_mounted_for_opencode() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::with_answers(&[("agents", "[opencode]")]);
+    let folder = skill(&env.path("home/.config/tophat/skills"), "writing-clearly");
+    let session = env.session(&env.run(&["--dry-run"]));
+    assert_eq!(
+        binds_in(&session, "/opt/tophat/home/.agents/skills"),
+        vec![format!(
+            "{}:/opt/tophat/home/.agents/skills/writing-clearly:ro",
+            folder.display()
+        )],
+        "{session}"
+    );
+}
+
+#[test] // rq-3f41b27f rq-c490844e
+fn codex_and_opencode_share_one_personal_skills_mount() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::with_answers(&[("agents", "[codex, opencode]")]);
+    skill(&env.path("home/.config/tophat/skills"), "writing-clearly");
+    let session = env.session(&env.run(&["--dry-run"]));
+    assert_eq!(
+        binds_in(&session, "/opt/tophat/home/.agents/skills").len(),
+        1,
+        "{session}"
+    );
+}
+
+#[test] // rq-bc93ff53 rq-c490844e
+fn every_selected_agent_gets_the_personal_skills() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::with_answers(&[("agents", "[claude-code, codex, opencode]")]);
+    let folder = skill(&env.path("home/.config/tophat/skills"), "writing-clearly");
+    let session = env.session(&env.run(&["--dry-run"]));
+    assert_eq!(
+        skill_binds(&session),
+        [format!(
+            "{}:/opt/tophat/home/.claude/skills/writing-clearly:ro",
+            folder.display()
+        )],
+        "{session}"
+    );
+    assert_eq!(
+        binds_in(&session, "/opt/tophat/home/.agents/skills"),
+        vec![format!(
+            "{}:/opt/tophat/home/.agents/skills/writing-clearly:ro",
+            folder.display()
+        )],
+        "{session}"
+    );
+}
+
+#[test] // rq-a7475e28 rq-c490844e
+fn a_personal_skill_does_not_shadow_codex_project_skills() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::with_answers(&[("agents", "[codex]")]);
+    let dir = env.path("home/.config/tophat/skills");
+    skill(&dir, "th-study");
+    let folder = skill(&dir, "writing-clearly");
+    let out = env.run(&["--dry-run"]);
+    let session = env.session(&out);
+    let err = stderr(&out);
+    assert!(
+        err.contains("'th-study'") && err.contains("name of a project skill"),
+        "{err}"
+    );
+    assert_eq!(
+        binds_in(&session, "/opt/tophat/home/.agents/skills"),
+        vec![format!(
+            "{}:/opt/tophat/home/.agents/skills/writing-clearly:ro",
+            folder.display()
+        )],
+        "{session}"
+    );
+}
+
 /// The binds the session command makes at Claude Code's user-level instructions.
 fn instruction_binds(session: &str) -> Vec<&str> {
     session
@@ -967,6 +1071,69 @@ fn the_check_mounts_no_personal_instructions() {
         .find(|l| l.starts_with("run ") && l.ends_with(" tophat check"))
         .unwrap_or_else(|| panic!("{log}"));
     assert!(!check.contains("CLAUDE.md"), "{check}");
+}
+
+#[test] // rq-8ab5f8ee rq-59768c6a
+fn personal_instructions_are_mounted_for_codex() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::with_answers(&[("agents", "[codex]")]);
+    let file = env.path("home/.config/tophat/CLAUDE.md");
+    fs::create_dir_all(file.parent().unwrap()).unwrap();
+    fs::write(&file, "Apply the honey skill.\n").unwrap();
+    let session = env.session(&env.run(&["--dry-run"]));
+    assert_eq!(
+        binds_in(&session, "/opt/tophat/home/.codex/AGENTS.md"),
+        vec![format!(
+            "{}:/opt/tophat/home/.codex/AGENTS.md:ro",
+            file.display()
+        )],
+        "{session}"
+    );
+}
+
+#[test] // rq-406a9ba4 rq-59768c6a
+fn personal_instructions_are_mounted_for_opencode() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::with_answers(&[("agents", "[opencode]")]);
+    let file = env.path("home/.config/tophat/CLAUDE.md");
+    fs::create_dir_all(file.parent().unwrap()).unwrap();
+    fs::write(&file, "Apply the honey skill.\n").unwrap();
+    let session = env.session(&env.run(&["--dry-run"]));
+    assert_eq!(
+        binds_in(&session, "/opt/tophat/home/.config/opencode/AGENTS.md"),
+        vec![format!(
+            "{}:/opt/tophat/home/.config/opencode/AGENTS.md:ro",
+            file.display()
+        )],
+        "{session}"
+    );
+}
+
+#[test] // rq-762ac795 rq-59768c6a
+fn every_selected_agent_gets_the_personal_instructions() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::with_answers(&[("agents", "[claude-code, codex, opencode]")]);
+    let file = env.path("home/.config/tophat/CLAUDE.md");
+    fs::create_dir_all(file.parent().unwrap()).unwrap();
+    fs::write(&file, "Apply the honey skill.\n").unwrap();
+    let session = env.session(&env.run(&["--dry-run"]));
+    for destination in [
+        "/opt/tophat/home/.claude/CLAUDE.md",
+        "/opt/tophat/home/.codex/AGENTS.md",
+        "/opt/tophat/home/.config/opencode/AGENTS.md",
+    ] {
+        assert_eq!(
+            binds_in(&session, destination),
+            vec![format!("{}:{destination}:ro", file.display())],
+            "{session}"
+        );
+    }
 }
 
 #[test] // rq-3c33f183 rq-2b0ca72f

@@ -175,17 +175,20 @@ committed, so a project never imposes one human's skills on another.
   `XDG_CONFIG_HOME` is unset or empty. When the folder does not exist, the launcher mounts nothing
   and prints nothing: the feature is opt-in per human.
 - Each direct subdirectory holding a `SKILL.md` is one skill, named after the subdirectory. The
-  launcher binds it **read-only** at `/opt/tophat/home/.claude/skills/<name>`, inside the Claude Code
-  configuration volume. Skills are mounted one by one, never the folder as a whole, so the agent's own
-  skills directory in the volume (for example skills synced from the human's account) stays visible.
+  launcher binds it **read-only** into each selected agent's user-level skills directory:
+  `/opt/tophat/home/.claude/skills/<name>` for Claude Code and
+  `/opt/tophat/home/.agents/skills/<name>` for Codex and OpenCode, which share that directory.
+  Skills are mounted one by one, never the folder as a whole, so each agent's own skills directory
+  in its configuration volume (for example skills synced from the human's account) stays visible.
 - A subdirectory that is a symbolic link is followed and its target mounted. Symbolic links inside a
   skill that point outside it do not resolve in the container.
 - These entries are skipped with a warning naming the entry and the reason, and the session still
   starts:
   - a file, or a subdirectory without a `SKILL.md`;
   - a name that is not lowercase letters, digits and hyphens;
-  - a name used by a skill in the project's `.claude/skills/` (such as `th-study`): a personal skill
-    never shadows a project or managed skill;
+  - a name used by a skill in the project's skills directory for any agent (`.claude/skills/`,
+    `.agents/skills/` or `.opencode/skills/`, such as `th-study`): a personal skill never shadows a
+    project or managed skill;
   - a path containing `:` or `,`, which a mount option cannot express.
 - Mounts are made when the launcher starts the container: edits to the files of a mounted skill show
   up in the session at once, but a skill added or removed on the host takes effect only after the
@@ -194,33 +197,34 @@ committed, so a project never imposes one human's skills on another.
   mount leaves in the agent volume when the skill is later removed from the host is harmless: without
   a `SKILL.md`, the agent ignores it.
 - `--check` mounts no personal skills: the check runs no agent.
-- Personal skills are mounted for every selected agent that reads Claude Code's skill format; with
-  `claude-code` the only agent the template offers, that is Claude Code alone.
+- Personal skills are mounted for every selected agent. Codex and OpenCode share one mount at
+  `/opt/tophat/home/.agents/skills`.
 
 ### Personal instructions <!-- rq-59768c6a -->
 
 A human can keep standing instructions of their own (which personal skill to apply when, for
-example) on the host and have Claude Code read them in every TopHat session they start, without
-adding them to any project. Like personal skills, nothing about them is committed.
+example) on the host and have every selected agent read them in every TopHat session they start,
+without adding them to any project. Like personal skills, nothing about them is committed.
 
 - The personal instructions file is `CLAUDE.md` in the folder that holds the personal skills folder:
   `$XDG_CONFIG_HOME/tophat/CLAUDE.md`, or `~/.config/tophat/CLAUDE.md` when `XDG_CONFIG_HOME` is
   unset or empty. When the file does not exist, the launcher mounts nothing and prints nothing. It is
   independent of the skills folder: either can exist without the other.
-- The launcher binds it **read-only** at `/opt/tophat/home/.claude/CLAUDE.md`, the user-level
-  instructions file of Claude Code in the container (`HOME` is `/opt/tophat/home`). Claude Code
-  reads it at the start of every session alongside the project's `CLAUDE.md`; where the two
-  conflict, Claude Code gives the project's instructions precedence, so personal instructions never
-  override TopHat's rules.
+- The launcher binds it **read-only** as each selected agent's user-level instructions:
+  `/opt/tophat/home/.claude/CLAUDE.md` for Claude Code, `/opt/tophat/home/.codex/AGENTS.md` for
+  Codex and `/opt/tophat/home/.config/opencode/AGENTS.md` for OpenCode (`HOME` is
+  `/opt/tophat/home`). Each agent reads it at the start of every session alongside the project's
+  instructions; where the two conflict, the project's instructions take precedence, so personal
+  instructions never override TopHat's rules.
 - A symbolic link is followed and its target mounted.
 - These cases are skipped with a warning naming the path and the reason, and the session still
   starts:
   - the path is a directory or other non-regular file;
   - the resolved path contains `:` or `,`, which a mount option cannot express.
-- While the file is mounted, a `CLAUDE.md` the agent volume already holds is hidden but left
-  unchanged, and writes to the user-level instructions from inside the container fail: the human
-  edits the file on the host.
-- The file is read when Claude Code starts, so an edit on the host takes effect at the next agent
+- While the file is mounted, an instructions file an agent volume already holds (such as
+  `~/.claude/CLAUDE.md` or `~/.codex/AGENTS.md`) is hidden but left unchanged, and writes to the
+  user-level instructions from inside the container fail: the human edits the file on the host.
+- Each agent reads the file when it starts, so an edit on the host takes effect at the next agent
   session; a file created or removed on the host takes effect only after the human exits and runs
   `./th.sh` again.
 - `--check` does not mount it: the check runs no agent.
@@ -451,6 +455,42 @@ Feature: Dev container and launcher
     When "th.sh --check" is run
     Then its podman run command binds nothing under /opt/tophat/home/.claude/skills
 
+  @rq-96259871
+  Scenario: Personal skills are mounted for Codex
+    Given the project is rendered with agents ["codex"]
+    And ~/.config/tophat/skills/writing-clearly/SKILL.md exists
+    When "th.sh --dry-run" is run
+    Then the podman run command binds ~/.config/tophat/skills/writing-clearly at /opt/tophat/home/.agents/skills/writing-clearly read-only
+
+  @rq-04529493
+  Scenario: Personal skills are mounted for OpenCode
+    Given the project is rendered with agents ["opencode"]
+    And ~/.config/tophat/skills/writing-clearly/SKILL.md exists
+    When "th.sh --dry-run" is run
+    Then the podman run command binds ~/.config/tophat/skills/writing-clearly at /opt/tophat/home/.agents/skills/writing-clearly read-only
+
+  @rq-3f41b27f
+  Scenario: Codex and OpenCode share one personal skills mount
+    Given the project is rendered with agents ["codex", "opencode"]
+    And ~/.config/tophat/skills/writing-clearly/SKILL.md exists
+    When "th.sh --dry-run" is run
+    Then the podman run command binds the skill at /opt/tophat/home/.agents/skills/writing-clearly once
+
+  @rq-bc93ff53
+  Scenario: Every selected agent gets the personal skills
+    Given the project is rendered with agents ["claude-code", "codex", "opencode"]
+    And ~/.config/tophat/skills/writing-clearly/SKILL.md exists
+    When "th.sh --dry-run" is run
+    Then the podman run command binds the skill at /opt/tophat/home/.claude/skills/writing-clearly and at /opt/tophat/home/.agents/skills/writing-clearly
+
+  @rq-a7475e28
+  Scenario: A personal skill does not shadow Codex's project skills
+    Given the project is rendered with agents ["codex"]
+    And the personal skills folder holds th-study/SKILL.md and writing-clearly/SKILL.md
+    When "th.sh --dry-run" is run
+    Then the launcher warns that the personal skill "th-study" has the name of a project skill and is not mounted
+    And the podman run command binds writing-clearly and not th-study
+
   @rq-97a969e1
   Scenario: Personal instructions are mounted read-only
     Given XDG_CONFIG_HOME is unset
@@ -493,6 +533,27 @@ Feature: Dev container and launcher
     Given ~/.config/tophat/CLAUDE.md exists
     When "th.sh --check" is run
     Then its podman run command binds nothing at /opt/tophat/home/.claude/CLAUDE.md
+
+  @rq-8ab5f8ee
+  Scenario: Personal instructions are mounted for Codex
+    Given the project is rendered with agents ["codex"]
+    And ~/.config/tophat/CLAUDE.md exists
+    When "th.sh --dry-run" is run
+    Then the podman run command binds ~/.config/tophat/CLAUDE.md at /opt/tophat/home/.codex/AGENTS.md read-only
+
+  @rq-406a9ba4
+  Scenario: Personal instructions are mounted for OpenCode
+    Given the project is rendered with agents ["opencode"]
+    And ~/.config/tophat/CLAUDE.md exists
+    When "th.sh --dry-run" is run
+    Then the podman run command binds ~/.config/tophat/CLAUDE.md at /opt/tophat/home/.config/opencode/AGENTS.md read-only
+
+  @rq-762ac795
+  Scenario: Every selected agent gets the personal instructions
+    Given the project is rendered with agents ["claude-code", "codex", "opencode"]
+    And ~/.config/tophat/CLAUDE.md exists
+    When "th.sh --dry-run" is run
+    Then the podman run command binds it at /opt/tophat/home/.claude/CLAUDE.md, /opt/tophat/home/.codex/AGENTS.md and /opt/tophat/home/.config/opencode/AGENTS.md read-only
 
   @rq-6de57a60
   Scenario: Local tool repositories are mounted read-only
