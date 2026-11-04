@@ -72,9 +72,9 @@ stays green.
 
 ### Phase 3 — CI gates (`rqm/testing.md` §CI Workflows)
 
-- [ ] `.github/workflows/CI.yaml` with the nine jobs: `cli` (Linux/macOS/Windows), `snakemake`,
+- [x] `.github/workflows/CI.yaml` with the nine jobs: `cli` (Linux/macOS/Windows), `snakemake`,
   `template`, `image`, `traceability`, `render`, `conformance`, `e2e`, `adoption`.
-- [ ] `.github/workflows/evals.yaml`: weekly and manual dispatch, credentials from secrets, never
+- [x] `.github/workflows/evals.yaml`: weekly and manual dispatch, credentials from secrets, never
   a required check.
 
 ### Phase 4 — Release

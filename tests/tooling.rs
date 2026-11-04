@@ -262,6 +262,31 @@ fn template_repo() -> Temp {
     repo
 }
 
+#[test] // rq-2e07e31f
+fn skill_lint_reports_findings_with_their_rule() {
+    if !common::copier() {
+        return;
+    }
+    let out = Temp::new("lint");
+    let project = render_with(&repo_root(), "minimal-claude", &out.join("p"), &[]).unwrap();
+    fs::remove_file(project.join(".claude/skills/th-study/SKILL.md")).unwrap();
+    let out = Command::new("cargo")
+        .args(["run", "--quiet", "--package", "xtask", "--", "lint-skills"])
+        .arg(&project)
+        .args(["--tophat", env!("CARGO_BIN_EXE_tophat")])
+        .current_dir(repo_root())
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(1));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout
+            .lines()
+            .any(|line| line.starts_with("skill.adapter-missing") && line.contains("th-study")),
+        "{stdout}"
+    );
+}
+
 #[test] // rq-5040a08a
 fn render_test_names_an_unknown_answer_set() {
     let err = xtask::render_test::run(
