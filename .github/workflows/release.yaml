@@ -1,6 +1,6 @@
 # Publish a TopHat release: build both musl binaries, run the gates against them, write the
-# release pin, re-run the render and end-to-end tests with that pin, and only then publish
-# (rqm/testing.md §CI Workflows, rq-e6ed00d3).
+# release pin, re-run the render and end-to-end tests with that pin, upload a draft release, and
+# verify the published assets before making it public (rqm/testing.md §CI Workflows, rq-e6ed00d3).
 name: Release
 
 on:
@@ -8,7 +8,7 @@ on:
     tags: ["v*"]
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release-${{ github.ref }}
@@ -65,10 +65,10 @@ jobs:
           python-version: "3.12"
       - uses: actions/download-artifact@v4
         with:
-          pattern: tophat-*
+          pattern: tophat-*-unknown-linux-musl
           path: dist
           merge-multiple: true
-      - name: Install Copier, pixi and Podman
+      - name: Install Copier, pixi, Podman and qemu
         run: |
           version=$(sed -n 's/^copier_version: *//p' template/.tophat/managed/container/versions.yaml)
           python -m pip install "copier==${version}"
@@ -80,9 +80,17 @@ jobs:
           tar -xzf "$RUNNER_TEMP/pixi.tar.gz" -C "$RUNNER_TEMP" pixi
           sudo install -m 0755 "$RUNNER_TEMP/pixi" /usr/local/bin/pixi
           sudo apt-get update
-          sudo apt-get install -y podman
+          sudo apt-get install -y podman qemu-user-static
       - name: Make the binaries executable
         run: chmod +x dist/tophat-*
+      - name: Check the aarch64 binary runs
+        run: |
+          version=$(qemu-aarch64-static dist/tophat-aarch64-unknown-linux-musl --version | awk '{print $NF}')
+          expected="${GITHUB_REF_NAME#v}"
+          if [ "$version" != "$expected" ]; then
+            echo "::error::the aarch64 binary reports $version, not $expected"
+            exit 1
+          fi
       - name: Run the conformance suite against the x86_64 binary
         run: cargo xtask conformance --tophat "$TOPHAT_TEST_BINARY"
       - name: Write the release pin
@@ -93,6 +101,11 @@ jobs:
             --url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}" \
             --binary "x86_64-unknown-linux-musl=dist/tophat-x86_64-unknown-linux-musl" \
             --binary "aarch64-unknown-linux-musl=dist/tophat-aarch64-unknown-linux-musl"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tophat-release-pin
+          path: template/.tophat/managed/tophat-release.yaml
+          if-no-files-found: error
       - name: Render every answer set with the release pin
         run: |
           cargo build --bin tophat
@@ -106,18 +119,20 @@ jobs:
     name: Publish the release
     needs: gates
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          pattern: tophat-*
+          pattern: tophat-*-unknown-linux-musl
           path: dist
           merge-multiple: true
       - name: Write the SHA-256 checksums
         run: |
           cd dist
           sha256sum tophat-x86_64-unknown-linux-musl tophat-aarch64-unknown-linux-musl > SHA256SUMS
-      - name: Publish the binaries
+      - name: Create the draft release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -126,5 +141,71 @@ jobs:
             dist/tophat-aarch64-unknown-linux-musl \
             dist/SHA256SUMS \
             --verify-tag \
+            --draft \
             --title "TopHat ${GITHUB_REF_NAME#v}" \
             --notes "TopHat ${GITHUB_REF_NAME#v}. Downloaded binaries are checked against SHA256SUMS."
+
+  verify:
+    name: Verify the published release
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: tophat-release-pin
+          path: pin
+      - name: Install Copier and Podman
+        run: |
+          version=$(sed -n 's/^copier_version: *//p' template/.tophat/managed/container/versions.yaml)
+          python -m pip install "copier==${version}"
+          sudo apt-get update
+          sudo apt-get install -y podman
+      - name: Download the published assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p published
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+            --dir published --pattern 'tophat-*' --pattern 'SHA256SUMS'
+          cd published
+          sha256sum -c SHA256SUMS
+      - name: Render a project with the release pin
+        run: |
+          cp pin/tophat-release.yaml template/.tophat/managed/tophat-release.yaml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add template/.tophat/managed/tophat-release.yaml
+          git commit -m "Pin the ${GITHUB_REF_NAME#v} release"
+          copier copy --defaults --quiet --vcs-ref HEAD \
+            --data project_name=verify \
+            --data project_slug=verify \
+            --data project_description="Release verification project" \
+            --data author_name=TopHat \
+            --data author_email=tophat@example.org \
+            . "$RUNNER_TEMP/verify-project"
+      - name: Install the pinned tophat from the release
+        working-directory: ${{ runner.temp }}/verify-project
+        run: |
+          pin=.tophat/managed/tophat-release.yaml
+          diff -u "${{ github.workspace }}/pin/tophat-release.yaml" "$pin"
+          target=x86_64-unknown-linux-musl
+          url=$(sed -n 's/^url: *//p' "$pin")
+          expected=$(sed -n "s/^  $target: *//p" "$pin")
+          curl -fsSL -o "$RUNNER_TEMP/tophat" "$url/tophat-$target"
+          echo "$expected  $RUNNER_TEMP/tophat" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/tophat"
+          "$RUNNER_TEMP/tophat" --version
+          unset TOPHAT_DEV_BINARY
+          ./th.sh --dry-run
+      - name: Make the draft release public
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false

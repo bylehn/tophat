@@ -226,9 +226,11 @@ checks:
 credentials from repository secrets; its result is reported, never required.
 
 `.github/workflows/release.yaml` runs on a version tag: it builds `tophat` for
-`x86_64-unknown-linux-musl` and `aarch64-unknown-linux-musl`, runs the conformance suite against the
-x86_64 binary, writes the release pin with `cargo xtask release-pin`, runs the render and
-end-to-end tests with that pin, and only then publishes the binaries with their SHA-256 checksums.
+`x86_64-unknown-linux-musl` and `aarch64-unknown-linux-musl`, runs the aarch64 binary under qemu,
+runs the conformance suite against the x86_64 binary, writes the release pin with
+`cargo xtask release-pin`, and runs the render and end-to-end tests with that pin. It then uploads
+the binaries and their SHA-256 checksums as a draft release, downloads those published assets and
+checks them, renders a project with the pin, and only after that makes the release public.
 
 ## Assumptions <!-- rq-5be14147 -->
 

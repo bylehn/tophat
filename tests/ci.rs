@@ -147,4 +147,56 @@ fn release_workflow_publishes_only_after_the_gates_pass() {
         conformance < publish_step,
         "the release is published before conformance runs"
     );
+
+    let verify = key(jobs, "verify").as_hash().expect("a verify job");
+    assert_eq!(key(verify, "needs").as_str(), Some("publish"));
+
+    let draft = RELEASE.find("--draft").unwrap();
+    let download = RELEASE.find("gh release download").unwrap();
+    let make_public = RELEASE
+        .find("gh release edit \"$GITHUB_REF_NAME\" --repo \"$GITHUB_REPOSITORY\" --draft=false")
+        .unwrap();
+    assert!(
+        publish_step < download && download < make_public,
+        "the release is made public before its published assets are verified"
+    );
+    assert!(
+        draft < make_public,
+        "the release is created public instead of as a draft"
+    );
+    assert!(
+        RELEASE.contains("qemu-aarch64-static"),
+        "the aarch64 binary is never run"
+    );
+}
+
+#[test] // rq-e6ed00d3
+fn release_workflow_scopes_write_access_to_publishing() {
+    let doc = document(RELEASE);
+    let permissions = key(&doc, "permissions")
+        .as_hash()
+        .expect("the workflow has permissions");
+    assert_eq!(
+        key(permissions, "contents").as_str(),
+        Some("read"),
+        "every release job gets write access"
+    );
+
+    let jobs = key(&doc, "jobs").as_hash().expect("`jobs` is a mapping");
+    for name in ["build", "gates"] {
+        let job = key(jobs, name).as_hash().unwrap();
+        assert!(
+            !job.contains_key(&Yaml::String("permissions".into())),
+            "the {name} job overrides the read-only workflow permissions"
+        );
+    }
+    for name in ["publish", "verify"] {
+        let job = key(jobs, name).as_hash().unwrap();
+        let permissions = key(job, "permissions").as_hash().unwrap();
+        assert_eq!(
+            key(permissions, "contents").as_str(),
+            Some("write"),
+            "the {name} job cannot write the release"
+        );
+    }
 }
