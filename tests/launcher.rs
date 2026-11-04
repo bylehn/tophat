@@ -139,6 +139,7 @@ impl Env {
             if key.starts_with("TOPHAT_ROOT_")
                 || key.starts_with("GIT_")
                 || key == "EMAIL"
+                || key == "TOPHAT_GPU"
                 || key == "XDG_CONFIG_HOME"
             {
                 cmd.env_remove(key);
@@ -1003,6 +1004,207 @@ fn the_check_runs_in_a_throwaway_container() {
         "{check}"
     );
     assert!(!check.contains(" -it"), "{check}");
+}
+
+// --- GPU ----------------------------------------------------------------------------------------
+
+/// Replaces the detection script, so the launcher sees the given detected GPU.
+fn stub_gpu_detection(env: &Env, detected: &str) {
+    env.write(
+        ".tophat/managed/launch/gpu-detect.sh",
+        &format!("#!/bin/sh\nprintf '%s\\n' '{detected}'\n"),
+    );
+}
+
+/// Runs a dry launch with the given project GPU setting and detected GPU, and with TOPHAT_GPU set
+/// on the host when `host` is given.
+fn gpu_launch(env: &Env, setting: Option<&str>, detected: &str, host: Option<&str>) -> Output {
+    if let Some(setting) = setting {
+        env.write(".tophat/user/container/gpu", &format!("{setting}\n"));
+    }
+    stub_gpu_detection(env, detected);
+    let mut cmd = env.launcher(&["--dry-run"]);
+    if let Some(host) = host {
+        cmd.env("TOPHAT_GPU", host);
+    }
+    cmd.output().unwrap()
+}
+
+fn has_gpu_options(session: &str) -> bool {
+    [
+        "--device nvidia.com/gpu=all",
+        "--device /dev/kfd",
+        "--device /dev/dri",
+        "--group-add keep-groups",
+        "--nv",
+        "--rocm",
+    ]
+    .iter()
+    .any(|option| session.contains(option))
+}
+
+#[test] // rq-7fb69dfd
+fn gpu_detection_from_simulated_hosts() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let cases: Vec<(Vec<(&str, &str)>, &str)> = vec![
+        (
+            vec![
+                ("dev/nvidiactl", ""),
+                ("etc/cdi/nvidia.yaml", "deviceName: nvidia.com/gpu\n"),
+            ],
+            "nvidia",
+        ),
+        (
+            vec![
+                ("dev/nvidiactl", ""),
+                (
+                    "var/run/cdi/nvidia.json",
+                    "{\"kind\": \"nvidia.com/gpu\"}\n",
+                ),
+            ],
+            "nvidia",
+        ),
+        (vec![("dev/nvidiactl", "")], "nvidia-no-cdi"),
+        (vec![("dev/kfd", ""), ("dev/dri/renderD128", "")], "amd"),
+        (vec![("dev/kfd", "")], "none"),
+        (
+            vec![
+                ("dev/nvidiactl", ""),
+                ("etc/cdi/nvidia.yaml", "deviceName: nvidia.com/gpu\n"),
+                ("dev/kfd", ""),
+                ("dev/dri/renderD128", ""),
+            ],
+            "nvidia",
+        ),
+        (vec![], "none"),
+    ];
+    for (i, (files, expected)) in cases.iter().enumerate() {
+        let root = env.path(&format!("sysroot-{i}"));
+        for (rel, text) in files {
+            let path = root.join(rel);
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            fs::write(path, text).unwrap();
+        }
+        let out = Command::new("sh")
+            .arg(".tophat/managed/launch/gpu-detect.sh")
+            .arg(&root)
+            .current_dir(env.project())
+            .output()
+            .unwrap();
+        assert!(out.status.success(), "{}", stderr(&out));
+        assert_eq!(stdout(&out).trim(), *expected, "case {i}");
+    }
+}
+
+#[test] // rq-31265ce2
+fn an_nvidia_gpu_is_passed_through() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let out = gpu_launch(&env, None, "nvidia", None);
+    let session = env.session(&out);
+    assert!(session.contains("--device nvidia.com/gpu=all"), "{session}");
+}
+
+#[test] // rq-abe5670e
+fn an_amd_gpu_is_passed_through() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let out = gpu_launch(&env, None, "amd", None);
+    let session = env.session(&out);
+    for option in [
+        "--device /dev/kfd",
+        "--device /dev/dri",
+        "--group-add keep-groups",
+    ] {
+        assert!(session.contains(option), "{option} missing from {session}");
+    }
+}
+
+#[test] // rq-46b1f245
+fn no_gpu_falls_back_to_cpu() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let out = gpu_launch(&env, None, "none", None);
+    let session = env.session(&out);
+    assert!(!has_gpu_options(&session), "{session}");
+    let err = stderr(&out);
+    assert!(
+        err.contains("no usable GPU") && err.contains("CPU"),
+        "{err}"
+    );
+}
+
+#[test] // rq-5dc40f24
+fn an_nvidia_gpu_without_cdi_falls_back_with_instructions() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let out = gpu_launch(&env, None, "nvidia-no-cdi", None);
+    let session = env.session(&out);
+    assert!(!has_gpu_options(&session), "{session}");
+    assert!(
+        stderr(&out).contains("nvidia-ctk cdi generate"),
+        "{}",
+        stderr(&out)
+    );
+}
+
+#[test] // rq-96018e0c
+fn gpu_on_without_a_gpu_refuses_to_launch() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let out = gpu_launch(&env, Some("on"), "none", None);
+    assert!(!out.status.success(), "{}", stdout(&out));
+    assert!(stderr(&out).contains("no usable GPU"), "{}", stderr(&out));
+}
+
+#[test] // rq-f6dc88ee
+fn gpu_off_passes_nothing_through() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let out = gpu_launch(&env, Some("off"), "nvidia", None);
+    let session = env.session(&out);
+    assert!(!has_gpu_options(&session), "{session}");
+}
+
+#[test] // rq-98385f5d
+fn the_host_variable_overrides_the_project_default() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let out = gpu_launch(&env, Some("on"), "none", Some("off"));
+    let session = env.session(&out);
+    assert!(!has_gpu_options(&session), "{session}");
+}
+
+#[test] // rq-3a78943e
+fn an_invalid_gpu_setting_is_refused() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::new();
+    let out = gpu_launch(&env, None, "none", Some("maybe"));
+    assert!(!out.status.success());
+    let err = stderr(&out);
+    for allowed in ["auto", "on", "off"] {
+        assert!(err.contains(allowed), "{allowed} missing from {err}");
+    }
+    assert!(!stdout(&out).contains("podman run --rm -it"), "{err}");
 }
 
 // --- Git hooks ----------------------------------------------------------------------------------

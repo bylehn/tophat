@@ -87,6 +87,73 @@ project_image="localhost/tophat-$id-project:latest"
 . .tophat/managed/launch/run-options.sh
 run_options=$(emit_run_options .tophat/user/podman/run-options) || exit 2
 
+# --- GPU ----------------------------------------------------------------------------------------
+
+gpu_setting=
+gpu_options=
+
+# rq-380bb3d9
+# Reads the GPU setting: TOPHAT_GPU when set, otherwise .tophat/user/container/gpu, otherwise
+# auto. Any other value is refused.
+resolve_gpu_setting() {
+  if [ "${TOPHAT_GPU+set}" = set ]; then
+    gpu_setting=$TOPHAT_GPU
+  elif [ -f .tophat/user/container/gpu ]; then
+    gpu_setting=$(sed -n '1p' .tophat/user/container/gpu | tr -d '\r' |
+      sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+  else
+    gpu_setting=auto
+  fi
+  case "$gpu_setting" in
+    auto | on | off) ;;
+    *) fail "the GPU setting '$gpu_setting' is invalid; use auto, on or off" ;;
+  esac
+}
+
+# rq-e363eed4
+# Prints the detected GPU, or none on macOS, where no GPU can be passed through.
+detect_gpu() {
+  if [ "$(uname -s 2>/dev/null || true)" = Darwin ]; then
+    printf 'none\n'
+  else
+    sh .tophat/managed/launch/gpu-detect.sh
+  fi
+}
+
+# rq-4cf7a956
+# Sets gpu_options from the setting and the detected GPU, refusing or explaining when no usable GPU
+# can be passed through.
+prepare_gpu() {
+  resolve_gpu_setting
+  gpu_options=
+  [ "$gpu_setting" = off ] && return 0
+  detected=$(detect_gpu) || fail "the GPU could not be detected"
+  case "$detected" in
+    nvidia)
+      gpu_options="--device nvidia.com/gpu=all"
+      ;;
+    amd)
+      gpu_options="--device /dev/kfd --device /dev/dri --group-add keep-groups"
+      ;;
+    none)
+      if [ "$gpu_setting" = on ]; then
+        fail "the GPU setting is 'on', but no usable GPU was found; use auto or off to run on CPU"
+      fi
+      printf 'th.sh: no usable GPU was found; the session runs on CPU\n' >&2
+      ;;
+    nvidia-no-cdi)
+      message="the NVIDIA GPU needs a CDI specification; create one with: sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml"
+      if [ "$gpu_setting" = on ]; then
+        fail "$message"
+      fi
+      printf 'th.sh: %s; the session runs on CPU\n' "$message" >&2
+      ;;
+    *)
+      fail "gpu-detect.sh printed '$detected', which is not a known GPU kind"
+      ;;
+  esac
+}
+
 # --- Mount sources ------------------------------------------------------------------------------
 
 # Under WSL2 with the Windows podman binary, mount sources must be Windows paths.
@@ -437,6 +504,10 @@ case "$mode" in
     ;;
 esac
 
+case "$mode" in
+  dry | session) prepare_gpu ;;
+esac
+
 command=$(
   with_roots "" podman run --rm -it -v "$workspace:/work" -w /work \
     -v "tophat-$id-pixi-cache:/opt/tophat/cache/pixi"
@@ -458,7 +529,7 @@ set -f
 IFS='
 '
 # shellcheck disable=SC2086
-set -- $command $run_options
+set -- $command $gpu_options $run_options
 unset IFS
 set +f
 run "$@" "$project_image" /work/.tophat/managed/launch/enter.sh

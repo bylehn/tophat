@@ -49,7 +49,7 @@ stays green.
   hooks, image installation of only the selected agents with pinned versions and checksums, and
   one session volume per selected agent at its configuration home
   (`rqm/template/container.md` §Session).
-- [ ] **GPU passthrough** (`rqm/template/gpu.md`): NVIDIA/AMD detection against simulated hosts,
+- [x] **GPU passthrough** (`rqm/template/gpu.md`): NVIDIA/AMD detection against simulated hosts,
   CDI fallback, `auto`/`on`/`off` and host override, CPU fallback, Podman and Apptainer options.
 - [ ] **Apptainer** (`rqm/template/apptainer.md`): `--export-sif` / `--run-sif`, GPU options,
   project-id label check, atomic export, host isolation and personal mounts.
