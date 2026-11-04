@@ -11,6 +11,10 @@ on:
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
+    # Code scanning with CodeQL on a private repository needs GitHub Code Security; it is free
+    # once the repository is public. Skip it while the repository is private instead of failing
+    # every push, and start analysing automatically when the repository goes public.
+    if: ${{ github.event.repository.private == false }}
     # Runner size impacts CodeQL analysis time. To learn more, please see:
     #   - https://gh.io/recommended-hardware-resources-for-running-codeql
     #   - https://gh.io/supported-runners-and-hardware-resources

@@ -253,7 +253,12 @@ impl Env {
                     self.human(&command, "pass\nlooks as expected\n");
                 }
                 11 => {
-                    self.run();
+                    let out = self.run();
+                    assert!(
+                        out.status.success(),
+                        "tophat run failed at row 11: {}",
+                        text(&out)
+                    );
                 }
                 // Report (a study not reported yet), or answer the question (a reported one).
                 13 | 14 => return,

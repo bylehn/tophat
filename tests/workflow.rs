@@ -75,6 +75,7 @@ const PLAN: [(&str, &str); 4] = [
 /// A fake pixi: records its arguments and working directory, then either runs a stage command
 /// (`run … -- cmd`), runs Snakemake (`run snakemake …`, only when TOPHAT_TEST_REAL_SNAKEMAKE is
 /// set), or exits with $FAKE_PIXI_EXIT.
+#[cfg(unix)]
 const FAKE_PIXI: &str = r#"#!/bin/sh
 for a in "$@"; do case "$a" in --) mode=stage;; esac; done
 if [ "$mode" = stage ]; then
@@ -1044,6 +1045,7 @@ fn pixi_not_available() {
 
 // --- Trial runs -------------------------------------------------------------------------------
 
+#[cfg(unix)]
 #[test] // rq-2a741327 rq-0d5e77fe rq-2e420949
 fn trial_outputs_are_separate_and_unreportable() {
     let env = Env::draft();

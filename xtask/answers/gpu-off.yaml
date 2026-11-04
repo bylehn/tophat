@@ -5,6 +5,6 @@ author_name: Example Author
 author_email: example@example.org
 languages: []
 agents: [claude-code, codex, opencode]
-gpu: off
+gpu: "off"
 license: MIT
 copyright_year: 2026
