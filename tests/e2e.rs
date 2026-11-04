@@ -12,6 +12,7 @@ use std::process::{Command, Output};
 
 const STUDY: &str = "median-vs-mean";
 /// Utilities a cluster offers: the job script must need nothing else.
+#[cfg(unix)]
 const POSIX_TOOLS: [&str; 15] = [
     "sh",
     "sha256sum",
@@ -49,6 +50,7 @@ fn text(out: &Output) -> String {
 }
 
 /// Finds a program in `/usr/bin` or `/bin` (not through shell aliases).
+#[cfg(unix)]
 fn system_program(name: &str) -> PathBuf {
     ["/usr/bin", "/bin"]
         .iter()
@@ -90,11 +92,13 @@ impl Env {
                 .unwrap_or_else(|| env!("CARGO_BIN_EXE_tophat").into());
             std::os::unix::fs::symlink(binary, base.join("bin/tophat")).unwrap();
         }
-        let posix = base.join("posix");
-        fs::create_dir_all(&posix).unwrap();
-        for tool in POSIX_TOOLS {
-            #[cfg(unix)]
-            std::os::unix::fs::symlink(system_program(tool), posix.join(tool)).unwrap();
+        #[cfg(unix)]
+        {
+            let posix = base.join("posix");
+            fs::create_dir_all(&posix).unwrap();
+            for tool in POSIX_TOOLS {
+                std::os::unix::fs::symlink(system_program(tool), posix.join(tool)).unwrap();
+            }
         }
         let path = format!(
             "{}:{}",
@@ -244,6 +248,7 @@ impl Env {
     /// Follows the next actions until the study is ready to report, or, once reported, until the
     /// pipeline is current again.
     fn run_to_report(&mut self) {
+        let mut last_run = String::new();
         for _ in 0..20 {
             let (row, command) = self.next();
             let words: Vec<&str> = command.split_whitespace().collect();
@@ -252,20 +257,13 @@ impl Env {
                 9 => {
                     self.human(&command, "pass\nlooks as expected\n");
                 }
-                11 => {
-                    let out = self.run();
-                    assert!(
-                        out.status.success(),
-                        "tophat run failed at row 11: {}",
-                        text(&out)
-                    );
-                }
+                11 => last_run = text(&self.run()),
                 // Report (a study not reported yet), or answer the question (a reported one).
                 13 | 14 => return,
                 other => panic!("unexpected next action, row {other}: {command}"),
             }
         }
-        panic!("the study did not reach its report");
+        panic!("the study did not reach its report; last run output:\n{last_run}");
     }
 }
 

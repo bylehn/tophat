@@ -100,6 +100,8 @@ impl Temp {
         ));
         let _ = fs::remove_dir_all(&path);
         fs::create_dir_all(&path).map_err(|e| format!("cannot create {}: {e}", path.display()))?;
+        fs::create_dir_all(path.join("home"))
+            .map_err(|e| format!("cannot create {}: {e}", path.join("home").display()))?;
         Ok(Temp(path))
     }
 }
