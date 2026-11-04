@@ -3344,7 +3344,12 @@
     "decl": "### `cargo xtask render-test`",
     "file": "tooling",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tooling.rs",
+        "kind": "code"
+      }
+    ],
     "title": "`cargo xtask render-test`",
     "type": "section"
   },
@@ -4135,7 +4140,12 @@
   "rq-5fa25ddc": {
     "decl": "Scenario: A Julia project has Julia in its image",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tooling.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A Julia project has Julia in its image",
     "type": "scenario"
   },
@@ -8515,7 +8525,12 @@
   "rq-cb8f92b1": {
     "decl": "Scenario: A failing render check names the answer set and step",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/tooling.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A failing render check names the answer set and step",
     "type": "scenario"
   },

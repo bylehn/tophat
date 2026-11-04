@@ -5,4 +5,5 @@ pub mod conformance;
 pub mod lint;
 pub mod lock;
 pub mod render;
+pub mod render_test;
 pub mod scenarios;
