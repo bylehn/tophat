@@ -1,0 +1,11 @@
+tophat-receipt 1
+study external-study
+stage md
+key sk-37ff266a46ae1a06
+script 7791bf7f59980ba1619b6349e40da24303e02948eb5ee858c8c2783e3d0979b1
+host 0eb04fd7f69d
+job -
+start 2026-11-04T20:21:36Z
+end 2026-11-04T20:21:36Z
+exit 0
+output 1c14b3d31319dc221ad98f34b7e49a7a846ad3afc3a7cec71fdfbd5858e7cb66  7  md.edr

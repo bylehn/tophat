@@ -1,0 +1,9 @@
+description: unpublished-stage-input
+since: 0.1.0
+git:
+  - commit: initial
+command: [check, --json]
+expect:
+  exit: 1
+  diagnostics:
+    - {rule: pipeline.config-invalid, severity: error, path: studies/study-b/config/base.yaml}

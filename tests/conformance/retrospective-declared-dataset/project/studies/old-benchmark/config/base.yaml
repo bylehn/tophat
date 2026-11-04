@@ -1,0 +1,5 @@
+stages:
+  - name: prepare
+    run: sh scripts/prepare.sh {out}
+    inputs:
+      data: dataset:old-data@v1

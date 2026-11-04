@@ -1,6 +1,6 @@
 //! `cargo xtask <command>`: development tooling for the TopHat template (see the library).
 
-use xtask::{lint, lock, render, scenarios};
+use xtask::{conformance, lint, lock, render, scenarios};
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -12,6 +12,8 @@ Commands:
   render --answers <name|file> --out <dir> [--set <question>=<value>]...
                                               Render a project from the working tree
   lock [--check]                              Regenerate or check the pre-solved pixi locks
+  conformance [--tophat <binary>] [--case <name>]...
+                                              Run the conformance suite
   scenarios                                   Check that every Gherkin scenario in rqm/ is referenced by a test
   lint-skills <project dir> [--tophat <bin>]  Lint the agent skills of a rendered project
 ";
@@ -98,6 +100,45 @@ fn main() -> ExitCode {
                 }
                 Err(e) => {
                     eprintln!("cargo xtask lock: {e}");
+                    ExitCode::from(2)
+                }
+            }
+        }
+        ["conformance", rest @ ..] => {
+            let mut binary = repo_root().join("target/debug/tophat");
+            let mut cases = Vec::new();
+            let mut i = 0;
+            while i < rest.len() {
+                match rest[i] {
+                    "--tophat" if i + 1 < rest.len() => {
+                        binary = PathBuf::from(rest[i + 1]);
+                        i += 2;
+                    }
+                    "--case" if i + 1 < rest.len() => {
+                        cases.push(rest[i + 1].to_string());
+                        i += 2;
+                    }
+                    other => {
+                        eprintln!(
+                            "cargo xtask conformance: unknown or incomplete option '{other}'"
+                        );
+                        return ExitCode::from(2);
+                    }
+                }
+            }
+            match conformance::run(&repo_root(), &binary, &cases) {
+                Ok(report) => {
+                    for line in &report.lines {
+                        println!("{line}");
+                    }
+                    if report.failed {
+                        ExitCode::from(1)
+                    } else {
+                        ExitCode::SUCCESS
+                    }
+                }
+                Err(e) => {
+                    eprintln!("cargo xtask conformance: {e}");
                     ExitCode::from(2)
                 }
             }

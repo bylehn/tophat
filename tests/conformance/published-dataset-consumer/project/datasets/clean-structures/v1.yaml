@@ -1,0 +1,16 @@
+dataset: "clean-structures"
+version: 1
+kind: published
+visibility: public
+root: "results"
+path: "producer/analyse/sk-0000000000000001"
+created: "2026-01-01T00:00:00Z"
+produced_by:
+  study: "producer"
+  stage: "analyse"
+  key: "sk-0000000000000001"
+files:
+  - path: "out.txt"
+    size: 6
+    sha256: "2e22da2ab13713309ac75219e525b8e06ed02f3f1963b8feef203fa25827f93d"
+content_hash: "sha256:cfdefeba3756eb8e90f9bcf0f1ccae2882bbdb4de2a66a1e149fdcd8c495e51a"

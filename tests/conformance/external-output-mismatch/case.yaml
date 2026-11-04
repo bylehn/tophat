@@ -1,0 +1,8 @@
+description: external-output-mismatch
+since: 0.1.0
+git:
+  - commit: initial
+command: [stage, external, external-study, md, --key, sk-37ff266a46ae1a06]
+expect:
+  exit: 1
+  stderr_contains: "do not match the receipt"

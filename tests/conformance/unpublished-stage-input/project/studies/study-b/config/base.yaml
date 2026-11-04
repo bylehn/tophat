@@ -1,0 +1,4 @@
+stages:
+  - name: steal
+    run: sh scripts/steal.sh {in.s} {out}
+    inputs: {s: stage:study-a/secret}

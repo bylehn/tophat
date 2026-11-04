@@ -1,0 +1,14 @@
+dataset: "old-data"
+version: 1
+kind: declared
+visibility: public
+root: "raw"
+path: "old-data/v1"
+created: "2026-01-01T00:00:00Z"
+origin:
+  statement: "Processed before adoption."
+files:
+  - path: "input.csv"
+    size: 8
+    sha256: "492d5ea496056f1a6a6592241032fab764c321596317930b4fa0e1e8bc3b7470"
+content_hash: "sha256:71bdb3a0319ac466f32a0b48e48c697c7f2d48adf22149fd4ce5c0e82a945d20"

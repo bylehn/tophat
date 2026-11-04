@@ -1,0 +1,39 @@
+{
+  "clean": true,
+  "code": [
+    {
+      "path": "scripts/prepare.sh",
+      "sha256": "cbfec18bc2688628b3abef1386d9014bdf00d0e4c93a847f433db85c67b76bb8"
+    }
+  ],
+  "commit": "601a242d7c2d4309ae0d562f79247bd57476dd06",
+  "env": {
+    "hash": "sha256:e0985608d39638b750c7aae0ee14057afc28ce1f8a9ebf17eb0d1617bf62442f",
+    "name": "default"
+  },
+  "external": null,
+  "format_version": 1,
+  "host": "0eb04fd7f69d",
+  "inputs": [],
+  "item": null,
+  "items": null,
+  "key": "sk-ade1cbe3d2e1b89b",
+  "outputs": [
+    {
+      "path": "system.gro",
+      "sha256": "a097ed52080b60c3d3194c2bf595e618d2a8e7e5736f763fb7819405c952dd2b",
+      "size": 9
+    }
+  ],
+  "params": {},
+  "platform": "linux-64",
+  "run": "sh scripts/prepare.sh '/data/results/external-study/prepare/sk-ade1cbe3d2e1b89b'",
+  "sealed": "2026-11-04T20:21:36Z",
+  "stage": "prepare",
+  "study": "external-study",
+  "tool": null,
+  "tophat_version": "0.1.0",
+  "trial": false,
+  "unclean_files": [],
+  "validate": "test -s '/data/results/external-study/prepare/sk-ade1cbe3d2e1b89b'/system.gro"
+}

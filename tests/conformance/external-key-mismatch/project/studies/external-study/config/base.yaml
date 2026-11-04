@@ -1,0 +1,18 @@
+stages:
+  - name: prepare
+    run: sh scripts/prepare.sh {out}
+    code: [scripts/prepare.sh]
+    validate: test -s {out}/system.gro
+  - name: md
+    run: sh scripts/md.sh {out}
+    code: [scripts/md.sh]
+    inputs: {system: stage:prepare}
+    external:
+      setup: []
+      slurm: []
+      keep: ["*.trr"]
+  - name: analyse
+    run: sh scripts/analyse.sh {in.md} {out}
+    code: [scripts/analyse.sh]
+    inputs: {md: stage:md}
+    result: result.txt

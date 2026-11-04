@@ -1,0 +1,14 @@
+dataset: "private-data"
+version: 1
+kind: raw
+visibility: private
+root: "raw"
+path: "private-data/v1"
+created: "2026-01-01T00:00:00Z"
+origin:
+  source: "fixture"
+files:
+  - path: "data.csv"
+    size: 7
+    sha256: "b37e50cedcd3e3f1ff64f4afc0422084ae694253cf399326868e07a35f4a45fb"
+content_hash: "sha256:7c5a77c85ab9911bf7a2f076a72246d31e20e3924dbd2c9c3d6899551016e249"

@@ -1,0 +1,9 @@
+description: retrospective-declared-dataset
+since: 0.1.0
+git:
+  - commit: initial
+command: [check, --json]
+expect:
+  exit: 0
+  diagnostics:
+    - {rule: data.declared-input, severity: legacy, path: studies/old-benchmark/config/base.yaml}

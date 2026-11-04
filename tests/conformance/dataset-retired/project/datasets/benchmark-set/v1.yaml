@@ -1,0 +1,17 @@
+dataset: "benchmark-set"
+version: 1
+kind: raw
+visibility: public
+root: "raw"
+path: "benchmark-set/v1"
+created: "2026-01-01T00:00:00Z"
+origin:
+  source: "fixture"
+files:
+  - path: "set.csv"
+    size: 10
+    sha256: "3a79bf37b571938d1f2907afb6a643f48088b83769dde8bc58f5ee866a5c3636"
+content_hash: "sha256:446d5acc04d91c91489535e69f2e4f8c8dbfb163374c1dcfa782524551aa256e"
+retired:
+  date: "2026-01-02"
+  reason: "defective"
