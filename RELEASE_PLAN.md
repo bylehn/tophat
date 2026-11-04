@@ -86,8 +86,12 @@ stays green.
 - [x] Un-pend and test the release scenarios: `rqm/template/container.md`
   (image holds the pinned tophat; wrong checksum fails the build) and `rqm/template/project.md`
   (the release pin is complete).
-- [ ] Tag `v0.1.0`, flip `tophat-release.yaml` from `unreleased` to the released pin, and confirm
-  a generated project runs the worked example without `TOPHAT_DEV_BINARY`.
+- [ ] Tag `v0.1.0` and let the release workflow publish it. The workflow uploads a draft release,
+  downloads and checks the published assets, renders a project with the pin, and only then makes
+  the release public.
+- [ ] Write the pin from the published binaries, update the README status, commit both to `main`,
+  and confirm a project generated with `copier copy --vcs-ref main` runs the worked example without
+  `TOPHAT_DEV_BINARY`.
 
 ### Phase 5 — Go public
 
