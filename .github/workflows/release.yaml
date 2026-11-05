@@ -195,9 +195,13 @@ jobs:
           sha256sum tophat-x86_64-unknown-linux-musl tophat-aarch64-unknown-linux-musl > SHA256SUMS
       - name: Upload the draft release
         run: |
-          # A draft left by an earlier run for the same version is replaced. The tag does not exist
-          # (the prepare job checked), so any release with this name is a draft.
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          # A draft left by an earlier run for the same version is replaced. A published release is
+          # never deleted: finding one means the version check was wrong, so stop.
+          if draft=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft 2>/dev/null); then
+            if [ "$draft" != true ]; then
+              echo "::error::the release $TAG is already published"
+              exit 1
+            fi
             gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes
           fi
           # A draft does not create its tag; publishing it creates the tag on the target commit.
