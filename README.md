@@ -189,7 +189,7 @@ both. TopHat does not yet automate working this way, which means:
 ### Create a project
 
 ```sh
-copier copy --vcs-ref main gh:bylehn/tophat my-project
+copier copy gh:bylehn/tophat my-project
 cd my-project
 ./th.sh       # builds and enters the container (the first build takes a few minutes)
 claude        # start your chosen agent: claude, codex or opencode
