@@ -201,7 +201,11 @@ jobs:
           target=x86_64-unknown-linux-musl
           url=$(sed -n 's/^url: *//p' "$pin")
           expected=$(sed -n "s/^  $target: *//p" "$pin")
-          curl -fsSL -o "$RUNNER_TEMP/tophat" "$url/tophat-$target"
+          # The release is still a draft, so its assets are not served from the public
+          # releases/download URL. Use the authenticated copy fetched above, and check that the
+          # pin names the public URL those assets will have once the draft is published.
+          test "$url" = "https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}"
+          cp "${{ github.workspace }}/published/tophat-$target" "$RUNNER_TEMP/tophat"
           echo "$expected  $RUNNER_TEMP/tophat" | sha256sum -c -
           chmod +x "$RUNNER_TEMP/tophat"
           "$RUNNER_TEMP/tophat" --version
@@ -211,3 +215,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false
+      - name: Check the public download URL
+        working-directory: ${{ runner.temp }}/verify-project
+        run: |
+          pin=.tophat/managed/tophat-release.yaml
+          target=x86_64-unknown-linux-musl
+          url=$(sed -n 's/^url: *//p' "$pin")
+          expected=$(sed -n "s/^  $target: *//p" "$pin")
+          curl -fsSL -o "$RUNNER_TEMP/tophat-public" "$url/tophat-$target"
+          echo "$expected  $RUNNER_TEMP/tophat-public" | sha256sum -c -
