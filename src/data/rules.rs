@@ -132,9 +132,9 @@ fn check_manifests(project: &Project, roots: &super::Roots, out: &mut Vec<Diagno
             continue;
         };
 
-        let dir = location.join(&manifest.path);
+        let dir = crate::fsutil::join_rel(location, &manifest.path);
         for entry in &manifest.files {
-            let path = dir.join(&entry.path);
+            let path = crate::fsutil::join_rel(&dir, &entry.path);
             let meta = std::fs::symlink_metadata(&path)
                 .ok()
                 .filter(|m| m.is_file());

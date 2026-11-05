@@ -202,7 +202,11 @@ impl Env {
     }
 
     fn out_dir(&self, stage: &str, key: &str) -> PathBuf {
-        self.base.join("results/x-vs-docking").join(stage).join(key)
+        self.base
+            .join("results")
+            .join("x-vs-docking")
+            .join(stage)
+            .join(key)
     }
 
     fn diagnostics(&self) -> Vec<Diagnostic> {
@@ -731,7 +735,7 @@ fn seal_a_completed_stage() {
         record.outputs[0].sha256,
         tophat::data::hash_file(&dir.join("1abc.pdb")).unwrap().1
     );
-    let raw_dir = env.base.join("raw/bench/v2");
+    let raw_dir = env.base.join("raw").join("bench").join("v2");
     assert_eq!(
         record.run,
         format!(

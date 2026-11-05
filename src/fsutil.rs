@@ -2,12 +2,21 @@
 
 use std::fs;
 use std::io::{self, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// The path as text with `/` separators, for instructions and generated text that must mean the
 /// same thing on every platform.
 pub(crate) fn path_text(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
+}
+
+/// `base` joined with `rel`, a relative path stored with `/` separators (as in manifests and
+/// configuration), one component at a time so the result uses the platform's separator
+/// throughout instead of mixing `\\` and `/` on Windows.
+pub(crate) fn join_rel(base: &Path, rel: &str) -> PathBuf {
+    let mut path = base.to_path_buf();
+    path.extend(rel.split('/').filter(|c| !c.is_empty()));
+    path
 }
 
 /// Writes `contents` to `path` atomically: writes a temporary file in the same directory, then
@@ -60,5 +69,15 @@ mod tests {
     fn paths_use_forward_slashes() {
         assert_eq!(path_text(Path::new(r"C:\work\job")), "C:/work/job");
         assert_eq!(path_text(Path::new("a/b/job")), "a/b/job");
+    }
+
+    #[test]
+    fn relative_paths_join_by_component() {
+        let joined = join_rel(Path::new("root"), "bench/v2/");
+        assert_eq!(joined, Path::new("root").join("bench").join("v2"));
+        assert_eq!(
+            joined.to_string_lossy(),
+            format!("root{0}bench{0}v2", std::path::MAIN_SEPARATOR)
+        );
     }
 }

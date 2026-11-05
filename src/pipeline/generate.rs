@@ -175,9 +175,9 @@ fn check_dataset(
             m.root
         ))
     })?;
-    let dir = location.join(&m.path);
+    let dir = crate::fsutil::join_rel(location, &m.path);
     for f in &m.files {
-        let ok = std::fs::metadata(dir.join(&f.path))
+        let ok = std::fs::metadata(crate::fsutil::join_rel(&dir, &f.path))
             .is_ok_and(|meta| meta.is_file() && meta.len() == f.size);
         if !ok {
             return Err(PipelineError::Data(format!(

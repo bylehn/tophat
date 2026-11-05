@@ -414,7 +414,7 @@ pub fn input_dir(
         )),
         StageInput::Dataset(r) => {
             let m = ctx.manifest(r)?;
-            Some(roots.location(&m.root)?.join(&m.path))
+            Some(crate::fsutil::join_rel(roots.location(&m.root)?, &m.path))
         }
     }
 }

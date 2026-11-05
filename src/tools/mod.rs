@@ -280,11 +280,15 @@ pub fn resolve_pin(root: &Path, pin: &ToolPin) -> Result<String, ToolsError> {
 
 /// The cache directory of a tool commit.
 pub fn checkout_dir(root: &Path, tool: &str, commit: &str) -> PathBuf {
-    root.join(CACHE_DIR).join(tool).join(commit)
+    crate::fsutil::join_rel(root, CACHE_DIR)
+        .join(tool)
+        .join(commit)
 }
 
 fn mirror_dir(root: &Path, tool: &str) -> PathBuf {
-    root.join(CACHE_DIR).join(tool).join(".git")
+    crate::fsutil::join_rel(root, CACHE_DIR)
+        .join(tool)
+        .join(".git")
 }
 
 // rq-052f542d

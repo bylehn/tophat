@@ -179,7 +179,11 @@ impl Env {
     }
 
     fn cache(&self, commit: &str) -> PathBuf {
-        self.root().join(".tophat/tools/method-x").join(commit)
+        self.root()
+            .join(".tophat")
+            .join("tools")
+            .join("method-x")
+            .join(commit)
     }
 
     fn request(&self, stage: &str) -> SealRequest {

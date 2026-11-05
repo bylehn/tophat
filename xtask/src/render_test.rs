@@ -589,12 +589,26 @@ fn check_image(
         .to_string();
     let mount = format!("{workspace}:/work");
     let in_image = |script: &str| -> Result<String, String> {
+        // The pixi-install check has already installed the environment in the project on the host,
+        // and pixi environments cannot be relocated: an anonymous volume (removed with the
+        // container) hides the host's `.pixi/` so pixi installs its own at `/work/.pixi`.
         let out = podman(
             temp,
             project,
             tophat,
             &[
-                "run", "--rm", "-v", &mount, "-w", "/work", &image, "sh", "-c", script,
+                "run",
+                "--rm",
+                "-v",
+                &mount,
+                "-v",
+                "/work/.pixi",
+                "-w",
+                "/work",
+                &image,
+                "sh",
+                "-c",
+                script,
             ],
         )?;
         if !out.status.success() {

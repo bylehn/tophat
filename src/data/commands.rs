@@ -124,7 +124,7 @@ pub fn add(project_root: &Path, options: &RegisterOptions) -> Result<DatasetRef,
     if !is_safe_relative_path(path) {
         return Err(DataError::PathOutsideRoot(path.to_string()));
     }
-    let dir = location.join(path);
+    let dir = crate::fsutil::join_rel(location, path);
     if !dir.is_dir() {
         return Err(DataError::NoFiles(format!(
             "{root}/{path} (not a directory)"
@@ -274,30 +274,39 @@ pub fn verify(project_root: &Path, target: Option<&str>) -> Result<VerifyReport,
             ));
             continue;
         };
-        let dir = location.join(&manifest.path);
+        let dir = crate::fsutil::join_rel(location, &manifest.path);
         let before = report.problems;
 
         let present: Vec<&FileEntry> = manifest
             .files
             .iter()
-            .filter(|e| dir.join(&e.path).is_file())
+            .filter(|e| crate::fsutil::join_rel(&dir, &e.path).is_file())
             .collect();
         for e in manifest
             .files
             .iter()
-            .filter(|e| !dir.join(&e.path).is_file())
+            .filter(|e| !crate::fsutil::join_rel(&dir, &e.path).is_file())
         {
             report.problems += 1;
             report
                 .lines
                 .push(format!("MISSING  {reference}  {}", e.path));
         }
-        let paths: Vec<PathBuf> = present.iter().map(|e| dir.join(&e.path)).collect();
+        let paths: Vec<PathBuf> = present
+            .iter()
+            .map(|e| crate::fsutil::join_rel(&dir, &e.path))
+            .collect();
         for (entry, hashed) in present.iter().zip(hash_files(&paths)) {
             match hashed {
                 Ok((size, sha)) if size == entry.size && sha == entry.sha256 => {
                     let rel = format!("{}/{}", manifest.path, entry.path);
-                    cache.record(&manifest.root, &rel, &dir.join(&entry.path), size, &sha);
+                    cache.record(
+                        &manifest.root,
+                        &rel,
+                        &crate::fsutil::join_rel(&dir, &entry.path),
+                        size,
+                        &sha,
+                    );
                 }
                 _ => {
                     report.problems += 1;

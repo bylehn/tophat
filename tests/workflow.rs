@@ -271,7 +271,11 @@ impl Env {
     }
 
     fn out_dir(&self, stage: &str, key: &str) -> PathBuf {
-        self.base.join("results/x-vs-docking").join(stage).join(key)
+        self.base
+            .join("results")
+            .join("x-vs-docking")
+            .join(stage)
+            .join(key)
     }
 
     fn seal(&self, stage: &str, variant: &str, item: Option<&str>) {
@@ -1184,7 +1188,9 @@ impl Env {
 
     fn trial_dir(&self, stage: &str, key: &str) -> PathBuf {
         self.base
-            .join("results/x-vs-docking/.trial")
+            .join("results")
+            .join("x-vs-docking")
+            .join(".trial")
             .join(stage)
             .join(key)
     }

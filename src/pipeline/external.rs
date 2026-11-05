@@ -463,7 +463,7 @@ fn input_files(
                     .iter()
                     .map(|f| (f.path.clone(), f.size, f.sha256.clone()))
                     .collect();
-                (location.join(&m.path), listed)
+                (crate::fsutil::join_rel(location, &m.path), listed)
             }
         };
         for (path, size, sha256) in listed {
@@ -474,7 +474,7 @@ fn input_files(
             }
             files.push(InputFile {
                 rel: format!("inputs/{name}/{path}"),
-                source: dir.join(&path),
+                source: crate::fsutil::join_rel(&dir, &path),
                 size,
                 sha256,
             });
@@ -1127,8 +1127,8 @@ pub fn ingest(root: &Path, request: &SealRequest) -> Result<PathBuf, ExternalErr
     // Outputs are in out/, or already moved by an earlier, interrupted ingest.
     let mut to_move = Vec::new();
     for o in &receipt.outputs {
-        let returned = job_out.join(&o.path);
-        let moved = out_dir.join(&o.path);
+        let returned = crate::fsutil::join_rel(&job_out, &o.path);
+        let moved = crate::fsutil::join_rel(&out_dir, &o.path);
         if present.contains_key(&o.path) {
             if holds(&returned, o)? {
                 to_move.push((returned, moved));
@@ -1211,7 +1211,7 @@ pub fn ingest(root: &Path, request: &SealRequest) -> Result<PathBuf, ExternalErr
         outputs: receipt
             .outputs
             .iter()
-            .map(|o| (o.clone(), out_dir.join(&o.path)))
+            .map(|o| (o.clone(), crate::fsutil::join_rel(&out_dir, &o.path)))
             .collect(),
         items: None,
         external: Some(record_external),

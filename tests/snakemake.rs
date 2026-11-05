@@ -206,7 +206,11 @@ impl Env {
     }
 
     fn out_dir(&self, stage: &str, key: &str) -> PathBuf {
-        self.base.join("results/x-vs-docking").join(stage).join(key)
+        self.base
+            .join("results")
+            .join("x-vs-docking")
+            .join(stage)
+            .join(key)
     }
 
     fn rules(&self) -> String {
@@ -359,6 +363,11 @@ fn with_rule<'a>(ds: &'a [Diagnostic], rule: &str) -> Vec<&'a Diagnostic> {
     ds.iter().filter(|d| d.rule == rule).collect()
 }
 
+/// A path as the Python string literal the generated rules write for it.
+fn py(path: &Path) -> String {
+    serde_json::to_string(&path.display().to_string()).unwrap()
+}
+
 fn hex(key: &str) -> &str {
     key.trim_start_matches("sk-")
 }
@@ -490,14 +499,17 @@ fn rule_outputs_and_inputs_follow_the_keys() {
     let prepare_record = env
         .out_dir("prepare", &base["prepare"])
         .join("provenance.json");
-    assert!(rules.contains(&format!("\"{}\"", prepare_record.display())));
+    assert!(rules.contains(&py(&prepare_record)), "{rules}");
     let analyse = rules
         .split(&format!("rule analyse_{}:", hex(&base["analyse"])))
         .nth(1)
         .unwrap();
     let analyse = analyse.split("\nrule ").next().unwrap();
     let score_record = env.out_dir("score", &base["score"]).join("provenance.json");
-    assert!(analyse.contains(&format!("ancient(\"{}\")", score_record.display())));
+    assert!(
+        analyse.contains(&format!("ancient({})", py(&score_record))),
+        "{analyse}"
+    );
     assert!(
         analyse.contains(&format!(
             "qc=[(\"score\", \"{}\", \"base\")]",
@@ -539,16 +551,17 @@ fn generated_outputs_default_to_the_projects_results_folder() {
     let env = Env::new();
     env.configure(false);
     let rules = generate_rules(&env.root(), "x-vs-docking").unwrap();
-    let results = format!(
-        "{}/results/",
-        std::path::absolute(env.root()).unwrap().display()
-    );
+    let results = py(&std::path::absolute(env.root())
+        .unwrap()
+        .join("results")
+        .join(""));
+    let results = results.trim_matches('"');
     let outputs: Vec<&str> = rules
         .lines()
         .filter(|l| l.trim_start().starts_with('"') && l.contains("provenance.json"))
         .collect();
     assert!(!outputs.is_empty(), "{rules}");
-    assert!(outputs.iter().all(|l| l.contains(&results)), "{outputs:?}");
+    assert!(outputs.iter().all(|l| l.contains(results)), "{outputs:?}");
 }
 
 #[test] // rq-dbe124d9 rq-654fa516
@@ -697,7 +710,9 @@ fn a_failed_item_is_retried_alone() {
     let base = env.keys("base");
     let item_1abc = env
         .out_dir("score", &base["score"])
-        .join("items/1abc/provenance.json");
+        .join("items")
+        .join("1abc")
+        .join("provenance.json");
     assert!(item_1abc.exists(), "{log}");
     let sealed_1abc = fs::read_to_string(&item_1abc).unwrap();
     fs::remove_file(&marker).unwrap();
