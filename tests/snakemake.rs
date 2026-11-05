@@ -368,6 +368,12 @@ fn py(path: &Path) -> String {
     serde_json::to_string(&path.display().to_string()).unwrap()
 }
 
+/// The path separator as it appears inside the generated rules' string literals.
+fn sep() -> String {
+    let sep = py(Path::new(std::path::MAIN_SEPARATOR_STR));
+    sep.trim_matches('"').to_string()
+}
+
 fn hex(key: &str) -> &str {
     key.trim_start_matches("sk-")
 }
@@ -551,17 +557,14 @@ fn generated_outputs_default_to_the_projects_results_folder() {
     let env = Env::new();
     env.configure(false);
     let rules = generate_rules(&env.root(), "x-vs-docking").unwrap();
-    let results = py(&std::path::absolute(env.root())
-        .unwrap()
-        .join("results")
-        .join(""));
-    let results = results.trim_matches('"');
+    let results = py(&std::path::absolute(env.root()).unwrap().join("results"));
+    let results = format!("{}{}", results.trim_end_matches('"'), sep());
     let outputs: Vec<&str> = rules
         .lines()
         .filter(|l| l.trim_start().starts_with('"') && l.contains("provenance.json"))
         .collect();
     assert!(!outputs.is_empty(), "{rules}");
-    assert!(outputs.iter().all(|l| l.contains(results)), "{outputs:?}");
+    assert!(outputs.iter().all(|l| l.contains(&results)), "{outputs:?}");
 }
 
 #[test] // rq-dbe124d9 rq-654fa516
@@ -596,7 +599,7 @@ fn draft_studies_only_get_trial_targets() {
     let rules = env.rules();
     assert!(rules.contains("rule trial:") && rules.contains("rule trial_base:"));
     assert!(!rules.contains("rule summary:") && !rules.contains("rule variant_base:"));
-    assert!(rules.contains("/.trial/"));
+    assert!(rules.contains(&format!("{0}.trial{0}", sep())), "{rules}");
     assert!(!rules.contains("qc=[(\"score\""));
 }
 
