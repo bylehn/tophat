@@ -225,12 +225,38 @@ checks:
 `.github/workflows/evals.yaml` runs `cargo xtask eval` weekly and on manual dispatch, with agent
 credentials from repository secrets; its result is reported, never required.
 
-`.github/workflows/release.yaml` runs on a version tag: it builds `tophat` for
-`x86_64-unknown-linux-musl` and `aarch64-unknown-linux-musl`, runs the aarch64 binary under qemu,
-runs the conformance suite against the x86_64 binary, writes the release pin with
-`cargo xtask release-pin`, and runs the render and end-to-end tests with that pin. It then uploads
-the binaries and their SHA-256 checksums as a draft release, downloads those published assets and
-checks them, renders a project with the pin, and only after that makes the release public.
+### Releases <!-- rq-3a15ab3d -->
+
+A project created from a release tag must install that release's binaries, so the tag points at a
+commit whose `template/.tophat/managed/tophat-release.yaml` pins them. That pin holds the binaries'
+SHA-256 checksums, which exist only after the build, so the pin is committed after the build and the
+tag is created on that commit.
+
+`.github/workflows/release.yaml` runs on manual dispatch and releases the `version` of `Cargo.toml`
+as `v<version>`:
+
+1. It refuses to run from any branch other than `main`, or for a version whose tag `v<version>`
+   already exists, before building anything.
+2. It builds `tophat` for `x86_64-unknown-linux-musl` and `aarch64-unknown-linux-musl`, runs the
+   aarch64 binary under qemu and checks that it reports `<version>`, runs the conformance suite
+   against the x86_64 binary, writes the release pin with `cargo xtask release-pin`, and runs the
+   render and end-to-end tests with that pin.
+3. It commits the pin, alone, on top of the commit it built, pushes that commit as the branch
+   `release/v<version>`, and uploads the binaries and their SHA-256 checksums as a draft release
+   `v<version>` whose target is that commit. A draft or branch left by an earlier run for the same
+   version is replaced.
+4. It downloads the draft's assets and checks them against the checksums, renders a project from the
+   pin commit, and checks that the project's pin names those assets and the public download URL
+   they will have.
+
+The workflow never makes the release public and never creates the tag: `v*` tags are restricted to
+the maintainer by a repository ruleset, which GitHub Actions cannot bypass. The maintainer publishes
+the draft, which creates the tag `v<version>` on the pin commit, and then merges
+`release/v<version>` into `main` through a pull request, so `main` pins the latest release.
+
+`.github/workflows/release-check.yaml` runs when a release is published: it reads the pin at the
+release's tag and downloads each binary from the public URL the pin names, without credentials,
+checking it against the pin's SHA-256. Its result is reported, never required.
 
 ## Assumptions <!-- rq-5be14147 -->
 
@@ -387,7 +413,38 @@ Feature: Test gates
 
   @rq-e6ed00d3
   Scenario: A release is published only after the gates pass
-    Given a version tag whose x86_64 binary fails a conformance case
+    Given a release run whose x86_64 binary fails a conformance case
     When the release workflow runs
     Then no binary is published
+
+  @rq-8327b496
+  Scenario: A release runs only from main
+    Given the release workflow is dispatched from a branch other than main
+    When it runs
+    Then it fails before building, and no branch or release is created
+
+  @rq-920bc7fe
+  Scenario: A release refuses a version that is already tagged
+    Given Cargo.toml's version is 0.1.0 and the tag v0.1.0 exists
+    When the release workflow runs
+    Then it fails before building, and no branch or release is created
+
+  @rq-843b5970
+  Scenario: The release pin is committed on the commit the release targets
+    Given Cargo.toml's version is 0.2.0 and the gates pass
+    When the release workflow runs
+    Then the branch release/v0.2.0 holds one commit on top of the built commit, changing only template/.tophat/managed/tophat-release.yaml
+    And the draft release v0.2.0 targets that commit and holds both binaries and SHA256SUMS
+
+  @rq-3057858e
+  Scenario: Only the maintainer makes a release public
+    When the release workflow completes
+    Then the release v0.2.0 is still a draft and the tag v0.2.0 does not exist
+
+  @rq-9718d88b
+  Scenario: A published release is checked at its public URL
+    Given the release v0.2.0 is published
+    When the release check runs
+    Then it downloads each binary from the url in the pin at tag v0.2.0, without credentials
+    And it fails when a binary's SHA-256 differs from the pin
 ```

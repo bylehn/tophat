@@ -1,0 +1,37 @@
+# Check a published release the way a project downloads it: read the pin at the release's tag and
+# fetch each binary from the public URL it names, without credentials (rqm/testing.md §Releases).
+# Reported, never required.
+# rq-3a15ab3d rq-9718d88b
+name: Release check
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  download:
+    name: Download the published binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          persist-credentials: false
+      - name: Check every binary against the pin
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          pin=template/.tophat/managed/tophat-release.yaml
+          test "$(sed -n 's/^version: *//p' "$pin")" = "${TAG#v}"
+          url=$(sed -n 's/^url: *//p' "$pin")
+          test "$url" = "https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}"
+          for target in x86_64-unknown-linux-musl aarch64-unknown-linux-musl; do
+            expected=$(sed -n "s/^  $target: *//p" "$pin")
+            test -n "$expected"
+            # The assets can take a moment to be served after publishing.
+            curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/tophat-$target" "$url/tophat-$target"
+            echo "$expected  $RUNNER_TEMP/tophat-$target" | sha256sum -c -
+          done

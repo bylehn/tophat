@@ -1,25 +1,59 @@
-# Publish a TopHat release: build both musl binaries, run the gates against them, write the
-# release pin, re-run the render and end-to-end tests with that pin, upload a draft release, and
-# verify the published assets before making it public (rqm/testing.md §CI Workflows, rq-e6ed00d3).
+# Prepare a TopHat release of the version in Cargo.toml: build both musl binaries, run the gates
+# against them, write the release pin, re-run the render and end-to-end tests with that pin, commit
+# the pin on top of the built commit as release/v<version>, upload a draft release targeting that
+# commit, and verify its assets. The maintainer publishes the draft, which creates the tag on the
+# pin commit (rqm/testing.md §Releases).
+# rq-068b6895 rq-3a15ab3d
 name: Release
 
 on:
-  push:
-    tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release
   cancel-in-progress: false
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  # rq-8327b496 rq-920bc7fe
+  prepare:
+    name: Check the version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Refuse a branch other than main
+        run: |
+          if [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "::error::releases run from main, not ${GITHUB_REF}"
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - name: Read the version and refuse one that is already tagged
+        id: version
+        run: |
+          version=$(sed -n 's/^version *= *"\([^"]*\)".*/\1/p' Cargo.toml | head -n 1)
+          if ! printf '%s\n' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$'; then
+            echo "::error::Cargo.toml has no usable version ('$version')"
+            exit 1
+          fi
+          tag="v$version"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
+            echo "::error::the tag $tag already exists; raise the version in Cargo.toml first"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
   build:
     name: Build (${{ matrix.target }})
+    needs: prepare
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -50,14 +84,17 @@ jobs:
           path: dist/tophat-${{ matrix.target }}
           if-no-files-found: error
 
+  # rq-e6ed00d3
   gates:
     name: Release gates
-    needs: build
+    needs: [prepare, build]
     # Julia's conda-forge libopenlibm still requests an executable stack, which glibc >= 2.41
     # refuses to load. Pin the runner until conda-forge ships openlibm >= 0.8.4.
     runs-on: ubuntu-24.04
     env:
       TOPHAT_TEST_BINARY: ${{ github.workspace }}/dist/tophat-x86_64-unknown-linux-musl
+      VERSION: ${{ needs.prepare.outputs.version }}
+      TAG: ${{ needs.prepare.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -88,19 +125,17 @@ jobs:
       - name: Check the aarch64 binary runs
         run: |
           version=$(qemu-aarch64-static dist/tophat-aarch64-unknown-linux-musl --version | awk '{print $NF}')
-          expected="${GITHUB_REF_NAME#v}"
-          if [ "$version" != "$expected" ]; then
-            echo "::error::the aarch64 binary reports $version, not $expected"
+          if [ "$version" != "$VERSION" ]; then
+            echo "::error::the aarch64 binary reports $version, not $VERSION"
             exit 1
           fi
       - name: Run the conformance suite against the x86_64 binary
         run: cargo xtask conformance --tophat "$TOPHAT_TEST_BINARY"
       - name: Write the release pin
         run: |
-          version="${GITHUB_REF_NAME#v}"
           cargo xtask release-pin \
-            --version "$version" \
-            --url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}" \
+            --version "$VERSION" \
+            --url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}" \
             --binary "x86_64-unknown-linux-musl=dist/tophat-x86_64-unknown-linux-musl" \
             --binary "aarch64-unknown-linux-musl=dist/tophat-aarch64-unknown-linux-musl"
       - uses: actions/upload-artifact@v4
@@ -117,12 +152,19 @@ jobs:
           TOPHAT_TEST_E2E: "1"
         run: cargo test -p tophat --test e2e
 
+  # rq-843b5970
   publish:
-    name: Publish the release
-    needs: gates
+    name: Commit the pin and upload the draft release
+    needs: [prepare, gates]
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      TAG: ${{ needs.prepare.outputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    outputs:
+      commit: ${{ steps.pin.outputs.commit }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -130,32 +172,62 @@ jobs:
           pattern: tophat-*-unknown-linux-musl
           path: dist
           merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: tophat-release-pin
+          path: pin
+      - name: Commit the pin on top of the built commit
+        id: pin
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          cp pin/tophat-release.yaml template/.tophat/managed/tophat-release.yaml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add template/.tophat/managed/tophat-release.yaml
+          git commit -m "Pin the template to the ${TAG} release"
+          test "$(git diff --name-only HEAD^ HEAD)" = template/.tophat/managed/tophat-release.yaml
+          # The branch belongs to this workflow; a rerun for the same version replaces it.
+          git push --force origin "HEAD:refs/heads/release/${TAG}"
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Write the SHA-256 checksums
         run: |
           cd dist
           sha256sum tophat-x86_64-unknown-linux-musl tophat-aarch64-unknown-linux-musl > SHA256SUMS
-      - name: Create the draft release
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Upload the draft release
         run: |
-          gh release create "$GITHUB_REF_NAME" \
+          # A draft left by an earlier run for the same version is replaced. The tag does not exist
+          # (the prepare job checked), so any release with this name is a draft.
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes
+          fi
+          # A draft does not create its tag; publishing it creates the tag on the target commit.
+          gh release create "$TAG" \
             dist/tophat-x86_64-unknown-linux-musl \
             dist/tophat-aarch64-unknown-linux-musl \
             dist/SHA256SUMS \
-            --verify-tag \
+            --repo "$GITHUB_REPOSITORY" \
             --draft \
-            --title "TopHat ${GITHUB_REF_NAME#v}" \
-            --notes "TopHat ${GITHUB_REF_NAME#v}. Downloaded binaries are checked against SHA256SUMS."
+            --target "${{ steps.pin.outputs.commit }}" \
+            --title "TopHat ${VERSION}" \
+            --notes "TopHat ${VERSION}. Downloaded binaries are checked against SHA256SUMS."
 
+  # rq-843b5970 rq-3057858e
   verify:
-    name: Verify the published release
-    needs: publish
+    name: Verify the draft release
+    needs: [prepare, publish]
     runs-on: ubuntu-latest
     permissions:
+      # Reading a draft release needs write access.
       contents: write
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      TAG: ${{ needs.prepare.outputs.tag }}
+      PIN_COMMIT: ${{ needs.publish.outputs.commit }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ needs.publish.outputs.commit }}
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
@@ -164,28 +236,30 @@ jobs:
         with:
           name: tophat-release-pin
           path: pin
-      - name: Install Copier and Podman
+      - name: Install Copier
         run: |
           version=$(sed -n 's/^copier_version: *//p' template/.tophat/managed/container/versions.yaml)
           python -m pip install "copier==${version}"
-          sudo apt-get update
-          sudo apt-get install -y podman
-      - name: Download the published assets
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Check the pin commit and the draft
         run: |
-          mkdir -p published
-          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
-            --dir published --pattern 'tophat-*' --pattern 'SHA256SUMS'
-          cd published
+          test "$(git rev-parse HEAD^)" = "$GITHUB_SHA"
+          test "$(git diff --name-only HEAD^ HEAD)" = template/.tophat/managed/tophat-release.yaml
+          test "$(git rev-parse "origin/release/${TAG}")" = "$PIN_COMMIT"
+          test "$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" = true
+          test "$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json targetCommitish --jq .targetCommitish)" = "$PIN_COMMIT"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
+            echo "::error::the tag $TAG exists before the maintainer published the release"
+            exit 1
+          fi
+      - name: Download the draft's assets
+        run: |
+          mkdir -p "$RUNNER_TEMP/published"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --dir "$RUNNER_TEMP/published" --pattern 'tophat-*' --pattern 'SHA256SUMS'
+          cd "$RUNNER_TEMP/published"
           sha256sum -c SHA256SUMS
-      - name: Render a project with the release pin
+      - name: Render a project from the pin commit
         run: |
-          cp pin/tophat-release.yaml template/.tophat/managed/tophat-release.yaml
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add template/.tophat/managed/tophat-release.yaml
-          git commit -m "Pin the ${GITHUB_REF_NAME#v} release"
           copier copy --defaults --quiet --vcs-ref HEAD \
             --data project_name=verify \
             --data project_slug=verify \
@@ -193,32 +267,26 @@ jobs:
             --data author_name=TopHat \
             --data author_email=tophat@example.org \
             . "$RUNNER_TEMP/verify-project"
-      - name: Install the pinned tophat from the release
+      - name: Check the project's pin names the draft's assets
         working-directory: ${{ runner.temp }}/verify-project
         run: |
           pin=.tophat/managed/tophat-release.yaml
           diff -u "${{ github.workspace }}/pin/tophat-release.yaml" "$pin"
-          target=x86_64-unknown-linux-musl
-          url=$(sed -n 's/^url: *//p' "$pin")
-          expected=$(sed -n "s/^  $target: *//p" "$pin")
-          # The release is still a draft, so its assets are not served from the public
-          # releases/download URL. Use the authenticated copy fetched above, and check that the
-          # pin names the public URL those assets will have once the draft is published.
-          test "$url" = "https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}"
-          cp "${{ github.workspace }}/published/tophat-$target" "$RUNNER_TEMP/tophat"
-          echo "$expected  $RUNNER_TEMP/tophat" | sha256sum -c -
-          chmod +x "$RUNNER_TEMP/tophat"
-          "$RUNNER_TEMP/tophat" --version
-      - name: Make the draft release public
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false
-      - name: Check the public download URL
-        working-directory: ${{ runner.temp }}/verify-project
+          test "$(sed -n 's/^version: *//p' "$pin")" = "$VERSION"
+          # The draft's assets are not served from the public URL until the release is published;
+          # the release check verifies that URL afterwards.
+          test "$(sed -n 's/^url: *//p' "$pin")" = "https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}"
+          for target in x86_64-unknown-linux-musl aarch64-unknown-linux-musl; do
+            expected=$(sed -n "s/^  $target: *//p" "$pin")
+            echo "$expected  $RUNNER_TEMP/published/tophat-$target" | sha256sum -c -
+          done
+          chmod +x "$RUNNER_TEMP/published/tophat-x86_64-unknown-linux-musl"
+          test "$("$RUNNER_TEMP/published/tophat-x86_64-unknown-linux-musl" --version | awk '{print $NF}')" = "$VERSION"
+      - name: Say what the maintainer does next
         run: |
-          pin=.tophat/managed/tophat-release.yaml
-          target=x86_64-unknown-linux-musl
-          url=$(sed -n 's/^url: *//p' "$pin")
-          expected=$(sed -n "s/^  $target: *//p" "$pin")
-          curl -fsSL -o "$RUNNER_TEMP/tophat-public" "$url/tophat-$target"
-          echo "$expected  $RUNNER_TEMP/tophat-public" | sha256sum -c -
+          {
+            echo "## ${TAG} is ready to publish"
+            echo
+            echo "1. Publish the draft at https://github.com/${GITHUB_REPOSITORY}/releases. This creates the tag ${TAG} on ${PIN_COMMIT}."
+            echo "2. Merge the pin into main: https://github.com/${GITHUB_REPOSITORY}/compare/main...release/${TAG}"
+          } >> "$GITHUB_STEP_SUMMARY"

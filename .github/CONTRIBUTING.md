@@ -35,6 +35,21 @@ describes how to contribute code changes to TopHat.
   integration returns checkmarks,
   and multiple core developers give "Approved" reviews.
 
+## Releasing
+
+Releases are made by the maintainer. Do not push `v*` tags by hand.
+
+1. Raise `version` in `Cargo.toml` (and `Cargo.lock`) through a pull request, and merge it.
+2. In the Actions tab, run the **Release** workflow on `main`. It builds and tests the binaries,
+   commits the release pin on the branch `release/v<version>`, and uploads a draft release.
+3. Review the draft on the Releases page and publish it. Publishing creates the tag on the pin
+   commit; the **Release check** workflow then downloads the binaries from the public URL.
+4. Open a pull request from `release/v<version>` into `main` (the run's summary links it), and
+   merge it so `main` pins the latest release.
+
+Once a release is published, never delete or move its tag: GitHub turns the release back into a
+draft and its downloads stop working. Fix mistakes in a new version.
+
 # Additional Resources
 
 * [General GitHub documentation](https://help.github.com/)
