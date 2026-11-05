@@ -342,6 +342,11 @@ fn an_unreleased_pin_needs_a_development_binary() {
         return;
     }
     let env = Env::new();
+    fs::write(
+        env.project().join(".tophat/managed/tophat-release.yaml"),
+        "version: unreleased\n",
+    )
+    .unwrap();
     let out = env
         .launcher(&["--dry-run"])
         .env_remove("TOPHAT_DEV_BINARY")

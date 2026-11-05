@@ -688,8 +688,21 @@ fn an_unreleased_pin_says_so() {
         return;
     }
     let scratch = Scratch::new();
+    let tpl = scratch.path("tpl");
+    template_repo(&tpl);
+    write(
+        &tpl,
+        "template/.tophat/managed/tophat-release.yaml",
+        "version: unreleased\n",
+    );
+    git_ok(&tpl, &["commit", "-qam", "unpin"]);
     let p = scratch.path("p");
-    render(&p, &[]);
+    let out = copier_copy(&tpl, "HEAD", &p, &[]);
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
     let pin = yaml(&read(&p, ".tophat/managed/tophat-release.yaml"));
     assert_eq!(pin["version"].as_str(), Some("unreleased"));
     assert!(pin["url"].is_badvalue() && pin["sha256"].is_badvalue());

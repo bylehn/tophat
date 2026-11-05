@@ -1,3 +1,6 @@
 # TopHat-managed: the tophat release this project uses. `copier update` changes it.
-# No release is pinned yet: the dev container needs a development binary (TOPHAT_DEV_BINARY).
-version: unreleased
+version: 0.1.0
+url: https://github.com/bylehn/tophat/releases/download/v0.1.0
+sha256:
+  x86_64-unknown-linux-musl: 7f440eb5fddc507942050f95b73b9cd4d4cb716d457f20a7c9b2ddd24bd28d9b
+  aarch64-unknown-linux-musl: c6a4504e7439cafe76e2f4cc3bb9af10b6f8630d3f6a0ec46f647a001ee1d639
