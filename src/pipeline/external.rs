@@ -728,9 +728,12 @@ exit \"$tophat_status\"
 
 /// A word for a shell command line: as is when it needs no quoting.
 fn shell_word(s: &str) -> String {
+    // A tilde expands only at the start of a word, so a path such as `C:/Users/RUNNER~1/` needs no
+    // quoting while `~/work` does.
     let plain = !s.is_empty()
+        && !s.starts_with('~')
         && s.bytes()
-            .all(|b| b.is_ascii_alphanumeric() || b"/._-+:@=,".contains(&b));
+            .all(|b| b.is_ascii_alphanumeric() || b"/._-+:@=,~".contains(&b));
     if plain { s.to_string() } else { shell_quote(s) }
 }
 
@@ -1329,6 +1332,16 @@ mod tests {
         assert_eq!(r.kept[0].path, "sub dir/md.trr");
         let failed = parse_receipt(&receipt("").replace("exit 0", "exit input-mismatch")).unwrap();
         assert_eq!(failed.exit, "input-mismatch");
+    }
+
+    #[test]
+    fn shell_words_quote_only_what_needs_it() {
+        assert_eq!(
+            shell_word("C:/Users/RUNNER~1/AppData/Local/Temp/job"),
+            "C:/Users/RUNNER~1/AppData/Local/Temp/job"
+        );
+        assert_eq!(shell_word("~/work/job"), "'~/work/job'");
+        assert_eq!(shell_word("a b/job"), "'a b/job'");
     }
 
     #[test] // rq-82d88391 rq-d39d6009

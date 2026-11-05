@@ -583,12 +583,19 @@ fn check_image(
         ));
     }
     let image = image_name(project)?;
+    let workspace = std::path::absolute(project)
+        .map_err(|e| e.to_string())?
+        .display()
+        .to_string();
+    let mount = format!("{workspace}:/work");
     let in_image = |script: &str| -> Result<String, String> {
         let out = podman(
             temp,
             project,
             tophat,
-            &["run", "--rm", &image, "sh", "-c", script],
+            &[
+                "run", "--rm", "-v", &mount, "-w", "/work", &image, "sh", "-c", script,
+            ],
         )?;
         if !out.status.success() {
             return Err(format!(
