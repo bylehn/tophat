@@ -244,7 +244,7 @@ as `v<version>`:
 3. It commits the pin, alone, on top of the commit it built, pushes that commit as the branch
    `release/v<version>`, and uploads the binaries and their SHA-256 checksums as a draft release
    `v<version>` whose target is that commit. A draft or branch left by an earlier run for the same
-   version is replaced.
+   version is replaced; a published release of that version stops the run and is left unchanged.
 4. It downloads the draft's assets and checks them against the checksums, renders a project from the
    pin commit, and checks that the project's pin names those assets and the public download URL
    they will have.
@@ -435,6 +435,12 @@ Feature: Test gates
     When the release workflow runs
     Then the branch release/v0.2.0 holds one commit on top of the built commit, changing only template/.tophat/managed/tophat-release.yaml
     And the draft release v0.2.0 targets that commit and holds both binaries and SHA256SUMS
+
+  @rq-d81f1b41
+  Scenario: A release never replaces a published release
+    Given the release v0.2.0 is published but the version check let the run through
+    When the release workflow uploads its draft
+    Then it fails without deleting or changing the published release
 
   @rq-3057858e
   Scenario: Only the maintainer makes a release public

@@ -9397,6 +9397,13 @@
     "title": "Commands",
     "type": "section"
   },
+  "rq-d81f1b41": {
+    "decl": "Scenario: A release never replaces a published release",
+    "file": "testing",
+    "refs": [],
+    "title": "A release never replaces a published release",
+    "type": "scenario"
+  },
   "rq-d8643ac5": {
     "decl": "Scenario: Connection details are not configuration",
     "file": "pipeline/external",

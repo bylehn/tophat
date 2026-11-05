@@ -404,6 +404,85 @@ fn release_pin_is_committed_on_the_commit_the_release_targets() {
     }
 }
 
+#[test] // rq-d81f1b41
+fn a_release_never_replaces_a_published_release() {
+    let script = step_script(&release_job("publish"), "Upload the draft release");
+    assert!(
+        script.contains("isDraft"),
+        "the upload does not check for a published release"
+    );
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        // A fake `gh` that answers `release view` with $IS_DRAFT and logs every call.
+        let dir = shell::temp_dir("published");
+        let bin = dir.join("bin");
+        std::fs::create_dir_all(&bin).unwrap();
+        let gh = bin.join("gh");
+        std::fs::write(
+            &gh,
+            "#!/bin/sh\necho \"$*\" >> \"$GH_LOG\"\n\
+             if [ \"$1 $2\" = \"release view\" ]; then echo \"$IS_DRAFT\"; fi\n",
+        )
+        .unwrap();
+        std::fs::set_permissions(&gh, std::fs::Permissions::from_mode(0o755)).unwrap();
+        let path = format!(
+            "{}:{}",
+            bin.display(),
+            std::env::var("PATH").unwrap_or_default()
+        );
+        let script = script.replace("${{ steps.pin.outputs.commit }}", "0123abc");
+
+        let published = dir.join("published.log");
+        let out = shell::run(
+            &dir,
+            &script,
+            &[
+                ("PATH", path.as_str()),
+                ("GH_LOG", published.to_str().unwrap()),
+                ("IS_DRAFT", "false"),
+                ("TAG", "v0.2.0"),
+                ("VERSION", "0.2.0"),
+                ("GITHUB_REPOSITORY", "o/r"),
+            ],
+        );
+        assert!(!out.status.success(), "a published release was replaced");
+        assert!(shell::stdout(&out).contains("already published"));
+        let calls = std::fs::read_to_string(&published).unwrap();
+        assert!(
+            !calls.contains("release delete") && !calls.contains("release create"),
+            "{calls}"
+        );
+
+        let draft = dir.join("draft.log");
+        let out = shell::run(
+            &dir,
+            &script,
+            &[
+                ("PATH", path.as_str()),
+                ("GH_LOG", draft.to_str().unwrap()),
+                ("IS_DRAFT", "true"),
+                ("TAG", "v0.2.0"),
+                ("VERSION", "0.2.0"),
+                ("GITHUB_REPOSITORY", "o/r"),
+            ],
+        );
+        assert!(out.status.success(), "{}", shell::stderr(&out));
+        let calls = std::fs::read_to_string(&draft).unwrap();
+        let delete = calls
+            .find("release delete v0.2.0")
+            .expect("the old draft is not replaced");
+        let create = calls
+            .find("release create v0.2.0")
+            .expect("no draft is uploaded");
+        assert!(delete < create, "{calls}");
+        assert!(
+            calls.contains("--draft") && calls.contains("--target 0123abc"),
+            "{calls}"
+        );
+    }
+}
+
 #[test] // rq-3057858e
 fn only_the_maintainer_makes_a_release_public() {
     for forbidden in ["--draft=false", "gh release edit", "git tag", "refs/tags/v"] {
