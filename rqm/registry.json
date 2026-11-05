@@ -2115,6 +2115,18 @@
     "title": "Out of Scope",
     "type": "section"
   },
+  "rq-3057858e": {
+    "decl": "Scenario: Only the maintainer makes a release public",
+    "file": "testing",
+    "refs": [
+      {
+        "file": "tests/ci.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Only the maintainer makes a release public",
+    "type": "scenario"
+  },
   "rq-3123c559": {
     "decl": "Scenario: Stub can be restored",
     "file": "pipeline/snakemake",
@@ -2461,6 +2473,14 @@
       }
     ],
     "title": "Read-only and offline",
+    "type": "section"
+  },
+  "rq-3a15ab3d": {
+    "decl": "### Releases",
+    "file": "testing",
+    "level": 3,
+    "refs": [],
+    "title": "Releases",
     "type": "section"
   },
   "rq-3a21c28f": {
@@ -5649,6 +5669,18 @@
     "title": "Receipts are parsed strictly",
     "type": "scenario"
   },
+  "rq-8327b496": {
+    "decl": "Scenario: A release runs only from main",
+    "file": "testing",
+    "refs": [
+      {
+        "file": "tests/ci.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A release runs only from main",
+    "type": "scenario"
+  },
   "rq-83643799": {
     "decl": "Scenario: Generation runs no commands",
     "file": "template/project",
@@ -5683,6 +5715,18 @@
       }
     ],
     "title": "Reaching an external stage writes the job folder and waits",
+    "type": "scenario"
+  },
+  "rq-843b5970": {
+    "decl": "Scenario: The release pin is committed on the commit the release targets",
+    "file": "testing",
+    "refs": [
+      {
+        "file": "tests/ci.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The release pin is committed on the commit the release targets",
     "type": "scenario"
   },
   "rq-84e20fdc": {
@@ -6122,6 +6166,18 @@
     "title": "Types",
     "type": "section"
   },
+  "rq-920bc7fe": {
+    "decl": "Scenario: A release refuses a version that is already tagged",
+    "file": "testing",
+    "refs": [
+      {
+        "file": "tests/ci.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A release refuses a version that is already tagged",
+    "type": "scenario"
+  },
   "rq-930cacde": {
     "decl": "Scenario: Reordering sections does not alter the fingerprint",
     "file": "study/format",
@@ -6294,6 +6350,18 @@
       }
     ],
     "title": "Seal a fan-out item and the stage",
+    "type": "scenario"
+  },
+  "rq-9718d88b": {
+    "decl": "Scenario: A published release is checked at its public URL",
+    "file": "testing",
+    "refs": [
+      {
+        "file": "tests/ci.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "A published release is checked at its public URL",
     "type": "scenario"
   },
   "rq-972c7f77": {
