@@ -49,3 +49,7 @@ target/
 # `copier update`.
 # =============================================================================
 
+# Local OpenCode tooling. Installed from .opencode/package.json, never source.
+/.opencode/node_modules/
+/.opencode/package.json
+/.opencode/package-lock.json
