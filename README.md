@@ -29,10 +29,9 @@ traced back to how it was made.
 Everything runs in a container that keeps the agent away from the rest of your computer. TopHat
 works in any scientific field and any language your analysis needs (Python, R, Julia, shell, …).
 
-> **Status: pre-release.** TopHat 0.1.0 is not released yet: the template still pins
-> `version: unreleased`, so a generated project needs a development `tophat` binary until the first
-> release ships a prebuilt, checksum-verified one. The study format may still change before 1.0.
-> See [Getting started](#getting-started) to create a project.
+> **Status: early release.** TopHat 0.1.0 is the first release: a generated project's container
+> installs a prebuilt, checksum-verified `tophat` binary. The study format may still change before
+> 1.0. See [Getting started](#getting-started) to create a project.
 
 ## How it works
 
@@ -199,9 +198,8 @@ claude        # start your chosen agent: claude, codex or opencode
 Copier asks for the project's name, description and author, which agents to install, any languages
 to install besides Python, the default GPU setting, and a license for the project.
 
-Until the first release, no `tophat` binary is published. Set `TOPHAT_DEV_BINARY` to a Linux
-`tophat` binary built from this repository before running `./th.sh`, or the launch refuses to start
-because no release is pinned.
+To try a development build of `tophat` instead of the pinned release, set `TOPHAT_DEV_BINARY` to a
+Linux `tophat` binary built from this repository before running `./th.sh`.
 
 ### Talk to the agent
 
