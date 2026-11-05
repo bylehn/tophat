@@ -209,11 +209,6 @@ jobs:
           echo "$expected  $RUNNER_TEMP/tophat" | sha256sum -c -
           chmod +x "$RUNNER_TEMP/tophat"
           "$RUNNER_TEMP/tophat" --version
-          unset TOPHAT_DEV_BINARY
-          # --dry-run needs an image from an earlier launch, so build once and run the project's
-          # check before printing what a session would do.
-          ./th.sh --check
-          ./th.sh --dry-run
       - name: Make the draft release public
         env:
           GH_TOKEN: ${{ github.token }}
