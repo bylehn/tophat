@@ -50,7 +50,7 @@ actions only a human may take; `anyone` marks actions a human or an agent may ta
 | 11 | Some stage of some listed variant has no sealed output for its current key, or `SUMMARY.md` is missing or stale | Run the pipeline: `tophat run <study>` | anyone |
 | 12 | `SUMMARY.md` is dirty | Commit the code listed as unclean, then `tophat run <study>` | anyone |
 | 13 | Status is `preregistered`, or status is `draft` in `exploratory` or `retrospective` mode | Report: `tophat study report <study>` | anyone |
-| 14 | The study's question is `open` and no answered question cites the study | Answer question `<question>` in `PROJECT.md`, citing this study | anyone |
+| 14 | The study's question is `open` or `emerged` and no answered question cites the study | Answer question `<question>` in `PROJECT.md`, citing this study | anyone |
 | 15 | Otherwise | None: done | — |
 
 Rows 3 and 4 exist only for modes that pre-register: a study whose mode locks nothing
@@ -74,8 +74,8 @@ blocks a run.
 - `tophat status [<study>...] [--json]` <!-- rq-6733b7c0 -->
   - Read-only. With no studies named, covers every study; superseded studies are listed on one
     line each at the end.
-  - Prints, first, a project line: the number of questions by status, and the number of check
-    errors, warnings and legacy items for the whole project.
+  - Prints, first, a project line: the number of `open`, `emerged`, `answered` and `dropped`
+    questions, and the number of check errors, warnings and legacy items for the whole project.
   - Then, per study in ID order, a block:
 
     ```
@@ -148,8 +148,6 @@ blocks a run.
 - Cluster profiles and other executor configuration for Snakemake (pass them after `--`).
 - Partial trial runs over a subset of items.
 - Notifications or dashboards beyond the terminal output.
-- Question statuses beyond `open` (such as questions emerged from results) and which results may
-  be cited with which labels (`rqm/question-tree.md`).
 
 ## Gherkin Scenarios <!-- rq-0b009184 -->
 
@@ -334,7 +332,7 @@ Feature: Status and run
     Given PROJECT.md has 2 open, 1 answered and 1 dropped questions
     And the project has 1 check error and 2 warnings
     When "tophat status" is run
-    Then the first line reports the question counts and "1 error(s), 2 warning(s), 0 legacy item(s)"
+    Then the first line reports "2 open, 0 emerged, 1 answered, 1 dropped" and "1 error(s), 2 warning(s), 0 legacy item(s)"
 
   @rq-20dad35a
   Scenario: The study line shows the mode

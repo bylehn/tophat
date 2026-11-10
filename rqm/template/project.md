@@ -269,7 +269,7 @@ are unconfigured in CI, so root-dependent checks report warnings, which do not f
 A generated project, before anything else is done:
 
 - `tophat check` reports no diagnostics and exits 0, both with and without `--strict`;
-- `tophat status` reports `0 open, 0 answered, 0 dropped` questions and lists no studies;
+- `tophat status` reports `0 open, 0 emerged, 0 answered, 0 dropped` questions and lists no studies;
 - `tophat question tree` shows an empty tree.
 
 `copier copy` does not run `git init` or any other command (it defines no `_tasks`), so generation

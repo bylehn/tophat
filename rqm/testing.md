@@ -96,7 +96,8 @@ expect:
 Valid (each expects exit 0 and no error diagnostics): a fresh project; a reported study with a clean,
 current summary built from a fan-out pipeline with a QC gate; a published dataset consumed by a
 second reported study; a retrospective study consuming a declared dataset (legacy diagnostics
-only); an ingested external stage.
+only); an ingested external stage; a question answered by citing an exploratory study with its
+label, with an emerged follow-up question.
 
 Broken (each expects exactly its diagnostic or failure):
 
@@ -108,6 +109,8 @@ Broken (each expects exactly its diagnostic or failure):
 | Dataset file whose content changed | `data.file-changed` |
 | Missing QC verdict before a consuming stage | the generated rule stops before the consumer (`stage qc-status` exits 2) |
 | Study citing a question that does not exist | `question.unknown-reference` |
+| Emerged question whose origin study does not exist | `question.origin-invalid` |
+| Answered question citing an exploratory study without a label | `question.evidence-tag-mismatch` |
 | Stage consuming another study's unpublished output (a `stage:` input naming that study's stage) | `pipeline.config-invalid` |
 | Pinned dataset retired for a defect | `data.reference-retired` |
 | Study reported while a producer is unreported | `data.producer-unreported` (error) |

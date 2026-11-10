@@ -745,6 +745,13 @@
     "title": "Receipt",
     "type": "api-item"
   },
+  "rq-1176e768": {
+    "decl": "Scenario: Emerge from a study that does not exist",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Emerge from a study that does not exist",
+    "type": "scenario"
+  },
   "rq-117c41af": {
     "decl": "## Out of Scope",
     "file": "testing",
@@ -1233,6 +1240,13 @@
       }
     ],
     "title": "A failed item is retried alone",
+    "type": "scenario"
+  },
+  "rq-1b7579af": {
+    "decl": "Scenario: Emerged question naming a study that does not exist",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Emerged question naming a study that does not exist",
     "type": "scenario"
   },
   "rq-1b912496": {
@@ -1778,6 +1792,13 @@
       }
     ],
     "title": "The hook is skipped without tophat or a container runtime",
+    "type": "scenario"
+  },
+  "rq-273c5387": {
+    "decl": "Scenario: An emerged question is answered like an open one",
+    "file": "question-tree",
+    "refs": [],
+    "title": "An emerged question is answered like an open one",
     "type": "scenario"
   },
   "rq-27bb0a4e": {
@@ -2875,6 +2896,13 @@
       }
     ],
     "title": "Variant cannot add stages",
+    "type": "scenario"
+  },
+  "rq-4044efe1": {
+    "decl": "Scenario: Emerge records a question born from a study",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Emerge records a question born from a study",
     "type": "scenario"
   },
   "rq-404d256a": {
@@ -4545,6 +4573,13 @@
     "title": "run_check",
     "type": "api-item"
   },
+  "rq-6248ce74": {
+    "decl": "Scenario: Emerge preserves the rest of the file",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Emerge preserves the rest of the file",
+    "type": "scenario"
+  },
   "rq-62e72400": {
     "decl": "Scenario: Reported study that is cited is done",
     "file": "workflow",
@@ -4899,6 +4934,13 @@
     "title": "tophat",
     "type": "api-item"
   },
+  "rq-6c48cc09": {
+    "decl": "Scenario: Emerge places the question as the parent's last sub-question",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Emerge places the question as the parent's last sub-question",
+    "type": "scenario"
+  },
   "rq-6ceae812": {
     "decl": "- `NextAction` — `row: u8`, `who: Who` (`You`, `Anyone`, `Nobody`), `text: String`,",
     "file": "workflow",
@@ -4937,6 +4979,13 @@
     "refs": [],
     "title": "Feature API",
     "type": "section"
+  },
+  "rq-6dc70288": {
+    "decl": "Scenario: Citing an emerged sub-question",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Citing an emerged sub-question",
+    "type": "scenario"
   },
   "rq-6dd4dd02": {
     "decl": "Scenario: Skill lint passes on a rendered project",
@@ -5263,6 +5312,13 @@
     "title": "Managed files carry the marker",
     "type": "scenario"
   },
+  "rq-7449b1fb": {
+    "decl": "- `tophat question emerge \"<text>\" --from <study-id> [--under <question-id>]`",
+    "file": "question-tree",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
   "rq-7478e01d": {
     "decl": "Scenario: A stale lock does not prevent the session",
     "file": "template/container",
@@ -5414,6 +5470,13 @@
     "refs": [],
     "title": "Files",
     "type": "section"
+  },
+  "rq-7853bb0a": {
+    "decl": "Scenario: Emerge with an explicit parent",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Emerge with an explicit parent",
+    "type": "scenario"
   },
   "rq-78b231e3": {
     "decl": "Scenario: A stage without a review question has no gate",
@@ -5666,6 +5729,14 @@
     ],
     "title": "Same-size modification is flagged by the cache",
     "type": "scenario"
+  },
+  "rq-7e178b97": {
+    "decl": "## Emerged Questions",
+    "file": "question-tree",
+    "level": 2,
+    "refs": [],
+    "title": "Emerged Questions",
+    "type": "section"
   },
   "rq-7e3bca84": {
     "decl": "Scenario: An unknown CLI command is caught",
@@ -6102,6 +6173,13 @@
     "title": "Julia is added when selected",
     "type": "scenario"
   },
+  "rq-8848775c": {
+    "decl": "Scenario: Emerge with an empty text",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Emerge with an empty text",
+    "type": "scenario"
+  },
   "rq-88716093": {
     "decl": "Scenario: Add a raw dataset",
     "file": "data",
@@ -6470,6 +6548,27 @@
       }
     ],
     "title": "Stamp assigns IDs and status lines",
+    "type": "scenario"
+  },
+  "rq-9447b114": {
+    "decl": "Scenario: A label the study has no result line for",
+    "file": "question-tree",
+    "refs": [],
+    "title": "A label the study has no result line for",
+    "type": "scenario"
+  },
+  "rq-944a6f44": {
+    "decl": "Scenario: A study may address an emerged question",
+    "file": "question-tree",
+    "refs": [],
+    "title": "A study may address an emerged question",
+    "type": "scenario"
+  },
+  "rq-94b72fce": {
+    "decl": "Scenario: Citing an exploratory study without a label",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Citing an exploratory study without a label",
     "type": "scenario"
   },
   "rq-956cc0ad": {
@@ -6902,6 +7001,13 @@
     "title": "An unreleased pin needs a development binary",
     "type": "scenario"
   },
+  "rq-9c8407f2": {
+    "decl": "Scenario: Emerge at the maximum depth",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Emerge at the maximum depth",
+    "type": "scenario"
+  },
   "rq-9cadbb01": {
     "decl": "Scenario: Citing a reported study about this question",
     "file": "question-tree",
@@ -6959,6 +7065,13 @@
     "file": "study/format",
     "refs": [],
     "title": "A valid split tag passes the syntax",
+    "type": "scenario"
+  },
+  "rq-9e04442c": {
+    "decl": "Scenario: Citing a confirmatory study's exploratory result",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Citing a confirmatory study's exploratory result",
     "type": "scenario"
   },
   "rq-9e24cb69": {
@@ -7121,6 +7234,13 @@
       }
     ],
     "title": "Seal refuses when the configuration changed during the run",
+    "type": "scenario"
+  },
+  "rq-9ff67f40": {
+    "decl": "Scenario: Emerge from a study whose question is not in the tree",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Emerge from a study whose question is not in the tree",
     "type": "scenario"
   },
   "rq-a029874e": {
@@ -7454,6 +7574,13 @@
     "title": "Output location",
     "type": "section"
   },
+  "rq-a5a6c56e": {
+    "decl": "Scenario: An emerged question is dropped like an open one",
+    "file": "question-tree",
+    "refs": [],
+    "title": "An emerged question is dropped like an open one",
+    "type": "scenario"
+  },
   "rq-a5ab4b78": {
     "decl": "Scenario: Fan-out stage cannot declare a result",
     "file": "pipeline/provenance",
@@ -7545,6 +7672,13 @@
     "title": "Reproduces outside replication mode",
     "type": "scenario"
   },
+  "rq-a7910365": {
+    "decl": "Scenario: An untagged result line is left to the study rules",
+    "file": "question-tree",
+    "refs": [],
+    "title": "An untagged result line is left to the study rules",
+    "type": "scenario"
+  },
   "rq-a79ad3ba": {
     "decl": "Scenario: Headings inside code fences are not sections",
     "file": "study/format",
@@ -7588,6 +7722,13 @@
     ],
     "title": "Invalid status value",
     "type": "scenario"
+  },
+  "rq-a88520bf": {
+    "decl": "- `emerge(root: &Path, text: &str, from: &str, under: Option<&str>) -> Result<(String, String), QuestionError>` —",
+    "file": "question-tree",
+    "refs": [],
+    "title": "emerge",
+    "type": "api-item"
   },
   "rq-a88d8dfe": {
     "decl": "Scenario: Exploration needs a mode that pre-registers",
@@ -8709,6 +8850,13 @@
     "title": "An exploratory study reports from a draft",
     "type": "scenario"
   },
+  "rq-c333e981": {
+    "decl": "Scenario: A question citation carries no label",
+    "file": "question-tree",
+    "refs": [],
+    "title": "A question citation carries no label",
+    "type": "scenario"
+  },
   "rq-c3395d20": {
     "decl": "Scenario: Retiring twice fails",
     "file": "data",
@@ -8916,6 +9064,13 @@
     ],
     "title": "tophat",
     "type": "api-item"
+  },
+  "rq-c7e4904d": {
+    "decl": "Scenario: Emerged questions get distinct IDs",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Emerged questions get distinct IDs",
+    "type": "scenario"
   },
   "rq-c7e4a9d5": {
     "decl": "Scenario: Citing a study that is only pre-registered",
@@ -9215,6 +9370,13 @@
     "file": "workflow",
     "refs": [],
     "title": "A plan informed by its deciding data is labelled",
+    "type": "scenario"
+  },
+  "rq-cdad3c4b": {
+    "decl": "Scenario: Emerge without PROJECT.md",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Emerge without PROJECT.md",
     "type": "scenario"
   },
   "rq-cdc39471": {
@@ -9582,6 +9744,13 @@
     "title": "The container check runs before every prompt",
     "type": "scenario"
   },
+  "rq-d47955a2": {
+    "decl": "Scenario: Citing an exploratory study with its label",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Citing an exploratory study with its label",
+    "type": "scenario"
+  },
   "rq-d47ba6b9": {
     "decl": "Scenario: JSON output structure",
     "file": "check",
@@ -9940,7 +10109,7 @@
     "type": "scenario"
   },
   "rq-db0d11c1": {
-    "decl": "Scenario: Citing a retrospective study is flagged as legacy",
+    "decl": "Scenario: Citing a retrospective study without a summary is flagged as legacy",
     "file": "question-tree",
     "refs": [
       {
@@ -9948,7 +10117,7 @@
         "kind": "code"
       }
     ],
-    "title": "Citing a retrospective study is flagged as legacy",
+    "title": "Citing a retrospective study without a summary is flagged as legacy",
     "type": "scenario"
   },
   "rq-db2ca072": {
@@ -10158,6 +10327,13 @@
     "title": "Missing back-link",
     "type": "scenario"
   },
+  "rq-ddd0dee1": {
+    "decl": "- `Citation` — one entry of an evidence line: `target: String` (a study ID or a question ID) and",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Citation",
+    "type": "api-item"
+  },
   "rq-de005c10": {
     "decl": "# Feature: Stage Configuration, Keys and Provenance",
     "file": "pipeline/provenance",
@@ -10228,6 +10404,13 @@
     "title": "Git refuses to commit inside the container",
     "type": "scenario"
   },
+  "rq-df111cbc": {
+    "decl": "Scenario: Citing a retrospective study with a verified summary",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Citing a retrospective study with a verified summary",
+    "type": "scenario"
+  },
   "rq-df2a2b0e": {
     "decl": "Scenario: A malformed project ID is refused",
     "file": "template/container",
@@ -10274,6 +10457,13 @@
       }
     ],
     "title": "Superseded study",
+    "type": "scenario"
+  },
+  "rq-e03f0826": {
+    "decl": "Scenario: Tree shows an origin line for a missing study",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Tree shows an origin line for a missing study",
     "type": "scenario"
   },
   "rq-e09ced9c": {
@@ -10574,6 +10764,13 @@
     "title": "A well-formed tree passes the check",
     "type": "scenario"
   },
+  "rq-e75df1d9": {
+    "decl": "Scenario: Emerged question without an origin",
+    "file": "question-tree",
+    "refs": [],
+    "title": "Emerged question without an origin",
+    "type": "scenario"
+  },
   "rq-e7c71a2b": {
     "decl": "Scenario: Re-reporting refreshes the result",
     "file": "study/format",
@@ -10674,6 +10871,13 @@
     ],
     "title": "Body Sections",
     "type": "section"
+  },
+  "rq-ea31a640": {
+    "decl": "Scenario: An answered question keeps a valid origin line",
+    "file": "question-tree",
+    "refs": [],
+    "title": "An answered question keeps a valid origin line",
+    "type": "scenario"
   },
   "rq-ea738ef8": {
     "decl": "- `tophat study supersede <old-id> --by <new-id>` <!-- rq-f2c5cd1 -->",
@@ -11034,6 +11238,13 @@
     "title": "Unknown front-matter field",
     "type": "scenario"
   },
+  "rq-f36436b8": {
+    "decl": "Scenario: An emerged question needs neither answer nor evidence",
+    "file": "question-tree",
+    "refs": [],
+    "title": "An emerged question needs neither answer nor evidence",
+    "type": "scenario"
+  },
   "rq-f3b637ee": {
     "decl": "Scenario: External job waiting for the human",
     "file": "workflow",
@@ -11095,7 +11306,7 @@
     "type": "scenario"
   },
   "rq-f448ed00": {
-    "decl": "- `QuestionStatus` — enum `Open`, `Answered`, `Dropped`.",
+    "decl": "- `QuestionStatus` — enum `Open`, `Emerged`, `Answered`, `Dropped`.",
     "file": "question-tree",
     "refs": [
       {
@@ -11183,6 +11394,13 @@
     "refs": [],
     "title": "`cargo xtask conformance`",
     "type": "section"
+  },
+  "rq-f5e9098c": {
+    "decl": "Scenario: A label that is not a citation label",
+    "file": "question-tree",
+    "refs": [],
+    "title": "A label that is not a citation label",
+    "type": "scenario"
   },
   "rq-f678e5d8": {
     "decl": "Scenario: Missing base config",
