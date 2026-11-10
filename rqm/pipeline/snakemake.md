@@ -19,10 +19,13 @@ The default target is `summary`, which builds every stage for every variant list
 and then writes `SUMMARY.md`. The target `variant_<variant>` builds every stage of one variant
 without writing the summary. `tophat run` (see `rqm/workflow.md`) wraps this command.
 
-For a study with status `draft`, the generated rules contain only the **trial** targets `trial`
-(every variant) and `trial_<variant>`, which build trial outputs (see `rqm/workflow.md`) with each
-stage's `trial` overrides applied, never write the summary, and end by running
-`tophat study exploration <study>` (see `rqm/study/exploration.md`). For every other status they contain the targets above and no trial targets.
+For a study with status `draft` in a mode that pre-registers (see `rqm/study/format.md`), the
+generated rules contain only the **trial** targets `trial` (every variant) and `trial_<variant>`,
+which build trial outputs (see `rqm/workflow.md`) with each stage's `trial` overrides applied,
+never write the summary, and end by running `tophat study exploration <study>` (see
+`rqm/study/exploration.md`). For every other status — and for every study in `exploratory` or
+`retrospective` mode, whose runs are real from the start — they contain the targets above and no
+trial targets.
 
 ## The Snakefile Stub <!-- rq-fbc524b4 -->
 
@@ -48,7 +51,8 @@ rule tophat_default:
 
 Snakemake never takes its default target from an included file, so the stub defines it. The
 generated rules define `_TOPHAT_DEFAULT_INPUTS` and `_tophat_default` so that the default does what
-the `summary` target does (or, for a draft study, what the `trial` target does).
+the `summary` target does (or, for a draft study in a mode that pre-registers, what the `trial`
+target does).
 
 `tophat study new` writes the stub, and `tophat pipeline stub <study>` rewrites it. The directory
 `.tophat/generated/` is git-ignored.

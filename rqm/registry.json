@@ -1424,6 +1424,13 @@
     "title": "Snakemake tests skip locally without Snakemake",
     "type": "scenario"
   },
+  "rq-20dad35a": {
+    "decl": "Scenario: The study line shows the mode",
+    "file": "workflow",
+    "refs": [],
+    "title": "The study line shows the mode",
+    "type": "scenario"
+  },
   "rq-20e3189f": {
     "decl": "## CLI Tests",
     "file": "testing",
@@ -1488,6 +1495,13 @@
     "refs": [],
     "title": "GUIDE.md",
     "type": "section"
+  },
+  "rq-226dad64": {
+    "decl": "Scenario: A descriptive study writes the plan its mode freezes",
+    "file": "workflow",
+    "refs": [],
+    "title": "A descriptive study writes the plan its mode freezes",
+    "type": "scenario"
   },
   "rq-2289dfd0": {
     "decl": "### th-data",
@@ -1797,6 +1811,13 @@
     ],
     "title": "load_roots",
     "type": "api-item"
+  },
+  "rq-297004df": {
+    "decl": "Scenario: A retrospective study without stages reports hand-written results",
+    "file": "workflow",
+    "refs": [],
+    "title": "A retrospective study without stages reports hand-written results",
+    "type": "scenario"
   },
   "rq-297a1f84": {
     "decl": "- `PipelineError` — error type of the pipeline commands, with at minimum:",
@@ -3008,6 +3029,13 @@
     "file": "study/format",
     "refs": [],
     "title": "A reported confirmatory study must have a pre-specified line",
+    "type": "scenario"
+  },
+  "rq-44085c48": {
+    "decl": "Scenario: Hand-written retrospective results must be tagged post hoc",
+    "file": "study/format",
+    "refs": [],
+    "title": "Hand-written retrospective results must be tagged post hoc",
     "type": "scenario"
   },
   "rq-44727473": {
@@ -4344,6 +4372,13 @@
     "refs": [],
     "title": "Feature: Apptainer",
     "type": "file"
+  },
+  "rq-5e87d0c4": {
+    "decl": "Scenario: --draft is refused for a mode without trial runs",
+    "file": "workflow",
+    "refs": [],
+    "title": "--draft is refused for a mode without trial runs",
+    "type": "scenario"
   },
   "rq-5ea916b5": {
     "decl": "### Functions",
@@ -5900,6 +5935,13 @@
     "title": "The release pin is committed on the commit the release targets",
     "type": "scenario"
   },
+  "rq-846e9510": {
+    "decl": "Scenario: An exploratory study never waits for pre-registration",
+    "file": "workflow",
+    "refs": [],
+    "title": "An exploratory study never waits for pre-registration",
+    "type": "scenario"
+  },
   "rq-84e20fdc": {
     "decl": "### Fast check",
     "file": "data",
@@ -7037,6 +7079,13 @@
     "title": "Variants with identical stage settings share a key",
     "type": "scenario"
   },
+  "rq-9f803f04": {
+    "decl": "Scenario: A replication study writes the plan its mode freezes",
+    "file": "workflow",
+    "refs": [],
+    "title": "A replication study writes the plan its mode freezes",
+    "type": "scenario"
+  },
   "rq-9f886d87": {
     "decl": "### Commits happen on the host",
     "file": "template/container",
@@ -7174,6 +7223,13 @@
     "refs": [],
     "title": "Feature: Exploration Before the Plan",
     "type": "file"
+  },
+  "rq-a250a373": {
+    "decl": "Scenario: JSON status includes the mode",
+    "file": "workflow",
+    "refs": [],
+    "title": "JSON status includes the mode",
+    "type": "scenario"
   },
   "rq-a27155bc": {
     "decl": "Scenario: Generated outputs default to the project's results folder",
@@ -7337,6 +7393,13 @@
     ],
     "title": "Fan-out",
     "type": "section"
+  },
+  "rq-a45c31de": {
+    "decl": "Scenario: Run an exploratory draft for real",
+    "file": "workflow",
+    "refs": [],
+    "title": "Run an exploratory draft for real",
+    "type": "scenario"
   },
   "rq-a4669866": {
     "decl": "Scenario: Skipped heading level",
@@ -7829,6 +7892,13 @@
     ],
     "title": "parse_manifest",
     "type": "api-item"
+  },
+  "rq-ae6ec611": {
+    "decl": "Scenario: A retrospective study without stages reports hand-written results",
+    "file": "study/format",
+    "refs": [],
+    "title": "A retrospective study without stages reports hand-written results",
+    "type": "scenario"
   },
   "rq-aea3767f": {
     "decl": "## End-to-End Example Study",
@@ -8632,6 +8702,13 @@
     "title": "Link ignores duplicates and keeps the list sorted",
     "type": "scenario"
   },
+  "rq-c2d7fe11": {
+    "decl": "Scenario: An exploratory study reports from a draft",
+    "file": "workflow",
+    "refs": [],
+    "title": "An exploratory study reports from a draft",
+    "type": "scenario"
+  },
   "rq-c3395d20": {
     "decl": "Scenario: Retiring twice fails",
     "file": "data",
@@ -9133,6 +9210,13 @@
     "title": "Duplicated governed section",
     "type": "scenario"
   },
+  "rq-cd55ac10": {
+    "decl": "Scenario: A plan informed by its deciding data is labelled",
+    "file": "workflow",
+    "refs": [],
+    "title": "A plan informed by its deciding data is labelled",
+    "type": "scenario"
+  },
   "rq-cdc39471": {
     "decl": "- `tophat run <study> [--variant <variant>] [--cores <n>] [--draft] [-- <snakemake args>...]`",
     "file": "workflow",
@@ -9559,7 +9643,7 @@
     "type": "section"
   },
   "rq-d511d6c8": {
-    "decl": "- `StudyStatus` — the per-study part of `tophat status`: ID, status, question, per-variant",
+    "decl": "- `StudyStatus` — the per-study part of `tophat status`: ID, mode, status, question, per-variant",
     "file": "workflow",
     "refs": [
       {
@@ -10845,6 +10929,13 @@
     "title": "Ready to report",
     "type": "scenario"
   },
+  "rq-f165adbc": {
+    "decl": "Scenario: Direct Snakemake on an exploratory draft offers the real targets",
+    "file": "workflow",
+    "refs": [],
+    "title": "Direct Snakemake on an exploratory draft offers the real targets",
+    "type": "scenario"
+  },
   "rq-f19caed4": {
     "decl": "Scenario: Reported study pinned to an older version is not warned",
     "file": "data",
@@ -11296,6 +11387,13 @@
       }
     ],
     "title": "Adopted content is labelled legacy",
+    "type": "scenario"
+  },
+  "rq-fb8e760b": {
+    "decl": "Scenario: A fresh exploratory study goes straight to its stages",
+    "file": "workflow",
+    "refs": [],
+    "title": "A fresh exploratory study goes straight to its stages",
     "type": "scenario"
   },
   "rq-fbc524b4": {

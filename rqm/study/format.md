@@ -327,15 +327,20 @@ superseded study without a block was in a mode without pre-registration).
 - `tophat study report <study-id>` <!-- rq-ecacda48 -->
   - Requires status `preregistered` or `reported` in any mode, or status `draft` in `exploratory` or
     `retrospective` mode.
-  - Requires `SUMMARY.md` to exist, parse, name this study, and have `dirty: false`; every result
-    line's variant must be listed in front matter.
-  - Requires the summary not to be stale (its `keys`, when present, equal the current stage keys;
-    see `pipeline.summary-stale` in `rqm/pipeline/snakemake.md`), and the study not to depend on
-    unreported work without an accepting amendment (see `rqm/data.md`).
+  - A study with stages reports from `SUMMARY.md`: it must exist, parse, name this study, and have
+    `dirty: false`, and every result line's variant must be listed in front matter. The summary
+    must not be stale (its `keys`, when present, equal the current stage keys; see
+    `pipeline.summary-stale` in `rqm/pipeline/snakemake.md`), and the study must not depend on
+    unreported work without an accepting amendment (see `rqm/data.md`). Replaces the content of
+    `## Result` with the summary's result lines, verbatim and in order.
+  - A `retrospective` study without stages reports its hand-written `## Result` instead: each line
+    must be a result line of a listed variant with a valid trailing tag group whose tag is
+    `post hoc` (see *Epistemic Tags*); `## Result` is left as written, and the reported study is
+    flagged legacy by `study.result-unverified`. An `exploratory` study without stages has nothing
+    to report from and fails.
   - Requires a `pass` verdict for the current key of every stage that declares `review`, in every
     listed variant (see `rqm/pipeline/snakemake.md`); otherwise it fails naming the
     `tophat stage qc` command of the first one missing.
-  - Replaces the content of `## Result` with the summary's result lines, verbatim and in order.
   - Sets status `reported` if it was `preregistered` or `draft`; otherwise leaves status unchanged.
   - Changes nothing else in the file. Does not require an interactive terminal.
 - `tophat study supersede <old-id> --by <new-id>` <!-- rq-f2c5cd1 --> <!-- rq-ea738ef8 -->
@@ -399,7 +404,8 @@ directory, then rename).
   - `NotInteractive` — `preregister` without an interactive terminal.
   - `ConfirmationMismatch` — the typed ID did not match.
   - `NotReady(Vec<Diagnostic>)` — `preregister` precondition violations.
-  - `Summary(String)` — `report` with a missing, unparseable, dirty, or mismatched `SUMMARY.md`.
+  - `Summary(String)` — `report` with a missing, unparseable, dirty, or mismatched `SUMMARY.md`,
+    or a hand-written retrospective result line that is not a valid `post hoc` result line.
   - `Io(String)`.
 
 ### Functions <!-- rq-e10b269c -->
@@ -1088,6 +1094,21 @@ Feature: Study document format, lifecycle and check rules
     When "tophat study report old-benchmark" is run
     Then the Result section equals the summary's result lines
     And the status is "reported"
+
+  @rq-ae6ec611
+  Scenario: A retrospective study without stages reports hand-written results
+    Given study "old-benchmark" has mode "retrospective", status "draft", a non-empty Question, no stages and a hand-written Result whose lines end in "[post hoc]"
+    When "tophat study report old-benchmark" is run
+    Then the status is "reported"
+    And the Result section is unchanged
+    And "tophat check --strict" reports the legacy diagnostic "study.result-unverified" and exits 0
+
+  @rq-44085c48
+  Scenario: Hand-written retrospective results must be tagged post hoc
+    Given study "old-benchmark" has mode "retrospective", status "draft", no stages and a hand-written Result line ending in "[pre-specified]"
+    When "tophat study report old-benchmark" is run
+    Then the command fails with a Summary error naming that line
+    And the status remains "draft"
 
   # --- Supersession ---
 
