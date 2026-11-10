@@ -1,11 +1,12 @@
 # Feature: Study Document Format and Lifecycle <!-- rq-2db7a1dd -->
 
-A study is the smallest unit of research in a TopHat project: it answers one question with one
-pre-registered primary endpoint and decision rule, and runs end-to-end with its own pipeline. Its
-`STUDY.md` is the study's requirements document. This file specifies the format of `STUDY.md`, the
-study lifecycle and the commands that move a study through it, the generated `SUMMARY.md` that
-results are copied from, and the `study` rule family evaluated by `tophat check` (see
-`rqm/check.md`).
+A study is the smallest unit of research in a TopHat project: it addresses one question in one of
+six modes, runs end-to-end with its own pipeline, and reports result lines that carry their
+epistemic tag. Its `STUDY.md` is the study's requirements document. This file specifies the format
+of `STUDY.md` (front matter, per-mode sections, links between studies), the study lifecycle and the
+commands that move a study through it, the epistemic tags on result lines, the generated
+`SUMMARY.md` that results are copied from, and the `study` rule family evaluated by `tophat check`
+(see `rqm/check.md`).
 
 Pipeline construction (Snakefile, stage keys, provenance), the question tree, and data rules are
 specified elsewhere. This file depends on them only through the interfaces stated below.
@@ -47,11 +48,14 @@ and `rqm/pipeline/snakemake.md`. Other files (scripts) may exist and are not gov
 |---|---|---|---|
 | `study` | string | always | Must equal the study directory name |
 | `title` | string | always | Non-empty, one line |
-| `question` | string | always | ID of the question in the project question tree this study answers; matches `^q-[0-9a-f]{8}$` |
-| `status` | enum | always | `draft`, `preregistered`, `reported`, `superseded`, or `retrospective` |
+| `question` | string | always | ID of the question in the project question tree this study addresses; matches `^q-[0-9a-f]{8}$` |
+| `mode` | enum | always | `confirmatory`, `exploratory`, `descriptive`, `methods`, `replication`, or `retrospective` |
+| `status` | enum | always | `draft`, `preregistered`, `reported`, or `superseded` |
 | `visibility` | enum | always | `public` or `private` |
 | `variants` | list of strings | always | Variant names; non-empty; each matches the study ID pattern; no duplicates |
-| `preregistered` | mapping | see *Lifecycle* | `date` (`YYYY-MM-DD`) and `frozen_hash` (`sha256:` followed by 64 lowercase hex characters); for studies locked with an exploration record also `exploration_hash` (same form) and `deciding_data_seen` (`true` or `false`), see `rqm/study/exploration.md` |
+| `preregistered` | mapping | modes with pre-registration, see *Lifecycle* | `date` (`YYYY-MM-DD`) and `frozen_hash` (`sha256:` followed by 64 lowercase hex characters); for studies locked with an exploration record also `exploration_hash` (same form) and `deciding_data_seen` (`true` or `false`), see `rqm/study/exploration.md`. Absent in `exploratory` and `retrospective` mode studies at every status |
+| `reproduces` | string | iff `mode: replication` | `<study-id>@<pin>`, where `<pin>` is a 40-character lowercase hex project commit; the target study's stage keys are read from its `SUMMARY.md` front matter at that commit |
+| `follows_up`, `reanalyses`, `refutes`, `extends`, `derived_from` | list of strings | optional | Study IDs this study relates to (see *Links*); each entry matches the study ID pattern |
 | `superseded_by` | string | iff `status: superseded` | Study ID of the replacing study |
 | `supersedes` | list of strings | optional | Study IDs this study replaces |
 
@@ -63,32 +67,46 @@ by this rule family.
 ### Body Sections <!-- rq-e9d4388a -->
 
 Sections are `##` headings. Headings inside fenced code blocks are not headings. Section names are
-matched exactly (case-sensitive). The governed sections are:
+matched exactly (case-sensitive). Every study carries these governed sections:
 
 | Section | Frozen | Content |
 |---|---|---|
-| `## Question` | yes | The question, in prose |
-| `## Primary endpoint` | yes | The single quantity that answers the question, and how it is measured |
-| `## Decision rule` | yes | How the endpoint's value maps to an answer, including any thresholds |
-| `## Scenarios` | yes | Testable expectations, as Gherkin (see *Scenarios*) |
+| `## Question` | in modes that pre-register, at pre-registration | The question, in prose |
 | `## Variants` | no | Prose describing each variant listed in front matter |
 | `## Stages` | no | Prose describing the pipeline stages; the machine-readable definition is in `config/` |
-| `## Amendments` | no | Dated changes after pre-registration (see *Amendments*) |
-| `## Result` | no | Result lines copied from `SUMMARY.md` by `tophat study report` |
+| `## Result` | no | Result lines copied from `SUMMARY.md` by `tophat study report`; in `retrospective` mode also hand-written results |
 | `## Interpretation` | no | Free human interpretation of the result |
 
-- Every governed section heading must be present in every status, in any order; a section may be
-  empty where the lifecycle allows.
+and each mode that pre-registers adds its own governed sections:
+
+| Mode | Mode sections | Content |
+|---|---|---|
+| `confirmatory` | `## Primary endpoint`, `## Decision rule`, `## Scenarios` | The single quantity that addresses the question and how it is measured; how the endpoint's value maps to an answer, including any thresholds; testable expectations (see *Scenarios*) |
+| `descriptive` | `## Deliverables`, `## Scenarios` | What is measured, on what data, and published as what dataset or measurement; testable expectations |
+| `methods` | `## Success criteria`, `## Scenarios` | The criteria a developed or evaluated method must meet; testable expectations |
+| `replication` | `## Match criterion`, `## Scenarios` | What counts as a match with the reproduction target (exact hashes or stated tolerances on named quantities); testable expectations |
+
+`exploratory` and `retrospective` mode studies add no mode sections. Their plan is never frozen.
+
+- Every governed section heading of the study's mode must be present in every status, in any
+  order; a section may be empty where the lifecycle allows.
 - A governed heading must not appear more than once.
+- A mode section belonging to another mode (e.g. `## Primary endpoint` in a descriptive study) is
+  an ordinary free section, not governed.
 - Any other `##` sections (e.g. `## Background`) are allowed and not governed.
+- `## Amendments` is a governed section in modes that pre-register: dated changes after
+  pre-registration (see *Amendments*). In `exploratory` and `retrospective` mode it is an ordinary
+  free section.
 - A section's content is every line after its heading up to the next `##` heading outside a fenced
   code block, or the end of the file. `###` and deeper headings are part of the section.
 - A section is **empty** if its content contains only whitespace and HTML comments.
 
 ### Scenarios <!-- rq-04595081 -->
 
-A scenario is one testable expectation of the study. The `## Scenarios` section writes them in
-either or both of two forms:
+A scenario is one testable expectation of the study. Modes that pre-register carry a `## Scenarios`
+section; `exploratory` and `retrospective` mode studies have none (a `## Scenarios` heading there is
+an ordinary free section). The `## Scenarios` section writes scenarios in either or both of two
+forms:
 
 - **Checklist:** a top-level list item outside any fenced block, `- S<n>: <expectation>`, where
   `<n>` is a positive integer without leading zeros and the expectation is non-empty. This is the
@@ -158,6 +176,50 @@ Feature: x-vs-docking
   than the current date.
 - The `## Amendments` section must be empty while the study has no `preregistered` block.
 
+## Links <!-- rq-db6541c1 -->
+
+A study relates to other studies through the relation fields in its front matter (`follows_up`,
+`reanalyses`, `refutes`, `extends`, `derived_from`) and, in `replication` mode, through `reproduces`.
+
+- Relations are stored once, on the relating study. The reverse direction — which studies follow up
+  on, re-analyse, refute or extend a given one — is a query over the studies, not stored backlink
+  fields.
+- Relation fields are written by `tophat study link` and `reproduces` by `tophat study replicate`;
+  they are never edited by hand. They may be added at any status, are not frozen, and do not enter
+  the frozen fingerprint.
+- Every relation entry must name an existing study other than the relating study itself.
+- `reproduces` must name an existing study of this project, and its pin must be a 40-character
+  lowercase hex commit. The target's stage keys are read from its committed `SUMMARY.md` front
+  matter at that commit; those keys define what a reproduction compares against. How a replication
+  study's pipeline re-runs the target's stages and how the comparison becomes result lines are
+  specified in `rqm/pipeline/provenance.md` and `rqm/pipeline/snakemake.md`.
+
+## Epistemic Tags <!-- rq-5cca5697 -->
+
+Every result line — in `SUMMARY.md` and in the `## Result` section, including hand-written
+retrospective results — ends with its **epistemic tag**: a final space-separated `[…]` group
+holding the tag, or the tag, ` · ` (middle dot surrounded by single spaces), and `split:<name>`:
+
+- `- base/score: n=120, rho=0.61 [0.49, 0.71], p<0.001 [pre-specified]`
+- `- base/analyse: rho=0.42 [exploratory · split:held-out]`
+
+- The tag is one of `pre-specified`, `exploratory`, or `post hoc`. The split name matches the study
+  ID pattern. Which datasets form a split, and how the split a line was computed on is derived, are
+  specified in `rqm/data.md`.
+- A line's tag comes from the result stage that produced it: the stage's `epistemic` field in
+  `config/` (see `rqm/pipeline/provenance.md`) overrides the mode default. The mode defaults are
+  `exploratory` for every line of an `exploratory` mode study, `post hoc` for every line of a
+  `retrospective` mode study, and `pre-specified` in `confirmatory`, `descriptive`, `methods` and
+  `replication` mode.
+- `epistemic: pre-specified` on a stage of an `exploratory` or `retrospective` mode study is a
+  configuration error, as is `epistemic` on a stage without `result`.
+- `tophat study summarize` derives each line's tag and writes it on the line; `tophat study report`
+  copies result lines verbatim, so tags reach `## Result` unchanged.
+- A `reported` `confirmatory` study has at least one result line tagged `pre-specified` — the
+  primary endpoint's; its other lines may carry `exploratory` or `post hoc`. A line tagged
+  `pre-specified` in an `exploratory` or `retrospective` mode study is an error: those modes never
+  froze a plan.
+
 ## SUMMARY.md Format <!-- rq-09eda840 -->
 
 `SUMMARY.md` is written by `tophat study summarize` (see `rqm/pipeline/snakemake.md`) and committed.
@@ -173,72 +235,91 @@ It is never hand-edited.
   - `tophat_version` — version string of the `tophat` binary that wrote it.
   - `keys` — optional mapping from `<variant>/<stage>` to the stage key each result line was read
     from. Summaries written by `tophat study summarize` always include it.
+  - `check` — optional: the study's test key, present exactly when the study has test files (see
+    `rqm/pipeline/snakemake.md`).
   - `deciding_data_seen` — optional boolean, copied from the study's `preregistered` block when it
     has one (see `rqm/study/exploration.md`).
 - A body containing a `## Results` section whose content is one or more **result lines**, each a
-  top-level list item `- <variant>/<stage>: <text>`, where `<variant>` is a listed variant and
-  `<stage>` matches the study ID pattern.
+  top-level list item `- <variant>/<stage>: <text> [<epistemic tag>]` (see *Epistemic Tags*), where
+  `<variant>` is a listed variant and `<stage>` matches the study ID pattern.
 
 ## Frozen Fingerprint <!-- rq-08c7718c -->
 
-The frozen fingerprint is computed from the study ID and the four frozen sections:
+The frozen fingerprint is computed from the study ID, the reproduction target, and the frozen
+sections of the study's mode. Only modes that pre-register have one; `exploratory` and
+`retrospective` mode studies never do.
 
 1. Start with the line `study:<study-id>`.
-2. For each frozen section in the fixed order Question, Primary endpoint, Decision rule, Scenarios,
-   append the line `## <section name>` followed by the section's normalized content.
-3. Normalization: convert CRLF line endings to LF, strip trailing whitespace from each line, and
+2. In `replication` mode, append the line `reproduces:<value exactly as in front matter>`.
+3. For each frozen section, in the fixed order of the study's mode — Question first, then the mode
+   sections in the order Primary endpoint, Decision rule, Scenarios (`confirmatory`); Deliverables,
+   Scenarios (`descriptive`); Success criteria, Scenarios (`methods`); Match criterion, Scenarios
+   (`replication`) — append the line `## <section name>` followed by the section's normalized
+   content.
+4. Normalization: convert CRLF line endings to LF, strip trailing whitespace from each line, and
    remove leading and trailing blank lines from the section content.
-4. Join all lines with LF, append a final LF, encode as UTF-8, and compute SHA-256.
-5. The fingerprint is `sha256:` followed by the lowercase hex digest.
+5. Join all lines with LF, append a final LF, encode as UTF-8, and compute SHA-256.
+6. The fingerprint is `sha256:` followed by the lowercase hex digest.
 
 The fingerprint does not depend on the order of sections in the file, on non-frozen sections, or on
-front matter other than the study ID.
+front matter other than the study ID and `reproduces`; it does not depend on the `mode` field, so
+recording a mode never invalidates a recorded fingerprint.
 
 ## Lifecycle <!-- rq-f28e6ab8 -->
 
+Modes that pre-register (`confirmatory`, `descriptive`, `methods`, `replication`) move through
+`draft` → `preregistered` → `reported`. `exploratory` and `retrospective` mode studies move through
+`draft` → `reported` directly and never have a `preregistered` block.
+
 | Status | `preregistered` block | Frozen sections | Result | Tests |
 |---|---|---|---|---|
-| `draft` | absent | may change; may be empty | empty | orphan references warn |
+| `draft` | absent | may change; may be empty | empty; in `retrospective` mode, hand-written result lines (tagged `post hoc`) are allowed and flagged legacy | orphan references warn |
 | `preregistered` | present, fingerprint matches | non-empty, at least one scenario | empty | untested scenarios warn; orphans error |
-| `reported` | present, fingerprint matches | non-empty, at least one scenario | equals `SUMMARY.md` result lines; summary clean | every scenario tested; orphans error |
-| `retrospective` | absent | Question and Primary endpoint non-empty; others may be empty | from `SUMMARY.md` if it exists, otherwise hand-written and flagged legacy | orphans error |
+| `reported` | present and matching in modes that pre-register; absent in `exploratory` and `retrospective` mode | non-empty, at least one scenario, in modes that pre-register | equals `SUMMARY.md` result lines; summary clean; in `retrospective` mode, hand-written result lines without a `SUMMARY.md` are flagged legacy | every scenario tested; orphans error |
 | `superseded` | as before supersession | as before supersession | as before supersession | as before supersession |
+
+In every mode, a `reported` study's `## Question` section is non-empty.
 
 Transitions:
 
-- `draft` → `preregistered`: only by `tophat study preregister`, run by a human.
+- `draft` → `preregistered`: only in modes that pre-register, by `tophat study preregister`, run by
+  a human.
 - `preregistered` → `reported`: by `tophat study report`.
-- `preregistered`, `reported` or `retrospective` → `superseded`: by `tophat study supersede`.
+- `draft` → `reported`: only in `exploratory` and `retrospective` mode, by `tophat study report`.
+- `preregistered` or `reported` → `superseded`: by `tophat study supersede`.
 - A `draft` study is never superseded; it is edited or deleted instead.
-- A `retrospective` study never becomes `preregistered` or `reported`.
+- A study in `exploratory` or `retrospective` mode never becomes `preregistered`.
 
 `tophat check` validates the current state against the table; it does not reconstruct history. A
 `superseded` study is validated by the rules of the status it had before supersession, which is
 inferred: `preregistered` block present and Result non-empty → `reported`; block present and
-Result empty → `preregistered`; block absent → `retrospective`.
+Result empty → `preregistered`; block absent → `reported` (drafts are never superseded, so a
+superseded study without a block was in a mode without pre-registration).
 
 ## Feature API <!-- rq-3fd30bb8 -->
 
 ### Commands <!-- rq-2dd95e98 -->
 
-- `tophat study new <study-id> --question <question-id> [--visibility public|private]` <!-- rq-f689a538 -->
-  - Creates `studies/<study-id>/` containing `STUDY.md` (status `draft`, `variants: [base]`,
-    visibility defaulting to `public`, every governed section heading present and empty except for
-    template guidance comments), `config/base.yaml` (containing `stages: []`), the `Snakefile`
-    stub, and an empty `tests/` directory.
-  - Fails without writing anything if the ID is invalid, the directory already exists, or the
-    question ID does not match the question ID pattern.
+- `tophat study new <study-id> --question <question-id> [--mode <mode>] [--visibility public|private]` <!-- rq-f689a538 -->
+  - Creates `studies/<study-id>/` containing `STUDY.md` (status `draft`, mode defaulting to
+    `confirmatory`, `variants: [base]`, visibility defaulting to `public`, every governed section
+    heading of the mode present and empty except for template guidance comments), `config/base.yaml`
+    (containing `stages: []`), the `Snakefile` stub, and an empty `tests/` directory.
+  - Fails without writing anything if the ID is invalid, the directory already exists, the
+    question ID does not match the question ID pattern, or `--mode` is `replication` (a
+    replication study is created by `tophat study replicate`, which sets its target).
 - `tophat study preregister <study-id>` <!-- rq-bcb83d0a -->
   - Requires standard input and standard output to be interactive terminals; otherwise fails
     without changes, explaining that pre-registration must be done by a human.
-  - Requires status `draft` and that the study has no `error` diagnostics from the `study` rule
-    family when evaluated as if it were `preregistered` with a matching fingerprint (non-empty
-    frozen sections, at least one scenario, valid tags, variant configs consistent).
-  - Explains in plain words what pre-registration does: the Question, Primary endpoint, Decision
-    rule and Scenarios printed below are locked from now on, so the result is judged by the plan
-    made before it was seen; later changes go into dated amendments that say whether results had
-    been seen; the pipeline, variants and stages can still change. Then prints the frozen sections
-    and asks the user to type the study ID to confirm. Any other input aborts without changes.
+  - Requires status `draft`, a mode that pre-registers, and that the study has no `error` diagnostics
+    from the `study` rule family when evaluated as if it were `preregistered` with a matching
+    fingerprint (non-empty frozen sections of the mode, at least one scenario, valid tags, variant
+    configs consistent).
+  - Explains in plain words what pre-registration does: the mode's frozen sections printed below
+    are locked from now on, so the result is judged by the plan made before it was seen; later
+    changes go into dated amendments that say whether results had been seen; the pipeline, variants
+    and stages can still change. Then prints the frozen sections and asks the user to type the
+    study ID to confirm. Any other input aborts without changes.
   - Says what the exploration saw before asking for confirmation, and on confirmation writes
     `EXPLORATION.md` (see `rqm/study/exploration.md`).
   - On confirmation, sets `status: preregistered` and writes `preregistered.date` (current local
@@ -246,23 +327,52 @@ Result empty → `preregistered`; block absent → `retrospective`.
     `preregistered.deciding_data_seen`. Changes nothing else in the file.
   - Prints a reminder to commit `STUDY.md` before running any answer-stage computation.
 - `tophat study report <study-id>` <!-- rq-ecacda48 -->
-  - Requires status `preregistered` or `reported`, or status `retrospective` with a `SUMMARY.md`.
-  - Requires `SUMMARY.md` to exist, parse, name this study, and have `dirty: false`; every result
-    line's variant must be listed in front matter.
-  - Requires the summary not to be stale (its `keys`, when present, equal the current stage keys;
-    see `pipeline.summary-stale` in `rqm/pipeline/snakemake.md`), and the study not to depend on
-    unreported work without an accepting amendment (see `rqm/data.md`).
+  - Requires status `preregistered` or `reported` in any mode, or status `draft` in `exploratory` or
+    `retrospective` mode.
+  - A study with stages reports from `SUMMARY.md`: it must exist, parse, name this study, and have
+    `dirty: false`, and every result line's variant must be listed in front matter. The summary
+    must not be stale (its `keys`, and its `check` when the study has test files, equal the current
+    keys; see `pipeline.summary-stale` in `rqm/pipeline/snakemake.md`), and the study must not
+    depend on unreported work without an accepting amendment (see `rqm/data.md`). Replaces the
+    content of
+    `## Result` with the summary's result lines, verbatim and in order.
+  - A `retrospective` study without stages reports its hand-written `## Result` instead: each line
+    must be a result line of a listed variant with a valid trailing tag group whose tag is
+    `post hoc` (see *Epistemic Tags*); `## Result` is left as written, and the reported study is
+    flagged legacy by `study.result-unverified`. An `exploratory` study without stages has nothing
+    to report from and fails.
   - Requires a `pass` verdict for the current key of every stage that declares `review`, in every
     listed variant (see `rqm/pipeline/snakemake.md`); otherwise it fails naming the
     `tophat stage qc` command of the first one missing.
-  - Replaces the content of `## Result` with the summary's result lines, verbatim and in order.
-  - Sets status `reported` if it was `preregistered`; otherwise leaves status unchanged.
+  - Sets status `reported` if it was `preregistered` or `draft`; otherwise leaves status unchanged.
   - Changes nothing else in the file. Does not require an interactive terminal.
-- `tophat study supersede <old-id> --by <new-id>` <!-- rq-9f2c5cd1 -->
-  - Requires both studies to exist, `<old-id>` to have status `preregistered`, `reported` or
-    `retrospective`, and `<new-id>` to differ from `<old-id>`.
+- `tophat study supersede <old-id> --by <new-id>` <!-- rq-f2c5cd1 --> <!-- rq-ea738ef8 -->
+  - Requires both studies to exist, `<old-id>` to have status `preregistered` or `reported`, and
+    `<new-id>` to differ from `<old-id>`.
   - Sets `<old-id>`'s status to `superseded` and `superseded_by: <new-id>`, and adds `<old-id>` to
     `<new-id>`'s `supersedes` list if not already present.
+- `tophat study replicate <study-id> --question <question-id> --of <study-id>@<commit> [--visibility public|private]` <!-- rq-3250dbea -->
+  - Creates the study exactly as `tophat study new` does with `mode: replication` and, in addition,
+    writes `reproduces: <study-id>@<commit>` to the front matter.
+  - Fails without writing anything under the conditions of `tophat study new`, when the target study
+    does not exist, when the commit is not a 40-character lowercase hex string, or when the
+    target's `SUMMARY.md` at that commit cannot be read from the project's history (its keys are
+    what the reproduction compares against).
+- `tophat study link <study-id> --follows-up|--reanalyses|--refutes|--extends|--derives-from <other-study-id>` <!-- rq-a8e3636b -->
+  - Appends `<other-study-id>` to the named relation list in the study's front matter, creating the
+    field when absent; duplicates are ignored and the list stays sorted by study ID.
+  - Fails without changes when the study does not exist or cannot be parsed, the other study does
+    not exist, or the other study is the study itself.
+  - Works at any status; relation fields are not frozen.
+- `tophat study migrate <study-id>...` <!-- rq-9bc9d54b -->
+  - For each named study, in one atomic write that preserves every other byte of the file:
+    - a study whose front matter has no `mode` and whose status is `draft`, `preregistered`,
+      `reported` or `superseded` gains `mode: confirmatory`;
+    - a study with `status: retrospective` becomes `mode: retrospective` with `status: reported`
+      when its `## Result` is non-empty, and `status: draft` when it is empty.
+  - Leaves a study that needs neither change untouched and says so. Fails without changes for a
+    study whose `status` is `retrospective` and whose front matter already carries a `mode`, or
+    whose `mode` value is invalid.
 
 All commands that modify `STUDY.md` preserve every byte of the file outside the fields and section
 they are specified to change, and write the file atomically (write to a temporary file in the same
@@ -270,12 +380,17 @@ directory, then rename).
 
 ### Types <!-- rq-dacbc76e -->
 
-- `Study` — a parsed study: ID, front-matter fields, governed sections with their content and <!-- rq-8071e60f -->
-  starting line numbers, scenarios (number, title, line), and amendments (date, results seen,
-  reason, line).
-- `Status` — enum `Draft`, `Preregistered`, `Reported`, `Superseded`, `Retrospective`. <!-- rq-5e9d0d62 -->
+- `Study` — a parsed study: ID, front-matter fields (including mode, relation lists and <!-- rq-8071e60f -->
+  `reproduces`), governed sections with their content and starting line numbers, scenarios (number,
+  title, line), and amendments (date, results seen, reason, line).
+- `Status` — enum `Draft`, `Preregistered`, `Reported`, `Superseded`. <!-- rq-5d9d0d62 -->
+- `Mode` — enum `Confirmatory`, `Exploratory`, `Descriptive`, `Methods`, `Replication`, <!-- rq-597a5aff -->
+  `Retrospective`, with a predicate for whether the mode pre-registers.
+- `Relation` — enum `FollowsUp`, `Reanalyses`, `Refutes`, `Extends`, `DerivesFrom`, one variant per <!-- rq-7d5a35b9 -->
+  relation field.
 - `Summary` — a parsed `SUMMARY.md`: study ID, commit, dirty flag, generated timestamp, tophat <!-- rq-6764653f -->
-  version, optional keys, and result lines (variant, stage, text, line).
+  version, optional keys, optional check key, and result lines (variant, stage, text, tag,
+  optional split, line).
 - `StudyError` — error type returned by parsing and by the study commands, with at minimum: <!-- rq-dba2a6b7 -->
   - `InvalidStudyId(String)`.
   - `StudyExists(String)` — `new` on an existing directory.
@@ -283,10 +398,18 @@ directory, then rename).
   - `FrontMatter { path: String, message: String }` — missing delimiters, invalid YAML, missing or
     mistyped fields.
   - `WrongStatus { study: String, status: Status, required: Vec<Status> }`.
+  - `WrongMode { study: String, mode: Mode }` — a command that does not apply to the study's mode,
+    such as `preregister` on an `exploratory` or `retrospective` mode study.
+  - `ModeInvalid(String)`.
+  - `ReproducesInvalid(String)` — malformed target or pin, nonexistent target study, or unreadable
+    target summary at the pin.
+  - `LinkInvalid { study: String, relation: Relation, other: String }`.
+  - `Migration(String)` — `migrate` on a study it cannot convert.
   - `NotInteractive` — `preregister` without an interactive terminal.
   - `ConfirmationMismatch` — the typed ID did not match.
   - `NotReady(Vec<Diagnostic>)` — `preregister` precondition violations.
-  - `Summary(String)` — `report` with a missing, unparseable, dirty, or mismatched `SUMMARY.md`.
+  - `Summary(String)` — `report` with a missing, unparseable, dirty, or mismatched `SUMMARY.md`,
+    or a hand-written retrospective result line that is not a valid `post hoc` result line.
   - `Io(String)`.
 
 ### Functions <!-- rq-e10b269c -->
@@ -309,15 +432,22 @@ front-matter field, heading, scenario, list item or result line where one exists
 | `study.parse-error` | error | `STUDY.md` front matter is missing, not valid YAML, or a field has the wrong type; no further `study` rules run for that study |
 | `study.id-invalid` | error | Directory name does not match the study ID pattern or length |
 | `study.id-mismatch` | error | Front-matter `study` differs from the directory name |
-| `study.field-missing` | error | A required front-matter field is absent |
-| `study.field-invalid` | error | `title` empty, `question` malformed, `status`/`visibility` not an allowed value, `variants` empty, duplicated or malformed |
+| `study.mode-missing` | error | Front matter has no `mode` field; the hint names `tophat study migrate <study>` |
+| `study.mode-invalid` | error | `mode` is not one of `confirmatory`, `exploratory`, `descriptive`, `methods`, `replication`, `retrospective` |
+| `study.status-retrospective` | error | `status` has the value `retrospective` (the pre-mode form); the hint names `tophat study migrate <study>` |
+| `study.field-missing` | error | A required front-matter field other than `mode` is absent (`reproduces` is `study.reproduces-missing`) |
+| `study.field-invalid` | error | `title` empty, `question` malformed, `status`/`mode`/`visibility` not an allowed value (a `status` of `retrospective` is reported as `study.status-retrospective`), `variants` empty, duplicated or malformed |
 | `study.field-unknown` | warning | Unknown front-matter field |
-| `study.section-missing` | error | A governed section heading is absent |
+| `study.section-missing` | error | A governed section heading of the study's mode is absent |
 | `study.section-duplicate` | error | A governed section heading appears more than once |
 | `study.section-empty` | error | A section required non-empty by the lifecycle table is empty |
 | `study.prereg-missing` | error | Status requires a `preregistered` block and it is absent or incomplete |
-| `study.prereg-unexpected` | error | Status `draft` or `retrospective` (or superseded from it) has a `preregistered` block |
+| `study.prereg-unexpected` | error | Status `draft` (or superseded from it), or a study in `exploratory` or `retrospective` mode, has a `preregistered` block |
 | `study.frozen-modified` | error | The recomputed fingerprint differs from `preregistered.frozen_hash` |
+| `study.reproduces-missing` | error | `mode: replication` without a `reproduces` field |
+| `study.reproduces-unexpected` | error | `reproduces` present while `mode` is not `replication` |
+| `study.reproduces-invalid` | error | `reproduces` is malformed, names a study that does not exist, or its pin is not a 40-character lowercase hex commit |
+| `study.link-invalid` | error | A relation entry is malformed, names a study that does not exist, or names the study itself |
 | `study.scenario-untagged` | error | A scenario lacks exactly one `@S<n>` tag |
 | `study.scenario-tag-invalid` | error | A tag is `@S` followed by digits, or a checklist item starts with `S` followed by digits and a colon, but the number is not valid (e.g. `@S0`, `- S01:`) |
 | `study.scenario-duplicate` | error | Two scenarios share a number |
@@ -330,13 +460,17 @@ front-matter field, heading, scenario, list item or result line where one exists
 | `study.amendment-format` | error | An amendment line does not match the format |
 | `study.amendment-date` | error | An amendment date is invalid, before the pre-registration date, or in the future |
 | `study.amendment-unexpected` | error | `## Amendments` is non-empty without a `preregistered` block |
-| `study.result-unexpected` | error | `## Result` is non-empty in `draft` or `preregistered` |
+| `study.result-unexpected` | error | `## Result` is non-empty in `draft` or `preregistered`, except `draft` in `retrospective` mode |
 | `study.result-missing` | error | `## Result` is empty in `reported` |
 | `study.summary-missing` | error | Result must come from `SUMMARY.md` and it is absent |
 | `study.summary-invalid` | error | `SUMMARY.md` cannot be parsed, names another study, or has a result line with an unlisted variant |
 | `study.summary-dirty` | error | Result is copied from a `SUMMARY.md` with `dirty: true` |
 | `study.result-mismatch` | error | `## Result` lines differ from `SUMMARY.md` result lines (compared verbatim after stripping trailing whitespace, in order) |
-| `study.result-unverified` | legacy | A `retrospective` study has a non-empty Result and no `SUMMARY.md` |
+| `study.result-unverified` | legacy | A `retrospective` mode study has a non-empty Result and no `SUMMARY.md` |
+| `study.tag-missing` | error | A result line in `SUMMARY.md` or `## Result` has no valid trailing tag group; the hint names `tophat study summarize` and `tophat study report` |
+| `study.tag-invalid` | error | The trailing tag group of a result line holds an unknown tag, or a split name that does not match the study ID pattern |
+| `study.tag-mode-invalid` | error | A result line is tagged `pre-specified` in an `exploratory` or `retrospective` mode study |
+| `study.no-pre-specified-result` | error | A `reported` `confirmatory` study has no result line tagged `pre-specified` |
 | `study.supersede-target-missing` | error | `superseded_by` names a study that does not exist |
 | `study.supersede-backlink-missing` | error | The replacing study does not list this study in `supersedes` |
 | `study.supersedes-invalid` | error | A `supersedes` entry names a study that does not exist or whose `superseded_by` is not this study |
@@ -347,14 +481,25 @@ front-matter field, heading, scenario, list item or result line where one exists
   style of riprap. The question-tree feature owns their assignment and resolution.
 - "Current date" for amendment validation and pre-registration is the local date of the machine
   running `tophat`.
+- A summary written by a `tophat` version that predates epistemic tags has untagged result lines;
+  those studies report `study.tag-missing` until `tophat study summarize` regenerates the summary
+  (sealed outputs are unchanged, so the regenerated summary differs only by the tags) and `tophat
+  study report` re-copies the lines. This residual state is deliberate: a tag states an epistemic
+  fact, so only regeneration can add it truthfully.
 
 ## Out of Scope <!-- rq-87476c9b -->
 
 - The question tree (`PROJECT.md`) and whether `question` resolves.
 - Pipeline construction, stage keys and provenance, including how the summary stage computes result
   lines and whether code changed after the run that produced `SUMMARY.md`.
+- How a replication study's pipeline re-runs its target and how the comparison becomes result lines
+  (`rqm/pipeline/provenance.md`, `rqm/pipeline/snakemake.md`).
+- Which datasets form a split and how a result line's split is derived (`rqm/data.md`).
+- Stored reverse links: relations live on the relating study; the reverse direction is a query.
+- Which results may be cited as evidence for a question, and with which labels
+  (`rqm/question-tree.md`).
 - Data, visibility-flow, and external-stage rules.
-- Running scenario tests (the pipeline's `check` stage does this).
+- Running scenario tests (the pipeline's check job, see `rqm/pipeline/snakemake.md`).
 - Validating the content of configuration files.
 
 ## Gherkin Scenarios <!-- rq-fbdc50b4 -->
@@ -369,14 +514,27 @@ Feature: Study document format, lifecycle and check rules
   # --- tophat study new ---
 
   @rq-52e3a974
-  Scenario: Create a new study
+  Scenario: Create a new confirmatory study
     When "tophat study new x-vs-docking --question q-1a2b3c4d" is run
-    Then "studies/x-vs-docking/STUDY.md" exists with status "draft", visibility "public" and variants ["base"]
-    And it contains every governed section heading, each with a plain-language comment saying what goes there
+    Then "studies/x-vs-docking/STUDY.md" exists with status "draft", mode "confirmatory", visibility "public" and variants ["base"]
+    And it contains every governed section heading of the confirmatory mode, each with a plain-language comment saying what goes there
     And "studies/x-vs-docking/config/base.yaml" exists and contains "stages: []"
     And "studies/x-vs-docking/Snakefile" equals the stub for "x-vs-docking"
     And the directory "studies/x-vs-docking/tests" exists
     And "tophat check" reports no study errors for "x-vs-docking"
+
+  @rq-2cd827c4
+  Scenario: Create a descriptive study
+    When "tophat study new bench-characterisation --question q-1a2b3c4d --mode descriptive" is run
+    Then its STUDY.md has mode "descriptive"
+    And it contains the governed headings "Question", "Deliverables" and "Scenarios", and no "Primary endpoint" heading
+    And "tophat check" reports no study errors for "bench-characterisation"
+
+  @rq-a091b98c
+  Scenario: Creating a replication study requires the replicate command
+    When "tophat study new rerun-score --question q-1a2b3c4d --mode replication" is run
+    Then the command fails naming "tophat study replicate"
+    And no directory is created
 
   @rq-7fcedcf8
   Scenario: Create a private study
@@ -427,6 +585,24 @@ Feature: Study document format, lifecycle and check rules
     When "tophat check" is run
     Then an error "study.field-invalid" is reported on the status line
 
+  @rq-45f33b14
+  Scenario: Invalid mode value
+    Given study "study-a" has "mode: hybrid"
+    When "tophat check" is run
+    Then an error "study.mode-invalid" is reported
+
+  @rq-bb7f2503
+  Scenario: A study without a mode
+    Given study "study-a" has no "mode" field
+    When "tophat check" is run
+    Then an error "study.mode-missing" is reported with a hint naming "tophat study migrate"
+
+  @rq-b80d58f2
+  Scenario: The pre-mode retrospective status
+    Given study "old-benchmark" has "status: retrospective"
+    When "tophat check" is run
+    Then an error "study.status-retrospective" is reported with a hint naming "tophat study migrate"
+
   @rq-f2be6f14
   Scenario: Unknown front-matter field
     Given study "study-a" has a front-matter field "statsu: draft" in addition to valid fields
@@ -457,6 +633,12 @@ Feature: Study document format, lifecycle and check rules
     Given study "study-a" has a "## Background" section
     When "tophat check" is run
     Then no diagnostic mentions the "Background" section
+
+  @rq-5702c253
+  Scenario: A section of another mode is free text
+    Given descriptive study "bench-characterisation" has a "## Primary endpoint" section
+    When "tophat check" is run
+    Then no "study.section-missing" or "study.section-empty" diagnostic is reported for that section
 
   # --- Scenarios and tests ---
 
@@ -607,6 +789,31 @@ Feature: Study document format, lifecycle and check rules
     When "tophat study preregister study-a" is run in an interactive terminal
     Then the command fails with WrongStatus
 
+  @rq-f7810e6d
+  Scenario: Pre-registering a descriptive study locks its deliverables
+    Given descriptive study "bench-characterisation" has status "draft" with non-empty Question and Deliverables and one tagged scenario
+    When "tophat study preregister bench-characterisation" is run interactively and confirmed
+    Then the status is "preregistered"
+    And "preregistered.frozen_hash" equals the frozen fingerprint of Question, Deliverables and Scenarios
+    When a word in the "## Deliverables" section is changed
+    And "tophat check" is run
+    Then an error "study.frozen-modified" is reported
+
+  @rq-4a0634d3
+  Scenario: Pre-registering a methods study locks its success criteria
+    Given methods study "scoring-v2" has status "draft" with non-empty Question and Success criteria and one tagged scenario
+    When "tophat study preregister scoring-v2" is run interactively and confirmed
+    Then the frozen sections are Question, Success criteria and Scenarios
+
+  @rq-5bdc928b
+  Scenario: Pre-registering a replication study locks its target and match criterion
+    Given study "rerun-score" has mode "replication", status "draft", non-empty Question and Match criterion, one tagged scenario, and "reproduces: x-vs-docking@<full-commit>"
+    When "tophat study preregister rerun-score" is run interactively and confirmed
+    Then the frozen fingerprint covers Question, Match criterion, Scenarios and "reproduces"
+    When the "reproduces" field is changed to another target
+    And "tophat check" is run
+    Then an error "study.frozen-modified" is reported
+
   # --- Frozen sections ---
 
   @rq-a3e1bf1f
@@ -705,7 +912,7 @@ Feature: Study document format, lifecycle and check rules
   Scenario: Report copies result lines verbatim
     Given study "study-a" is preregistered with variants ["base", "b3lyp"]
     And "studies/study-a/SUMMARY.md" names study "study-a", has "dirty: false", and result lines
-      "- base/score: n=120, rho=0.61 [0.49, 0.71], p<0.001" and "- b3lyp/score: n=120, rho=0.58 [0.45, 0.69], p<0.001"
+      "- base/score: n=120, rho=0.61 [0.49, 0.71], p<0.001 [pre-specified]" and "- b3lyp/score: n=120, rho=0.58 [0.45, 0.69], p<0.001 [pre-specified]"
     When "tophat study report study-a" is run
     Then the Result section contains exactly those two lines in that order
     And the status is "reported"
@@ -734,10 +941,29 @@ Feature: Study document format, lifecycle and check rules
     Then the command fails with a Summary error
 
   @rq-13aae895
-  Scenario: Report refuses a draft
-    Given study "study-a" has status "draft" and a valid SUMMARY.md
+  Scenario: Report refuses a confirmatory draft
+    Given study "study-a" has mode "confirmatory", status "draft" and a valid SUMMARY.md
     When "tophat study report study-a" is run
     Then the command fails with WrongStatus
+
+  @rq-86197e5c
+  Scenario: An exploratory study reports from a draft
+    Given study "outlier-dig" has mode "exploratory", status "draft" and a clean current SUMMARY.md with the result line "- base/analyse: mean shift of 0.4 sigma [exploratory]"
+    When "tophat study report outlier-dig" is run
+    Then the Result section contains that line verbatim
+    And the status is "reported"
+
+  @rq-07a5604f
+  Scenario: An exploratory study cannot pre-register
+    Given study "outlier-dig" has mode "exploratory" and status "draft"
+    When "tophat study preregister outlier-dig" is run in an interactive terminal
+    Then the command fails with WrongMode
+
+  @rq-91befa97
+  Scenario: A reported exploratory study needs a non-empty question
+    Given study "outlier-dig" has mode "exploratory", status "reported" and an empty Question section
+    When "tophat check" is run
+    Then an error "study.section-empty" is reported
 
   @rq-e7c71a2b
   Scenario: Re-reporting refreshes the result
@@ -776,15 +1002,72 @@ Feature: Study document format, lifecycle and check rules
   @rq-588d371f
   Scenario: Summary line with an unlisted variant
     Given study "study-a" is reported with variants ["base"]
-    And SUMMARY.md contains the result line "- pbe/score: n=10, rho=0.3"
+    And SUMMARY.md contains the result line "- pbe/score: n=10, rho=0.3 [pre-specified]"
     When "tophat check" is run
     Then an error "study.summary-invalid" is reported
 
-  # --- Retrospective studies ---
+  # --- Epistemic tags ---
+
+  @rq-ca33392b
+  Scenario: Confirmatory result lines are tagged pre-specified by default
+    Given study "study-a" is reported and its SUMMARY.md result line reads "- base/score: n=120, rho=0.61 [0.49, 0.71], p<0.001 [pre-specified]"
+    When "tophat check" is run
+    Then no tag diagnostic is reported for that line
+
+  @rq-2e3e53d6
+  Scenario: A confirmatory study overrides a secondary result stage to exploratory
+    Given confirmatory study "study-a" has result stages "score" and "diagnose"
+    And stage "diagnose" declares "epistemic: exploratory"
+    When "tophat study summarize study-a" is run
+    Then the line of "diagnose" ends in "[exploratory]" and the line of "score" ends in "[pre-specified]"
+
+  @rq-c5610a75
+  Scenario: A result line without a tag
+    Given study "study-a" is reported and its SUMMARY.md result line reads "- base/score: n=120, rho=0.61"
+    When "tophat check" is run
+    Then an error "study.tag-missing" is reported naming "tophat study summarize"
+
+  @rq-6d57beba
+  Scenario: An unknown tag
+    Given study "study-a" is reported and its result line ends in "[maybe]"
+    When "tophat check" is run
+    Then an error "study.tag-invalid" is reported
+
+  @rq-f4564941
+  Scenario: A malformed split name
+    Given study "study-a" is reported and its result line ends in "[pre-specified · split:Held Out]"
+    When "tophat check" is run
+    Then an error "study.tag-invalid" is reported
+
+  @rq-9dd27343
+  Scenario: A valid split tag passes the syntax
+    Given study "study-a" is reported and its result line ends in "[pre-specified · split:held-out]"
+    When "tophat check" is run
+    Then no tag diagnostic is reported
+
+  @rq-b096fd9e
+  Scenario: Pre-specified is impossible in exploratory mode
+    Given study "outlier-dig" is exploratory and reported with a result line ending in "[pre-specified]"
+    When "tophat check" is run
+    Then an error "study.tag-mode-invalid" is reported
+
+  @rq-d952ad20
+  Scenario: An exploratory study cannot declare a pre-specified stage
+    Given study "outlier-dig" is exploratory and has a result stage with "epistemic: pre-specified"
+    When "tophat check" is run
+    Then an error "pipeline.config-invalid" is reported
+
+  @rq-43f53fc5
+  Scenario: A reported confirmatory study must have a pre-specified line
+    Given study "study-a" is confirmatory and reported with every result line ending in "[exploratory]"
+    When "tophat check" is run
+    Then an error "study.no-pre-specified-result" is reported
+
+  # --- Retrospective mode studies ---
 
   @rq-c55140e8
   Scenario: Retrospective study with hand-written result is flagged as legacy
-    Given study "old-benchmark" has status "retrospective", non-empty Question and Primary endpoint, a non-empty Result, and no SUMMARY.md
+    Given study "old-benchmark" has mode "retrospective", status "reported", a non-empty Question, a hand-written Result whose lines end in "[post hoc]", and no SUMMARY.md
     When "tophat check --strict" is run
     Then a legacy diagnostic "study.result-unverified" is reported
     And no error or warning is reported for "old-benchmark"
@@ -792,29 +1075,44 @@ Feature: Study document format, lifecycle and check rules
 
   @rq-c985c1d6
   Scenario: Retrospective study with a pipeline uses strict results
-    Given study "old-benchmark" has status "retrospective" and a SUMMARY.md
+    Given study "old-benchmark" has mode "retrospective", status "reported" and a SUMMARY.md
     And its Result section differs from the summary's result lines
     When "tophat check" is run
     Then an error "study.result-mismatch" is reported
 
   @rq-c65bf680
-  Scenario: Retrospective study may have empty decision rule and scenarios
-    Given study "old-benchmark" has status "retrospective" with empty Decision rule and Scenarios sections
+  Scenario: Retrospective mode has no endpoint or scenario sections
+    Given study "old-benchmark" has mode "retrospective" and status "reported" with no "Primary endpoint", "Decision rule" or "Scenarios" headings
     When "tophat check" is run
-    Then no "study.section-empty" or "study.no-scenarios" diagnostic is reported
+    Then no "study.section-missing" or "study.no-scenarios" diagnostic is reported
 
   @rq-647102ae
-  Scenario: Retrospective study cannot carry a pre-registration block
-    Given study "old-benchmark" has status "retrospective" and a "preregistered" block
+  Scenario: A study in a mode without pre-registration cannot carry a pre-registration block
+    Given study "old-benchmark" has mode "retrospective", status "reported" and a "preregistered" block
     When "tophat check" is run
     Then an error "study.prereg-unexpected" is reported
 
   @rq-3a79a3f7
-  Scenario: Retrospective study can be reported from a summary
-    Given study "old-benchmark" has status "retrospective" and a clean SUMMARY.md
+  Scenario: Retrospective study reports from a summary
+    Given study "old-benchmark" has mode "retrospective", status "draft" and a clean SUMMARY.md
     When "tophat study report old-benchmark" is run
     Then the Result section equals the summary's result lines
-    And the status remains "retrospective"
+    And the status is "reported"
+
+  @rq-ae6ec611
+  Scenario: A retrospective study without stages reports hand-written results
+    Given study "old-benchmark" has mode "retrospective", status "draft", a non-empty Question, no stages and a hand-written Result whose lines end in "[post hoc]"
+    When "tophat study report old-benchmark" is run
+    Then the status is "reported"
+    And the Result section is unchanged
+    And "tophat check --strict" reports the legacy diagnostic "study.result-unverified" and exits 0
+
+  @rq-44085c48
+  Scenario: Hand-written retrospective results must be tagged post hoc
+    Given study "old-benchmark" has mode "retrospective", status "draft", no stages and a hand-written Result line ending in "[pre-specified]"
+    When "tophat study report old-benchmark" is run
+    Then the command fails with a Summary error naming that line
+    And the status remains "draft"
 
   # --- Supersession ---
 
@@ -867,6 +1165,123 @@ Feature: Study document format, lifecycle and check rules
     And study "study-a" has status "reported" with no "superseded_by"
     When "tophat check" is run
     Then an error "study.supersedes-invalid" is reported for study "study-b"
+
+  @rq-7737c032
+  Scenario: Supersede an exploratory reported study
+    Given study "outlier-dig" has mode "exploratory", status "reported", and study "study-b" exists
+    When "tophat study supersede outlier-dig --by study-b" is run
+    Then study "outlier-dig" has status "superseded" and "superseded_by: study-b"
+
+  # --- Replication creation ---
+
+  @rq-0725f8c7
+  Scenario: Replicate creates a study with a pinned target
+    Given study "x-vs-docking" is reported at commit "<full-commit>"
+    When "tophat study replicate rerun-score --question q-1a2b3c4d --of x-vs-docking@<full-commit>" is run
+    Then "studies/rerun-score/STUDY.md" exists with mode "replication", status "draft" and "reproduces: x-vs-docking@<full-commit>"
+    And it contains the governed headings "Question" and "Match criterion"
+    And "tophat check" reports no study errors for "rerun-score"
+
+  @rq-4c09754e
+  Scenario: Replicate refuses a pin that is not a commit
+    When "tophat study replicate rerun-score --question q-1a2b3c4d --of x-vs-docking@latest" is run
+    Then the command fails with ReproducesInvalid
+    And no directory is created
+
+  @rq-2a8b349a
+  Scenario: Replicate refuses a missing target
+    When "tophat study replicate rerun-score --question q-1a2b3c4d --of no-such-study@<full-commit>" is run
+    Then the command fails with ReproducesInvalid
+    And no directory is created
+
+  @rq-016794d2
+  Scenario: Reproduction target missing on a replication study
+    Given study "rerun-score" has mode "replication" and no "reproduces" field
+    When "tophat check" is run
+    Then an error "study.reproduces-missing" is reported
+
+  @rq-a779cb78
+  Scenario: Reproduces outside replication mode
+    Given study "study-a" has mode "confirmatory" and "reproduces: x-vs-docking@<full-commit>"
+    When "tophat check" is run
+    Then an error "study.reproduces-unexpected" is reported
+
+  @rq-ac7347b1
+  Scenario: Reproduces with a malformed pin
+    Given study "rerun-score" has mode "replication" and "reproduces: x-vs-docking@main"
+    When "tophat check" is run
+    Then an error "study.reproduces-invalid" is reported
+
+  # --- Study links ---
+
+  @rq-9c500c8f
+  Scenario: Link records a follow-up relation
+    Given studies "study-a" and "study-b" exist
+    When "tophat study link study-b --follows-up study-a" is run
+    Then study "study-b" lists "study-a" under "follows_up"
+    And no other byte of its STUDY.md changed
+
+  @rq-c2acb5c8
+  Scenario: Link ignores duplicates and keeps the list sorted
+    Given studies "study-a", "study-b" and "study-c" exist
+    And study "study-c" lists ["study-b"] under "follows_up"
+    When "tophat study link study-c --follows-up study-a" is run
+    Then study "study-c" lists ["study-a", "study-b"] under "follows_up"
+
+  @rq-2a6c36db
+  Scenario: Link refuses a missing study
+    When "tophat study link study-a --refutes no-such-study" is run
+    Then the command fails with LinkInvalid
+    And STUDY.md is unchanged
+
+  @rq-2dd238fe
+  Scenario: Link refuses the study itself
+    When "tophat study link study-a --extends study-a" is run
+    Then the command fails with LinkInvalid
+    And STUDY.md is unchanged
+
+  @rq-98115a64
+  Scenario: A dangling relation entry
+    Given study "study-a" lists ["gone"] under "refutes"
+    When "tophat check" is run
+    Then an error "study.link-invalid" is reported
+
+  @rq-6422ad44
+  Scenario: Links are not frozen
+    Given study "study-b" is preregistered
+    When "tophat study link study-b --follows-up study-a" is run
+    And "tophat check" is run
+    Then no "study.frozen-modified" error is reported
+
+  # --- Migration ---
+
+  @rq-014c049f
+  Scenario: Migrate adds the mode of an existing study
+    Given study "study-a" is reported and has no "mode" field
+    When "tophat study migrate study-a" is run
+    Then its front matter has "mode: confirmatory"
+    And every other byte of STUDY.md is unchanged
+    And "tophat check" reports no study errors for "study-a"
+    And no "study.frozen-modified" error is reported
+
+  @rq-c3ccc5f9
+  Scenario: Migrate converts a reported pre-mode retrospective study
+    Given study "old-benchmark" has "status: retrospective", a non-empty Result and no "mode" field
+    When "tophat study migrate old-benchmark" is run
+    Then its front matter has "mode: retrospective" and "status: reported"
+
+  @rq-3c9a3c47
+  Scenario: Migrate converts an in-progress pre-mode retrospective study
+    Given study "old-benchmark" has "status: retrospective", an empty Result and no "mode" field
+    When "tophat study migrate old-benchmark" is run
+    Then its front matter has "mode: retrospective" and "status: draft"
+
+  @rq-ed56d920
+  Scenario: Migrate leaves a current study untouched
+    Given study "study-a" has mode "confirmatory" and status "draft"
+    When "tophat study migrate study-a" is run
+    Then STUDY.md is byte-for-byte unchanged
+    And the command says there was nothing to migrate
 
   # --- File safety ---
 

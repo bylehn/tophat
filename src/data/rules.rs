@@ -6,9 +6,12 @@ use super::cache::{HashCache, mtime_ns};
 use super::manifest::list_manifests;
 use super::refs::{accepts, config_occurrences, manifests_by_ref, study_status};
 use super::roots::{ROOTS_FILE, load_roots_lenient};
+use super::splits::{SPLITS_FILE, load_splits, split_of};
 use super::{DATASETS_DIR, DatasetKind, DatasetRef};
 use crate::check::{Diagnostic, Project, Severity};
-use crate::study::{STUDIES_DIR, STUDY_FILE, Status, parse_study_text};
+use crate::study::{
+    STUDIES_DIR, STUDY_FILE, SUMMARY_FILE, Status, parse_study_text, parse_summary,
+};
 
 fn diag(
     rule: &'static str,
@@ -50,6 +53,8 @@ pub fn data_rules_with(project: &Project, env: &dyn Fn(&str) -> Option<String>) 
     }
     check_manifests(project, &roots, &mut out);
     check_references(project, &mut out);
+    let splits = check_splits(project, &mut out);
+    check_split_tags(project, splits.as_ref(), &mut out);
     out
 }
 
@@ -331,6 +336,184 @@ fn check_references(project: &Project, out: &mut Vec<Diagnostic>) {
                     Severity::Legacy,
                     format!("`{reference}` is declared data; its history is not verified"),
                     "Re-derive it from raw data in a study when possible",
+                ));
+            }
+        }
+    }
+}
+
+// rq-4a8ef3c9
+/// Checks the split registry: references, partition-source agreement, containment and overlaps.
+/// Returns the parsed registry when it is valid.
+fn check_splits(project: &Project, out: &mut Vec<Diagnostic>) -> Option<super::Splits> {
+    let splits = match load_splits(project) {
+        Ok(splits) => splits,
+        Err(message) => {
+            out.push(diag(
+                "data.splits-invalid",
+                Severity::Error,
+                SPLITS_FILE,
+                None,
+                format!("The split registry is invalid: {message}"),
+                "Splits are written by `tophat data split`",
+            ));
+            return None;
+        }
+    };
+    let manifests = manifests_by_ref(project);
+    let mut partition_sources: BTreeMap<String, Option<DatasetRef>> = BTreeMap::new();
+    for split in &splits.splits {
+        if let Some(partition) = &split.partition {
+            match partition_sources.get(partition) {
+                Some(existing) if *existing != split.source => out.push(diag(
+                    "data.splits-invalid",
+                    Severity::Error,
+                    SPLITS_FILE,
+                    None,
+                    format!(
+                        "Split `{}` in partition `{partition}` names a different source than the other splits",
+                        split.name
+                    ),
+                    "Make every split of a partition name the same source, or none",
+                )),
+                None => {
+                    partition_sources.insert(partition.clone(), split.source.clone());
+                }
+                _ => {}
+            }
+        }
+        let mut member_hashes = BTreeSet::new();
+        for r in &split.datasets {
+            let Some(manifest) = manifests.get(r) else {
+                out.push(diag(
+                    "data.reference-unknown",
+                    Severity::Error,
+                    SPLITS_FILE,
+                    None,
+                    format!(
+                        "Split `{}` names dataset `{r}`, which does not exist",
+                        split.name
+                    ),
+                    "Register the dataset, or fix the split",
+                ));
+                continue;
+            };
+            if manifest.retired.is_some() {
+                out.push(diag(
+                    "data.reference-retired",
+                    Severity::Error,
+                    SPLITS_FILE,
+                    None,
+                    format!("Split `{}` names retired dataset `{r}`", split.name),
+                    "Repin the split to a non-retired version",
+                ));
+            }
+            member_hashes.extend(manifest.files.iter().map(|f| f.sha256.clone()));
+        }
+        if let (Some(source), true) = (&split.source, !member_hashes.is_empty()) {
+            if let Some(m) = manifests.get(source) {
+                let source_hashes: BTreeSet<String> =
+                    m.files.iter().map(|f| f.sha256.clone()).collect();
+                if !member_hashes.is_subset(&source_hashes) {
+                    out.push(diag(
+                        "data.split-not-contained",
+                        Severity::Error,
+                        SPLITS_FILE,
+                        None,
+                        format!(
+                            "Split `{}` has a file whose content is not in its source `{source}`",
+                            split.name
+                        ),
+                        "Make the split a part of its source, or fix `source`",
+                    ));
+                }
+            }
+        }
+    }
+    // Overlaps within a partition.
+    for (i, a) in splits.splits.iter().enumerate() {
+        let Some(partition) = &a.partition else {
+            continue;
+        };
+        let a_hashes: BTreeSet<String> = a
+            .datasets
+            .iter()
+            .filter_map(|r| manifests.get(r))
+            .flat_map(|m| m.files.iter().map(|f| f.sha256.clone()))
+            .collect();
+        for b in splits.splits.iter().skip(i + 1) {
+            if b.partition.as_ref() != Some(partition) {
+                continue;
+            }
+            let overlaps = b
+                .datasets
+                .iter()
+                .filter_map(|r| manifests.get(r))
+                .any(|m| m.files.iter().any(|f| a_hashes.contains(&f.sha256)));
+            if overlaps {
+                out.push(diag(
+                    "data.split-overlap",
+                    Severity::Error,
+                    SPLITS_FILE,
+                    None,
+                    format!(
+                        "Splits `{}` and `{}` of partition `{partition}` share file content",
+                        a.name, b.name
+                    ),
+                    "Parts of one partition must be disjoint by content",
+                ));
+            }
+        }
+    }
+    Some(splits)
+}
+
+// rq-b138c677
+/// Checks every summary result line's split tag against the split derived from its lineage.
+fn check_split_tags(project: &Project, splits: Option<&super::Splits>, out: &mut Vec<Diagnostic>) {
+    let Some(splits) = splits else { return };
+    for id in project.list_dir(STUDIES_DIR).unwrap_or_default() {
+        let summary_file = format!("{STUDIES_DIR}/{id}/{SUMMARY_FILE}");
+        let Ok(summary) = parse_summary(&project.root().join(&summary_file)) else {
+            continue;
+        };
+        let Some(keys) = &summary.keys else { continue };
+        for line in &summary.results {
+            let Some(tag) = &line.tag else { continue };
+            let label = format!("{}/{}", line.variant, line.stage);
+            let Some(key) = keys.get(&label) else {
+                continue;
+            };
+            if let Some(split) = &tag.split
+                && splits.get(split).is_none()
+            {
+                out.push(diag(
+                    "data.split-unknown",
+                    Severity::Error,
+                    &summary_file,
+                    Some(line.line),
+                    format!("Result line names split `{split}`, which is not declared"),
+                    "Declare it with `tophat data split`, or regenerate the summary",
+                ));
+            }
+            let Ok(Some(consumed)) =
+                super::splits::consumed_datasets(project, &id, &line.stage, key)
+            else {
+                continue;
+            };
+            let derived = split_of(splits, &consumed);
+            if derived != tag.split {
+                let named = derived.as_deref().unwrap_or("no split");
+                out.push(diag(
+                    "data.split-tag-mismatch",
+                    Severity::Error,
+                    &summary_file,
+                    Some(line.line),
+                    format!(
+                        "Result line's split `{}` differs from the split derived from its lineage ({named})",
+                        tag.split.as_deref().unwrap_or("none")
+                    ),
+                    "Regenerate the summary with `tophat study summarize`",
                 ));
             }
         }

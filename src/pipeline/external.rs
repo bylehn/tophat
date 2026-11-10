@@ -1392,6 +1392,7 @@ mod tests {
             review: None,
             trial: None,
             result: None,
+            epistemic: None,
             file: String::new(),
             line: None,
         };

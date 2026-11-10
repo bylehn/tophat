@@ -461,6 +461,7 @@ impl LineageNode {
 
 struct LineageContext {
     manifests: BTreeMap<DatasetRef, Manifest>,
+    splits: super::Splits,
     results: Option<PathBuf>,
     depth_limit: usize,
     /// Studies whose plan was informed by their deciding data.
@@ -491,6 +492,14 @@ impl LineageContext {
                     .push(self.stage(&p.study, &p.stage, &p.key, depth + 1))
             }
             _ => {}
+        }
+        let split_names = super::splits::splits_of_dataset(&self.splits, &m.reference());
+        if !split_names.is_empty() {
+            let annotation = format!("[split {}]", split_names.join(", "));
+            node.mark = Some(match node.mark {
+                Some(mark) => format!("{mark} {annotation}"),
+                None => annotation,
+            });
         }
         node
     }
@@ -557,6 +566,7 @@ pub fn lineage(project_root: &Path, target: &str) -> Result<LineageNode, DataErr
     let project = Project::new(project_root);
     let ctx = LineageContext {
         manifests: super::refs::manifests_by_ref(&project),
+        splits: super::splits::load_splits(&project).unwrap_or_default(),
         results: load_roots(project_root)?
             .location(RESULTS_ROOT)
             .map(Path::to_path_buf),

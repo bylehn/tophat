@@ -21,7 +21,7 @@ use tophat::pipeline::{
     generate_rules, items_of, load_pipeline, pipeline_rules, qc, qc_status, seal, stub, summarize,
     write_summary,
 };
-use tophat::study::{Console, StudyError, new_study, parse_summary, report};
+use tophat::study::{Console, Mode, StudyError, new_study, parse_summary, report};
 
 // --- Fixtures -------------------------------------------------------------------------------
 
@@ -411,7 +411,14 @@ fn snakemake_tests_skip_locally_without_snakemake() {
 fn new_studies_get_the_stub() {
     let env = Env::new();
     env.write("PROJECT.md", "# P\n\n## q-1a2b3c4d · Q?\nstatus: open\n");
-    new_study(&env.root(), "y-study", "q-1a2b3c4d", false).unwrap();
+    new_study(
+        &env.root(),
+        "y-study",
+        "q-1a2b3c4d",
+        false,
+        Mode::Confirmatory,
+    )
+    .unwrap();
     assert_eq!(env.read("studies/y-study/Snakefile"), stub("y-study"));
     assert!(
         env.read("studies/y-study/config/base.yaml")
@@ -1139,7 +1146,10 @@ fn summarize_sealed_results() {
     let lines: Vec<&str> = summary.results.iter().map(|l| l.raw.as_str()).collect();
     assert_eq!(
         lines,
-        ["- base/analyse: rho=0.61", "- pbe/analyse: rho=0.58"]
+        [
+            "- base/analyse: rho=0.61 [pre-specified]",
+            "- pbe/analyse: rho=0.58 [pre-specified]"
+        ]
     );
     let keys = summary.keys.unwrap();
     assert_eq!(keys["base/analyse"], env.keys("base")["analyse"]);

@@ -6,6 +6,7 @@ mod manifest;
 mod refs;
 mod roots;
 mod rules;
+mod splits;
 
 use std::fmt;
 use std::fs::File;
@@ -26,6 +27,10 @@ pub use manifest::{
 pub use refs::{ConfigRef, study_dataset_refs, unreported_dependencies};
 pub use roots::{Roots, load_roots, load_roots_with, render_roots};
 pub use rules::{data_rules, data_rules_with};
+pub use splits::{
+    SPLITS_FILE, Split, Splits, consumed_datasets, declare_split, load_splits, parse_splits,
+    remove_split, render_splits, split_of, splits_of_dataset,
+};
 
 pub(crate) use manifest::is_safe_relative_path;
 pub(crate) use refs::manifests_by_ref;
@@ -94,6 +99,19 @@ pub enum DataError {
     NotSealed(String),
     NotClean(String),
     OutputMismatch(Vec<String>),
+    RetiredReference(String),
+    SplitUnknown(String),
+    SplitOverlap {
+        split: String,
+        other: String,
+    },
+    SplitNotContained {
+        split: String,
+        source: String,
+    },
+    SplitSourceConflict {
+        partition: String,
+    },
     /// `.tophat/roots.yaml` or `.tophat/roots.local.yaml` is invalid.
     Roots(String),
     Manifest {
@@ -143,6 +161,20 @@ impl fmt::Display for DataError {
                 f,
                 "stage output files differ from their provenance record: {}",
                 files.join(", ")
+            ),
+            DataError::RetiredReference(r) => write!(f, "dataset `{r}` is retired"),
+            DataError::SplitUnknown(n) => write!(f, "no split `{n}` is declared"),
+            DataError::SplitOverlap { split, other } => write!(
+                f,
+                "split `{split}` shares file content with split `{other}` of the same partition"
+            ),
+            DataError::SplitNotContained { split, source } => write!(
+                f,
+                "split `{split}` has a file whose content is not in its source `{source}`"
+            ),
+            DataError::SplitSourceConflict { partition } => write!(
+                f,
+                "the splits of partition `{partition}` must all name the same source"
             ),
             DataError::Roots(m) => write!(f, "invalid data roots: {m}"),
             DataError::Manifest { path, message } => write!(f, "{path}: {message}"),

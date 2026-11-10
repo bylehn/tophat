@@ -11,7 +11,7 @@ use chrono::NaiveDate;
 use tophat::check::{Diagnostic, Project, RULE_FAMILIES, Severity};
 use tophat::cli::{EXIT_OK, Streams, run};
 use tophat::study::{
-    Console, GOVERNED_SECTIONS, Status, StudyError, exploration_hash, frozen_fingerprint,
+    Console, Mode, Status, StudyError, exploration_hash, frozen_fingerprint, governed_sections,
     new_study, parse_exploration, parse_study_text, preregister, report, study_rules_at, supersede,
 };
 
@@ -89,6 +89,7 @@ Feature: x-vs-docking
 struct Doc {
     id: String,
     status: String,
+    mode: String,
     variants: Vec<String>,
     extra_front: Vec<String>,
     sections: Vec<(String, String)>,
@@ -109,9 +110,10 @@ impl Doc {
         Doc {
             id: id.to_string(),
             status: "draft".into(),
+            mode: "confirmatory".into(),
             variants: vec!["base".into()],
             extra_front: Vec::new(),
-            sections: GOVERNED_SECTIONS
+            sections: governed_sections(Mode::Confirmatory)
                 .iter()
                 .map(|n| (n.to_string(), content(n).to_string()))
                 .collect(),
@@ -120,6 +122,11 @@ impl Doc {
 
     fn status(mut self, status: &str) -> Doc {
         self.status = status.into();
+        self
+    }
+
+    fn mode(mut self, mode: &str) -> Doc {
+        self.mode = mode.into();
         self
     }
 
@@ -149,9 +156,10 @@ impl Doc {
     fn render(&self) -> String {
         let mut text = format!(
             "---\nstudy: {}\ntitle: \"X versus docking\"\nquestion: q-1a2b3c4d\nstatus: {}\n\
-             visibility: public\nvariants: [{}]\n",
+             mode: {}\nvisibility: public\nvariants: [{}]\n",
             self.id,
             self.status,
+            self.mode,
             self.variants.join(", ")
         );
         for line in &self.extra_front {
@@ -189,13 +197,25 @@ impl Doc {
     }
 }
 
-const RESULT_LINES: [&str; 1] = ["- base/score: n=120, rho=0.61 [0.49, 0.71], p<0.001"];
+const RESULT_LINES: [&str; 1] =
+    ["- base/score: n=120, rho=0.61 [0.49, 0.71], p<0.001 [pre-specified]"];
 
 fn summary_text(id: &str, dirty: bool, lines: &[&str]) -> String {
     format!(
         "---\nstudy: {id}\ncommit: \"0123456789abcdef0123456789abcdef01234567\"\ndirty: {dirty}\n\
          generated: \"2026-10-01T12:00:00Z\"\ntophat_version: \"0.1.0\"\n---\n\n## Results\n\n{}\n",
         lines.join("\n")
+    )
+}
+
+/// A summary carrying the study's current test key, for studies with test files.
+fn summary_text_with_check(root: &Path, id: &str, dirty: bool, lines: &[&str]) -> String {
+    let key = tophat::pipeline::test_key(root, id)
+        .unwrap()
+        .expect("the study has test files");
+    summary_text(id, dirty, lines).replace(
+        "tophat_version: \"0.1.0\"\n",
+        &format!("tophat_version: \"0.1.0\"\ncheck: \"{key}\"\n"),
     )
 }
 
@@ -214,11 +234,11 @@ fn write_study(p: &TempProject, doc: &Doc) {
 /// Writes a fully consistent reported study: summary and a test covering S1.
 fn write_reported(p: &TempProject, id: &str) {
     write_study(p, &Doc::reported(id));
+    p.write(&format!("studies/{id}/tests/test_scores.py"), "# th:S1\n");
     p.write(
         &format!("studies/{id}/SUMMARY.md"),
-        &summary_text(id, false, &RESULT_LINES),
+        &summary_text_with_check(p.root(), id, false, &RESULT_LINES),
     );
-    p.write(&format!("studies/{id}/tests/test_scores.py"), "# th:S1\n");
 }
 
 fn diagnostics(p: &TempProject) -> Vec<Diagnostic> {
@@ -292,13 +312,20 @@ fn preregister_typing(p: &TempProject, id: &str, answer: &str) -> (Result<(), St
 #[test] // rq-52e3a974 rq-f689a538
 fn create_a_new_study() {
     let p = TempProject::new();
-    new_study(p.root(), "x-vs-docking", "q-1a2b3c4d", false).unwrap();
+    new_study(
+        p.root(),
+        "x-vs-docking",
+        "q-1a2b3c4d",
+        false,
+        Mode::Confirmatory,
+    )
+    .unwrap();
     let text = p.study_text("x-vs-docking");
     let study = parse_study_text("x-vs-docking", "STUDY.md", &text).unwrap();
     assert_eq!(study.status(), Some(Status::Draft));
     assert_eq!(study.front.visibility.as_ref().unwrap().value, "public");
     assert_eq!(study.variants(), ["base".to_string()]);
-    for name in GOVERNED_SECTIONS {
+    for name in governed_sections(Mode::Confirmatory) {
         assert!(study.section(name).is_some(), "missing ## {name}");
     }
     assert!(
@@ -357,7 +384,13 @@ fn create_a_private_study() {
 fn reject_an_invalid_study_id() {
     let p = TempProject::new();
     assert_eq!(
-        new_study(p.root(), "X_vs_Docking", "q-1a2b3c4d", false),
+        new_study(
+            p.root(),
+            "X_vs_Docking",
+            "q-1a2b3c4d",
+            false,
+            Mode::Confirmatory
+        ),
         Err(StudyError::InvalidStudyId("X_vs_Docking".into()))
     );
     assert!(!p.file("studies").exists());
@@ -366,10 +399,23 @@ fn reject_an_invalid_study_id() {
 #[test] // rq-36072125
 fn reject_a_study_id_that_already_exists() {
     let p = TempProject::new();
-    new_study(p.root(), "x-vs-docking", "q-1a2b3c4d", false).unwrap();
+    new_study(
+        p.root(),
+        "x-vs-docking",
+        "q-1a2b3c4d",
+        false,
+        Mode::Confirmatory,
+    )
+    .unwrap();
     p.write("studies/x-vs-docking/STUDY.md", "edited\n");
     assert_eq!(
-        new_study(p.root(), "x-vs-docking", "q-1a2b3c4d", false),
+        new_study(
+            p.root(),
+            "x-vs-docking",
+            "q-1a2b3c4d",
+            false,
+            Mode::Confirmatory
+        ),
         Err(StudyError::StudyExists("x-vs-docking".into()))
     );
     assert_eq!(p.study_text("x-vs-docking"), "edited\n");
@@ -378,7 +424,7 @@ fn reject_a_study_id_that_already_exists() {
 #[test] // rq-bb0e22f1
 fn reject_a_malformed_question_id() {
     let p = TempProject::new();
-    assert!(new_study(p.root(), "x-vs-docking", "Q1", false).is_err());
+    assert!(new_study(p.root(), "x-vs-docking", "Q1", false, Mode::Confirmatory).is_err());
     assert!(!p.file("studies/x-vs-docking").exists());
 }
 
@@ -1093,8 +1139,8 @@ fn amendment_on_a_draft() {
 // --- Reporting --------------------------------------------------------------------------------
 
 const TWO_LINES: [&str; 2] = [
-    "- base/score: n=120, rho=0.61 [0.49, 0.71], p<0.001",
-    "- b3lyp/score: n=120, rho=0.58 [0.45, 0.69], p<0.001",
+    "- base/score: n=120, rho=0.61 [0.49, 0.71], p<0.001 [pre-specified]",
+    "- b3lyp/score: n=120, rho=0.58 [0.45, 0.69], p<0.001 [pre-specified]",
 ];
 
 #[test] // rq-46e1add4 rq-ecacda48
@@ -1189,10 +1235,10 @@ fn report_refuses_a_draft() {
 fn re_reporting_refreshes_the_result() {
     let p = TempProject::new();
     write_reported(&p, "study-a");
-    let new_line = "- base/score: n=130, rho=0.63 [0.52, 0.72], p<0.001";
+    let new_line = "- base/score: n=130, rho=0.63 [0.52, 0.72], p<0.001 [pre-specified]";
     p.write(
         "studies/study-a/SUMMARY.md",
-        &summary_text("study-a", false, &[new_line]),
+        &summary_text_with_check(p.root(), "study-a", false, &[new_line]),
     );
     report(p.root(), "study-a").unwrap();
     let study = parse_study_text("study-a", "STUDY.md", &p.study_text("study-a")).unwrap();
@@ -1257,7 +1303,10 @@ fn empty_result_in_a_reported_study() {
 fn summary_line_with_an_unlisted_variant() {
     let p = TempProject::new();
     write_reported(&p, "study-a");
-    let lines = [RESULT_LINES[0], "- pbe/score: n=10, rho=0.3"];
+    let lines = [
+        RESULT_LINES[0],
+        "- pbe/score: n=10, rho=0.3 [pre-specified]",
+    ];
     p.write(
         "studies/study-a/SUMMARY.md",
         &summary_text("study-a", false, &lines),
@@ -1272,8 +1321,15 @@ fn summary_line_with_an_unlisted_variant() {
 
 fn retrospective(id: &str) -> Doc {
     Doc::draft(id)
-        .status("retrospective")
-        .set("Result", "- base/score: rho=0.5 (from the 2024 report)")
+        .mode("retrospective")
+        .status("reported")
+        .without("Primary endpoint")
+        .without("Decision rule")
+        .without("Scenarios")
+        .set(
+            "Result",
+            "- base/score: rho=0.5 (from the 2024 report) [post hoc]",
+        )
 }
 
 #[test] // rq-c55140e8 rq-f28e6ab8
@@ -1306,14 +1362,9 @@ fn retrospective_study_with_a_pipeline_uses_strict_results() {
 #[test] // rq-c65bf680 rq-f28e6ab8
 fn retrospective_study_may_have_empty_decision_rule_and_scenarios() {
     let p = TempProject::new();
-    write_study(
-        &p,
-        &retrospective("old-benchmark")
-            .set("Decision rule", "")
-            .set("Scenarios", ""),
-    );
+    write_study(&p, &retrospective("old-benchmark"));
     let ds = diagnostics(&p);
-    assert!(with_rule(&ds, "study.section-empty").is_empty());
+    assert!(with_rule(&ds, "study.section-missing").is_empty());
     assert!(with_rule(&ds, "study.no-scenarios").is_empty());
     assert_clean(&ds);
 }
@@ -1321,7 +1372,12 @@ fn retrospective_study_may_have_empty_decision_rule_and_scenarios() {
 #[test] // rq-647102ae rq-f28e6ab8
 fn retrospective_study_cannot_carry_a_preregistration_block() {
     let p = TempProject::new();
-    write_study(&p, &retrospective("old-benchmark").prereg_block());
+    write_study(
+        &p,
+        &retrospective("old-benchmark")
+            .status("draft")
+            .prereg_block(),
+    );
     assert_eq!(
         with_rule(&diagnostics(&p), "study.prereg-unexpected").len(),
         1
@@ -1331,17 +1387,18 @@ fn retrospective_study_cannot_carry_a_preregistration_block() {
 #[test] // rq-3a79a3f7 rq-ecacda48
 fn retrospective_study_can_be_reported_from_a_summary() {
     let p = TempProject::new();
-    write_study(&p, &retrospective("old-benchmark"));
+    let post_hoc = ["- base/score: n=120, rho=0.61 [post hoc]"];
+    write_study(&p, &retrospective("old-benchmark").status("draft"));
     p.write(
         "studies/old-benchmark/SUMMARY.md",
-        &summary_text("old-benchmark", false, &RESULT_LINES),
+        &summary_text("old-benchmark", false, &post_hoc),
     );
     report(p.root(), "old-benchmark").unwrap();
     let study =
         parse_study_text("old-benchmark", "STUDY.md", &p.study_text("old-benchmark")).unwrap();
-    assert_eq!(study.status(), Some(Status::Retrospective));
+    assert_eq!(study.status(), Some(Status::Reported));
     let lines: Vec<String> = study.result_lines().into_iter().map(|(_, l)| l).collect();
-    assert_eq!(lines, RESULT_LINES);
+    assert_eq!(lines, post_hoc);
     assert_clean(&diagnostics(&p));
 }
 

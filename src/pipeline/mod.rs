@@ -1,6 +1,7 @@
 //! Study pipelines: stage configuration, stage keys and provenance records. Specified in
 //! `rqm/pipeline/provenance.md`.
 
+mod check;
 mod config;
 mod external;
 mod generate;
@@ -12,6 +13,10 @@ mod summary;
 
 use std::fmt;
 
+pub use check::{
+    TEST_KEY_FORMAT, check_key_stale, check_record_clean, check_record_dir, check_record_path,
+    check_record_sealed, run_tests, test_files, test_key,
+};
 pub use config::{
     ExternalConfig, PipelineConfig, StageConfig, StageInput, TemplatePart, config_path,
     load_pipeline, load_variant_lenient, parse_template,
