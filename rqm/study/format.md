@@ -235,6 +235,8 @@ It is never hand-edited.
   - `tophat_version` — version string of the `tophat` binary that wrote it.
   - `keys` — optional mapping from `<variant>/<stage>` to the stage key each result line was read
     from. Summaries written by `tophat study summarize` always include it.
+  - `check` — optional: the study's test key, present exactly when the study has test files (see
+    `rqm/pipeline/snakemake.md`).
   - `deciding_data_seen` — optional boolean, copied from the study's `preregistered` block when it
     has one (see `rqm/study/exploration.md`).
 - A body containing a `## Results` section whose content is one or more **result lines**, each a
@@ -329,9 +331,10 @@ superseded study without a block was in a mode without pre-registration).
     `retrospective` mode.
   - A study with stages reports from `SUMMARY.md`: it must exist, parse, name this study, and have
     `dirty: false`, and every result line's variant must be listed in front matter. The summary
-    must not be stale (its `keys`, when present, equal the current stage keys; see
-    `pipeline.summary-stale` in `rqm/pipeline/snakemake.md`), and the study must not depend on
-    unreported work without an accepting amendment (see `rqm/data.md`). Replaces the content of
+    must not be stale (its `keys`, and its `check` when the study has test files, equal the current
+    keys; see `pipeline.summary-stale` in `rqm/pipeline/snakemake.md`), and the study must not
+    depend on unreported work without an accepting amendment (see `rqm/data.md`). Replaces the
+    content of
     `## Result` with the summary's result lines, verbatim and in order.
   - A `retrospective` study without stages reports its hand-written `## Result` instead: each line
     must be a result line of a listed variant with a valid trailing tag group whose tag is
@@ -386,7 +389,8 @@ directory, then rename).
 - `Relation` — enum `FollowsUp`, `Reanalyses`, `Refutes`, `Extends`, `DerivesFrom`, one variant per <!-- rq-7d5a35b9 -->
   relation field.
 - `Summary` — a parsed `SUMMARY.md`: study ID, commit, dirty flag, generated timestamp, tophat <!-- rq-6764653f -->
-  version, optional keys, and result lines (variant, stage, text, tag, optional split, line).
+  version, optional keys, optional check key, and result lines (variant, stage, text, tag,
+  optional split, line).
 - `StudyError` — error type returned by parsing and by the study commands, with at minimum: <!-- rq-dba2a6b7 -->
   - `InvalidStudyId(String)`.
   - `StudyExists(String)` — `new` on an existing directory.
@@ -495,7 +499,7 @@ front-matter field, heading, scenario, list item or result line where one exists
 - Which results may be cited as evidence for a question, and with which labels
   (`rqm/question-tree.md`).
 - Data, visibility-flow, and external-stage rules.
-- Running scenario tests (the pipeline's `check` stage does this).
+- Running scenario tests (the pipeline's check job, see `rqm/pipeline/snakemake.md`).
 - Validating the content of configuration files.
 
 ## Gherkin Scenarios <!-- rq-fbdc50b4 -->

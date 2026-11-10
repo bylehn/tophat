@@ -134,6 +134,14 @@
     "title": "Datasets",
     "type": "section"
   },
+  "rq-02245feb": {
+    "decl": "### The check job",
+    "file": "pipeline/snakemake",
+    "level": 3,
+    "refs": [],
+    "title": "The check job",
+    "type": "section"
+  },
   "rq-027991e8": {
     "decl": "## Out of Scope",
     "file": "template/agents",
@@ -840,6 +848,13 @@
     "title": "Job Script",
     "type": "section"
   },
+  "rq-138b025c": {
+    "decl": "Scenario: A test edited during the check fails with a key mismatch",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "A test edited during the check fails with a key mismatch",
+    "type": "scenario"
+  },
   "rq-13a88566": {
     "decl": "Scenario: Reported study whose question is still open",
     "file": "workflow",
@@ -1523,6 +1538,13 @@
     "title": "th-question",
     "type": "section"
   },
+  "rq-22119ec7": {
+    "decl": "- `tophat study test <study> --key <key>`",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
   "rq-226c596c": {
     "decl": "### GUIDE.md",
     "file": "template/project",
@@ -1803,6 +1825,13 @@
     "title": "Summary goes stale when the code changes",
     "type": "scenario"
   },
+  "rq-265cb93c": {
+    "decl": "Scenario: Trial runs have no check job",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Trial runs have no check job",
+    "type": "scenario"
+  },
   "rq-26afc755": {
     "decl": "Scenario: The hook is skipped without tophat or a container runtime",
     "file": "template/project",
@@ -2072,6 +2101,13 @@
     "file": "study/format",
     "refs": [],
     "title": "Create a descriptive study",
+    "type": "scenario"
+  },
+  "rq-2d800e95": {
+    "decl": "Scenario: A failing scenario test blocks the summary",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "A failing scenario test blocks the summary",
     "type": "scenario"
   },
   "rq-2da2ae3f": {
@@ -2769,6 +2805,13 @@
       }
     ],
     "title": "Project run options are appended and validated",
+    "type": "scenario"
+  },
+  "rq-3c5a51df": {
+    "decl": "Scenario: The summary goes stale when tests change",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "The summary goes stale when tests change",
     "type": "scenario"
   },
   "rq-3c9a3c47": {
@@ -3609,6 +3652,13 @@
       }
     ],
     "title": "A recorded resolution never changes",
+    "type": "scenario"
+  },
+  "rq-4f452155": {
+    "decl": "Scenario: An uncommitted test makes the summary dirty",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "An uncommitted test makes the summary dirty",
     "type": "scenario"
   },
   "rq-4f95e12e": {
@@ -6143,6 +6193,13 @@
     "title": "Check Rules (`pipeline` family, tools)",
     "type": "section"
   },
+  "rq-856a5dc4": {
+    "decl": "Scenario: Editing a test re-runs only the check job",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "Editing a test re-runs only the check job",
+    "type": "scenario"
+  },
   "rq-8595614d": {
     "decl": "Scenario: A result line's split tag matches its lineage",
     "file": "data",
@@ -6250,6 +6307,13 @@
       }
     ],
     "title": "Julia is added when selected",
+    "type": "scenario"
+  },
+  "rq-87e05653": {
+    "decl": "Scenario: A test file without the executable bit fails the job",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "A test file without the executable bit fails the job",
     "type": "scenario"
   },
   "rq-8848775c": {
@@ -10192,6 +10256,13 @@
     "title": "tophat",
     "type": "api-item"
   },
+  "rq-d8eefe11": {
+    "decl": "Scenario: A study without tests has no check job",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "A study without tests has no check job",
+    "type": "scenario"
+  },
   "rq-d94a6490": {
     "decl": "- `Project` — a read-only view of the project used by rule families: the project root and accessors",
     "file": "check",
@@ -11238,6 +11309,13 @@
       }
     ],
     "title": "A stage cannot be both a tool stage and an external stage",
+    "type": "scenario"
+  },
+  "rq-ee51b4e6": {
+    "decl": "Scenario: The check job runs the scenario tests",
+    "file": "pipeline/snakemake",
+    "refs": [],
+    "title": "The check job runs the scenario tests",
     "type": "scenario"
   },
   "rq-ee88aae5": {

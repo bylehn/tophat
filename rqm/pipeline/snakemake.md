@@ -4,8 +4,8 @@ Every study with stages runs end-to-end with one Snakemake command. Nobody write
 the study's `Snakefile` is a fixed stub that asks `tophat` to generate the rules from the study's
 configuration every time Snakemake starts. Generated rules run each stage in its pixi environment,
 seal its output (see `rqm/pipeline/provenance.md`), fan out over items where configured, stop at
-human QC gates, and finally write `SUMMARY.md`, from which `tophat study report` copies results
-(see `rqm/study/format.md`).
+human QC gates, run the study's scenario tests, and finally write `SUMMARY.md`, from which
+`tophat study report` copies results (see `rqm/study/format.md`).
 
 ## Running a Study <!-- rq-1339368c -->
 
@@ -15,17 +15,18 @@ From the project root:
 pixi run snakemake -s studies/<study>/Snakefile --cores <n>
 ```
 
-The default target is `summary`, which builds every stage for every variant listed in `STUDY.md`
-and then writes `SUMMARY.md`. The target `variant_<variant>` builds every stage of one variant
-without writing the summary. `tophat run` (see `rqm/workflow.md`) wraps this command.
+The default target is `summary`, which builds every stage for every variant listed in `STUDY.md`,
+runs the study's scenario tests, and then writes `SUMMARY.md`. The target `variant_<variant>` builds
+every stage of one variant without writing the summary. `tophat run` (see `rqm/workflow.md`) wraps
+this command.
 
 For a study with status `draft` in a mode that pre-registers (see `rqm/study/format.md`), the
 generated rules contain only the **trial** targets `trial` (every variant) and `trial_<variant>`,
 which build trial outputs (see `rqm/workflow.md`) with each stage's `trial` overrides applied,
 never write the summary, and end by running `tophat study exploration <study>` (see
-`rqm/study/exploration.md`). For every other status — and for every study in `exploratory` or
-`retrospective` mode, whose runs are real from the start — they contain the targets above and no
-trial targets.
+`rqm/study/exploration.md`), and contain no check job. For every other status — and for every study
+in `exploratory` or `retrospective` mode, whose runs are real from the start — they contain the
+targets above and no trial targets.
 
 ## The Snakefile Stub <!-- rq-fbc524b4 -->
 
@@ -112,11 +113,36 @@ For a stage with `foreach: <input>`:
   with a message naming them.
 - If one item fails, Snakemake retries only that item; sealed items are kept.
 
+### The check job <!-- rq-02245feb -->
+
+A study's scenario tests (see `rqm/study/format.md`) run in the pipeline as one generated **check
+job**. It exists exactly when the study has at least one test file (a regular file under
+`studies/<study>/tests/`, recursively) — one job per study, not per variant; a study without test
+files has no check job, and nothing gates its summary on tests.
+
+- The job's **test key** is `sk-` followed by the first 16 lowercase hex characters of the SHA-256
+  of the key text: the line `tophat-test-key/1`, the line `env <environment hash>` of the
+  `default` environment, and one line `test <path> <sha256>` per test file, sorted by path, with
+  paths relative to the study directory and `/`-separated. Editing a test file, adding one, or
+  upgrading the `default` environment re-runs the check job and nothing else.
+- The rule is named `check_<key without "sk-">` and its output is
+  `<results root>/<study>/.check/<key>/provenance.json`, the **check record**. Like a stage output,
+  a sealed check record is never re-run.
+- The job runs `tophat study test <study> --key <key>` (see *Feature API*), which runs every test
+  file as a command in the project's `default` pixi environment, from the study directory. Each
+  test file carries its interpreter's shebang line and the executable bit (git preserves it), so
+  any language available in the project environment works with no configuration. A test file
+  without the executable bit fails the job naming the file and the `chmod` command that fixes it;
+  a test that exits non-zero fails the job naming the test, and nothing is written.
+- The `summary` rule takes the check record as an input (see *Summary rule*): the summary is
+  written only when every scenario test passes. Trial rules contain no check job — a trial run
+  reports nothing, so nothing gates it on tests.
+
 ### Summary rule <!-- rq-bdfef246 -->
 
 The `summary` rule depends on the stage-level non-trial record of every stage with `result`, for
-every listed variant, and runs `tophat study summarize <study>`. `STUDY.md` is never an input of any
-rule.
+every listed variant, and on the check record when the study has test files, and runs `tophat
+study summarize <study>`. `STUDY.md` is never an input of any rule.
 
 ## Validation and Review <!-- rq-dc1e521d -->
 
@@ -174,8 +200,9 @@ whether an intermediate result makes scientific sense.
 - `commit` is the project's `HEAD`.
 - `dirty` is `true` if any provenance record the result lines derive from is not clean: the result
   stage's record and, transitively through `stage:` inputs, every upstream record, including each
-  fan-out item's record.
+  fan-out item's record — and, when the study has test files, the check record.
 - `keys` maps each `<variant>/<stage>` result line to the key it was read from.
+- `check` is the study's test key, written when the study has test files (see *The check job*).
 - `generated` is the current time and `tophat_version` the running version.
 
 ## Feature API <!-- rq-0a8079d6 -->
@@ -203,7 +230,22 @@ whether an intermediate result makes scientific sense.
 - `tophat study summarize <study>` <!-- rq-23fa4a9a -->
   - Writes `SUMMARY.md` as specified under *Summaries*. Fails, writing nothing, if the study has no
     stage with `result`, any required output is not sealed under its current key (listing them),
+    the study has test files and no check record is sealed for the current test key (listing it),
     a result file does not have exactly one non-empty line, or the project is not a git repository.
+- `tophat study test <study> --key <key>` <!-- rq-22119ec7 -->
+  - Recomputes the study's test key and fails with `KeyMismatch` if it differs from `--key` (a test
+    file was added, removed or edited while the job ran). Requires at least one test file, and
+    fails naming the study when it has none.
+  - Runs every test file, sorted by path, as a command in the project's `default` pixi environment
+    from the study directory, showing each test's output as it runs. A test file without the
+    executable bit fails the run naming the file and the `chmod` command that fixes it; the first
+    test that exits non-zero ends the run with a non-zero exit naming the test; in both cases
+    nothing is written.
+  - On success writes the check record `<results root>/<study>/.check/<key>/provenance.json`
+    atomically: the test key, the environment hash, every test file with its SHA-256, the project
+    commit, whether every test file is committed unchanged at that commit (`clean`, with
+    `unclean_files` listing those that are not), and the time.
+  - Used by the check job; not normally run by hand.
 
 ### Functions <!-- rq-5ea916b5 -->
 
@@ -219,13 +261,19 @@ whether an intermediate result makes scientific sense.
 | `pipeline.snakefile-missing` | error | A study with stages has no `Snakefile` |
 | `pipeline.snakefile-modified` | error | A study's `Snakefile` differs from the stub |
 | `pipeline.qc-invalid` | error | A file under `qc/` is not `qc/<stage>/<key>.md`, cannot be parsed, has a `stage` or `key` disagreeing with its path, a `verdict` other than `pass` or `fail`, or names a stage that is not gated in any variant |
-| `pipeline.summary-stale` | warning in `draft`; error in `preregistered` and `reported` | `SUMMARY.md` has `keys` and an entry differs from the current key of that variant and stage, or names a result stage or variant that no longer exists |
+| `pipeline.summary-stale` | warning in `draft`; error in `preregistered` and `reported` | `SUMMARY.md` has `keys` and an entry differs from the current key of that variant and stage, or names a result stage or variant that no longer exists, or the study has test files and the summary's `check` is absent or differs from the current test key |
 
 ## Assumptions <!-- rq-b4d5c830 -->
 
 - Snakemake and pixi are installed in the project environment; `tophat` is on `PATH` inside it.
 - Snakemake is always run from the project root.
 - A study ID is a valid path segment, so the stub's paths need no quoting.
+- A test file is an executable script whose shebang line names an interpreter of the project's
+  `default` environment; the interpreters of the languages chosen at generation are installed there.
+- A summary written by a `tophat` version that predates the check job has no `check` field; for a
+  study with test files it is stale until the pipeline re-runs the check job and `tophat study
+  summarize` regenerates the summary. This residual state is deliberate: a `check` key states that
+  those tests passed, so only a re-run can add it truthfully.
 
 ## Out of Scope <!-- rq-c0a68ab3 -->
 
@@ -488,6 +536,82 @@ Feature: Snakemake pipelines, QC gates and summaries
     Given "studies/x-vs-docking/qc/prepare/<key>.md" exists
     When "tophat check" is run
     Then an error "pipeline.qc-invalid" is reported
+
+  # --- The check job ---
+
+  @rq-ee51b4e6
+  Scenario: The check job runs the scenario tests
+    Given Snakemake is available
+    And the study is preregistered
+    And the executable test files "tests/test_scores.jl" and "tests/test_filter.sh" exist
+    When the pipeline is run
+    Then every test file runs as a command in the "default" environment from the study directory
+    And "<results root>/x-vs-docking/.check/<test key>/provenance.json" is written listing both files with their SHA-256 hashes
+    And SUMMARY.md is written with "check" equal to the test key
+    And the check job runs once, not once per variant
+
+  @rq-2d800e95
+  Scenario: A failing scenario test blocks the summary
+    Given Snakemake is available
+    And the executable test file "tests/test_scores.jl" exists and exits 1
+    When the pipeline is run
+    Then the run fails naming "tests/test_scores.jl"
+    And no check record is written
+    And SUMMARY.md is not written
+
+  @rq-87e05653
+  Scenario: A test file without the executable bit fails the job
+    Given Snakemake is available
+    And the test file "tests/test_scores.jl" exists without the executable bit
+    When the pipeline is run
+    Then the check job fails naming the file and "chmod"
+    And no check record is written
+
+  @rq-138b025c
+  Scenario: A test edited during the check fails with a key mismatch
+    Given the check job started with test key K
+    And "tests/test_scores.jl" was edited before the record was written
+    When "tophat study test x-vs-docking --key K" is run
+    Then the command fails with KeyMismatch
+    And no record is written
+
+  @rq-856a5dc4
+  Scenario: Editing a test re-runs only the check job
+    Given Snakemake is available and the pipeline has completed
+    When "tests/test_scores.jl" is edited and the pipeline is run
+    Then the check job runs into a new key directory
+    And no stage job runs
+    And SUMMARY.md is re-written with the new test key
+
+  @rq-265cb93c
+  Scenario: Trial runs have no check job
+    Given Snakemake is available
+    And the study is a draft in a mode that pre-registers
+    And the executable test file "tests/test_scores.jl" exists
+    When "tophat run x-vs-docking --draft" is run
+    Then no directory exists under "<results root>/x-vs-docking/.check/"
+
+  @rq-4f452155
+  Scenario: An uncommitted test makes the summary dirty
+    Given Snakemake is available
+    And the study is preregistered and "tests/test_scores.jl" has uncommitted changes
+    When the pipeline is run and the check job succeeds
+    Then the check record is not clean and names the test file in "unclean_files"
+    And SUMMARY.md has "dirty: true"
+
+  @rq-3c5a51df
+  Scenario: The summary goes stale when tests change
+    Given Snakemake is available and the study is reported from a current summary
+    When "tests/test_scores.jl" is edited and committed
+    And "tophat check" is run
+    Then an error "pipeline.summary-stale" is reported for the study
+
+  @rq-d8eefe11
+  Scenario: A study without tests has no check job
+    Given Snakemake is available and the study has no test files
+    When the pipeline is run
+    Then SUMMARY.md is written without a "check" field
+    And no directory exists under "<results root>/x-vs-docking/.check/"
 
   # --- Summaries ---
 

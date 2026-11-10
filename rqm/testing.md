@@ -96,8 +96,9 @@ expect:
 Valid (each expects exit 0 and no error diagnostics): a fresh project; a reported study with a clean,
 current summary built from a fan-out pipeline with a QC gate; a published dataset consumed by a
 second reported study; a retrospective study consuming a declared dataset (legacy diagnostics
-only); an ingested external stage; a question answered by citing an exploratory study with its
-label, with an emerged follow-up question.
+only); an ingested external stage; a reported study on the held-out part of a partitioned dataset
+whose result lines carry their split tags; a question answered by citing an exploratory study with
+its label, with an emerged follow-up question.
 
 Broken (each expects exactly its diagnostic or failure):
 
@@ -106,6 +107,9 @@ Broken (each expects exactly its diagnostic or failure):
 | Frozen section edited after pre-registration | `study.frozen-modified` |
 | Scenario without a test in a reported study | `study.scenario-untested` |
 | Result from a dirty commit | `study.summary-dirty` |
+| Result line without its epistemic tag | `study.tag-missing` |
+| Exploratory study with a pre-registration block | `study.prereg-unexpected` |
+| Summary predating the current scenario tests | `pipeline.summary-stale` |
 | Dataset file whose content changed | `data.file-changed` |
 | Missing QC verdict before a consuming stage | the generated rule stops before the consumer (`stage qc-status` exits 2) |
 | Study citing a question that does not exist | `question.unknown-reference` |
@@ -113,6 +117,10 @@ Broken (each expects exactly its diagnostic or failure):
 | Answered question citing an exploratory study without a label | `question.evidence-tag-mismatch` |
 | Stage consuming another study's unpublished output (a `stage:` input naming that study's stage) | `pipeline.config-invalid` |
 | Pinned dataset retired for a defect | `data.reference-retired` |
+| Splits of one partition that share a file | `data.split-overlap` |
+| Split part with a file outside its source | `data.split-not-contained` |
+| Result line whose split tag contradicts its lineage | `data.split-tag-mismatch` |
+| Result line naming an undeclared split | `data.split-unknown` |
 | Study reported while a producer is unreported | `data.producer-unreported` (error) |
 | Private dataset consumed by a public study | `data.visibility-leak` |
 | External receipt for another key | `stage external` exits 1 with `KeyMismatch` |
@@ -141,8 +149,9 @@ pseudo-terminal) on `PATH` and network access for the packages:
    folder back without kept files, and run again.
 5. Give QC verdicts through a pseudo-terminal as the run stops at each gate; run until the summary
    is written; `tophat study report`; require `tophat check --strict` to report no errors.
-6. Verify the outputs, provenance records (including the `external` record), the summary's keys and
-   result lines, and that `tophat data lineage` leads from the result to the generated data.
+6. Verify the outputs, provenance records (including the `external` record and the check record of
+   the scenario tests), the summary's keys and result lines, and that `tophat data lineage` leads
+   from the result to the generated data.
 7. Change the tool pin to the second commit, commit, and run: exactly `score`, `analyse` and the
    summary run again (Snakemake's job list), and `generate` and `filter` are untouched.
 8. Exercise the failing returns: a job folder returned after a configuration change (stale key), a

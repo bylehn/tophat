@@ -244,6 +244,11 @@ version.
   that existed before adoption. They are registered with an ID and hashes like any dataset, plus a
   human-written statement of their origin. Lineage stops at them and is marked *declared, not
   verified*; studies may consume them, and every result depending on one is labelled as such.
+- **Data splits.** A project declares named splits of its data — the training and held-out parts
+  of a benchmark, a pilot — in a committed registry written by commands, never by hand. Parts of
+  one partition are verified pairwise disjoint by content hash and contained in the dataset
+  version they come out of, so a result claimed on one part is guaranteed free of another; every
+  result line carries the split it was computed on.
 - **Lineage in both directions** is a CLI query: from any result or dataset back to the raw data it
   came from, and from any dataset forward to every study that consumed it. Which study ran on which
   data is always answerable from the committed manifests alone.
@@ -496,9 +501,6 @@ provide Snakemake and pixi for the end-to-end tests to count as a gate.
 
 ## Open Questions
 
-- Exact set and names of `th-` skills and how plan, build, QC and reporting are split between them.
-- Whether scenario tests run as part of the pipeline (e.g. a generated check stage before the
-  summary) or separately.
 - Object-store data roots (e.g. `s3://`), which are not supported yet.
 - How a declared dataset can later be upgraded to verified (e.g. a study that re-derives it from raw
   data and shows matching hashes).
@@ -506,11 +508,5 @@ provide Snakemake and pixi for the end-to-end tests to count as a gate.
 - Whether notebooks in exploration get any tooling beyond being excluded from citation.
 - Which batch schedulers external-stage job scripts support beyond SLURM, and how job arrays and
   multi-job stages map onto a single receipt.
-- The exact front-matter fields, per-mode lifecycle rules, epistemic tags, link fields and check
-  diagnostics introduced by study modes — owned by the revisions of the study-format, exploration,
-  workflow, question-tree and data feature files.
-- The migration of existing `status: retrospective` studies to `mode: retrospective` with
-  `status: reported`, and whether the CLI applies it during `copier update`.
-- Data-reuse accounting beyond `deciding_data_seen`: how per-result data-split tags are derived,
-  recorded and checked.
-- How `emerged` questions differ from `open` ones in check rules and status output.
+- Whether `copier update` applies `tophat study migrate` to existing studies automatically, or the
+  human runs it after the update.
