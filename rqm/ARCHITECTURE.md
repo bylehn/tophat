@@ -8,8 +8,17 @@ turn intent into traceable, reviewable written requirements before acting) to sc
 rather than software features: a study's plan plays the role a requirements file plays for code.
 
 The guiding promise is **verifiable provenance**: every reported result can be traced, mechanically
-and without trusting the LLM, back to the pre-registered question and endpoint it answers, the code
-and tool versions that computed it, the environment it ran in, and the data it consumed.
+and without trusting the LLM, back to the question it answers, the plan it followed (pre-registered
+where its mode locks one), the code and tool versions that computed it, the environment it ran in,
+and the data it consumed.
+
+Provenance and epistemic status are separate axes. **Provenance is unconditional**: trial runs,
+exploratory investigations, notebooks and retrospective write-ups all keep records, because what
+ran, on what data, and with what code is valuable for every kind of work. **Epistemic status is a
+label on results** — pre-specified, exploratory, post hoc — inferred by skills from the scientist's
+stated intent and recorded by the CLI; never a form the scientist fills in, never a gate on the
+workflow. This lets the workflow be a loop rather than a funnel: findings raise follow-up questions,
+replications and refutations are first-class studies, and all of them keep the same provenance.
 
 TopHat is a community open-source project aimed at the broader scientific community. It must be
 general across scientific domains, documented, and stable across template versions. Generated
@@ -28,43 +37,76 @@ A generated project organizes work in these levels:
 |---|---|---|---|
 | **Project** | One repository and one overarching research question | No | Living |
 | **Question tree** | The project question decomposed into sub-questions, each with a stable ID | No | Living |
-| **Study** | The smallest unit that answers **one** question with **one** pre-registered primary endpoint and decision rule | Yes, end-to-end | `draft` → `preregistered` → `reported` (or `superseded`); `retrospective` for adopted past work |
+| **Study** | The smallest unit that addresses **one** question in one of six modes | Yes, end-to-end | `draft` → `preregistered` → `reported` (or `superseded`); the mode decides whether `preregistered` exists |
 | **Variant** | The same study and endpoint under a different setting (method, level of theory, tool version, data subset) | Yes | Within its study |
 | **Stage** | One step of a study's pipeline, with a cached, provenance-stamped output | Yes | — |
 | **Dataset** | Raw data, or a study output published for other studies, with a stable name and version | No | Immutable per version |
 | **Tool** | General-purpose code used by studies, including code developed for this project's needs | In its own repo | Versioned independently |
-| **Exploration** | Scratch analyses and notebooks | Yes | Never cited as a result |
+| **Exploration** | Scratch analyses and notebooks | Yes | Recorded; feeds studies, not citations |
 
 - The **question tree** (`PROJECT.md`) holds only questions and links. A leaf question is answered by
   one or more studies; a parent question is answered by citing its children's results.
-- A **study** is defined by its `STUDY.md`: question, primary endpoint and decision rule, numbered
-  scenarios (`S<n>`, the testable expectations), variants, stages, tools pinned by version, and
-  results. Each study lives in its own directory with its own pipeline.
-- Change rules: a new question or new primary endpoint means a **new study** (linked both ways); a
+- A **study** is defined by its `STUDY.md`: question, mode, what its mode locks (for a confirmatory
+  study: the primary endpoint and decision rule), numbered scenarios (`S<n>`, the testable
+  expectations) where the mode has them, variants, stages, tools pinned by version, and results.
+  Each study lives in its own directory with its own pipeline.
+- Change rules: a new question or new primary endpoint means a **new study**; a
   fix that does not change what is measured is an **amendment**; a different setting under the same
   endpoint is a **variant**.
-- **Exploration** is a separate area for unregistered work. It may inform new studies but nothing in
-  it may be cited as a result.
+- **Links between studies.** Beyond supersession, a study may record that it follows up on,
+  re-analyses, refutes, extends, or derives from another study, and a replication names its target;
+  links are recorded both ways. A question born from a study's results is recorded as **emerged**,
+  linked to the study that produced it, and is otherwise an open question. Links and emerged
+  questions are written by commands (`tophat study follow-up`, `tophat study replicate`, …), never
+  by hand.
+- **Exploration** is a separate area for unregistered scratch work. It may inform new studies; a
+  finding becomes citable when a study reports it as a labelled result line.
 
-### Study lifecycle and pre-registration
+### Study modes, lifecycle and pre-registration
 
-- `draft`: everything may change, and this is where exploring happens: trial runs, on pilot data
-  where possible, keep their provenance and are collected in a generated exploration record. When
-  the plan is locked, TopHat records what the exploration saw, including whether it already saw the
-  data that will decide the question; a result whose plan was informed by its own deciding data is
-  labelled, not refused.
-- `preregistered`: set by the human (with a date) before any answer-stage result is seen. From then on
-  the question, primary endpoint and scenarios are **frozen**; changes go into a dated
-  **Amendments** section stating the reason and whether results had been seen.
+Every study carries a **mode**, recorded at creation, that says how it produces knowledge; the
+**status** says where it is. Modes and statuses are orthogonal axes: the status machinery —
+freezing, amendments, reporting from summaries, supersession — is shared by every mode, and the mode
+decides what, if anything, pre-registration freezes.
+
+| Mode | What it is | What pre-registration freezes |
+|---|---|---|
+| `confirmatory` | Tests a pre-specified claim: one question, one primary endpoint, one decision rule | Question, primary endpoint, decision rule, scenarios |
+| `exploratory` | Investigates a pattern or anomaly ("what is going on here?"); the deliverable is labelled findings, not a verdict | Nothing — no `preregistered` state; `draft` → `reported` directly |
+| `descriptive` | Characterizes or measures a system; the deliverable is a published dataset or measurement, not an endpoint | The measurement and deliverable plan: what is measured, on what data, published as what |
+| `methods` | Develops or evaluates a method against stated success criteria | The success criteria |
+| `replication` | Reproduces another study's result at a pinned key or commit (see *Reproduction as a result*) | The reproduction target and the match criterion |
+| `retrospective` | Adopted past work, written up after the fact; same `STUDY.md` structure and, where the work is reproducible, a pipeline | Nothing — never pre-registered |
+
+- `draft`: everything may change. In modes that pre-register, exploring happens here: trial runs, on
+  pilot data where possible, keep their provenance and are collected in a generated exploration
+  record. When the plan is locked, TopHat records what the exploration saw, including whether it
+  already saw the data that will decide the question; a result whose plan was informed by its own
+  deciding data is labelled, not refused.
+- `preregistered`: set by the human (with a date) before any answer-stage result is seen. From then
+  on the sections the mode freezes are **frozen**; changes go into a dated **Amendments** section
+  stating the reason and whether results had been seen. Pre-registration locks the claim, not the
+  whole study: the pipeline, variants and stages can still change.
 - `reported`: the **Result** section is filled in only from pipeline output files, one line per
   variant and stage (n, effect size, uncertainty, test statistic), stating plainly when a result is
-  not useful or not significant.
+  not useful or not significant. Every result line carries its **epistemic tag** — `pre-specified`,
+  `exploratory` or `post hoc` — and, where the study splits its data, the split it was computed on;
+  tags appear in the summary prose, not only in front matter. A result computed outside the frozen
+  plan is tagged, not refused.
 - `superseded`: replaced by a linked newer study.
-- `retrospective`: a study written up after the fact from work done before TopHat was adopted. It
-  uses the same `STUDY.md` structure and, where the work is reproducible, a pipeline, but it was
-  never pre-registered. Its results may be cited and are always labelled retrospective.
 
-Only the primary endpoint answers the question; diagnostics inform but decide nothing.
+Only a confirmatory study's primary endpoint answers its question; its diagnostics inform but
+decide nothing. Results tagged `exploratory` or `post hoc`, and the results of exploratory studies,
+are citable as evidence for a question when cited with their label; nothing else about exploration
+is citable.
+
+**Reproduction as a result.** A replication study's frozen plan declares that it reproduces a target
+study at a pinned key or commit (`reproduces: <study>@<key-or-commit>`, a study of this project or
+of a pinned other project) and the match criterion: exact content hashes, or stated tolerances on
+named quantities. The pipeline re-runs the target's stages and compares the outputs against the
+target's recorded ones; the comparison yields result lines of `reproduced` or `failed to reproduce`
+that report like any other result. A failed replication or a refutation is a linked study of its
+own, never an automatic supersession of its target.
 
 ### Running a study end-to-end
 
@@ -112,10 +154,12 @@ first-class workflow engine and does all execution; nobody writes Snakemake rule
   code, the study configuration, the pixi files) is committed unchanged; the summary is *dirty* if any
   record it derives from is not. A dirty summary cannot be reported, and a summary whose keys no
   longer match the configuration is *stale*: it cannot be reported and must be re-run.
-- **Trial runs.** A draft study can be run only as a trial (`tophat run --draft`): trial outputs live
-  apart, skip QC gates, never produce a summary, and can never be published or reported. After
-  pre-registration the real run computes everything again, so results seen before the plan was frozen
-  can never be reused as reported results.
+- **Trial runs.** In modes that pre-register, a draft study can be run only as a trial
+  (`tophat run --draft`): trial outputs live apart, skip QC gates, never produce a summary, and can
+  never be published or reported. After pre-registration the real run computes everything again, so
+  results seen before the plan was frozen can never be reused as reported results. Exploratory and
+  retrospective studies have no pre-registered state to wait for: their runs are real from the
+  start, keep QC gates, and report from their summaries.
 
 ### Day-to-day workflow
 
@@ -123,10 +167,11 @@ first-class workflow engine and does all execution; nobody writes Snakemake rule
 action, marked when only a human may take it (pre-registration and QC verdicts). The next action is
 computed from committed and local files by a fixed priority order: fix check errors, write the plan,
 pre-register, add stages, configure the results root, give or fix QC verdicts, run, commit and re-run
-if dirty, report, answer the question in `PROJECT.md`. `tophat run` refuses to start a run that
-cannot produce reportable results (check errors in the study's scope, a draft without `--draft`) and
-ends by printing the next action. Skills use the same information, in machine-readable form, to
-decide what to do next.
+if dirty, report, answer the question in `PROJECT.md`. The order is per mode: a study whose mode
+locks nothing skips the plan and pre-registration rows and runs straight to its report. `tophat
+run` refuses to start a run that cannot produce reportable results (check errors in the study's
+scope, a draft without `--draft` in a mode that pre-registers) and ends by printing the next
+action. Skills use the same information, in machine-readable form, to decide what to do next.
 
 ### External stages and clusters
 
@@ -263,6 +308,9 @@ rejected or presented as verified.
   process (ideally a riprap project).
 - A plugin system with runtime loading of third-party code.
 - Electronic lab notebook, LIMS, or publication-management features.
+- Wet-lab provenance (samples, instruments, operators, chain of custody). TopHat models
+  computational research: data, code and compute. Wet-lab work enters only as registered raw
+  datasets with origin metadata.
 
 ## Architectural Decisions
 
@@ -297,6 +345,15 @@ holds with no LLM involved.
 
 Decisions that belong to the scientist — the question, primary endpoint, decision rule, thresholds,
 pre-registration, QC verdicts — are always elicited from the human and never invented by the agent.
+
+Classifying intent is a skill's job; recording it is the CLI's. The scientist states what they want
+in a sentence ("does X rank binders better than docking?", "what is going on with these outliers?",
+"can we reproduce their result?"); a skill infers the study mode and its links, asking at most one
+clarifying question, and only when the answer changes what gets recorded. The CLI records mode,
+links and epistemic tags and enforces their rules; nobody fills in a mode field or link YAML by
+hand. Labels are presented in plain words as the route to credibility, never as accusations: the
+agent says "we found this by looking at this data; to claim it, we would lock a plan first", not
+"this result is contaminated".
 
 **No remote access.** Neither `tophat` nor an agent ever connects to a remote machine, transfers data
 to or from one, or submits jobs. The project stores no connection details, the development container
@@ -412,7 +469,9 @@ Testing establishes that TopHat itself works:
    changed input hash, missing QC verdict, dangling question link, consuming another study's
    unpublished output, a pinned dataset superseded for a defect, reporting a study whose producers
    are unreported, private data flowing into a public study, an external-stage receipt
-   with a mismatched stage key or output hash). Every CLI version must accept the
+    with a mismatched stage key or output hash, a result line without its epistemic tag, a study in
+    a mode run against another mode's lifecycle, a replication whose output hashes do not match its
+    target's). Every CLI version must accept the
    valid ones and report the expected diagnostic for each broken one. This suite is the executable
    definition of the provenance guarantees.
 3. **End-to-end example study** (required CI gate) — a small toy study, with scripts in several
@@ -447,3 +506,11 @@ provide Snakemake and pixi for the end-to-end tests to count as a gate.
 - Whether notebooks in exploration get any tooling beyond being excluded from citation.
 - Which batch schedulers external-stage job scripts support beyond SLURM, and how job arrays and
   multi-job stages map onto a single receipt.
+- The exact front-matter fields, per-mode lifecycle rules, epistemic tags, link fields and check
+  diagnostics introduced by study modes — owned by the revisions of the study-format, exploration,
+  workflow, question-tree and data feature files.
+- The migration of existing `status: retrospective` studies to `mode: retrospective` with
+  `status: reported`, and whether the CLI applies it during `copier update`.
+- Data-reuse accounting beyond `deciding_data_seen`: how per-result data-split tags are derived,
+  recorded and checked.
+- How `emerged` questions differ from `open` ones in check rules and status output.
