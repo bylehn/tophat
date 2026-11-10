@@ -8,7 +8,7 @@ use std::fmt;
 
 use crate::markdown::{FenceState, FenceTracker, atx_heading, numbered_lines};
 
-pub use commands::{StampOutcome, render_tree, render_tree_json, stamp, stamp_outcome};
+pub use commands::{StampOutcome, emerge, render_tree, render_tree_json, stamp, stamp_outcome};
 pub use rules::question_rules;
 
 /// File name of the project document, at the project root.
@@ -22,6 +22,7 @@ pub const SEPARATOR: char = '·';
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum QuestionStatus {
     Open,
+    Emerged,
     Answered,
     Dropped,
 }
@@ -30,6 +31,7 @@ impl QuestionStatus {
     pub fn parse(s: &str) -> Option<QuestionStatus> {
         Some(match s {
             "open" => QuestionStatus::Open,
+            "emerged" => QuestionStatus::Emerged,
             "answered" => QuestionStatus::Answered,
             "dropped" => QuestionStatus::Dropped,
             _ => return None,
@@ -39,10 +41,21 @@ impl QuestionStatus {
     pub fn as_str(self) -> &'static str {
         match self {
             QuestionStatus::Open => "open",
+            QuestionStatus::Emerged => "emerged",
             QuestionStatus::Answered => "answered",
             QuestionStatus::Dropped => "dropped",
         }
     }
+}
+
+// rq-ddd0dee1
+/// One entry of an evidence line.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Citation {
+    /// A study ID or a question ID.
+    pub target: String,
+    /// `Some("exploratory")` or `Some("post hoc")` on a labelled study citation.
+    pub label: Option<String>,
 }
 
 // rq-e956ef6a
@@ -61,8 +74,10 @@ pub struct Question {
     pub status: Option<(String, u32)>,
     pub answer: Option<(String, u32)>,
     pub reason: Option<(String, u32)>,
+    /// Raw origin value and its line, when an `Emerged from:` line exists.
+    pub origin: Option<(String, u32)>,
     /// Citations (trimmed, empty items dropped) and the evidence line.
-    pub evidence: Option<(Vec<String>, u32)>,
+    pub evidence: Option<(Vec<Citation>, u32)>,
 }
 
 impl Question {
@@ -120,6 +135,14 @@ pub enum QuestionError {
     ProjectFileMissing,
     /// `stamp` left these malformed or duplicated IDs unchanged.
     Unresolved(Vec<String>),
+    /// `emerge` with an empty question text.
+    TextInvalid,
+    /// `emerge`'s `--from` study does not exist or cannot be parsed.
+    OriginStudyInvalid(String),
+    /// `emerge`'s parent question is not a stamped question in the tree.
+    ParentInvalid(String),
+    /// `emerge`'s parent question is at level 6.
+    ParentTooDeep,
     Io(String),
 }
 
@@ -134,6 +157,20 @@ impl fmt::Display for QuestionError {
                 "left unchanged, fix by hand: {} (malformed or duplicated question IDs)",
                 ids.join(", ")
             ),
+            QuestionError::TextInvalid => write!(f, "the question text is empty"),
+            QuestionError::OriginStudyInvalid(id) => write!(
+                f,
+                "study `{id}` does not exist or its STUDY.md cannot be parsed"
+            ),
+            QuestionError::ParentInvalid(id) => {
+                write!(f, "`{id}` is not a stamped question in {PROJECT_FILE}")
+            }
+            QuestionError::ParentTooDeep => {
+                write!(
+                    f,
+                    "the parent question is at level 6; no deeper heading exists"
+                )
+            }
             QuestionError::Io(message) => write!(f, "I/O error: {message}"),
         }
     }
@@ -190,6 +227,23 @@ pub(crate) fn heading_id(text: &str) -> HeadingId<'_> {
 /// Extracts the value after `prefix` on a line that starts with it, trimmed.
 fn line_value<'a>(line: &'a str, prefix: &str) -> Option<&'a str> {
     line.trim_start().strip_prefix(prefix).map(str::trim)
+}
+
+/// Parses one citation, splitting an optional trailing `[label]` group.
+pub(crate) fn parse_citation(text: &str) -> Citation {
+    let text = text.trim();
+    if let Some(inner) = text.strip_suffix(']')
+        && let Some(start) = inner.rfind(" [")
+    {
+        return Citation {
+            target: inner[..start].trim().to_string(),
+            label: Some(inner[start + 2..].trim().to_string()),
+        };
+    }
+    Citation {
+        target: text.to_string(),
+        label: None,
+    }
 }
 
 // rq-0e66003f rq-ba118d75 rq-44727473 rq-76dbbbfa
@@ -256,6 +310,7 @@ pub fn parse_project(text: &str) -> QuestionTree {
                 status: None,
                 answer: None,
                 reason: None,
+                origin: None,
                 evidence: None,
             });
             stack.push((level, index));
@@ -293,6 +348,12 @@ pub fn parse_project(text: &str) -> QuestionTree {
             question.reason = Some((value.to_string(), no));
             continue;
         }
+        if question.origin.is_none()
+            && let Some(value) = line_value(line, "Emerged from:")
+            && !value.is_empty()
+        {
+            question.origin = Some((value.to_string(), no));
+        }
         if question.evidence.is_none()
             && let Some(value) = line_value(line, "Evidence:")
         {
@@ -300,7 +361,7 @@ pub fn parse_project(text: &str) -> QuestionTree {
                 .split(',')
                 .map(str::trim)
                 .filter(|c| !c.is_empty())
-                .map(str::to_string)
+                .map(parse_citation)
                 .collect();
             question.evidence = Some((citations, no));
         }
@@ -338,7 +399,16 @@ mod tests {
         assert_eq!(tree.questions[1].answer.as_ref().unwrap().0, "Yes.");
         assert_eq!(
             tree.questions[1].evidence.as_ref().unwrap().0,
-            vec!["x-energy".to_string(), "q-00000000".to_string()]
+            vec![
+                Citation {
+                    target: "x-energy".into(),
+                    label: None
+                },
+                Citation {
+                    target: "q-00000000".into(),
+                    label: None
+                }
+            ]
         );
         assert_eq!(tree.questions[3].reason.as_ref().unwrap().0, "Withdrawn.");
         assert_eq!(tree.questions[3].parent, Some(2));

@@ -14,6 +14,7 @@ use super::{HeadingId, PROJECT_FILE, QuestionError, QuestionTree, heading_id, pa
 use crate::check::Project;
 use crate::fsutil::write_atomic;
 use crate::markdown::atx_heading;
+use crate::study::STUDIES_DIR;
 
 /// What `stamp` did.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -183,6 +184,7 @@ fn tree_and_studies(root: &Path) -> Result<(QuestionTree, AttachedStudies), Ques
 /// Renders `tophat question tree` as indented text.
 pub fn render_tree(root: &Path) -> Result<String, QuestionError> {
     let (tree, attached) = tree_and_studies(root)?;
+    let statuses = study_statuses(root);
     let mut out = String::new();
     for q in &tree.questions {
         let indent = "  ".repeat(q.level.saturating_sub(2) as usize);
@@ -197,14 +199,35 @@ pub fn render_tree(root: &Path) -> Result<String, QuestionError> {
         {
             out.push_str(&format!("{indent}  study {study} [{study_status}]\n"));
         }
+        if let Some((origin, _)) = &q.origin {
+            let origin_status = statuses.get(origin).map_or("?", String::as_str);
+            out.push_str(&format!(
+                "{indent}  emerged from {origin} [{origin_status}]\n"
+            ));
+        }
     }
     Ok(out)
+}
+
+/// The status of every parseable study, by ID.
+fn study_statuses(root: &Path) -> BTreeMap<String, String> {
+    let project = Project::new(root);
+    load_studies(&project)
+        .into_iter()
+        .filter_map(|(id, entry)| match entry {
+            StudyEntry::Parsed(study) => {
+                Some((id, study.status().map_or("?", |s| s.as_str()).to_string()))
+            }
+            StudyEntry::Unparseable => Some((id, "?".to_string())),
+        })
+        .collect()
 }
 
 // rq-5d07156c
 /// Renders `tophat question tree --json`.
 pub fn render_tree_json(root: &Path) -> Result<String, QuestionError> {
     let (tree, attached) = tree_and_studies(root)?;
+    let statuses = study_statuses(root);
     let questions: Vec<Value> = tree
         .questions
         .iter()
@@ -216,6 +239,10 @@ pub fn render_tree_json(root: &Path) -> Result<String, QuestionError> {
                     .flatten()
                     .map(|(id, status)| json!({ "id": id, "status": status }))
                     .collect();
+            let origin = q
+                .origin
+                .as_ref()
+                .map(|(id, _)| json!({"id": id, "status": statuses.get(id).cloned()}));
             json!({
                 "id": q.id,
                 "text": q.text,
@@ -224,6 +251,7 @@ pub fn render_tree_json(root: &Path) -> Result<String, QuestionError> {
                 "parent": q.parent.and_then(|p| tree.questions[p].id.clone()),
                 "line": q.heading_line,
                 "studies": studies,
+                "origin": origin,
             })
         })
         .collect();
@@ -250,4 +278,99 @@ mod tests {
         assert_eq!(split_eol("a\n"), ("a", "\n"));
         assert_eq!(split_eol("a"), ("a", ""));
     }
+}
+
+/// Splits `text` into lines keeping their endings.
+fn text_lines(text: &str) -> Vec<String> {
+    text.split_inclusive('\n').map(str::to_string).collect()
+}
+
+// rq-a88520bf rq-7449b1fb
+/// Performs `tophat question emerge`: records a question born from a study's results.
+pub fn emerge(
+    root: &Path,
+    text: &str,
+    from: &str,
+    under: Option<&str>,
+) -> Result<(String, String), QuestionError> {
+    let path = root.join(PROJECT_FILE);
+    if !path.is_file() {
+        return Err(QuestionError::ProjectFileMissing);
+    }
+    let question_text = text.trim();
+    if question_text.is_empty() {
+        return Err(QuestionError::TextInvalid);
+    }
+    let project = Project::new(root);
+    let study_file = format!("{STUDIES_DIR}/{from}/{}", study_file_name());
+    let study = project
+        .read_to_string(&study_file)
+        .ok()
+        .and_then(|t| crate::study::parse_study_text(from, &study_file, &t).ok())
+        .ok_or_else(|| QuestionError::OriginStudyInvalid(from.to_string()))?;
+
+    let source = fs::read_to_string(&path)?;
+    let tree = parse_project(&source);
+    let parent_id = under
+        .map(str::to_string)
+        .or_else(|| study.front.question.as_ref().map(|f| f.value.clone()))
+        .ok_or_else(|| QuestionError::ParentInvalid("(none)".to_string()))?;
+    let parent_index = tree
+        .index_of(&parent_id)
+        .ok_or_else(|| QuestionError::ParentInvalid(parent_id.clone()))?;
+    let parent = &tree.questions[parent_index];
+    if parent.level >= 6 {
+        return Err(QuestionError::ParentTooDeep);
+    }
+
+    let mut used: HashSet<String> = tree.questions.iter().filter_map(|q| q.id.clone()).collect();
+    let id = loop {
+        let candidate = random_id(used.len() as u64 + 1);
+        if used.insert(candidate.clone()) {
+            break candidate;
+        }
+    };
+
+    let mut lines = text_lines(&source);
+    let eol = if lines.first().is_some_and(|l| l.ends_with("\r\n")) {
+        "\r\n"
+    } else {
+        "\n"
+    };
+    // The insertion point: before the next heading at most the parent's level, or at the end.
+    let mut insert_at = lines.len();
+    let mut fences = crate::markdown::FenceTracker::default();
+    for (index, line) in lines.iter().enumerate() {
+        let bare = line.trim_end_matches(['\n', '\r']);
+        let state = fences.next(bare);
+        if state == crate::markdown::FenceState::Outside
+            && let Some((level, _)) = crate::markdown::atx_heading(bare)
+            && index + 1 > parent.heading_line as usize
+            && level <= parent.level
+        {
+            insert_at = index;
+            break;
+        }
+    }
+    if insert_at > 0 && !lines[insert_at - 1].ends_with('\n') {
+        lines[insert_at - 1].push_str(eol);
+    }
+    let level = parent.level + 1;
+    let block = vec![
+        format!(
+            "{} {id} {} {question_text}{eol}",
+            "#".repeat(level as usize),
+            super::SEPARATOR
+        ),
+        format!("status: emerged{eol}"),
+        format!("Emerged from: {from}{eol}"),
+        eol.to_string(),
+    ];
+    lines.splice(insert_at..insert_at, block);
+    write_atomic(&path, &lines.concat())?;
+    Ok((id, question_text.to_string()))
+}
+
+const fn study_file_name() -> &'static str {
+    crate::study::STUDY_FILE
 }

@@ -424,7 +424,16 @@ fn citing_a_superseded_study() {
 #[test] // rq-db0d11c1 rq-ef5ab539
 fn citing_a_retrospective_study_is_flagged_as_legacy() {
     let p = TempProject::with_project(&three(OPEN, &answered("old-benchmark"), OPEN));
-    p.study("old-benchmark", "q-5e6f7a8b", "retrospective", &[]);
+    p.study(
+        "old-benchmark",
+        "q-5e6f7a8b",
+        "reported",
+        &["mode: retrospective"],
+    );
+    let dir = p.root().join("studies/old-benchmark");
+    let text = fs::read_to_string(dir.join("STUDY.md")).unwrap()
+        + "\n## Result\n\n- base/score: rho=0.5 [post hoc]\n";
+    fs::write(dir.join("STUDY.md"), text).unwrap();
     let ds = diagnostics(&p);
     let found = with_rule(&ds, "question.evidence-retrospective");
     assert_eq!(found.len(), 1);

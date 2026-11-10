@@ -6,11 +6,11 @@ use chrono::NaiveDate;
 
 use super::exploration::{EXPLORATION_FILE, exploration_hash, parse_exploration};
 use super::fingerprint::is_fingerprint_format;
-use super::summary::parse_summary_text;
+use super::summary::{TagProblem, classify_tag, parse_summary_text};
 use super::{
-    FROZEN_SECTIONS, GOVERNED_SECTIONS, STUDIES_DIR, STUDY_FILE, SUMMARY_FILE, Status, Study,
-    StudyError, TagIssue, frozen_fingerprint, is_valid_question_id, is_valid_study_id,
-    matches_id_pattern, parse_study_text,
+    Epistemic, Mode, Relation, STUDIES_DIR, STUDY_FILE, SUMMARY_FILE, Status, Study, StudyError,
+    TagIssue, frozen_fingerprint, frozen_sections, governed_sections, is_valid_question_id,
+    is_valid_study_id, matches_id_pattern, parse_study_text,
 };
 use crate::check::{Diagnostic, Project, Severity};
 
@@ -120,13 +120,13 @@ impl Reporter<'_> {
 /// supersession.
 fn effective_status(study: &Study) -> Option<Status> {
     match study.status()? {
-        Status::Superseded => Some(if study.front.preregistered.is_none() {
-            Status::Retrospective
-        } else if study.result_lines().is_empty() {
-            Status::Preregistered
-        } else {
-            Status::Reported
-        }),
+        Status::Superseded => Some(
+            if study.front.preregistered.is_some() && study.result_lines().is_empty() {
+                Status::Preregistered
+            } else {
+                Status::Reported
+            },
+        ),
         other => Some(other),
     }
 }
@@ -200,6 +200,7 @@ pub(super) fn check_study(ctx: &Context<'_>, study: &Study) -> Vec<Diagnostic> {
         path,
     };
     check_front_matter(&mut r, study);
+    check_links(ctx, &mut r, study);
     check_sections(&mut r, study);
     check_scenario_tags(&mut r, study);
     check_configs(ctx, &mut r, study);
@@ -267,15 +268,37 @@ fn check_front_matter(r: &mut Reporter<'_>, study: &Study) {
             "Use `q-` followed by 8 lowercase hex characters",
         );
     }
-    if let Some(field) = &f.status
-        && Status::parse(&field.value).is_none()
-    {
-        r.error(
-            "study.field-invalid",
+    match &f.mode {
+        None => r.error(
+            "study.mode-missing",
+            None,
+            "Required front-matter field `mode` is missing",
+            format!("Run `tophat study migrate {}`", study.id),
+        ),
+        Some(field) if Mode::parse(&field.value).is_none() => r.error(
+            "study.mode-invalid",
             Some(field.line),
-            format!("`status: {}` is not a valid status", field.value),
-            "Use draft, preregistered, reported, superseded or retrospective",
-        );
+            format!("`mode: {}` is not a valid mode", field.value),
+            "Use confirmatory, exploratory, descriptive, methods, replication or retrospective",
+        ),
+        Some(_) => {}
+    }
+    if let Some(field) = &f.status {
+        if field.value == "retrospective" {
+            r.error(
+                "study.status-retrospective",
+                Some(field.line),
+                "`status: retrospective` is the pre-mode form",
+                format!("Run `tophat study migrate {}`", study.id),
+            );
+        } else if Status::parse(&field.value).is_none() {
+            r.error(
+                "study.field-invalid",
+                Some(field.line),
+                format!("`status: {}` is not a valid status", field.value),
+                "Use draft, preregistered, reported or superseded",
+            );
+        }
     }
     if let Some(field) = &f.visibility
         && field.value != "public"
@@ -396,9 +419,80 @@ fn check_front_matter(r: &mut Reporter<'_>, study: &Study) {
     }
 }
 
+// rq-3250dbea rq-a8e3636b
+/// The `reproduces` field and the study-to-study relation lists.
+fn check_links(ctx: &Context<'_>, r: &mut Reporter<'_>, study: &Study) {
+    let mode = study.mode();
+    match (mode == Mode::Replication, &study.front.reproduces) {
+        (true, None) => r.error(
+            "study.reproduces-missing",
+            study.front.status.as_ref().map(|f| f.line),
+            "A `replication` study needs a `reproduces` field",
+            "Create it with `tophat study replicate`",
+        ),
+        (false, Some(field)) => r.error(
+            "study.reproduces-unexpected",
+            Some(field.line),
+            "`reproduces` is only allowed in `replication` mode",
+            "Remove the field, or use `tophat study replicate`",
+        ),
+        (_, Some(field)) => {
+            let valid = field
+                .value
+                .rsplit_once('@')
+                .is_some_and(|(target, commit)| {
+                    is_valid_study_id(target)
+                        && ctx.exists(target)
+                        && commit.len() == 40
+                        && commit
+                            .bytes()
+                            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+                });
+            if !valid {
+                r.error(
+                    "study.reproduces-invalid",
+                    Some(field.line),
+                    format!(
+                        "`reproduces: {}` must name an existing study and a 40-character lowercase hex commit",
+                        field.value
+                    ),
+                    "Use `tophat study replicate <study> --of <study-id>@<commit>`",
+                );
+            }
+        }
+        _ => {}
+    }
+    for relation in [
+        Relation::FollowsUp,
+        Relation::Reanalyses,
+        Relation::Refutes,
+        Relation::Extends,
+        Relation::DerivesFrom,
+    ] {
+        let Some(field) = study.relation(relation) else {
+            continue;
+        };
+        for other in &field.value {
+            let invalid = !is_valid_study_id(other) || other == &study.id || !ctx.exists(other);
+            if invalid {
+                r.error(
+                    "study.link-invalid",
+                    Some(field.line),
+                    format!(
+                        "`{}` entry `{other}` must name an existing study other than `{}`",
+                        relation.field(),
+                        study.id
+                    ),
+                    "Name an existing study, or remove the entry",
+                );
+            }
+        }
+    }
+}
+
 // rq-e9d4388a
 fn check_sections(r: &mut Reporter<'_>, study: &Study) {
-    for name in GOVERNED_SECTIONS {
+    for name in governed_sections(study.mode()) {
         let occurrences: Vec<_> = study.sections_named(name).collect();
         match occurrences.as_slice() {
             [] => r.error(
@@ -558,9 +652,11 @@ fn check_supersession(ctx: &Context<'_>, r: &mut Reporter<'_>, study: &Study) {
 
 // rq-f28e6ab8
 fn check_lifecycle(ctx: &Context<'_>, r: &mut Reporter<'_>, study: &Study, status: Status) {
+    let mode = study.mode();
+    let preregisters = mode.preregisters();
     let block = study.front.preregistered.as_ref();
     let status_line = study.front.status.as_ref().map(|f| f.line);
-    let needs_block = matches!(status, Status::Preregistered | Status::Reported);
+    let needs_block = preregisters && matches!(status, Status::Preregistered | Status::Reported);
 
     // Pre-registration block and fingerprint.
     match (needs_block, block) {
@@ -579,7 +675,7 @@ fn check_lifecycle(ctx: &Context<'_>, r: &mut Reporter<'_>, study: &Study, statu
         (false, Some(b)) => r.error(
             "study.prereg-unexpected",
             Some(b.line),
-            format!("A `{status}` study must not have a `preregistered` block"),
+            format!("A `{status}` study in `{mode}` mode must not have a `preregistered` block"),
             "Remove the block; only `tophat study preregister` writes it",
         ),
         _ => {}
@@ -599,71 +695,82 @@ fn check_lifecycle(ctx: &Context<'_>, r: &mut Reporter<'_>, study: &Study, statu
     }
 
     // Non-empty frozen sections and scenarios.
-    let must_be_filled: &[&str] = match status {
-        Status::Preregistered | Status::Reported => &FROZEN_SECTIONS[..3],
-        Status::Retrospective => &FROZEN_SECTIONS[..2],
-        _ => &[],
-    };
-    for name in must_be_filled {
-        if let Some(section) = study.section(name)
-            && study.section_is_empty(name)
-        {
+    if matches!(status, Status::Preregistered | Status::Reported) {
+        if preregisters {
+            for name in frozen_sections(mode)
+                .iter()
+                .filter(|name| **name != "Scenarios")
+            {
+                if let Some(section) = study.section(name)
+                    && study.section_is_empty(name)
+                {
+                    r.error(
+                        "study.section-empty",
+                        Some(section.heading_line),
+                        format!("Section `## {name}` is empty"),
+                        format!("Fill in `## {name}`"),
+                    );
+                }
+            }
+            if study.scenarios.is_empty() {
+                r.error(
+                    "study.no-scenarios",
+                    study.section("Scenarios").map(|s| s.heading_line),
+                    "The study has no scenarios",
+                    "Add at least one tagged Gherkin scenario under `## Scenarios`",
+                );
+            }
+        } else if study.section("Question").is_some() && study.section_is_empty("Question") {
             r.error(
                 "study.section-empty",
-                Some(section.heading_line),
-                format!("Section `## {name}` is empty"),
-                format!("Fill in `## {name}`"),
+                study.section("Question").map(|s| s.heading_line),
+                "Section `## Question` is empty",
+                "Fill in `## Question`",
             );
         }
-    }
-    if needs_block && study.scenarios.is_empty() {
-        r.error(
-            "study.no-scenarios",
-            study.section("Scenarios").map(|s| s.heading_line),
-            "The study has no scenarios",
-            "Add at least one tagged Gherkin scenario under `## Scenarios`",
-        );
     }
 
-    // Amendments.
-    let amendments_heading = study.section("Amendments").map(|s| s.heading_line);
-    if block.is_none() {
-        if !study.section_is_empty("Amendments") {
-            r.error(
-                "study.amendment-unexpected",
-                amendments_heading,
-                "Amendments are recorded only after pre-registration",
-                "Edit the study directly while it is a draft",
-            );
-        }
-    } else {
-        let prereg_date = block
-            .and_then(|b| b.value.date.as_deref())
-            .and_then(parse_date);
-        for line in &study.malformed_amendments {
-            r.error(
-                "study.amendment-format",
-                Some(*line),
-                "Amendment is not in the form `- YYYY-MM-DD — results seen: yes|no — <reason>`",
-                "Rewrite the line in the amendment format (with em dashes)",
-            );
-        }
-        for a in &study.amendments {
-            let problem = match parse_date(&a.date) {
-                None => Some(format!("`{}` is not a valid date", a.date)),
-                Some(d) if prereg_date.is_some_and(|p| d < p) => {
-                    Some(format!("{} is before the pre-registration date", a.date))
-                }
-                Some(d) if d > ctx.today => Some(format!("{} is in the future", a.date)),
-                Some(_) => None,
-            };
-            if let Some(problem) = problem {
+    // Amendments (only in modes that pre-register; elsewhere the heading is free text).
+    if preregisters {
+        let amendments_heading = study.section("Amendments").map(|s| s.heading_line);
+        if block.is_none() {
+            if !study.section_is_empty("Amendments") {
                 r.error(
-                    "study.amendment-date",
-                    Some(a.line),
-                    format!("Amendment date invalid: {problem}"),
-                    "Use the date the amendment was made",
+                    "study.amendment-unexpected",
+                    amendments_heading,
+                    "Amendments are recorded only after pre-registration",
+                    "Edit the study directly while it is a draft",
                 );
+            }
+        } else {
+            let prereg_date = block
+                .and_then(|b| b.value.date.as_deref())
+                .and_then(parse_date);
+            for line in &study.malformed_amendments {
+                r.error(
+                    "study.amendment-format",
+                    Some(*line),
+                    "Amendment is not in the form `- YYYY-MM-DD — results seen: yes|no — <reason>`",
+                    "Rewrite the line in the amendment format (with em dashes)",
+                );
+            }
+            for a in &study.amendments {
+                let problem = match parse_date(&a.date) {
+                    None => Some(format!("`{}` is not a valid date", a.date)),
+                    Some(d) if prereg_date.is_some_and(|p| d < p) => {
+                        Some(format!("{} is before the pre-registration date", a.date))
+                    }
+                    Some(d) if d > ctx.today => Some(format!("{} is in the future", a.date)),
+                    Some(_) => None,
+                };
+                if let Some(problem) = problem {
+                    r.error(
+                        "study.amendment-date",
+                        Some(a.line),
+                        format!("Amendment date invalid: {problem}"),
+                        "Use the date the amendment was made",
+                    );
+                }
             }
         }
     }
@@ -672,23 +779,25 @@ fn check_lifecycle(ctx: &Context<'_>, r: &mut Reporter<'_>, study: &Study, statu
     let result_lines = study.result_lines();
     let result_heading = study.section("Result").map(|s| s.heading_line);
     match status {
-        Status::Draft | Status::Preregistered if !result_lines.is_empty() => r.error(
-            "study.result-unexpected",
-            result_lines.first().map(|(l, _)| *l),
-            format!("A `{status}` study must not have a Result"),
-            "Results are written by `tophat study report` after the pipeline has run",
-        ),
+        Status::Draft | Status::Preregistered
+            if !result_lines.is_empty()
+                && !(status == Status::Draft && mode == Mode::Retrospective) =>
+        {
+            r.error(
+                "study.result-unexpected",
+                result_lines.first().map(|(l, _)| *l),
+                format!("A `{status}` study must not have a Result"),
+                "Results are written by `tophat study report` after the pipeline has run",
+            )
+        }
         Status::Reported if result_lines.is_empty() => r.error(
             "study.result-missing",
             result_heading,
             "A reported study has an empty Result",
             "Run `tophat study report`",
         ),
-        Status::Reported => check_result_against_summary(ctx, r, study, &result_lines),
-        Status::Retrospective if !result_lines.is_empty() => {
-            if ctx.project.is_file(&summary_path(study)) {
-                check_result_against_summary(ctx, r, study, &result_lines);
-            } else {
+        Status::Reported => {
+            if mode == Mode::Retrospective && !ctx.project.is_file(&summary_path(study)) {
                 r.push(
                     "study.result-unverified",
                     Severity::Legacy,
@@ -696,9 +805,43 @@ fn check_lifecycle(ctx: &Context<'_>, r: &mut Reporter<'_>, study: &Study, statu
                     "Retrospective result is hand-written and not backed by a SUMMARY.md",
                     "Reproduce it with a pipeline and `tophat study report` to verify it",
                 );
+                check_study_result_tags(r, study, &result_lines);
+            } else {
+                check_result_against_summary(ctx, r, study, &result_lines);
             }
         }
         _ => {}
+    }
+}
+
+/// Checks the epistemic tag group of result lines written directly in `STUDY.md`.
+fn check_study_result_tags(r: &mut Reporter<'_>, study: &Study, lines: &[(u32, String)]) {
+    let mode = study.mode();
+    for (_, raw) in lines {
+        match classify_tag(raw) {
+            Ok((_, tag)) => {
+                if !mode.preregisters() && tag.epistemic == Epistemic::PreSpecified {
+                    r.error(
+                        "study.tag-mode-invalid",
+                        None,
+                        format!("A `{mode}` study cannot carry a `pre-specified` result line"),
+                        "Tag the line `exploratory` or `post hoc`",
+                    );
+                }
+            }
+            Err(TagProblem::Missing) => r.error(
+                "study.tag-missing",
+                None,
+                "A result line has no trailing epistemic tag",
+                "Run `tophat study report` after regenerating the summary",
+            ),
+            Err(_) => r.error(
+                "study.tag-invalid",
+                None,
+                "A result line's trailing tag group is invalid",
+                "Use `[pre-specified]`, `[exploratory]` or `[post hoc]`, optionally ` · split:<name>`",
+            ),
+        }
     }
 }
 
@@ -712,6 +855,18 @@ fn check_exploration(ctx: &Context<'_>, r: &mut Reporter<'_>, study: &Study) {
         out: &mut *r.out,
         path: file.clone(),
     };
+    if text.is_some() && !study.mode().preregisters() {
+        er.error(
+            "study.exploration-unexpected",
+            None,
+            format!(
+                "A `{}` mode study has no plan to lock, so it must not have {EXPLORATION_FILE}",
+                study.mode()
+            ),
+            "Remove EXPLORATION.md; exploration is recorded only in modes that pre-register",
+        );
+        return;
+    }
     // rq-647bcecc
     if let Some(text) = &text {
         match parse_exploration(text) {
@@ -783,6 +938,11 @@ fn summary_path(study: &Study) -> String {
     format!("{STUDIES_DIR}/{}/{SUMMARY_FILE}", study.id)
 }
 
+/// Whether the study is a reported confirmatory study.
+fn status_is_reported_confirmatory(study: &Study) -> bool {
+    study.status() == Some(Status::Reported) && study.mode() == Mode::Confirmatory
+}
+
 // rq-09eda840
 fn check_result_against_summary(
     ctx: &Context<'_>,
@@ -800,6 +960,22 @@ fn check_result_against_summary(
         );
         return;
     }
+    if status_is_reported_confirmatory(study)
+        && !result_lines.iter().any(|(_, raw)| {
+            matches!(
+                classify_tag(raw),
+                Ok((_, ref tag)) if tag.epistemic == Epistemic::PreSpecified
+            )
+        })
+    {
+        r.error(
+            "study.no-pre-specified-result",
+            study.section("Result").map(|s| s.heading_line),
+            "A reported confirmatory study needs at least one `pre-specified` result line",
+            "Report the primary endpoint's pre-specified result",
+        );
+    }
+
     let mut sr = Reporter {
         out: &mut *r.out,
         path: summary_file.clone(),
@@ -828,6 +1004,37 @@ fn check_result_against_summary(
             format!("SUMMARY.md is for study `{}`", summary.study),
             "Regenerate it with this study's pipeline",
         );
+    }
+    let mode = study.mode();
+    for line in &summary.results {
+        match &line.tag_problem {
+            Some(TagProblem::Missing) => sr.error(
+                "study.tag-missing",
+                Some(line.line),
+                "Result line has no trailing epistemic tag",
+                "Run `tophat study summarize` to regenerate the summary, then `tophat study report`",
+            ),
+            Some(_) => sr.error(
+                "study.tag-invalid",
+                Some(line.line),
+                "Result line's trailing tag group is invalid",
+                "Use `[pre-specified]`, `[exploratory]` or `[post hoc]`, optionally ` · split:<name>`",
+            ),
+            None => {}
+        }
+        if !mode.preregisters()
+            && line
+                .tag
+                .as_ref()
+                .is_some_and(|t| t.epistemic == Epistemic::PreSpecified)
+        {
+            sr.error(
+                "study.tag-mode-invalid",
+                Some(line.line),
+                format!("A `{mode}` study cannot carry a `pre-specified` result line"),
+                "Tag the line `exploratory` or `post hoc`",
+            );
+        }
     }
     for line in &summary.results {
         if !study.variants().contains(&line.variant) {

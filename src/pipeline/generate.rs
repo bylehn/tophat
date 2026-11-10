@@ -193,7 +193,7 @@ fn check_dataset(
 /// Generates the Snakemake rules file of a study.
 pub fn generate_rules(root: &Path, study: &str) -> Result<String, PipelineError> {
     let doc = read_study(root, study)?;
-    let trial = doc.status() == Some(Status::Draft);
+    let trial = doc.status() == Some(Status::Draft) && doc.mode().preregisters();
     let variants = doc.variants().to_vec();
     if variants.is_empty() {
         return Err(PipelineError::Study(format!(
@@ -310,15 +310,31 @@ pub fn generate_rules(root: &Path, study: &str) -> Result<String, PipelineError>
             list(&all)
         ));
     } else {
-        let results: Vec<PathBuf> = variant_records
+        let mut results: Vec<PathBuf> = variant_records
             .iter()
             .flat_map(|(_, _, r)| r.clone())
             .collect();
+        let check = super::check::test_key(root, study)?;
+        let check_record = match &check {
+            Some(key) => Some(super::check::check_record_path(root, study, key)?),
+            None => None,
+        };
+        if let Some(record) = &check_record {
+            results.push(record.clone());
+        }
         out.push_str(&format!(
             "_TOPHAT_DEFAULT_INPUTS = [\n{}]\n\n\ndef _tophat_default():\n    _tophat(\"study\", \"summarize\", _TOPHAT_STUDY)\n\n\nrule summary:\n    input:\n{}    run:\n        _tophat_default()\n\n",
             list(&results).replace("        ", "    "),
             list(&results)
         ));
+        if let (Some(key), Some(record)) = (&check, &check_record) {
+            let name = format!("check_{}", key.trim_start_matches("sk-"));
+            out.push_str(&format!(
+                "rule {name}:\n    output:\n        {}\n    run:\n        _tophat(\"study\", \"test\", _TOPHAT_STUDY, \"--key\", {})\n\n",
+                pattern(record),
+                py(key)
+            ));
+        }
     }
     for (variant, all, _) in &variant_records {
         out.push_str(&format!(

@@ -3,6 +3,7 @@ study: median-vs-mean
 title: "Median vs mean filter on noisy step signals"
 question: q-00000000
 status: draft
+mode: confirmatory
 visibility: public
 variants:
   - base

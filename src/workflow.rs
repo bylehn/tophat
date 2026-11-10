@@ -13,8 +13,8 @@ use crate::pipeline::{
 };
 use crate::question::{PROJECT_FILE, QuestionStatus, parse_project};
 use crate::study::{
-    STUDIES_DIR, STUDY_FILE, SUMMARY_FILE, Status, Study, StudyError, parse_study_text,
-    parse_summary,
+    Mode, STUDIES_DIR, STUDY_FILE, SUMMARY_FILE, Status, Study, StudyError, frozen_sections,
+    parse_study_text, parse_summary,
 };
 
 /// Who may take a next action.
@@ -80,6 +80,7 @@ pub type Progress = Option<(u32, u32)>;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StudyStatus {
     pub id: String,
+    pub mode: Option<String>,
     pub status: Option<String>,
     pub question: Option<String>,
     pub question_text: Option<String>,
@@ -318,6 +319,7 @@ fn evaluate(root: &Path, view: &ProjectView, study_id: &str) -> Result<StudyStat
     let Some(study) = study else {
         return Ok(StudyStatus {
             id: study_id.to_string(),
+            mode: None,
             status: None,
             question: None,
             question_text: None,
@@ -340,6 +342,7 @@ fn evaluate(root: &Path, view: &ProjectView, study_id: &str) -> Result<StudyStat
     let pipeline = stages.then(|| progress(root, study_id, &variants));
     let mut result = StudyStatus {
         id: study_id.to_string(),
+        mode: study.front.mode.as_ref().map(|f| f.value.clone()),
         status: study.front.status.as_ref().map(|f| f.value.clone()),
         question: question.clone(),
         question_text,
@@ -363,17 +366,19 @@ fn evaluate(root: &Path, view: &ProjectView, study_id: &str) -> Result<StudyStat
     } else if !blocking_errors(root, view, id).is_empty() {
         fix(id)
     } else if status == Some(Status::Draft)
-        && (["Question", "Primary endpoint", "Decision rule"]
+        && study.mode().preregisters()
+        && (frozen_sections(study.mode())
             .iter()
+            .filter(|s| **s != "Scenarios")
             .any(|s| study.section_is_empty(s))
             || study.scenarios.is_empty())
     {
         NextAction::new(3, Who::Anyone, "Write the plan in STUDY.md", None)
-    } else if status == Some(Status::Draft) {
+    } else if status == Some(Status::Draft) && study.mode().preregisters() {
         let cmd = format!("tophat study preregister {id}");
         NextAction::new(4, Who::You, format!("Pre-register: {cmd}"), Some(cmd))
     } else if let Some(action) = (|| {
-        if status == Some(Status::Retrospective) && !stages {
+        if study.mode() == Mode::Retrospective && !stages {
             return None;
         }
         if !stages {
@@ -414,20 +419,25 @@ fn evaluate(root: &Path, view: &ProjectView, study_id: &str) -> Result<StudyStat
         external_action(root, id, &variants).or_else(|| pipeline_action(root, &study, &variants))
     })() {
         action
-    } else if status == Some(Status::Preregistered) {
+    } else if status == Some(Status::Preregistered)
+        || (status == Some(Status::Draft) && !study.mode().preregisters())
+    {
         let cmd = format!("tophat study report {id}");
         NextAction::new(13, Who::Anyone, format!("Report: {cmd}"), Some(cmd))
     } else if let Some(q) = question.as_ref().filter(|q| {
         let tree = &view.questions;
-        let open = tree
-            .index_of(q)
-            .is_some_and(|i| tree.questions[i].parsed_status() == Some(QuestionStatus::Open));
+        let open = tree.index_of(q).is_some_and(|i| {
+            matches!(
+                tree.questions[i].parsed_status(),
+                Some(QuestionStatus::Open | QuestionStatus::Emerged)
+            )
+        });
         let cited = tree.questions.iter().any(|other| {
             other.parsed_status() == Some(QuestionStatus::Answered)
                 && other
                     .evidence
                     .as_ref()
-                    .is_some_and(|(citations, _)| citations.iter().any(|c| c == id))
+                    .is_some_and(|(citations, _)| citations.iter().any(|c| &c.target == id))
         });
         open && !cited
     }) {
@@ -482,6 +492,7 @@ pub fn project_summary(root: &Path) -> Result<Value, StudyError> {
     Ok(json!({
         "questions": {
             "open": count_q(QuestionStatus::Open),
+            "emerged": count_q(QuestionStatus::Emerged),
             "answered": count_q(QuestionStatus::Answered),
             "dropped": count_q(QuestionStatus::Dropped),
         },
@@ -499,8 +510,14 @@ pub fn render_status(project: &Value, studies: &[StudyStatus]) -> String {
     let q = &project["questions"];
     let c = &project["check"];
     let mut out = format!(
-        "questions: {} open, {} answered, {} dropped; check: {} error(s), {} warning(s), {} legacy item(s)\n",
-        q["open"], q["answered"], q["dropped"], c["errors"], c["warnings"], c["legacy"]
+        "questions: {} open, {} emerged, {} answered, {} dropped; check: {} error(s), {} warning(s), {} legacy item(s)\n",
+        q["open"],
+        q["emerged"],
+        q["answered"],
+        q["dropped"],
+        c["errors"],
+        c["warnings"],
+        c["legacy"]
     );
     let (superseded, active): (Vec<_>, Vec<_>) = studies
         .iter()
@@ -512,7 +529,11 @@ pub fn render_status(project: &Value, studies: &[StudyStatus]) -> String {
         if s.informed && status == "reported" {
             status.push_str(" (plan informed by its deciding data)");
         }
-        let mut header = vec![s.id.clone(), status];
+        let mut header = vec![s.id.clone()];
+        if let Some(mode) = &s.mode {
+            header.push(mode.clone());
+        }
+        header.push(status);
         if let Some(q) = &s.question {
             header.push(q.clone());
         }
@@ -552,6 +573,7 @@ pub fn status_json(project: &Value, studies: &[StudyStatus]) -> Value {
         "project": project,
         "studies": studies.iter().map(|s| json!({
             "id": s.id,
+            "mode": s.mode,
             "status": s.status,
             "plan_informed_by_deciding_data": s.informed,
             "question": s.question,
@@ -601,20 +623,26 @@ pub fn run_command(root: &Path, study: &str, options: &RunOptions) -> Result<Vec
             "study `{study}` has no stages: add stages to config/base.yaml"
         ));
     }
-    match (status == Some(Status::Draft), options.draft) {
-        (true, false) => {
-            return refuse(format!(
-                "study `{study}` is a draft. Results seen before pre-registration cannot be reported, so \
-                 pre-register first (`tophat study preregister {study}`), or pass --draft for a trial run \
-                 whose results are kept apart and can never be reported"
-            ));
-        }
-        (false, true) => {
+    let preregisters = doc.mode().preregisters();
+    if options.draft {
+        if status != Some(Status::Draft) {
             return refuse(format!(
                 "--draft is only for draft studies; study `{study}` is not a draft"
             ));
         }
-        _ => {}
+        if !preregisters {
+            return refuse(format!(
+                "study `{study}` is in `{}` mode, which has no trial runs: its runs are real from the \
+                 start",
+                doc.mode()
+            ));
+        }
+    } else if status == Some(Status::Draft) && preregisters {
+        return refuse(format!(
+            "study `{study}` is a draft. Results seen before pre-registration cannot be reported, so \
+             pre-register first (`tophat study preregister {study}`), or pass --draft for a trial run \
+             whose results are kept apart and can never be reported"
+        ));
     }
     if let Some(v) = &options.variant
         && !doc.variants().contains(v)

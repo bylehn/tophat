@@ -76,6 +76,8 @@ pub struct StageConfig {
     /// The question a human answers at the stage's QC gate; not part of the key.
     pub review: Option<String>,
     pub result: Option<String>,
+    /// The epistemic tag carried by the stage's result line, overriding the mode default.
+    pub epistemic: Option<String>,
     /// Project-relative path of the file that defines the stage.
     pub file: String,
     /// 1-based line of the stage in `file`, when it can be located.
@@ -223,9 +225,22 @@ fn yaml_to_json(value: &Yaml) -> Result<Value, String> {
     })
 }
 
-const STAGE_KEYS: [&str; 14] = [
-    "name", "run", "code", "inputs", "params", "env", "threads", "foreach", "validate", "review",
-    "result", "tool", "external", "trial",
+const STAGE_KEYS: [&str; 15] = [
+    "name",
+    "run",
+    "code",
+    "inputs",
+    "params",
+    "env",
+    "threads",
+    "foreach",
+    "validate",
+    "review",
+    "result",
+    "epistemic",
+    "tool",
+    "external",
+    "trial",
 ];
 
 /// Parses an input source: `stage:<stage>` or `dataset:<name>@v<n>`.
@@ -295,6 +310,7 @@ struct StageFields {
     validate: Option<String>,
     review: Option<String>,
     result: Option<String>,
+    epistemic: Option<String>,
     tool: Option<String>,
     external: Option<ExternalConfig>,
     trial: Option<TrialOverride>,
@@ -495,6 +511,10 @@ fn parse_file(
                     Yaml::String(s) => fields.result = Some(s),
                     _ => problems.push(bad("a file name")),
                 },
+                "epistemic" => match value {
+                    Yaml::String(s) => fields.epistemic = Some(s),
+                    _ => problems.push(bad("an epistemic tag")),
+                },
                 "tool" => match value {
                     Yaml::String(s) => fields.tool = Some(s),
                     _ => problems.push(bad("a pin `<tool>@<commit>`")),
@@ -645,6 +665,22 @@ fn build_stage(
             "stage `{name}`: `result` must be a relative file path"
         )));
     }
+    if let Some(epistemic) = &fields.epistemic {
+        let valid = matches!(
+            epistemic.as_str(),
+            "pre-specified" | "exploratory" | "post hoc"
+        );
+        if !valid {
+            problems.push(problem(format!(
+                "stage `{name}`: `epistemic: {epistemic}` is not pre-specified, exploratory or post hoc"
+            )));
+        }
+        if fields.result.is_none() {
+            problems.push(problem(format!(
+                "stage `{name}`: `epistemic` is only allowed on a stage with `result`"
+            )));
+        }
+    }
     let env = fields.env.clone().unwrap_or_else(|| "default".into());
     Some(StageConfig {
         name,
@@ -662,6 +698,7 @@ fn build_stage(
         review: fields.review.clone(),
         tool: fields.tool.clone(),
         result: fields.result.clone(),
+        epistemic: fields.epistemic.clone(),
         file: file.to_string(),
         line: fields.line,
     })
@@ -913,6 +950,9 @@ fn merge_variant(
         }
         if let Some(result) = fields.result {
             stage.result = Some(result);
+        }
+        if let Some(epistemic) = fields.epistemic {
+            stage.epistemic = Some(epistemic);
         }
         stage.file = file.to_string();
         stage.line = fields.line.or(stage.line);

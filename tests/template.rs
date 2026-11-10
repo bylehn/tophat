@@ -997,11 +997,14 @@ fn a_new_project_has_nothing_to_do_but_ask_the_question() {
     let status: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     assert_eq!(
         status["project"]["questions"],
-        serde_json::json!({"open": 0, "answered": 0, "dropped": 0})
+        serde_json::json!({"open": 0, "emerged": 0, "answered": 0, "dropped": 0})
     );
     assert_eq!(status["studies"], serde_json::json!([]));
     let text = String::from_utf8_lossy(&tophat(&p, &["status"]).stdout).into_owned();
-    assert!(text.contains("0 open, 0 answered, 0 dropped"), "{text}");
+    assert!(
+        text.contains("0 open, 0 emerged, 0 answered, 0 dropped"),
+        "{text}"
+    );
 }
 
 #[test] // rq-83643799 rq-4a8d3a7d

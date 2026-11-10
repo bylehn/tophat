@@ -67,7 +67,12 @@
   "rq-014c049f": {
     "decl": "Scenario: Migrate adds the mode of an existing study",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Migrate adds the mode of an existing study",
     "type": "scenario"
   },
@@ -138,7 +143,12 @@
     "decl": "### The check job",
     "file": "pipeline/snakemake",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/check.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The check job",
     "type": "section"
   },
@@ -384,7 +394,12 @@
   "rq-0725f8c7": {
     "decl": "Scenario: Replicate creates a study with a pinned target",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Replicate creates a study with a pinned target",
     "type": "scenario"
   },
@@ -1541,7 +1556,12 @@
   "rq-22119ec7": {
     "decl": "- `tophat study test <study> --key <key>`",
     "file": "pipeline/snakemake",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/pipeline/check.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -2099,7 +2119,12 @@
   "rq-2cd827c4": {
     "decl": "Scenario: Create a descriptive study",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Create a descriptive study",
     "type": "scenario"
   },
@@ -2132,7 +2157,12 @@
   "rq-2dd238fe": {
     "decl": "Scenario: Link refuses the study itself",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Link refuses the study itself",
     "type": "scenario"
   },
@@ -2342,7 +2372,16 @@
   "rq-3250dbea": {
     "decl": "- `tophat study replicate <study-id> --question <question-id> --of <study-id>@<commit> [--visibility public|private]`",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/study/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -2470,7 +2509,12 @@
   "rq-367917d9": {
     "decl": "- `consumed_datasets(project: &Project, study: &str, stage: &str, key: &str) ->",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/splits.rs",
+        "kind": "code"
+      }
+    ],
     "title": "consumed_datasets",
     "type": "api-item"
   },
@@ -2972,7 +3016,12 @@
   "rq-4044efe1": {
     "decl": "Scenario: Emerge records a question born from a study",
     "file": "question-tree",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Emerge records a question born from a study",
     "type": "scenario"
   },
@@ -3133,7 +3182,12 @@
   "rq-44085c48": {
     "decl": "Scenario: Hand-written retrospective results must be tagged post hoc",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/study/commands.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Hand-written retrospective results must be tagged post hoc",
     "type": "scenario"
   },
@@ -3217,7 +3271,12 @@
   "rq-45f33b14": {
     "decl": "Scenario: Invalid mode value",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Invalid mode value",
     "type": "scenario"
   },
@@ -3430,7 +3489,12 @@
     "decl": "## Data Splits",
     "file": "data",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/rules.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Data Splits",
     "type": "section"
   },
@@ -4159,7 +4223,12 @@
   "rq-597a5aff": {
     "decl": "- `Mode` — enum `Confirmatory`, `Exploratory`, `Descriptive`, `Methods`, `Replication`,",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/study/mod.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Mode",
     "type": "api-item"
   },
@@ -4368,7 +4437,16 @@
     "decl": "## Epistemic Tags",
     "file": "study/format",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/study/summary.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Epistemic Tags",
     "type": "section"
   },
@@ -4427,7 +4505,12 @@
   "rq-5d9d0d62": {
     "decl": "- `Status` — enum `Draft`, `Preregistered`, `Reported`, `Superseded`.",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/study/mod.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Status",
     "type": "api-item"
   },
@@ -5289,7 +5372,16 @@
   "rq-70fdb927": {
     "decl": "- `split_of(splits: &Splits, consumed: &[DatasetRef]) -> Option<String>` — the split a consumed",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/splits.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "split_of",
     "type": "api-item"
   },
@@ -5430,7 +5522,12 @@
   "rq-7449b1fb": {
     "decl": "- `tophat question emerge \"<text>\" --from <study-id> [--under <question-id>]`",
     "file": "question-tree",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/question/commands.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -5805,7 +5902,12 @@
   "rq-7d5a35b9": {
     "decl": "- `Relation` — enum `FollowsUp`, `Reanalyses`, `Refutes`, `Extends`, `DerivesFrom`, one variant per",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/study/mod.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Relation",
     "type": "api-item"
   },
@@ -5849,7 +5951,12 @@
     "decl": "## Emerged Questions",
     "file": "question-tree",
     "level": 2,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/question/rules.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Emerged Questions",
     "type": "section"
   },
@@ -6710,7 +6817,12 @@
   "rq-94b72fce": {
     "decl": "Scenario: Citing an exploratory study without a label",
     "file": "question-tree",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Citing an exploratory study without a label",
     "type": "scenario"
   },
@@ -6825,7 +6937,12 @@
   "rq-9673eeec": {
     "decl": "- `Split` — one registry entry: name, members (`Vec<DatasetRef>`), optional partition name,",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/splits.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Split",
     "type": "api-item"
   },
@@ -6912,7 +7029,12 @@
   "rq-98115a64": {
     "decl": "Scenario: A dangling relation entry",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A dangling relation entry",
     "type": "scenario"
   },
@@ -7106,7 +7228,12 @@
   "rq-9bc9d54b": {
     "decl": "- `tophat study migrate <study-id>...`",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/study/commands.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -7137,7 +7264,12 @@
   "rq-9c500c8f": {
     "decl": "Scenario: Link records a follow-up relation",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Link records a follow-up relation",
     "type": "scenario"
   },
@@ -7367,7 +7499,12 @@
     "decl": "### The split registry",
     "file": "data",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The split registry",
     "type": "section"
   },
@@ -7461,7 +7598,12 @@
   "rq-a091b98c": {
     "decl": "Scenario: Creating a replication study requires the replicate command",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Creating a replication study requires the replicate command",
     "type": "scenario"
   },
@@ -7905,7 +8047,12 @@
   "rq-a88520bf": {
     "decl": "- `emerge(root: &Path, text: &str, from: &str, under: Option<&str>) -> Result<(String, String), QuestionError>` —",
     "file": "question-tree",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/question/commands.rs",
+        "kind": "code"
+      }
+    ],
     "title": "emerge",
     "type": "api-item"
   },
@@ -7931,14 +8078,28 @@
   "rq-a8e08904": {
     "decl": "Scenario: An invalid registry fails the check",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An invalid registry fails the check",
     "type": "scenario"
   },
   "rq-a8e3636b": {
     "decl": "- `tophat study link <study-id> --follows-up|--reanalyses|--refutes|--extends|--derives-from <other-study-id>`",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/study/commands.rs",
+        "kind": "code"
+      },
+      {
+        "file": "src/study/rules.rs",
+        "kind": "code"
+      }
+    ],
     "title": "tophat",
     "type": "api-item"
   },
@@ -8230,7 +8391,12 @@
   "rq-ae6ec611": {
     "decl": "Scenario: A retrospective study without stages reports hand-written results",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/study/commands.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A retrospective study without stages reports hand-written results",
     "type": "scenario"
   },
@@ -8357,7 +8523,12 @@
     "decl": "### Split tags on results",
     "file": "data",
     "level": 3,
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/rules.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Split tags on results",
     "type": "section"
   },
@@ -8651,7 +8822,12 @@
   "rq-b80d58f2": {
     "decl": "Scenario: The pre-mode retrospective status",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "The pre-mode retrospective status",
     "type": "scenario"
   },
@@ -8760,7 +8936,12 @@
   "rq-bb7f2503": {
     "decl": "Scenario: A study without a mode",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A study without a mode",
     "type": "scenario"
   },
@@ -8883,7 +9064,12 @@
   "rq-bda61e61": {
     "decl": "- `Splits` — the parsed registry: the splits, sorted by name.",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/splits.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Splits",
     "type": "api-item"
   },
@@ -9082,7 +9268,12 @@
   "rq-c2acb5c8": {
     "decl": "Scenario: Link ignores duplicates and keeps the list sorted",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Link ignores duplicates and keeps the list sorted",
     "type": "scenario"
   },
@@ -9142,7 +9333,12 @@
   "rq-c3ccc5f9": {
     "decl": "Scenario: Migrate converts a reported pre-mode retrospective study",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Migrate converts a reported pre-mode retrospective study",
     "type": "scenario"
   },
@@ -10601,7 +10797,12 @@
   "rq-ddd0dee1": {
     "decl": "- `Citation` — one entry of an evidence line: `target: String` (a study ID or a question ID) and",
     "file": "question-tree",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/question/mod.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Citation",
     "type": "api-item"
   },
@@ -11519,7 +11720,12 @@
   "rq-f36436b8": {
     "decl": "Scenario: An emerged question needs neither answer nor evidence",
     "file": "question-tree",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "An emerged question needs neither answer nor evidence",
     "type": "scenario"
   },
@@ -11735,7 +11941,12 @@
   "rq-f7810e6d": {
     "decl": "Scenario: Pre-registering a descriptive study locks its deliverables",
     "file": "study/format",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "Pre-registering a descriptive study locks its deliverables",
     "type": "scenario"
   },
@@ -11851,7 +12062,16 @@
   "rq-f9dd9929": {
     "decl": "- `parse_splits(text: &str) -> Result<Splits, String>` — parses and validates the split registry",
     "file": "data",
-    "refs": [],
+    "refs": [
+      {
+        "file": "src/data/splits.rs",
+        "kind": "code"
+      },
+      {
+        "file": "tests/science_workflow.rs",
+        "kind": "code"
+      }
+    ],
     "title": "parse_splits",
     "type": "api-item"
   },

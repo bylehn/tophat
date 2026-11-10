@@ -484,7 +484,7 @@ Feature: Generated project skeleton
   @rq-6fd1f551
   Scenario: A new project has nothing to do but ask the question
     When the template is rendered with default answers
-    Then "tophat status" reports "0 open, 0 answered, 0 dropped" and lists no studies
+    Then "tophat status" reports "0 open, 0 emerged, 0 answered, 0 dropped" and lists no studies
 
   @rq-83643799
   Scenario: Generation runs no commands

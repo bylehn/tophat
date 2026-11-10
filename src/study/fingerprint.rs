@@ -2,7 +2,7 @@
 
 use sha2::{Digest, Sha256};
 
-use super::{FROZEN_SECTIONS, Study};
+use super::{Mode, Study, frozen_sections};
 
 /// Strips trailing whitespace from each line and removes leading and trailing blank lines.
 fn normalize(content: &[(u32, String)]) -> Vec<&str> {
@@ -24,7 +24,13 @@ fn normalize(content: &[(u32, String)]) -> Vec<&str> {
 /// heading line.
 pub fn frozen_fingerprint(study: &Study) -> String {
     let mut text = format!("study:{}\n", study.id);
-    for name in FROZEN_SECTIONS {
+    let mode = study.mode();
+    if mode == Mode::Replication
+        && let Some(field) = &study.front.reproduces
+    {
+        text.push_str(&format!("reproduces:{}\n", field.value));
+    }
+    for name in frozen_sections(mode) {
         text.push_str(&format!("## {name}\n"));
         if let Some(section) = study.section(name) {
             for line in normalize(&section.content) {

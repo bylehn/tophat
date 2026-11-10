@@ -93,6 +93,43 @@ pub fn pipeline_rules(project: &Project) -> Vec<Diagnostic> {
                 configs.push(config);
             }
         }
+        let study_file = format!("{STUDIES_DIR}/{study}/{STUDY_FILE}");
+        let mode = project
+            .read_to_string(&study_file)
+            .ok()
+            .and_then(|t| parse_study_text(&study, &study_file, &t).ok())
+            .map(|s| s.mode())
+            .unwrap_or(crate::study::Mode::Confirmatory);
+        let mut flagged = BTreeSet::new();
+        for stage in base
+            .iter()
+            .chain(configs.iter().flat_map(|c| c.stages.iter()))
+        {
+            if !flagged.insert((stage.file.clone(), stage.name.clone())) {
+                continue;
+            }
+            if !mode.preregisters() && stage.trial.is_some() {
+                problems.push(ConfigProblem {
+                    file: stage.file.clone(),
+                    line: stage.line,
+                    message: format!(
+                        "stage `{}`: `trial` is only allowed in a mode that pre-registers, and \
+                         this study is `{mode}` mode",
+                        stage.name
+                    ),
+                });
+            }
+            if !mode.preregisters() && stage.epistemic.as_deref() == Some("pre-specified") {
+                problems.push(ConfigProblem {
+                    file: stage.file.clone(),
+                    line: stage.line,
+                    message: format!(
+                        "stage `{}`: `epistemic: pre-specified` is not allowed in a `{mode}` mode study",
+                        stage.name
+                    ),
+                });
+            }
+        }
         let mut seen = BTreeSet::new();
         for p in problems {
             if seen.insert((p.file.clone(), p.line, p.message.clone())) {
@@ -275,13 +312,25 @@ fn check_execution(
     let Ok(summary) = parse_summary(&project.root().join(&summary_path)) else {
         return;
     };
-    let Some(keys) = summary.keys else { return };
-    let Ok(stale) = stale_entries(project.root(), study, &keys) else {
-        return;
-    };
-    if stale.is_empty() {
+    let stale = summary
+        .keys
+        .as_ref()
+        .and_then(|keys| stale_entries(project.root(), study, keys).ok())
+        .unwrap_or_default();
+    let check_stale =
+        super::check::check_key_stale(project.root(), study, summary.check.as_deref())
+            .unwrap_or(false);
+    if stale.is_empty() && !check_stale {
         return;
     }
+    let detail = if check_stale {
+        "the study's test files changed since the summary was written".to_string()
+    } else {
+        format!(
+            "SUMMARY.md was produced under keys that no longer match the configuration: {}",
+            stale.join(", ")
+        )
+    };
     let study_file = format!("{STUDIES_DIR}/{study}/{STUDY_FILE}");
     let status = project
         .read_to_string(&study_file)
@@ -297,10 +346,7 @@ fn check_execution(
         severity,
         summary_path,
         None,
-        format!(
-            "SUMMARY.md was produced under keys that no longer match the configuration: {}",
-            stale.join(", ")
-        ),
+        detail,
         &format!("Run `tophat run {study}` to bring the results up to date"),
     ));
 }

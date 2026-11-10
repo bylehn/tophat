@@ -11,7 +11,8 @@ use super::config::StageInput;
 use super::provenance::{ProvenanceRecord, ResolvedStage};
 use crate::fsutil::write_atomic;
 use crate::study::{
-    ResultLine, STUDIES_DIR, STUDY_FILE, SUMMARY_FILE, Study, Summary, parse_study_text,
+    Epistemic, Mode, ResultLine, ResultTag, STUDIES_DIR, STUDY_FILE, SUMMARY_FILE, Study, Summary,
+    parse_study_text,
 };
 
 /// Reads and parses a study's `STUDY.md`.
@@ -78,6 +79,12 @@ pub fn summarize(root: &Path, study: &str) -> Result<Summary, PipelineError> {
         PipelineError::Io("summaries need a git repository with at least one commit".into())
     })?;
 
+    let mode = doc.mode();
+    let default_epistemic = match mode {
+        Mode::Exploratory => Epistemic::Exploratory,
+        Mode::Retrospective => Epistemic::PostHoc,
+        _ => Epistemic::PreSpecified,
+    };
     let mut results = Vec::new();
     let mut keys = BTreeMap::new();
     let mut missing = Vec::new();
@@ -112,11 +119,21 @@ pub fn summarize(root: &Path, study: &str) -> Result<Summary, PipelineError> {
             match (sealed, lines.as_slice()) {
                 (true, [line]) => {
                     dirty |= !lineage_clean(&resolved, &stage.name, &mut BTreeSet::new());
+                    let epistemic = stage
+                        .epistemic
+                        .as_deref()
+                        .and_then(Epistemic::parse)
+                        .unwrap_or(default_epistemic);
                     results.push(ResultLine {
                         variant: variant.clone(),
                         stage: stage.name.clone(),
                         text: line.to_string(),
-                        raw: format!("- {label}: {line}"),
+                        tag: Some(ResultTag {
+                            epistemic,
+                            split: None,
+                        }),
+                        tag_problem: None,
+                        raw: format!("- {label}: {line} [{}]", epistemic.as_str()),
                         line: 0,
                     });
                     keys.insert(label, key);
@@ -136,6 +153,15 @@ pub fn summarize(root: &Path, study: &str) -> Result<Summary, PipelineError> {
             missing.join(", ")
         )));
     }
+    let check = super::check::test_key(root, study)?;
+    if let Some(key) = &check {
+        if !super::check::check_record_sealed(root, study, key) {
+            return Err(PipelineError::NotSealed(format!(
+                "the study has test files but no sealed check record for test key {key}; run the pipeline"
+            )));
+        }
+        dirty |= super::check::check_record_clean(root, study, key) == Some(false);
+    }
     Ok(Summary {
         study: study.to_string(),
         commit,
@@ -144,6 +170,7 @@ pub fn summarize(root: &Path, study: &str) -> Result<Summary, PipelineError> {
         generated: chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
         tophat_version: env!("CARGO_PKG_VERSION").to_string(),
         keys: Some(keys),
+        check,
         deciding_data_seen: doc.deciding_data_seen(),
         results,
     })
@@ -165,6 +192,9 @@ pub fn render_summary(summary: &Summary) -> String {
         for (label, key) in keys {
             out.push_str(&format!("  {}: {}\n", q(label), q(key)));
         }
+    }
+    if let Some(check) = &summary.check {
+        out.push_str(&format!("check: {}\n", q(check)));
     }
     // rq-643d82cb
     if summary.deciding_data_seen {

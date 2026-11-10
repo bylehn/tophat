@@ -19,7 +19,7 @@ use tophat::pipeline::{
     summarize, write_summary,
 };
 use tophat::study::{
-    Console, Status, StudyError, exploration_hash, new_study, parse_study_text, preregister,
+    Console, Mode, Status, StudyError, exploration_hash, new_study, parse_study_text, preregister,
     record_exploration, report, supersede,
 };
 use tophat::workflow::{Who, next_action, study_status};
@@ -173,7 +173,7 @@ impl Env {
 
     /// A draft study created by `tophat study new` with its plan written.
     fn new_study(&self, id: &str) {
-        new_study(&self.root(), id, "q-9c0d1e2f", false).unwrap();
+        new_study(&self.root(), id, "q-9c0d1e2f", false, Mode::Confirmatory).unwrap();
         let rel = format!("studies/{id}/STUDY.md");
         for (section, content) in PLAN {
             let text = self.read(&rel);
@@ -330,6 +330,16 @@ impl Env {
         );
     }
 
+    /// Writes a sealed check record for the study's current test key.
+    fn seal_check(&self) {
+        let key = tophat::pipeline::test_key(&self.root(), "x-vs-docking")
+            .unwrap()
+            .expect("the study has test files");
+        let dir = tophat::pipeline::check_record_dir(&self.root(), "x-vs-docking", &key).unwrap();
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("provenance.json"), "{\"clean\": true}").unwrap();
+    }
+
     /// Runs every stage by hand, records pass verdicts, writes the summary, and commits.
     fn complete(&self) {
         for v in ["base", "pbe"] {
@@ -337,6 +347,7 @@ impl Env {
             self.verdict(v, "pass");
             self.run_by_hand(v, "analyse");
         }
+        self.seal_check();
         write_summary(
             &self.root(),
             &summarize(&self.root(), "x-vs-docking").unwrap(),
@@ -424,7 +435,14 @@ fn the_baseline_project_has_no_check_errors() {
 #[test] // rq-a3f2b786 rq-956cc0ad rq-bf93285a
 fn a_fresh_draft_needs_its_plan_written() {
     let env = Env::draft();
-    new_study(&env.root(), "fresh-study", "q-9c0d1e2f", false).unwrap();
+    new_study(
+        &env.root(),
+        "fresh-study",
+        "q-9c0d1e2f",
+        false,
+        Mode::Confirmatory,
+    )
+    .unwrap();
     let next = next_action(&env.root(), "fresh-study").unwrap();
     assert_eq!((next.row, next.who), (3, Who::Anyone));
     assert_eq!(next.text, "Write the plan in STUDY.md");
@@ -749,13 +767,18 @@ fn retrospective_study_without_a_pipeline() {
     env.new_study("old-benchmark");
     env.edit(
         "studies/old-benchmark/STUDY.md",
-        "status: draft",
-        "status: retrospective",
+        "status: draft\n",
+        "status: reported\n",
+    );
+    env.edit(
+        "studies/old-benchmark/STUDY.md",
+        "mode: confirmatory\n",
+        "mode: retrospective\n",
     );
     env.edit(
         "studies/old-benchmark/STUDY.md",
         "## Result\n",
-        "## Result\n\n- base/score: rho=0.5 (2024)\n",
+        "## Result\n\n- base/score: rho=0.5 (2024) [post hoc]\n",
     );
     env.edit(
         "PROJECT.md",
@@ -786,7 +809,7 @@ fn project_line() {
     assert_eq!(code, 0);
     assert_eq!(
         out.lines().next().unwrap(),
-        "questions: 2 open, 1 answered, 1 dropped; check: 1 error(s), 2 warning(s), 0 legacy item(s)"
+        "questions: 2 open, 0 emerged, 1 answered, 1 dropped; check: 1 error(s), 2 warning(s), 0 legacy item(s)"
     );
 }
 
@@ -1556,7 +1579,8 @@ fn a_result_informed_by_its_deciding_data_is_labelled() {
     );
     let (_, status, _) = env.tophat(&["status"], &[]);
     assert!(
-        status.contains("x-vs-docking  reported (plan informed by its deciding data)"),
+        status
+            .contains("x-vs-docking  confirmatory  reported (plan informed by its deciding data)"),
         "{status}"
     );
 }

@@ -9,12 +9,96 @@ use super::document::load_front_matter;
 use super::{StudyError, matches_id_pattern};
 use crate::markdown::{meaningful_lines, numbered_lines, sections, split_front_matter};
 
-/// One result line: `- <variant>/<stage>: <text>`.
+// rq-5cca5697
+/// The epistemic status carried by a result line.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Epistemic {
+    PreSpecified,
+    Exploratory,
+    PostHoc,
+}
+
+impl Epistemic {
+    pub fn parse(s: &str) -> Option<Epistemic> {
+        Some(match s {
+            "pre-specified" => Epistemic::PreSpecified,
+            "exploratory" => Epistemic::Exploratory,
+            "post hoc" => Epistemic::PostHoc,
+            _ => return None,
+        })
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Epistemic::PreSpecified => "pre-specified",
+            Epistemic::Exploratory => "exploratory",
+            Epistemic::PostHoc => "post hoc",
+        }
+    }
+}
+
+/// The trailing tag group of a result line: its epistemic tag and optional split.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResultTag {
+    pub epistemic: Epistemic,
+    pub split: Option<String>,
+}
+
+/// Why a result line's trailing tag group is not usable.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TagProblem {
+    /// There is no trailing `[…]` group.
+    Missing,
+    /// The group holds an unknown tag or is otherwise malformed.
+    Invalid,
+    /// The group's split name does not match the study ID pattern.
+    InvalidSplit(String),
+}
+
+/// Splits a trailing space-separated `[...]` group off a result line: `(body, inner)`.
+pub fn trailing_tag_group(line: &str) -> Option<(&str, &str)> {
+    let trimmed = line.trim_end();
+    let inner = trimmed.strip_suffix(']')?;
+    let start = inner.rfind(" [")?;
+    Some((&inner[..start], &inner[start + 2..]))
+}
+
+/// Classifies the trailing tag group of a result line.
+pub fn classify_tag(line: &str) -> Result<(String, ResultTag), TagProblem> {
+    let Some((body, inner)) = trailing_tag_group(line) else {
+        return Err(TagProblem::Missing);
+    };
+    let mut parts = inner.split(" · ");
+    let epistemic = parts
+        .next()
+        .and_then(Epistemic::parse)
+        .ok_or(TagProblem::Invalid)?;
+    let split = match parts.next() {
+        None => None,
+        Some(rest) => {
+            let name = rest.strip_prefix("split:").ok_or(TagProblem::Invalid)?;
+            if !matches_id_pattern(name) {
+                return Err(TagProblem::InvalidSplit(name.to_string()));
+            }
+            Some(name.to_string())
+        }
+    };
+    if parts.next().is_some() {
+        return Err(TagProblem::Invalid);
+    }
+    Ok((body.to_string(), ResultTag { epistemic, split }))
+}
+
+/// One result line: `- <variant>/<stage>: <text> [<epistemic tag>]`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ResultLine {
     pub variant: String,
     pub stage: String,
     pub text: String,
+    /// The trailing tag group, when it parses.
+    pub tag: Option<ResultTag>,
+    /// Why the tag group is unusable, when it is.
+    pub tag_problem: Option<TagProblem>,
     /// The whole line as written (trailing whitespace stripped); what gets copied into STUDY.md.
     pub raw: String,
     /// 1-based line in SUMMARY.md.
@@ -34,6 +118,8 @@ pub struct Summary {
     pub tophat_version: String,
     /// `<variant>/<stage>` → the stage key each result line was read from, when recorded.
     pub keys: Option<std::collections::BTreeMap<String, String>>,
+    /// The study's test key, when the study has test files.
+    pub check: Option<String>,
     /// Whether the study's plan was informed by its deciding data; `false` when absent.
     pub deciding_data_seen: bool,
     pub results: Vec<ResultLine>,
@@ -48,10 +134,25 @@ fn parse_result_line(line: u32, raw: &str) -> Result<ResultLine, String> {
     if !matches_id_pattern(variant) || !matches_id_pattern(stage) || text.trim().is_empty() {
         return Err(malformed());
     }
+    let (tag, tag_problem) = match classify_tag(raw) {
+        Ok((_, tag)) => (Some(tag), None),
+        Err(problem) => (None, Some(problem)),
+    };
+    let text = match trailing_tag_group(raw) {
+        Some((body, _)) => body
+            .strip_prefix("- ")
+            .and_then(|r| r.split_once(": ").map(|(_, t)| t))
+            .unwrap_or(text)
+            .trim()
+            .to_string(),
+        None => text.trim().to_string(),
+    };
     Ok(ResultLine {
         variant: variant.to_string(),
         stage: stage.to_string(),
-        text: text.trim().to_string(),
+        text,
+        tag,
+        tag_problem,
         raw: raw.to_string(),
         line,
     })
@@ -72,6 +173,7 @@ pub(super) fn parse_summary_text(text: &str) -> Result<Summary, String> {
     let mut generated = None;
     let mut tophat_version = None;
     let mut keys = None;
+    let mut check = None;
     let mut deciding_data_seen = false;
     for (key, value) in &loaded.entries {
         match key.as_str() {
@@ -79,6 +181,7 @@ pub(super) fn parse_summary_text(text: &str) -> Result<Summary, String> {
             "commit" => commit = Some(loaded.scalar(key, value)?),
             "generated" => generated = Some(loaded.scalar(key, value)?),
             "tophat_version" => tophat_version = Some(loaded.scalar(key, value)?),
+            "check" => check = Some(loaded.scalar(key, value)?),
             "deciding_data_seen" => match value {
                 Yaml::Boolean(b) => deciding_data_seen = *b,
                 _ => return Err("field `deciding_data_seen` must be `true` or `false`".into()),
@@ -151,6 +254,7 @@ pub(super) fn parse_summary_text(text: &str) -> Result<Summary, String> {
         generated,
         tophat_version,
         keys,
+        check,
         deciding_data_seen,
         results,
     })
