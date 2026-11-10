@@ -158,6 +158,13 @@
     "title": "study_status",
     "type": "api-item"
   },
+  "rq-0317b8e4": {
+    "decl": "Scenario: The split command refuses a part not contained in its source",
+    "file": "data",
+    "refs": [],
+    "title": "The split command refuses a part not contained in its source",
+    "type": "scenario"
+  },
   "rq-032bd279": {
     "decl": "Scenario: Tools not fetched on this machine",
     "file": "workflow",
@@ -706,6 +713,13 @@
     "title": "parse_project",
     "type": "api-item"
   },
+  "rq-0f8176df": {
+    "decl": "Scenario: Declaring a split replaces its members",
+    "file": "data",
+    "refs": [],
+    "title": "Declaring a split replaces its members",
+    "type": "scenario"
+  },
   "rq-0f8bd6f3": {
     "decl": "- `DatasetRef` — a parsed `<name>@v<n>`: `name: String`, `version: u32`.",
     "file": "data",
@@ -1018,6 +1032,13 @@
       }
     ],
     "title": "Hand-edited content hash is detected",
+    "type": "scenario"
+  },
+  "rq-169f1ba6": {
+    "decl": "Scenario: A missing split tag where one is derived is a mismatch",
+    "file": "data",
+    "refs": [],
+    "title": "A missing split tag where one is derived is a mismatch",
     "type": "scenario"
   },
   "rq-170877ff": {
@@ -2410,6 +2431,13 @@
     "title": "Feature: Question Tree",
     "type": "file"
   },
+  "rq-367917d9": {
+    "decl": "- `consumed_datasets(project: &Project, study: &str, stage: &str, key: &str) ->",
+    "file": "data",
+    "refs": [],
+    "title": "consumed_datasets",
+    "type": "api-item"
+  },
   "rq-369fc531": {
     "decl": "Scenario: The quiz writes nothing",
     "file": "template/skills",
@@ -3206,6 +3234,13 @@
     "title": "Report copies result lines verbatim",
     "type": "scenario"
   },
+  "rq-47e0069b": {
+    "decl": "Scenario: A part with files outside its source fails the check",
+    "file": "data",
+    "refs": [],
+    "title": "A part with files outside its source fails the check",
+    "type": "scenario"
+  },
   "rq-47e127bc": {
     "decl": "Scenario: The hook uses the container on the host",
     "file": "template/project",
@@ -3279,6 +3314,14 @@
     "title": "Launcher",
     "type": "section"
   },
+  "rq-48c1339c": {
+    "decl": "### Partitions and sources",
+    "file": "data",
+    "level": 3,
+    "refs": [],
+    "title": "Partitions and sources",
+    "type": "section"
+  },
   "rq-49765877": {
     "decl": "Scenario: Environment variable overrides the local roots file",
     "file": "data",
@@ -3338,6 +3381,14 @@
       }
     ],
     "title": "Initial State",
+    "type": "section"
+  },
+  "rq-4a8ef3c9": {
+    "decl": "## Data Splits",
+    "file": "data",
+    "level": 2,
+    "refs": [],
+    "title": "Data Splits",
     "type": "section"
   },
   "rq-4aa0232e": {
@@ -4941,6 +4992,13 @@
     "title": "Emerge places the question as the parent's last sub-question",
     "type": "scenario"
   },
+  "rq-6c92aabb": {
+    "decl": "Scenario: Overlapping parts of one partition fail the check",
+    "file": "data",
+    "refs": [],
+    "title": "Overlapping parts of one partition fail the check",
+    "type": "scenario"
+  },
   "rq-6ceae812": {
     "decl": "- `NextAction` — `row: u8`, `who: Who` (`You`, `Anyone`, `Nobody`), `text: String`,",
     "file": "workflow",
@@ -5177,6 +5235,13 @@
     ],
     "title": "Amendment dated in the future",
     "type": "scenario"
+  },
+  "rq-70fdb927": {
+    "decl": "- `split_of(splits: &Splits, consumed: &[DatasetRef]) -> Option<String>` — the split a consumed",
+    "file": "data",
+    "refs": [],
+    "title": "split_of",
+    "type": "api-item"
   },
   "rq-71385ea7": {
     "decl": "## Assumptions",
@@ -5958,6 +6023,13 @@
     "title": "A release runs only from main",
     "type": "scenario"
   },
+  "rq-8359435d": {
+    "decl": "Scenario: A retired split member fails the check",
+    "file": "data",
+    "refs": [],
+    "title": "A retired split member fails the check",
+    "type": "scenario"
+  },
   "rq-83643799": {
     "decl": "Scenario: Generation runs no commands",
     "file": "template/project",
@@ -6070,6 +6142,13 @@
     ],
     "title": "Check Rules (`pipeline` family, tools)",
     "type": "section"
+  },
+  "rq-8595614d": {
+    "decl": "Scenario: A result line's split tag matches its lineage",
+    "file": "data",
+    "refs": [],
+    "title": "A result line's split tag matches its lineage",
+    "type": "scenario"
   },
   "rq-859c4b9b": {
     "decl": "# Feature: Generated Project Skeleton",
@@ -6588,6 +6667,20 @@
     "title": "Next Action",
     "type": "section"
   },
+  "rq-95a25436": {
+    "decl": "Scenario: Lineage annotates split membership",
+    "file": "data",
+    "refs": [],
+    "title": "Lineage annotates split membership",
+    "type": "scenario"
+  },
+  "rq-95c1a006": {
+    "decl": "Scenario: The split command refuses overlapping parts",
+    "file": "data",
+    "refs": [],
+    "title": "The split command refuses overlapping parts",
+    "type": "scenario"
+  },
   "rq-95cf00a8": {
     "decl": "Scenario: Missing data file",
     "file": "data",
@@ -6664,6 +6757,13 @@
     ],
     "title": "SLURM Defaults",
     "type": "section"
+  },
+  "rq-9673eeec": {
+    "decl": "- `Split` — one registry entry: name, members (`Vec<DatasetRef>`), optional partition name,",
+    "file": "data",
+    "refs": [],
+    "title": "Split",
+    "type": "api-item"
   },
   "rq-96dcd148": {
     "decl": "### Types",
@@ -7044,6 +7144,13 @@
     "title": "Read-only tophat commands need no approval",
     "type": "scenario"
   },
+  "rq-9d5aadcf": {
+    "decl": "Scenario: Removing a split",
+    "file": "data",
+    "refs": [],
+    "title": "Removing a split",
+    "type": "scenario"
+  },
   "rq-9d5b8ddf": {
     "decl": "### Commands",
     "file": "pipeline/tools",
@@ -7191,6 +7298,14 @@
     ],
     "title": "Variants with identical stage settings share a key",
     "type": "scenario"
+  },
+  "rq-9f70c6e0": {
+    "decl": "### The split registry",
+    "file": "data",
+    "level": 3,
+    "refs": [],
+    "title": "The split registry",
+    "type": "section"
   },
   "rq-9f803f04": {
     "decl": "Scenario: A replication study writes the plan its mode freezes",
@@ -7749,6 +7864,13 @@
     "title": "An unparseable file does not stop other files being checked",
     "type": "scenario"
   },
+  "rq-a8e08904": {
+    "decl": "Scenario: An invalid registry fails the check",
+    "file": "data",
+    "refs": [],
+    "title": "An invalid registry fails the check",
+    "type": "scenario"
+  },
   "rq-a8e3636b": {
     "decl": "- `tophat study link <study-id> --follows-up|--reanalyses|--refutes|--extends|--derives-from <other-study-id>`",
     "file": "study/format",
@@ -7877,6 +7999,13 @@
     "refs": [],
     "title": "Eval definitions",
     "type": "section"
+  },
+  "rq-aac98d90": {
+    "decl": "Scenario: Declare the parts of one partition",
+    "file": "data",
+    "refs": [],
+    "title": "Declare the parts of one partition",
+    "type": "scenario"
   },
   "rq-aae2e08f": {
     "decl": "Scenario: A fully referenced pending file is stale",
@@ -8054,6 +8183,13 @@
     "title": "End-to-End Example Study",
     "type": "section"
   },
+  "rq-aebc6258": {
+    "decl": "Scenario: Split tags are not checked without readable lineage",
+    "file": "data",
+    "refs": [],
+    "title": "Split tags are not checked without readable lineage",
+    "type": "scenario"
+  },
   "rq-af111715": {
     "decl": "Scenario: Gaps in scenario numbers are allowed",
     "file": "study/format",
@@ -8152,6 +8288,14 @@
     ],
     "title": "Render refuses a non-empty output directory",
     "type": "scenario"
+  },
+  "rq-b138c677": {
+    "decl": "### Split tags on results",
+    "file": "data",
+    "level": 3,
+    "refs": [],
+    "title": "Split tags on results",
+    "type": "section"
   },
   "rq-b17553a6": {
     "decl": "Scenario: An error fails the check",
@@ -8259,6 +8403,13 @@
       }
     ],
     "title": "Empty evidence list",
+    "type": "scenario"
+  },
+  "rq-b37c775b": {
+    "decl": "Scenario: A line whose data spans two splits carries no split",
+    "file": "data",
+    "refs": [],
+    "title": "A line whose data spans two splits carries no split",
     "type": "scenario"
   },
   "rq-b3af0612": {
@@ -8376,6 +8527,13 @@
     "refs": [],
     "title": "Behaviour",
     "type": "section"
+  },
+  "rq-b62f0bca": {
+    "decl": "Scenario: A wrong split tag is a mismatch",
+    "file": "data",
+    "refs": [],
+    "title": "A wrong split tag is a mismatch",
+    "type": "scenario"
   },
   "rq-b6cac057": {
     "decl": "Scenario: Relative local location is rejected",
@@ -8658,6 +8816,13 @@
     "title": "A full pin needs no lock entry",
     "type": "scenario"
   },
+  "rq-bda61e61": {
+    "decl": "- `Splits` — the parsed registry: the splits, sorted by name.",
+    "file": "data",
+    "refs": [],
+    "title": "Splits",
+    "type": "api-item"
+  },
   "rq-bdfef246": {
     "decl": "### Summary rule",
     "file": "pipeline/snakemake",
@@ -8674,6 +8839,13 @@
     ],
     "title": "Summary rule",
     "type": "section"
+  },
+  "rq-be0ec542": {
+    "decl": "Scenario: The parts of a partition name one source",
+    "file": "data",
+    "refs": [],
+    "title": "The parts of a partition name one source",
+    "type": "scenario"
   },
   "rq-be3c6abc": {
     "decl": "### `cargo xtask release-pin`",
@@ -8693,6 +8865,13 @@
       }
     ],
     "title": "Result in a preregistered study",
+    "type": "scenario"
+  },
+  "rq-be571301": {
+    "decl": "Scenario: A split tag naming no declared split",
+    "file": "data",
+    "refs": [],
+    "title": "A split tag naming no declared split",
     "type": "scenario"
   },
   "rq-bf30c589": {
@@ -8850,6 +9029,13 @@
     "title": "An exploratory study reports from a draft",
     "type": "scenario"
   },
+  "rq-c323764f": {
+    "decl": "- `tophat data split <name> --datasets <ref>… [--partition <name>] [--source <ref>]`",
+    "file": "data",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
   "rq-c333e981": {
     "decl": "Scenario: A question citation carries no label",
     "file": "question-tree",
@@ -8916,6 +9102,13 @@
     ],
     "title": "Personal skills",
     "type": "section"
+  },
+  "rq-c4944da0": {
+    "decl": "- `tophat data split <name> --remove`",
+    "file": "data",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
   },
   "rq-c5416f0d": {
     "decl": "## Assumptions",
@@ -9052,6 +9245,13 @@
     "refs": [],
     "title": "Gherkin Scenarios",
     "type": "section"
+  },
+  "rq-c7ad4a1c": {
+    "decl": "Scenario: Declare a split",
+    "file": "data",
+    "refs": [],
+    "title": "Declare a split",
+    "type": "scenario"
   },
   "rq-c7d50a4a": {
     "decl": "- `tophat pipeline stub <study>`",
@@ -11569,6 +11769,13 @@
     ],
     "title": "Invalid SLURM defaults",
     "type": "scenario"
+  },
+  "rq-f9dd9929": {
+    "decl": "- `parse_splits(text: &str) -> Result<Splits, String>` — parses and validates the split registry",
+    "file": "data",
+    "refs": [],
+    "title": "parse_splits",
+    "type": "api-item"
   },
   "rq-f9fd06bf": {
     "decl": "Scenario: Shared keys produce one job",
