@@ -64,6 +64,20 @@
     "title": "Manifests",
     "type": "section"
   },
+  "rq-014c049f": {
+    "decl": "Scenario: Migrate adds the mode of an existing study",
+    "file": "study/format",
+    "refs": [],
+    "title": "Migrate adds the mode of an existing study",
+    "type": "scenario"
+  },
+  "rq-016794d2": {
+    "decl": "Scenario: Reproduction target missing on a replication study",
+    "file": "study/format",
+    "refs": [],
+    "title": "Reproduction target missing on a replication study",
+    "type": "scenario"
+  },
   "rq-018e0aed": {
     "decl": "Scenario: Project line",
     "file": "workflow",
@@ -154,6 +168,13 @@
       }
     ],
     "title": "Tools not fetched on this machine",
+    "type": "scenario"
+  },
+  "rq-039a519b": {
+    "decl": "Scenario: A replication trial computes its reproduction",
+    "file": "study/exploration",
+    "refs": [],
+    "title": "A replication trial computes its reproduction",
     "type": "scenario"
   },
   "rq-039ad741": {
@@ -345,6 +366,13 @@
     "title": "The guide starts with exploring and explains its terms",
     "type": "scenario"
   },
+  "rq-0725f8c7": {
+    "decl": "Scenario: Replicate creates a study with a pinned target",
+    "file": "study/format",
+    "refs": [],
+    "title": "Replicate creates a study with a pinned target",
+    "type": "scenario"
+  },
   "rq-079894b1": {
     "decl": "### Commands",
     "file": "workflow",
@@ -360,6 +388,13 @@
     "refs": [],
     "title": "Feature API",
     "type": "section"
+  },
+  "rq-07a5604f": {
+    "decl": "Scenario: An exploratory study cannot pre-register",
+    "file": "study/format",
+    "refs": [],
+    "title": "An exploratory study cannot pre-register",
+    "type": "scenario"
   },
   "rq-07fe36ca": {
     "decl": "Scenario: Skills mention only real CLI commands",
@@ -797,7 +832,7 @@
     "type": "scenario"
   },
   "rq-13aae895": {
-    "decl": "Scenario: Report refuses a draft",
+    "decl": "Scenario: Report refuses a confirmatory draft",
     "file": "study/format",
     "refs": [
       {
@@ -805,7 +840,7 @@
         "kind": "code"
       }
     ],
-    "title": "Report refuses a draft",
+    "title": "Report refuses a confirmatory draft",
     "type": "scenario"
   },
   "rq-13cb4dbd": {
@@ -1811,6 +1846,13 @@
     "title": "Only stages with a review question are gated",
     "type": "scenario"
   },
+  "rq-2a055696": {
+    "decl": "Scenario: An exploration record without pre-registration is an error",
+    "file": "study/exploration",
+    "refs": [],
+    "title": "An exploration record without pre-registration is an error",
+    "type": "scenario"
+  },
   "rq-2a51782f": {
     "decl": "Scenario: The removed QC fields are rejected",
     "file": "pipeline/provenance",
@@ -1823,6 +1865,13 @@
     "title": "The removed QC fields are rejected",
     "type": "scenario"
   },
+  "rq-2a6c36db": {
+    "decl": "Scenario: Link refuses a missing study",
+    "file": "study/format",
+    "refs": [],
+    "title": "Link refuses a missing study",
+    "type": "scenario"
+  },
   "rq-2a741327": {
     "decl": "Scenario: Trial outputs are separate and unreportable",
     "file": "workflow",
@@ -1833,6 +1882,13 @@
       }
     ],
     "title": "Trial outputs are separate and unreportable",
+    "type": "scenario"
+  },
+  "rq-2a8b349a": {
+    "decl": "Scenario: Replicate refuses a missing target",
+    "file": "study/format",
+    "refs": [],
+    "title": "Replicate refuses a missing target",
     "type": "scenario"
   },
   "rq-2b0ca72f": {
@@ -1948,6 +2004,13 @@
     "title": "Stamp keeps existing IDs and status lines",
     "type": "scenario"
   },
+  "rq-2cd827c4": {
+    "decl": "Scenario: Create a descriptive study",
+    "file": "study/format",
+    "refs": [],
+    "title": "Create a descriptive study",
+    "type": "scenario"
+  },
   "rq-2da2ae3f": {
     "decl": "Scenario: The example study runs end to end",
     "file": "testing",
@@ -1966,6 +2029,13 @@
     "refs": [],
     "title": "Feature: Study Document Format and Lifecycle",
     "type": "file"
+  },
+  "rq-2dd238fe": {
+    "decl": "Scenario: Link refuses the study itself",
+    "file": "study/format",
+    "refs": [],
+    "title": "Link refuses the study itself",
+    "type": "scenario"
   },
   "rq-2dd95e98": {
     "decl": "### Commands",
@@ -2033,6 +2103,13 @@
       }
     ],
     "title": "Warnings do not block a run",
+    "type": "scenario"
+  },
+  "rq-2e3e53d6": {
+    "decl": "Scenario: A confirmatory study overrides a secondary result stage to exploratory",
+    "file": "study/format",
+    "refs": [],
+    "title": "A confirmatory study overrides a secondary result stage to exploratory",
     "type": "scenario"
   },
   "rq-2e420949": {
@@ -2162,6 +2239,13 @@
     ],
     "title": "Return steps leave kept files on the cluster",
     "type": "scenario"
+  },
+  "rq-3250dbea": {
+    "decl": "- `tophat study replicate <study-id> --question <question-id> --of <study-id>@<commit> [--visibility public|private]`",
+    "file": "study/format",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
   },
   "rq-32776f33": {
     "decl": "## Assumptions",
@@ -2517,7 +2601,7 @@
     "type": "scenario"
   },
   "rq-3a79a3f7": {
-    "decl": "Scenario: Retrospective study can be reported from a summary",
+    "decl": "Scenario: Retrospective study reports from a summary",
     "file": "study/format",
     "refs": [
       {
@@ -2525,7 +2609,7 @@
         "kind": "code"
       }
     ],
-    "title": "Retrospective study can be reported from a summary",
+    "title": "Retrospective study reports from a summary",
     "type": "scenario"
   },
   "rq-3ac5de89": {
@@ -2615,6 +2699,13 @@
       }
     ],
     "title": "Project run options are appended and validated",
+    "type": "scenario"
+  },
+  "rq-3c9a3c47": {
+    "decl": "Scenario: Migrate converts an in-progress pre-mode retrospective study",
+    "file": "study/format",
+    "refs": [],
+    "title": "Migrate converts an in-progress pre-mode retrospective study",
     "type": "scenario"
   },
   "rq-3ca62dea": {
@@ -2912,6 +3003,13 @@
     "title": "Verify a matching dataset",
     "type": "scenario"
   },
+  "rq-43f53fc5": {
+    "decl": "Scenario: A reported confirmatory study must have a pre-specified line",
+    "file": "study/format",
+    "refs": [],
+    "title": "A reported confirmatory study must have a pre-specified line",
+    "type": "scenario"
+  },
   "rq-44727473": {
     "decl": "### Title and preamble",
     "file": "question-tree",
@@ -2988,6 +3086,13 @@
     "refs": [],
     "title": "exploration/README.md",
     "type": "section"
+  },
+  "rq-45f33b14": {
+    "decl": "Scenario: Invalid mode value",
+    "file": "study/format",
+    "refs": [],
+    "title": "Invalid mode value",
+    "type": "scenario"
   },
   "rq-45fb5dee": {
     "decl": "### Types",
@@ -3151,6 +3256,13 @@
     "title": "Skill Lint Rules",
     "type": "section"
   },
+  "rq-4a0634d3": {
+    "decl": "Scenario: Pre-registering a methods study locks its success criteria",
+    "file": "study/format",
+    "refs": [],
+    "title": "Pre-registering a methods study locks its success criteria",
+    "type": "scenario"
+  },
   "rq-4a253518": {
     "decl": "## Feature API",
     "file": "study/exploration",
@@ -3225,6 +3337,13 @@
     "refs": [],
     "title": "Out of Scope",
     "type": "section"
+  },
+  "rq-4c09754e": {
+    "decl": "Scenario: Replicate refuses a pin that is not a commit",
+    "file": "study/format",
+    "refs": [],
+    "title": "Replicate refuses a pin that is not a commit",
+    "type": "scenario"
   },
   "rq-4c6f3b16": {
     "decl": "Scenario: A valid case passes",
@@ -3521,7 +3640,7 @@
     "type": "section"
   },
   "rq-52e3a974": {
-    "decl": "Scenario: Create a new study",
+    "decl": "Scenario: Create a new confirmatory study",
     "file": "study/format",
     "refs": [
       {
@@ -3529,7 +3648,7 @@
         "kind": "code"
       }
     ],
-    "title": "Create a new study",
+    "title": "Create a new confirmatory study",
     "type": "scenario"
   },
   "rq-52e5c665": {
@@ -3764,6 +3883,13 @@
     "title": "Generated Rules",
     "type": "section"
   },
+  "rq-5702c253": {
+    "decl": "Scenario: A section of another mode is free text",
+    "file": "study/format",
+    "refs": [],
+    "title": "A section of another mode is free text",
+    "type": "scenario"
+  },
   "rq-5737320e": {
     "decl": "# Feature: Data Roots, Datasets and Lineage",
     "file": "data",
@@ -3872,6 +3998,13 @@
     ],
     "title": "Personal instructions",
     "type": "section"
+  },
+  "rq-597a5aff": {
+    "decl": "- `Mode` — enum `Confirmatory`, `Exploratory`, `Descriptive`, `Methods`, `Replication`,",
+    "file": "study/format",
+    "refs": [],
+    "title": "Mode",
+    "type": "api-item"
   },
   "rq-597bb615": {
     "decl": "### Full verification",
@@ -4022,6 +4155,13 @@
     "title": "Check Rules (`data` family)",
     "type": "section"
   },
+  "rq-5bdc928b": {
+    "decl": "Scenario: Pre-registering a replication study locks its target and match criterion",
+    "file": "study/format",
+    "refs": [],
+    "title": "Pre-registering a replication study locks its target and match criterion",
+    "type": "scenario"
+  },
   "rq-5be14147": {
     "decl": "## Assumptions",
     "file": "testing",
@@ -4065,6 +4205,14 @@
     "level": 3,
     "refs": [],
     "title": "Types",
+    "type": "section"
+  },
+  "rq-5cca5697": {
+    "decl": "## Epistemic Tags",
+    "file": "study/format",
+    "level": 2,
+    "refs": [],
+    "title": "Epistemic Tags",
     "type": "section"
   },
   "rq-5cd91e7d": {
@@ -4117,6 +4265,13 @@
       }
     ],
     "title": "tophat",
+    "type": "api-item"
+  },
+  "rq-5d9d0d62": {
+    "decl": "- `Status` — enum `Draft`, `Preregistered`, `Reported`, `Superseded`.",
+    "file": "study/format",
+    "refs": [],
+    "title": "Status",
     "type": "api-item"
   },
   "rq-5da5a173": {
@@ -4189,18 +4344,6 @@
     "refs": [],
     "title": "Feature: Apptainer",
     "type": "file"
-  },
-  "rq-5e9d0d62": {
-    "decl": "- `Status` — enum `Draft`, `Preregistered`, `Reported`, `Superseded`, `Retrospective`.",
-    "file": "study/format",
-    "refs": [
-      {
-        "file": "src/study/mod.rs",
-        "kind": "code"
-      }
-    ],
-    "title": "Status",
-    "type": "api-item"
   },
   "rq-5ea916b5": {
     "decl": "### Functions",
@@ -4410,6 +4553,13 @@
     "title": "No license is written by default",
     "type": "scenario"
   },
+  "rq-6422ad44": {
+    "decl": "Scenario: Links are not frozen",
+    "file": "study/format",
+    "refs": [],
+    "title": "Links are not frozen",
+    "type": "scenario"
+  },
   "rq-643d82cb": {
     "decl": "Scenario: A result informed by its deciding data is labelled",
     "file": "study/exploration",
@@ -4443,7 +4593,7 @@
     "type": "section"
   },
   "rq-647102ae": {
-    "decl": "Scenario: Retrospective study cannot carry a pre-registration block",
+    "decl": "Scenario: A study in a mode without pre-registration cannot carry a pre-registration block",
     "file": "study/format",
     "refs": [
       {
@@ -4451,7 +4601,7 @@
         "kind": "code"
       }
     ],
-    "title": "Retrospective study cannot carry a pre-registration block",
+    "title": "A study in a mode without pre-registration cannot carry a pre-registration block",
     "type": "scenario"
   },
   "rq-647bcecc": {
@@ -4725,6 +4875,13 @@
     ],
     "title": "NextAction",
     "type": "api-item"
+  },
+  "rq-6d57beba": {
+    "decl": "Scenario: An unknown tag",
+    "file": "study/format",
+    "refs": [],
+    "title": "An unknown tag",
+    "type": "scenario"
   },
   "rq-6d9d6c2d": {
     "decl": "Scenario: Updating the environment changes keys of stages using it",
@@ -5196,6 +5353,13 @@
     "title": "Question body",
     "type": "section"
   },
+  "rq-7737c032": {
+    "decl": "Scenario: Supersede an exploratory reported study",
+    "file": "study/format",
+    "refs": [],
+    "title": "Supersede an exploratory reported study",
+    "type": "scenario"
+  },
   "rq-77e1e92c": {
     "decl": "Scenario: An unknown commit fails sync for that pin only",
     "file": "pipeline/tools",
@@ -5425,6 +5589,13 @@
     "title": "Every YAML form tophat accepts is understood",
     "type": "scenario"
   },
+  "rq-7d5a35b9": {
+    "decl": "- `Relation` — enum `FollowsUp`, `Reanalyses`, `Refutes`, `Extends`, `DerivesFrom`, one variant per",
+    "file": "study/format",
+    "refs": [],
+    "title": "Relation",
+    "type": "api-item"
+  },
   "rq-7d741e69": {
     "decl": "Scenario: Tree does not validate",
     "file": "question-tree",
@@ -5551,7 +5722,7 @@
     "type": "scenario"
   },
   "rq-8071e60f": {
-    "decl": "- `Study` — a parsed study: ID, front-matter fields, governed sections with their content and",
+    "decl": "- `Study` — a parsed study: ID, front-matter fields (including mode, relation lists and",
     "file": "study/format",
     "refs": [
       {
@@ -5804,6 +5975,13 @@
       }
     ],
     "title": "A new dataset version changes the key",
+    "type": "scenario"
+  },
+  "rq-86197e5c": {
+    "decl": "Scenario: An exploratory study reports from a draft",
+    "file": "study/format",
+    "refs": [],
+    "title": "An exploratory study reports from a draft",
     "type": "scenario"
   },
   "rq-864e9f23": {
@@ -6158,6 +6336,13 @@
     "title": "Report refuses a summary for another study",
     "type": "scenario"
   },
+  "rq-91befa97": {
+    "decl": "Scenario: A reported exploratory study needs a non-empty question",
+    "file": "study/format",
+    "refs": [],
+    "title": "A reported exploratory study needs a non-empty question",
+    "type": "scenario"
+  },
   "rq-91c22cd5": {
     "decl": "### Types",
     "file": "study/exploration",
@@ -6176,6 +6361,13 @@
       }
     ],
     "title": "A release refuses a version that is already tagged",
+    "type": "scenario"
+  },
+  "rq-924b622d": {
+    "decl": "Scenario: Pre-registration of a descriptive study records its exploration",
+    "file": "study/exploration",
+    "refs": [],
+    "title": "Pre-registration of a descriptive study records its exploration",
     "type": "scenario"
   },
   "rq-930cacde": {
@@ -6412,6 +6604,13 @@
     "title": "The required cases are present",
     "type": "scenario"
   },
+  "rq-98115a64": {
+    "decl": "Scenario: A dangling relation entry",
+    "file": "study/format",
+    "refs": [],
+    "title": "A dangling relation entry",
+    "type": "scenario"
+  },
   "rq-98385f5d": {
     "decl": "Scenario: The host variable overrides the project default",
     "file": "template/gpu",
@@ -6599,6 +6798,13 @@
     "title": "Waiting for a QC verdict",
     "type": "scenario"
   },
+  "rq-9bc9d54b": {
+    "decl": "- `tophat study migrate <study-id>...`",
+    "file": "study/format",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
   "rq-9bca6bbf": {
     "decl": "Scenario: Check does not modify the working tree",
     "file": "check",
@@ -6621,6 +6827,13 @@
       }
     ],
     "title": "STUDY.md is never a rule input",
+    "type": "scenario"
+  },
+  "rq-9c500c8f": {
+    "decl": "Scenario: Link records a follow-up relation",
+    "file": "study/format",
+    "refs": [],
+    "title": "Link records a follow-up relation",
     "type": "scenario"
   },
   "rq-9c53f79c": {
@@ -6699,6 +6912,13 @@
     "title": "Out of Scope",
     "type": "section"
   },
+  "rq-9dd27343": {
+    "decl": "Scenario: A valid split tag passes the syntax",
+    "file": "study/format",
+    "refs": [],
+    "title": "A valid split tag passes the syntax",
+    "type": "scenario"
+  },
   "rq-9e24cb69": {
     "decl": "Scenario: Gating a stage does not change keys",
     "file": "pipeline/provenance",
@@ -6751,22 +6971,6 @@
     ],
     "title": "The Human's Steps",
     "type": "section"
-  },
-  "rq-9f2c5cd1": {
-    "decl": "- `tophat study supersede <old-id> --by <new-id>`",
-    "file": "study/format",
-    "refs": [
-      {
-        "file": "src/study/commands.rs",
-        "kind": "code"
-      },
-      {
-        "file": "tests/study.rs",
-        "kind": "code"
-      }
-    ],
-    "title": "tophat",
-    "type": "api-item"
   },
   "rq-9f3a6366": {
     "decl": "### Clean",
@@ -6904,6 +7108,13 @@
       }
     ],
     "title": "Provenance records the tool",
+    "type": "scenario"
+  },
+  "rq-a091b98c": {
+    "decl": "Scenario: Creating a replication study requires the replicate command",
+    "file": "study/format",
+    "refs": [],
+    "title": "Creating a replication study requires the replicate command",
     "type": "scenario"
   },
   "rq-a147f8cf": {
@@ -7264,6 +7475,13 @@
     "title": "tophat",
     "type": "api-item"
   },
+  "rq-a779cb78": {
+    "decl": "Scenario: Reproduces outside replication mode",
+    "file": "study/format",
+    "refs": [],
+    "title": "Reproduces outside replication mode",
+    "type": "scenario"
+  },
   "rq-a79ad3ba": {
     "decl": "Scenario: Headings inside code fences are not sections",
     "file": "study/format",
@@ -7308,6 +7526,13 @@
     "title": "Invalid status value",
     "type": "scenario"
   },
+  "rq-a88d8dfe": {
+    "decl": "Scenario: Exploration needs a mode that pre-registers",
+    "file": "study/exploration",
+    "refs": [],
+    "title": "Exploration needs a mode that pre-registers",
+    "type": "scenario"
+  },
   "rq-a8be8316": {
     "decl": "Scenario: An unparseable file does not stop other files being checked",
     "file": "check",
@@ -7319,6 +7544,13 @@
     ],
     "title": "An unparseable file does not stop other files being checked",
     "type": "scenario"
+  },
+  "rq-a8e3636b": {
+    "decl": "- `tophat study link <study-id> --follows-up|--reanalyses|--refutes|--extends|--derives-from <other-study-id>`",
+    "file": "study/format",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
   },
   "rq-a96b0574": {
     "decl": "## Tool Environments",
@@ -7519,6 +7751,13 @@
     "title": "The release pin refuses a missing target",
     "type": "scenario"
   },
+  "rq-ac7347b1": {
+    "decl": "Scenario: Reproduces with a malformed pin",
+    "file": "study/format",
+    "refs": [],
+    "title": "Reproduces with a malformed pin",
+    "type": "scenario"
+  },
   "rq-acd69936": {
     "decl": "## Skills",
     "file": "template/skills",
@@ -7683,6 +7922,13 @@
     "refs": [],
     "title": "Conformance Suite",
     "type": "section"
+  },
+  "rq-b096fd9e": {
+    "decl": "Scenario: Pre-specified is impossible in exploratory mode",
+    "file": "study/format",
+    "refs": [],
+    "title": "Pre-specified is impossible in exploratory mode",
+    "type": "scenario"
   },
   "rq-b0f89137": {
     "decl": "Scenario: Render refuses a non-empty output directory",
@@ -7969,6 +8215,13 @@
     "title": "Output",
     "type": "section"
   },
+  "rq-b80d58f2": {
+    "decl": "Scenario: The pre-mode retrospective status",
+    "file": "study/format",
+    "refs": [],
+    "title": "The pre-mode retrospective status",
+    "type": "scenario"
+  },
   "rq-b8e989cd": {
     "decl": "Scenario: Orphan test reference in a draft warns",
     "file": "study/format",
@@ -8070,6 +8323,13 @@
     ],
     "title": "Files",
     "type": "section"
+  },
+  "rq-bb7f2503": {
+    "decl": "Scenario: A study without a mode",
+    "file": "study/format",
+    "refs": [],
+    "title": "A study without a mode",
+    "type": "scenario"
   },
   "rq-bb98136e": {
     "decl": "- `Roots` — declared root names and their resolved locations on this machine.",
@@ -8365,6 +8625,13 @@
     "title": "Referencing a retired version is an error",
     "type": "scenario"
   },
+  "rq-c2acb5c8": {
+    "decl": "Scenario: Link ignores duplicates and keeps the list sorted",
+    "file": "study/format",
+    "refs": [],
+    "title": "Link ignores duplicates and keeps the list sorted",
+    "type": "scenario"
+  },
   "rq-c3395d20": {
     "decl": "Scenario: Retiring twice fails",
     "file": "data",
@@ -8395,6 +8662,13 @@
       }
     ],
     "title": "Code outside the project",
+    "type": "scenario"
+  },
+  "rq-c3ccc5f9": {
+    "decl": "Scenario: Migrate converts a reported pre-mode retrospective study",
+    "file": "study/format",
+    "refs": [],
+    "title": "Migrate converts a reported pre-mode retrospective study",
     "type": "scenario"
   },
   "rq-c4003645": {
@@ -8438,6 +8712,13 @@
     "title": "Retrospective study with hand-written result is flagged as legacy",
     "type": "scenario"
   },
+  "rq-c5610a75": {
+    "decl": "Scenario: A result line without a tag",
+    "file": "study/format",
+    "refs": [],
+    "title": "A result line without a tag",
+    "type": "scenario"
+  },
   "rq-c5b9e99a": {
     "decl": "## The Tool Cache",
     "file": "pipeline/tools",
@@ -8472,7 +8753,7 @@
     "type": "scenario"
   },
   "rq-c65bf680": {
-    "decl": "Scenario: Retrospective study may have empty decision rule and scenarios",
+    "decl": "Scenario: Retrospective mode has no endpoint or scenario sections",
     "file": "study/format",
     "refs": [
       {
@@ -8480,7 +8761,7 @@
         "kind": "code"
       }
     ],
-    "title": "Retrospective study may have empty decision rule and scenarios",
+    "title": "Retrospective mode has no endpoint or scenario sections",
     "type": "scenario"
   },
   "rq-c65f79e0": {
@@ -8665,6 +8946,13 @@
     "refs": [],
     "title": "Feature: Tool Stages",
     "type": "file"
+  },
+  "rq-ca33392b": {
+    "decl": "Scenario: Confirmatory result lines are tagged pre-specified by default",
+    "file": "study/format",
+    "refs": [],
+    "title": "Confirmatory result lines are tagged pre-specified by default",
+    "type": "scenario"
   },
   "rq-cae7fbe8": {
     "decl": "Scenario: Every project-owned file is skipped on update",
@@ -9400,7 +9688,12 @@
   "rq-d81f1b41": {
     "decl": "Scenario: A release never replaces a published release",
     "file": "testing",
-    "refs": [],
+    "refs": [
+      {
+        "file": "tests/ci.rs",
+        "kind": "code"
+      }
+    ],
     "title": "A release never replaces a published release",
     "type": "scenario"
   },
@@ -9421,6 +9714,13 @@
     "file": "template/skills",
     "refs": [],
     "title": "The agent hands the external job to the human",
+    "type": "scenario"
+  },
+  "rq-d887a262": {
+    "decl": "Scenario: Trial result lines carry no epistemic tag",
+    "file": "study/exploration",
+    "refs": [],
+    "title": "Trial result lines carry no epistemic tag",
     "type": "scenario"
   },
   "rq-d89c8a6b": {
@@ -9450,6 +9750,13 @@
     ],
     "title": "Project",
     "type": "api-item"
+  },
+  "rq-d952ad20": {
+    "decl": "Scenario: An exploratory study cannot declare a pre-specified stage",
+    "file": "study/format",
+    "refs": [],
+    "title": "An exploratory study cannot declare a pre-specified stage",
+    "type": "scenario"
   },
   "rq-d953c801": {
     "decl": "Scenario: Summarize refuses a study without result stages",
@@ -9596,6 +9903,14 @@
     "title": "The example uses Julia when selected",
     "type": "scenario"
   },
+  "rq-db6541c1": {
+    "decl": "## Links",
+    "file": "study/format",
+    "level": 2,
+    "refs": [],
+    "title": "Links",
+    "type": "section"
+  },
   "rq-dba2a6b7": {
     "decl": "- `StudyError` — error type returned by parsing and by the study commands, with at minimum:",
     "file": "study/format",
@@ -9730,6 +10045,13 @@
       }
     ],
     "title": "Study names a question with sub-questions",
+    "type": "scenario"
+  },
+  "rq-dd5fc8f7": {
+    "decl": "Scenario: A study without pre-registration has no trial inputs",
+    "file": "study/exploration",
+    "refs": [],
+    "title": "A study without pre-registration has no trial inputs",
     "type": "scenario"
   },
   "rq-dd882acb": {
@@ -10269,6 +10591,13 @@
     "title": "Body Sections",
     "type": "section"
   },
+  "rq-ea738ef8": {
+    "decl": "- `tophat study supersede <old-id> --by <new-id>` <!-- rq-f2c5cd1 -->",
+    "file": "study/format",
+    "refs": [],
+    "title": "tophat",
+    "type": "api-item"
+  },
   "rq-ea89d221": {
     "decl": "Scenario: Answered question without evidence",
     "file": "question-tree",
@@ -10383,6 +10712,13 @@
       }
     ],
     "title": "The template's own license files are not copied",
+    "type": "scenario"
+  },
+  "rq-ed56d920": {
+    "decl": "Scenario: Migrate leaves a current study untouched",
+    "file": "study/format",
+    "refs": [],
+    "title": "Migrate leaves a current study untouched",
     "type": "scenario"
   },
   "rq-ed65c3a5": {
@@ -10679,6 +11015,13 @@
     "title": "QuestionStatus",
     "type": "api-item"
   },
+  "rq-f4564941": {
+    "decl": "Scenario: A malformed split name",
+    "file": "study/format",
+    "refs": [],
+    "title": "A malformed split name",
+    "type": "scenario"
+  },
   "rq-f480be87": {
     "decl": "Scenario: The agent suggests exploring before guessing an endpoint",
     "file": "template/skills",
@@ -10763,7 +11106,7 @@
     "type": "scenario"
   },
   "rq-f689a538": {
-    "decl": "- `tophat study new <study-id> --question <question-id> [--visibility public|private]`",
+    "decl": "- `tophat study new <study-id> --question <question-id> [--mode <mode>] [--visibility public|private]`",
     "file": "study/format",
     "refs": [
       {
@@ -10800,6 +11143,13 @@
       }
     ],
     "title": "Mixed citations are each checked",
+    "type": "scenario"
+  },
+  "rq-f7810e6d": {
+    "decl": "Scenario: Pre-registering a descriptive study locks its deliverables",
+    "file": "study/format",
+    "refs": [],
+    "title": "Pre-registering a descriptive study locks its deliverables",
     "type": "scenario"
   },
   "rq-f8136bd3": {
