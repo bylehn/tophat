@@ -437,7 +437,7 @@ fn evaluate(root: &Path, view: &ProjectView, study_id: &str) -> Result<StudyStat
                 && other
                     .evidence
                     .as_ref()
-                    .is_some_and(|(citations, _)| citations.iter().any(|c| &c.target == id))
+                    .is_some_and(|(citations, _)| citations.iter().any(|c| c.target == id))
         });
         open && !cited
     }) {

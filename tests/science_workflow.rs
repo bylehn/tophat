@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use chrono::NaiveDate;
-use tophat::check::{Project, Severity, run_check};
+use tophat::check::Project;
 use tophat::data::{DatasetRef, Split, Splits, parse_splits, render_splits, split_of};
 use tophat::question::{Citation, QuestionStatus, emerge, parse_project};
 use tophat::study::{

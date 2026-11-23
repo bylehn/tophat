@@ -410,23 +410,23 @@ fn check_splits(project: &Project, out: &mut Vec<Diagnostic>) -> Option<super::S
             }
             member_hashes.extend(manifest.files.iter().map(|f| f.sha256.clone()));
         }
-        if let (Some(source), true) = (&split.source, !member_hashes.is_empty()) {
-            if let Some(m) = manifests.get(source) {
-                let source_hashes: BTreeSet<String> =
-                    m.files.iter().map(|f| f.sha256.clone()).collect();
-                if !member_hashes.is_subset(&source_hashes) {
-                    out.push(diag(
-                        "data.split-not-contained",
-                        Severity::Error,
-                        SPLITS_FILE,
-                        None,
-                        format!(
-                            "Split `{}` has a file whose content is not in its source `{source}`",
-                            split.name
-                        ),
-                        "Make the split a part of its source, or fix `source`",
-                    ));
-                }
+        if let (Some(source), true) = (&split.source, !member_hashes.is_empty())
+            && let Some(m) = manifests.get(source)
+        {
+            let source_hashes: BTreeSet<String> =
+                m.files.iter().map(|f| f.sha256.clone()).collect();
+            if !member_hashes.is_subset(&source_hashes) {
+                out.push(diag(
+                    "data.split-not-contained",
+                    Severity::Error,
+                    SPLITS_FILE,
+                    None,
+                    format!(
+                        "Split `{}` has a file whose content is not in its source `{source}`",
+                        split.name
+                    ),
+                    "Make the split a part of its source, or fix `source`",
+                ));
             }
         }
     }

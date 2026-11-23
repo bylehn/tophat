@@ -214,11 +214,11 @@ fn study_statuses(root: &Path) -> BTreeMap<String, String> {
     let project = Project::new(root);
     load_studies(&project)
         .into_iter()
-        .filter_map(|(id, entry)| match entry {
+        .map(|(id, entry)| match entry {
             StudyEntry::Parsed(study) => {
-                Some((id, study.status().map_or("?", |s| s.as_str()).to_string()))
+                (id, study.status().map_or("?", |s| s.as_str()).to_string())
             }
-            StudyEntry::Unparseable => Some((id, "?".to_string())),
+            StudyEntry::Unparseable => (id, "?".to_string()),
         })
         .collect()
 }
@@ -259,25 +259,6 @@ pub fn render_tree_json(root: &Path) -> Result<String, QuestionError> {
         .expect("JSON values always serialize");
     text.push('\n');
     Ok(text)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test] // rq-1513da11
-    fn random_ids_are_well_formed() {
-        for attempt in 0..100 {
-            assert!(crate::study::is_valid_question_id(&random_id(attempt)));
-        }
-    }
-
-    #[test]
-    fn eol_splitting() {
-        assert_eq!(split_eol("a\r\n"), ("a", "\r\n"));
-        assert_eq!(split_eol("a\n"), ("a", "\n"));
-        assert_eq!(split_eol("a"), ("a", ""));
-    }
 }
 
 /// Splits `text` into lines keeping their endings.
@@ -373,4 +354,23 @@ pub fn emerge(
 
 const fn study_file_name() -> &'static str {
     crate::study::STUDY_FILE
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test] // rq-1513da11
+    fn random_ids_are_well_formed() {
+        for attempt in 0..100 {
+            assert!(crate::study::is_valid_question_id(&random_id(attempt)));
+        }
+    }
+
+    #[test]
+    fn eol_splitting() {
+        assert_eq!(split_eol("a\r\n"), ("a", "\r\n"));
+        assert_eq!(split_eol("a\n"), ("a", "\n"));
+        assert_eq!(split_eol("a"), ("a", ""));
+    }
 }

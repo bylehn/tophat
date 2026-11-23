@@ -27,12 +27,12 @@ pub fn test_files(root: &Path, study: &str) -> Vec<(String, PathBuf)> {
         .walk_files(&dir)
         .unwrap_or_default()
         .into_iter()
-        .filter_map(|path| {
+        .map(|path| {
             let name = path
                 .strip_prefix(&format!("{dir}/"))
                 .unwrap_or(&path)
                 .to_string();
-            Some((name, root.join(&path)))
+            (name, root.join(&path))
         })
         .collect();
     files.sort_by(|a, b| a.0.cmp(&b.0));

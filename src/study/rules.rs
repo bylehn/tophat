@@ -780,8 +780,8 @@ fn check_lifecycle(ctx: &Context<'_>, r: &mut Reporter<'_>, study: &Study, statu
     let result_heading = study.section("Result").map(|s| s.heading_line);
     match status {
         Status::Draft | Status::Preregistered
-            if !result_lines.is_empty()
-                && !(status == Status::Draft && mode == Mode::Retrospective) =>
+            if !(result_lines.is_empty()
+                || status == Status::Draft && mode == Mode::Retrospective) =>
         {
             r.error(
                 "study.result-unexpected",
