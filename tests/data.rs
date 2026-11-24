@@ -12,8 +12,9 @@ use std::time::{Duration, SystemTime};
 use chrono::NaiveDate;
 use tophat::check::{Diagnostic, Project, Severity};
 use tophat::data::{
-    DataError, DatasetKind, FileEntry, Manifest, Origin, ProducedBy, RegisterOptions, add,
-    content_hash, data_rules_with, declare, hash_file, lineage, load_roots_with, parse_manifest,
+    DataError, DatasetKind, DatasetRef, FileEntry, Manifest, Origin, ProducedBy, RegisterOptions,
+    SPLITS_FILE, Split, Splits, add, content_hash, data_rules_with, declare, declare_split,
+    hash_file, lineage, load_roots_with, load_splits, parse_manifest, remove_split, render_splits,
     retire, used_by, verify,
 };
 use tophat::study::{StudyError, report};
@@ -975,4 +976,391 @@ fn used_by_follows_variant_overrides() {
             ),
         ]
     );
+}
+
+// --- Splits (science workflow, rqm/data.md) ---------------------------------------------------
+
+/// Registers `bench-set@v1` (files "A\n", "B\n"), `bench-train@v1` ("A\n") and
+/// `bench-holdout@v1` ("B\n").
+fn split_datasets(env: &Env) {
+    env.data("raw", "bench/all/a.pdb", "A\n");
+    env.data("raw", "bench/all/b.pdb", "B\n");
+    env.add("bench-set", "raw", "bench/all").unwrap();
+    env.data("raw", "train/t.pdb", "A\n");
+    env.add("bench-train", "raw", "train").unwrap();
+    env.data("raw", "holdout/h.pdb", "B\n");
+    env.add("bench-holdout", "raw", "holdout").unwrap();
+}
+
+fn ref_(s: &str) -> DatasetRef {
+    DatasetRef::parse(s).unwrap()
+}
+
+#[test] // rq-c7ad4a1c
+fn declare_a_split() {
+    let env = Env::new();
+    env.data("raw", "holdout/h.pdb", "B\n");
+    env.add("bench-holdout", "raw", "holdout").unwrap();
+    let project = Project::new(env.root());
+    declare_split(
+        &project,
+        "holdout",
+        vec![ref_("bench-holdout@v1")],
+        None,
+        None,
+    )
+    .unwrap();
+    let splits = load_splits(&project).unwrap();
+    assert_eq!(
+        splits.get("holdout").unwrap().datasets,
+        vec![ref_("bench-holdout@v1")]
+    );
+    assert_eq!(data_problems(&env.diagnostics()), Vec::<&Diagnostic>::new());
+}
+
+#[test] // rq-aac98d90
+fn declare_the_parts_of_one_partition() {
+    let env = Env::new();
+    split_datasets(&env);
+    let project = Project::new(env.root());
+    declare_split(
+        &project,
+        "train",
+        vec![ref_("bench-train@v1")],
+        Some("bench".into()),
+        Some(ref_("bench-set@v1")),
+    )
+    .unwrap();
+    declare_split(
+        &project,
+        "holdout",
+        vec![ref_("bench-holdout@v1")],
+        Some("bench".into()),
+        Some(ref_("bench-set@v1")),
+    )
+    .unwrap();
+    let splits = load_splits(&project).unwrap();
+    assert_eq!(
+        splits.get("train").unwrap().partition.as_deref(),
+        Some("bench")
+    );
+    assert_eq!(
+        splits.get("holdout").unwrap().source,
+        Some(ref_("bench-set@v1"))
+    );
+    assert_eq!(data_problems(&env.diagnostics()), Vec::<&Diagnostic>::new());
+}
+
+#[test] // rq-95c1a006
+fn the_split_command_refuses_overlapping_parts() {
+    let env = Env::new();
+    split_datasets(&env);
+    let project = Project::new(env.root());
+    declare_split(
+        &project,
+        "train",
+        vec![ref_("bench-train@v1")],
+        Some("bench".into()),
+        Some(ref_("bench-set@v1")),
+    )
+    .unwrap();
+    let err = declare_split(
+        &project,
+        "holdout",
+        vec![ref_("bench-train@v1")],
+        Some("bench".into()),
+        Some(ref_("bench-set@v1")),
+    )
+    .unwrap_err();
+    assert!(matches!(err, DataError::SplitOverlap { other, .. } if other == "train"));
+}
+
+#[test] // rq-0317b8e4
+fn the_split_command_refuses_a_part_not_contained_in_its_source() {
+    let env = Env::new();
+    split_datasets(&env);
+    env.data("raw", "foreign/f.pdb", "FOREIGN\n");
+    env.add("bench-foreign", "raw", "foreign").unwrap();
+    let project = Project::new(env.root());
+    let err = declare_split(
+        &project,
+        "holdout",
+        vec![ref_("bench-foreign@v1")],
+        Some("bench".into()),
+        Some(ref_("bench-set@v1")),
+    )
+    .unwrap_err();
+    assert!(matches!(err, DataError::SplitNotContained { .. }));
+}
+
+#[test] // rq-be0ec542
+fn the_parts_of_a_partition_name_one_source() {
+    let env = Env::new();
+    split_datasets(&env);
+    env.data("raw", "other/o.pdb", "O\n");
+    env.add("other-set", "raw", "other").unwrap();
+    let project = Project::new(env.root());
+    declare_split(
+        &project,
+        "train",
+        vec![ref_("bench-train@v1")],
+        Some("bench".into()),
+        Some(ref_("bench-set@v1")),
+    )
+    .unwrap();
+    let err = declare_split(
+        &project,
+        "holdout",
+        vec![ref_("bench-holdout@v1")],
+        Some("bench".into()),
+        Some(ref_("other-set@v1")),
+    )
+    .unwrap_err();
+    assert!(matches!(err, DataError::SplitSourceConflict { .. }));
+}
+
+#[test] // rq-0f8176df
+fn declaring_a_split_replaces_its_members() {
+    let env = Env::new();
+    split_datasets(&env);
+    let project = Project::new(env.root());
+    declare_split(
+        &project,
+        "holdout",
+        vec![ref_("bench-holdout@v1")],
+        None,
+        None,
+    )
+    .unwrap();
+    declare_split(
+        &project,
+        "holdout",
+        vec![ref_("bench-train@v1")],
+        None,
+        None,
+    )
+    .unwrap();
+    let splits = load_splits(&project).unwrap();
+    assert_eq!(
+        splits.get("holdout").unwrap().datasets,
+        vec![ref_("bench-train@v1")]
+    );
+}
+
+#[test] // rq-6c92aabb
+fn overlapping_parts_of_one_partition_fail_the_check() {
+    let env = Env::new();
+    env.data("raw", "train/t.pdb", "SAME\n");
+    env.add("bench-train", "raw", "train").unwrap();
+    env.data("raw", "holdout/h.pdb", "SAME\n");
+    env.add("bench-holdout", "raw", "holdout").unwrap();
+    let splits = Splits {
+        splits: vec![
+            Split {
+                name: "train".into(),
+                datasets: vec![ref_("bench-train@v1")],
+                partition: Some("bench".into()),
+                source: None,
+            },
+            Split {
+                name: "holdout".into(),
+                datasets: vec![ref_("bench-holdout@v1")],
+                partition: Some("bench".into()),
+                source: None,
+            },
+        ],
+    };
+    env.write(SPLITS_FILE, &render_splits(&splits));
+    let ds = env.diagnostics();
+    let found = with_rule(&ds, "data.split-overlap");
+    assert_eq!(found.len(), 1);
+    assert_eq!(found[0].path, SPLITS_FILE);
+}
+
+#[test] // rq-47e0069b
+fn a_part_with_files_outside_its_source_fails_the_check() {
+    let env = Env::new();
+    split_datasets(&env);
+    env.data("raw", "foreign/f.pdb", "FOREIGN\n");
+    env.add("bench-foreign", "raw", "foreign").unwrap();
+    let splits = Splits {
+        splits: vec![Split {
+            name: "holdout".into(),
+            datasets: vec![ref_("bench-foreign@v1")],
+            partition: Some("bench".into()),
+            source: Some(ref_("bench-set@v1")),
+        }],
+    };
+    env.write(SPLITS_FILE, &render_splits(&splits));
+    let ds = env.diagnostics();
+    assert_eq!(with_rule(&ds, "data.split-not-contained").len(), 1);
+}
+
+#[test] // rq-8359435d
+fn a_retired_split_member_fails_the_check() {
+    let env = Env::new();
+    split_datasets(&env);
+    let project = Project::new(env.root());
+    declare_split(
+        &project,
+        "holdout",
+        vec![ref_("bench-holdout@v1")],
+        None,
+        None,
+    )
+    .unwrap();
+    retire(&env.root(), "bench-holdout@v1", "defect", today()).unwrap();
+    let ds = env.diagnostics();
+    let found = with_rule(&ds, "data.reference-retired");
+    assert_eq!(found.len(), 1);
+    assert_eq!(found[0].path, SPLITS_FILE);
+}
+
+/// Writes a study with a SUMMARY.md whose single result line carries `tag`, keyed at `key`, plus a
+/// provenance record for `score@key` consuming `input`.
+fn tagged_result(env: &Env, tag: &str, input: &str) {
+    env.study("x-vs-docking", "reported", "public", &[], "");
+    env.write(
+        "studies/x-vs-docking/SUMMARY.md",
+        &format!(
+            "---\nstudy: x-vs-docking\ncommit: \"0123456789abcdef0123456789abcdef01234567\"\ndirty: false\n\
+             generated: \"2026-10-01T12:00:00Z\"\ntophat_version: \"0.1.0\"\n\
+             keys:\n  base/score: \"{KEY_A}\"\n---\n\n## Results\n\n- base/score: rho=0.5 {tag}\n"
+        ),
+    );
+    env.provenance(
+        "x-vs-docking",
+        "score",
+        KEY_A,
+        serde_json::json!([{"name": "raw", "kind": "dataset", "ref": input, "content_hash": "sha256:x"}]),
+    );
+}
+
+fn declare_holdout(env: &Env) {
+    let project = Project::new(env.root());
+    declare_split(
+        &project,
+        "holdout",
+        vec![ref_("bench-holdout@v1")],
+        None,
+        None,
+    )
+    .unwrap();
+}
+
+#[test] // rq-8595614d
+fn a_result_lines_split_tag_matches_its_lineage() {
+    let env = Env::new();
+    split_datasets(&env);
+    declare_holdout(&env);
+    tagged_result(&env, "[pre-specified · split:holdout]", "bench-holdout@v1");
+    let ds = env.diagnostics();
+    assert!(
+        with_rule(&ds, "data.split-tag-mismatch").is_empty(),
+        "{ds:#?}"
+    );
+    assert!(with_rule(&ds, "data.split-unknown").is_empty(), "{ds:#?}");
+}
+
+#[test] // rq-b62f0bca
+fn a_wrong_split_tag_is_a_mismatch() {
+    let env = Env::new();
+    split_datasets(&env);
+    declare_holdout(&env);
+    tagged_result(&env, "[pre-specified · split:train]", "bench-holdout@v1");
+    let ds = env.diagnostics();
+    let found = with_rule(&ds, "data.split-tag-mismatch");
+    assert_eq!(found.len(), 1);
+    assert!(found[0].message.contains("holdout"), "{found:?}");
+}
+
+#[test] // rq-169f1ba6
+fn a_missing_split_tag_where_one_is_derived_is_a_mismatch() {
+    let env = Env::new();
+    split_datasets(&env);
+    declare_holdout(&env);
+    tagged_result(&env, "[pre-specified]", "bench-holdout@v1");
+    let ds = env.diagnostics();
+    let found = with_rule(&ds, "data.split-tag-mismatch");
+    assert_eq!(found.len(), 1);
+    assert!(found[0].message.contains("holdout"), "{found:?}");
+}
+
+#[test] // rq-be571301
+fn a_split_tag_naming_no_declared_split() {
+    let env = Env::new();
+    split_datasets(&env);
+    tagged_result(
+        &env,
+        "[pre-specified · split:old-split]",
+        "bench-holdout@v1",
+    );
+    let ds = env.diagnostics();
+    assert_eq!(with_rule(&ds, "data.split-unknown").len(), 1);
+}
+
+#[test] // rq-95a25436
+fn lineage_annotates_split_membership() {
+    let env = Env::new();
+    split_datasets(&env);
+    declare_holdout(&env);
+    env.provenance(
+        "x-vs-docking",
+        "score",
+        KEY_A,
+        serde_json::json!([{"name": "raw", "kind": "dataset", "ref": "bench-holdout@v1", "content_hash": "sha256:x"}]),
+    );
+    let tree = lineage(&env.root(), &format!("x-vs-docking/score@{KEY_A}")).unwrap();
+    assert!(
+        tree.inputs[0]
+            .mark
+            .as_deref()
+            .unwrap()
+            .contains("split holdout"),
+        "{:?}",
+        tree.inputs[0].mark
+    );
+}
+
+#[test] // rq-9d5aadcf
+fn removing_a_split() {
+    let env = Env::new();
+    split_datasets(&env);
+    let project = Project::new(env.root());
+    declare_split(
+        &project,
+        "holdout",
+        vec![ref_("bench-holdout@v1")],
+        None,
+        None,
+    )
+    .unwrap();
+    remove_split(&project, "holdout").unwrap();
+    assert!(load_splits(&project).unwrap().get("holdout").is_none());
+    assert!(matches!(
+        remove_split(&project, "holdout"),
+        Err(DataError::SplitUnknown(_))
+    ));
+}
+
+#[test] // rq-aebc6258
+fn split_tags_are_not_checked_without_readable_lineage() {
+    let env = Env::new();
+    split_datasets(&env);
+    declare_holdout(&env);
+    env.study("x-vs-docking", "reported", "public", &[], "");
+    env.write(
+        "studies/x-vs-docking/SUMMARY.md",
+        &format!(
+            "---\nstudy: x-vs-docking\ncommit: \"0123456789abcdef0123456789abcdef01234567\"\ndirty: false\n\
+             generated: \"2026-10-01T12:00:00Z\"\ntophat_version: \"0.1.0\"\n\
+             keys:\n  base/score: \"{KEY_A}\"\n---\n\n## Results\n\n- base/score: rho=0.5 [pre-specified · split:holdout]\n"
+        ),
+    );
+    let ds = env.diagnostics();
+    assert!(
+        with_rule(&ds, "data.split-tag-mismatch").is_empty(),
+        "{ds:#?}"
+    );
+    assert!(with_rule(&ds, "data.split-unknown").is_empty(), "{ds:#?}");
 }

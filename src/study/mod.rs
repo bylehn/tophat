@@ -14,7 +14,10 @@ use std::fmt;
 use crate::check::Diagnostic;
 
 pub use crate::markdown::Section;
-pub use commands::{Console, new_study, preregister, record_exploration, report, supersede};
+pub use commands::{
+    Console, link, migrate, new_study, preregister, record_exploration, replicate, report,
+    supersede,
+};
 pub use document::{
     Amendment, Field, FrontMatter, Preregistration, Scenario, Study, TagIssue, parse_study,
     parse_study_text,
@@ -25,7 +28,9 @@ pub use exploration::{
 };
 pub use fingerprint::frozen_fingerprint;
 pub use rules::{study_rules, study_rules_at};
-pub use summary::{ResultLine, Summary, parse_summary};
+pub use summary::{
+    Epistemic, ResultLine, ResultTag, Summary, TagProblem, classify_tag, parse_summary,
+};
 
 /// Directory, relative to the project root, that holds one subdirectory per study.
 pub const STUDIES_DIR: &str = "studies";
@@ -34,25 +39,92 @@ pub const STUDY_FILE: &str = "STUDY.md";
 /// File name of the generated summary.
 pub const SUMMARY_FILE: &str = "SUMMARY.md";
 
-/// The governed `##` sections of `STUDY.md`, in template order.
-pub const GOVERNED_SECTIONS: [&str; 9] = [
-    "Question",
-    "Primary endpoint",
-    "Decision rule",
-    "Scenarios",
-    "Variants",
-    "Stages",
-    "Amendments",
-    "Result",
-    "Interpretation",
-];
+/// The governed `##` sections of `STUDY.md` for a mode, in template order.
+pub fn governed_sections(mode: Mode) -> Vec<&'static str> {
+    let mut sections = vec!["Question"];
+    sections.extend(mode.mode_sections());
+    sections.extend(["Variants", "Stages"]);
+    if mode.preregisters() {
+        sections.push("Amendments");
+    }
+    sections.extend(["Result", "Interpretation"]);
+    sections
+}
 
-// rq-08c7718c
-/// The frozen sections, in fingerprint order.
-pub const FROZEN_SECTIONS: [&str; 4] =
-    ["Question", "Primary endpoint", "Decision rule", "Scenarios"];
+// rq-08c7718c rq-597a5aff
+/// The sections frozen by pre-registration, in fingerprint order.
+pub fn frozen_sections(mode: Mode) -> &'static [&'static str] {
+    match mode {
+        Mode::Confirmatory => &["Question", "Primary endpoint", "Decision rule", "Scenarios"],
+        Mode::Descriptive => &["Question", "Deliverables", "Scenarios"],
+        Mode::Methods => &["Question", "Success criteria", "Scenarios"],
+        Mode::Replication => &["Question", "Match criterion", "Scenarios"],
+        Mode::Exploratory | Mode::Retrospective => &[],
+    }
+}
 
-// rq-5e9d0d62
+// rq-597a5aff
+/// How a study produces knowledge. Orthogonal to its status.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Mode {
+    Confirmatory,
+    Exploratory,
+    Descriptive,
+    Methods,
+    Replication,
+    Retrospective,
+}
+
+impl Mode {
+    /// Parses the front-matter spelling of a mode.
+    pub fn parse(s: &str) -> Option<Mode> {
+        Some(match s {
+            "confirmatory" => Mode::Confirmatory,
+            "exploratory" => Mode::Exploratory,
+            "descriptive" => Mode::Descriptive,
+            "methods" => Mode::Methods,
+            "replication" => Mode::Replication,
+            "retrospective" => Mode::Retrospective,
+            _ => return None,
+        })
+    }
+
+    /// The front-matter spelling of the mode.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Mode::Confirmatory => "confirmatory",
+            Mode::Exploratory => "exploratory",
+            Mode::Descriptive => "descriptive",
+            Mode::Methods => "methods",
+            Mode::Replication => "replication",
+            Mode::Retrospective => "retrospective",
+        }
+    }
+
+    /// Whether the mode has a `preregistered` state and freezes a subset of the plan.
+    pub fn preregisters(self) -> bool {
+        !matches!(self, Mode::Exploratory | Mode::Retrospective)
+    }
+
+    /// The mode-specific sections (besides `Question` and `Result`).
+    pub fn mode_sections(self) -> &'static [&'static str] {
+        match self {
+            Mode::Confirmatory => &["Primary endpoint", "Decision rule", "Scenarios"],
+            Mode::Descriptive => &["Deliverables", "Scenarios"],
+            Mode::Methods => &["Success criteria", "Scenarios"],
+            Mode::Replication => &["Match criterion", "Scenarios"],
+            Mode::Exploratory | Mode::Retrospective => &[],
+        }
+    }
+}
+
+impl fmt::Display for Mode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+// rq-5d9d0d62
 /// Lifecycle status of a study.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Status {
@@ -60,18 +132,17 @@ pub enum Status {
     Preregistered,
     Reported,
     Superseded,
-    Retrospective,
 }
 
 impl Status {
-    /// Parses the front-matter spelling of a status.
+    /// Parses the front-matter spelling of a status. `retrospective` is the pre-mode form and is
+    /// reported separately by the rules.
     pub fn parse(s: &str) -> Option<Status> {
         Some(match s {
             "draft" => Status::Draft,
             "preregistered" => Status::Preregistered,
             "reported" => Status::Reported,
             "superseded" => Status::Superseded,
-            "retrospective" => Status::Retrospective,
             _ => return None,
         })
     }
@@ -83,7 +154,6 @@ impl Status {
             Status::Preregistered => "preregistered",
             Status::Reported => "reported",
             Status::Superseded => "superseded",
-            Status::Retrospective => "retrospective",
         }
     }
 }
@@ -91,6 +161,30 @@ impl Status {
 impl fmt::Display for Status {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
+    }
+}
+
+// rq-7d5a35b9
+/// A study-to-study relation recorded on the relating study.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Relation {
+    FollowsUp,
+    Reanalyses,
+    Refutes,
+    Extends,
+    DerivesFrom,
+}
+
+impl Relation {
+    /// The front-matter field holding the relation.
+    pub fn field(self) -> &'static str {
+        match self {
+            Relation::FollowsUp => "follows_up",
+            Relation::Reanalyses => "reanalyses",
+            Relation::Refutes => "refutes",
+            Relation::Extends => "extends",
+            Relation::DerivesFrom => "derived_from",
+        }
     }
 }
 
@@ -118,6 +212,23 @@ pub enum StudyError {
         status: Option<Status>,
         required: Vec<Status>,
     },
+    /// A command that does not apply to the study's mode.
+    WrongMode {
+        study: String,
+        mode: Mode,
+    },
+    /// The `mode` value is not one of the allowed modes.
+    ModeInvalid(String),
+    /// A malformed or unusable `reproduces` field.
+    ReproducesInvalid(String),
+    /// A malformed, missing or self-referential relation.
+    LinkInvalid {
+        study: String,
+        relation: Relation,
+        other: String,
+    },
+    /// `migrate` on a study it cannot convert.
+    Migration(String),
     /// A study cannot supersede itself.
     SameStudy(String),
     NotInteractive,
@@ -164,6 +275,28 @@ impl fmt::Display for StudyError {
                     required.join(" or ")
                 )
             }
+            StudyError::WrongMode { study, mode } => write!(
+                f,
+                "study `{study}` is in `{mode}` mode, which has no plan to lock; this command does \
+                 not apply to it"
+            ),
+            StudyError::ModeInvalid(mode) => write!(
+                f,
+                "`{mode}` is not a valid study mode; use confirmatory, exploratory, descriptive, \
+                 methods, replication or retrospective"
+            ),
+            StudyError::ReproducesInvalid(message) => write!(f, "reproduces: {message}"),
+            StudyError::LinkInvalid {
+                study,
+                relation,
+                other,
+            } => write!(
+                f,
+                "study `{study}` cannot record `{}` of `{other}`: the target must be an existing \
+                 study other than `{study}`",
+                relation.field()
+            ),
+            StudyError::Migration(message) => write!(f, "cannot migrate: {message}"),
             StudyError::SameStudy(id) => write!(f, "study `{id}` cannot supersede itself"),
             StudyError::NotInteractive => write!(
                 f,
@@ -255,17 +388,52 @@ mod tests {
         assert!(!is_valid_question_id("q-1a2b3c4"));
     }
 
-    #[test] // rq-5e9d0d62
+    #[test] // rq-5d9d0d62
     fn status_round_trip() {
         for s in [
             Status::Draft,
             Status::Preregistered,
             Status::Reported,
             Status::Superseded,
-            Status::Retrospective,
         ] {
             assert_eq!(Status::parse(s.as_str()), Some(s));
         }
+        assert_eq!(Status::parse("retrospective"), None);
         assert_eq!(Status::parse("finished"), None);
+    }
+
+    #[test] // rq-597a5aff
+    fn mode_round_trip_and_predicates() {
+        for m in [
+            Mode::Confirmatory,
+            Mode::Exploratory,
+            Mode::Descriptive,
+            Mode::Methods,
+            Mode::Replication,
+            Mode::Retrospective,
+        ] {
+            assert_eq!(Mode::parse(m.as_str()), Some(m));
+        }
+        assert!(Mode::Confirmatory.preregisters());
+        assert!(Mode::Replication.preregisters());
+        assert!(!Mode::Exploratory.preregisters());
+        assert!(!Mode::Retrospective.preregisters());
+        assert_eq!(
+            governed_sections(Mode::Descriptive),
+            vec![
+                "Question",
+                "Deliverables",
+                "Scenarios",
+                "Variants",
+                "Stages",
+                "Amendments",
+                "Result",
+                "Interpretation"
+            ]
+        );
+        assert_eq!(
+            governed_sections(Mode::Exploratory),
+            vec!["Question", "Variants", "Stages", "Result", "Interpretation"]
+        );
     }
 }

@@ -37,7 +37,7 @@ CLAUDE.md                           project   agent entry point for Claude Code
   question; `CLAUDE.md` only when `claude-code` is selected.
 - Managed paths outside `.tophat/managed/` are listed in `.tophat/managed/ownership-exceptions`.
   `.claude/settings.json` is JSON and therefore marker-exempt.
-- The adapters and permission files of Codex and OpenCode are specified in `rqm/template/agents.md`.
+- The adapters and permission files of Codex, OpenCode and Vibe are specified in `rqm/template/agents.md`.
 
 ## Canonical Skills <!-- rq-25d62c0c -->
 
@@ -143,7 +143,7 @@ Template tooling (see `rqm/testing.md`) checks the rendered skills for every ans
 | `skill.adapter-content` | An adapter does not point at its canonical skill, or has more than 15 lines after its front matter |
 | `skill.cli-unknown` | A `tophat <command> [<subcommand>]` mentioned in a skill is not in the usage text of the pinned `tophat` release |
 | `skill.local-missing` | A canonical skill does not end with the *Project Extensions* section, or its `local.md` does not exist |
-| `skill.agent-specific` | A canonical skill mentions an agent name, an agent-specific file (`.claude/`, `.codex/`, `.opencode/`, `CLAUDE.md`) or a slash or dollar invocation of a skill |
+| `skill.agent-specific` | A canonical skill mentions an agent name, an agent-specific file (`.claude/`, `.codex/`, `.opencode/`, `.vibe/`, `CLAUDE.md`) or a slash or dollar invocation of a skill |
 
 ## Skills <!-- rq-acd69936 -->
 
@@ -372,7 +372,7 @@ never placed in `studies/` by the template.
 
 ## Out of Scope <!-- rq-2b4964eb -->
 
-- Agents other than Claude Code; Codex and OpenCode are specified in `rqm/template/agents.md`.
+- Agents other than Claude Code; Codex, OpenCode and Vibe are specified in `rqm/template/agents.md`.
 - Skills that run or schedule compute themselves, or that interact with batch systems.
 - Notebook tooling in `exploration/` beyond the rule that it is never cited.
 - Verifying in `tophat check` that skills or adapters are unmodified.

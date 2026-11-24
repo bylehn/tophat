@@ -244,6 +244,7 @@ codex_version=$(version_of codex_version)
 codex_sha256=$(version_of "codex_sha256_$arch")
 opencode_version=$(version_of opencode_version)
 opencode_sha256=$(version_of "opencode_sha256_$arch")
+vibe_version=$(version_of vibe_version)
 case "$arch" in
   x86_64) opencode_arch=x64 ;;
   aarch64) opencode_arch=arm64 ;;
@@ -270,6 +271,7 @@ build() {
     --build-arg "OPENCODE_VERSION=$opencode_version" \
     --build-arg "OPENCODE_SHA256=$opencode_sha256" \
     --build-arg "OPENCODE_ARCH=$opencode_arch" \
+    --build-arg "VIBE_VERSION=$vibe_version" \
     "$context" || fail "the agent image could not be built; the previous image is unchanged"
   run podman build -t "$project_image" -f "$context/Project.Containerfile" \
     --build-arg "TOPHAT_AGENT_IMAGE=$agent_image" \
@@ -392,6 +394,7 @@ agent_volume_mounts() {
       claude-code) name=claude; home=/opt/tophat/home/.claude ;;
       codex) name=codex; home=/opt/tophat/home/.codex ;;
       opencode) name=opencode; home=/opt/tophat/home/.local/share/opencode ;;
+      vibe) name=vibe; home=/opt/tophat/home/.vibe ;;
       *)
         printf 'th.sh: warning: agent %s is unknown; no volume is mounted for it\n' "$agent" >&2
         continue
@@ -411,6 +414,7 @@ agent_state_mounts() {
       claude-code) home=/opt/tophat/home/.claude ;;
       codex) home=/opt/tophat/home/.codex ;;
       opencode) home=/opt/tophat/home/.local/share/opencode ;;
+      vibe) home=/opt/tophat/home/.vibe ;;
       *)
         printf 'th.sh: warning: agent %s is unknown; no configuration home is mounted for it\n' "$agent" >&2
         continue
@@ -437,13 +441,16 @@ personal_config() {
 
 # Prints the container directories where the selected agents read personal skills, one per line
 # and without duplicates. Claude Code reads ~/.claude/skills; Codex and OpenCode both read
-# ~/.agents/skills (rqm/template/container.md, Personal skills).
+# ~/.agents/skills; Vibe reads ~/.vibe/skills (rqm/template/container.md, Personal skills).
 personal_skill_destinations() {
   if agent_selected claude-code; then
     printf '%s\n' /opt/tophat/home/.claude/skills
   fi
   if agent_selected codex || agent_selected opencode; then
     printf '%s\n' /opt/tophat/home/.agents/skills
+  fi
+  if agent_selected vibe; then
+    printf '%s\n' /opt/tophat/home/.vibe/skills
   fi
 }
 
@@ -457,6 +464,9 @@ personal_instruction_destinations() {
   fi
   if agent_selected opencode; then
     printf '%s\n' /opt/tophat/home/.config/opencode/AGENTS.md
+  fi
+  if agent_selected vibe; then
+    printf '%s\n' /opt/tophat/home/.vibe/AGENTS.md
   fi
 }
 
@@ -487,7 +497,7 @@ read_skills() {
       esac
     fi
     if [ -z "$skip" ]; then
-      for project_skills in .claude/skills .agents/skills .opencode/skills; do
+      for project_skills in .claude/skills .agents/skills .opencode/skills .vibe/skills; do
         if [ -e "$project_skills/$name" ]; then
           skip="it has the name of a project skill"
           break

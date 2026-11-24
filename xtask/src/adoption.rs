@@ -330,8 +330,9 @@ fn write(path: &Path, text: &str) -> Result<(), String> {
 }
 
 fn study_text(study: &StudyRecipe, question: &str) -> String {
+    let result_line = format!("- base/{}: {} [post hoc]", study.stage, study.result);
     format!(
-        "---\nstudy: {id}\ntitle: \"{title}\"\nquestion: {question}\nstatus: retrospective\nvisibility: public\nvariants:\n  - base\n---\n\n# {id}\n\n## Question\n\n{question_text}\n\n## Primary endpoint\n\n{endpoint}\n\n## Decision rule\n\n{decision}\n\n## Scenarios\n\n```gherkin\nFeature: adopted work\n\n  @S1\n  Scenario: The adopted analysis reports its result\n    Given the declared dataset\n    When the pipeline completes\n    Then the result is recorded\n```\n\n## Variants\n\n- base\n\n## Stages\n\n{stage}\n\n## Result\n\n{result}\n\n## Interpretation\n\n{interpretation}\n\n## Amendments\n\n",
+        "---\nstudy: {id}\ntitle: \"{title}\"\nquestion: {question}\nstatus: reported\nmode: retrospective\nvisibility: public\nvariants:\n  - base\n---\n\n# {id}\n\n## Question\n\n{question_text}\n\n## Primary endpoint\n\n{endpoint}\n\n## Decision rule\n\n{decision}\n\n## Scenarios\n\n```gherkin\nFeature: adopted work\n\n  @S1\n  Scenario: The adopted analysis reports its result\n    Given the declared dataset\n    When the pipeline completes\n    Then the result is recorded\n```\n\n## Variants\n\n- base\n\n## Stages\n\n{stage}\n\n## Result\n\n{result}\n\n## Interpretation\n\n{interpretation}\n\n## Amendments\n\n",
         id = study.id,
         title = study.title,
         question = question,
@@ -339,7 +340,7 @@ fn study_text(study: &StudyRecipe, question: &str) -> String {
         endpoint = study.endpoint,
         decision = study.decision,
         stage = study.stage,
-        result = study.result,
+        result = result_line,
         interpretation = study.interpretation,
     )
 }

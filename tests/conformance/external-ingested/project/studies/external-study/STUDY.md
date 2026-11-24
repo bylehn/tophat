@@ -8,6 +8,7 @@ variants: [base]
 preregistered:
   date: "2026-01-01"
   frozen_hash: "sha256:ae7fc34b3e54038f3d053c86a1e2b9ea19562f99476d67d898eb1a041db8d8fb"
+mode: confirmatory
 ---
 
 # external-study

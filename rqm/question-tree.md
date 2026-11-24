@@ -3,11 +3,14 @@
 The question tree is the top level of a TopHat project's research hierarchy. `PROJECT.md` records
 the project's overarching research question broken down into sub-questions, each with a stable ID.
 Studies (see `rqm/study/format.md`) attach to questions through their `question:` field. A question
-is answered by citing evidence: reported studies, or the answers of its own sub-questions.
+is answered by citing evidence: reported studies — for their pre-specified results, or, with a
+label, for their exploratory or post hoc ones — or the answers of its own sub-questions. Findings
+raise follow-up questions: a question born from a study's results is recorded as **emerged**,
+carries the study that produced it as its origin, and is otherwise an open question.
 
 This file specifies the format of `PROJECT.md`, the `question` rule family evaluated by
-`tophat check` (see `rqm/check.md`), and the `tophat question` commands that assign IDs and display
-the tree.
+`tophat check` (see `rqm/check.md`), and the `tophat question` commands that assign IDs, record
+emerged questions and display the tree.
 
 ## PROJECT.md Format <!-- rq-ba118d75 -->
 
@@ -48,15 +51,16 @@ Structure rules:
 A question's body is every line after its heading up to the next heading of any level (outside a
 fenced code block) or the end of the file.
 
-- The first non-blank line of the body is the **status line**: `status: open`, `status: answered`,
-  or `status: dropped`.
+- The first non-blank line of the body is the **status line**: `status: open`, `status: emerged`,
+  `status: answered`, or `status: dropped`.
 - An `answered` question has:
   - an **answer line**: a line starting with `**Answer:**` followed by non-empty text; and
   - an **evidence line**: a line starting with `Evidence:` followed by a comma-separated, non-empty
-    list of citations. Each citation is a study ID or a question ID; surrounding whitespace is
-    ignored.
+    list of citations (see *Evidence*).
 - A `dropped` question has a **reason line**: a line starting with `**Reason:**` followed by
   non-empty text.
+- An `emerged` question has an **origin line**: a line starting with `Emerged from:` followed by
+  the ID of one study of this project.
 - Any other body text is free-form and not governed.
 
 Example:
@@ -82,34 +86,75 @@ status: open
 status: dropped
 
 **Reason:** The client withdrew the target set.
+
+#### q-7d8e9f0a · What is going on with the outlier structures?
+status: emerged
+
+Emerged from: x-vs-docking
 ```
 
 ## Evidence <!-- rq-ef5ab539 -->
 
-Citations in an evidence line are checked as follows.
+A citation names a study or a question. A study citation states what kind of evidence it cites,
+through the same tags result lines carry (see `rqm/study/format.md`):
+
+- `<study-id>` — cites the study's results tagged `pre-specified`.
+- `<study-id> [exploratory]` or `<study-id> [post hoc]` — cites the study's results carrying that
+  tag.
+
+A question citation is a bare question ID and carries no label. Citations are checked as follows.
 
 | Citation | Requirement | Otherwise |
 |---|---|---|
 | Study ID | A study directory `studies/<id>/` with `STUDY.md` exists | error |
-| Study ID | The study's status is `reported` | `draft` or `preregistered`: error; `superseded`: error; `retrospective`: legacy diagnostic |
+| Study ID | The study's status is `reported` | `draft` or `preregistered`: error; `superseded`: error |
+| Study ID | The study's `## Result` section carries a line matching the citation: tagged `pre-specified` when the citation is unlabelled, tagged the citation's label otherwise | error |
+| Study ID | Not a `retrospective` mode study whose result lines are hand-written without a `SUMMARY.md` | legacy |
 | Study ID | The study's `question` is this question or one of its descendants | warning |
 | Question ID | The question exists in the tree and is a descendant of the citing question | error |
 | Question ID | The cited question has status `answered` | error |
 
-A citation that matches neither the question ID pattern nor the study ID pattern is an error. A
-cited study whose `STUDY.md` cannot be parsed is reported by the `study` rule family and not checked
-further here.
+A citation that matches neither form — a malformed identifier, a label other than `exploratory` or
+`post hoc`, or a label on a question citation — is an error. A cited study whose `STUDY.md` cannot
+be parsed is reported by the `study` rule family and not checked further here.
+
+**Label matching.** A cited study's tags are read from the `## Result` section of its `STUDY.md`,
+so a label is never trusted that the study's own results do not carry. Exploratory and
+retrospective mode studies carry no `pre-specified` result lines (see `rqm/study/format.md`), so
+citing them without a label is an error: their evidence is exploratory or post hoc and is cited as
+such. A `reported` study whose result lines include a line without a valid tag group is left to
+the `study` rule family (`study.tag-missing`) and its citations are not label-checked.
+
+## Emerged Questions <!-- rq-7e178b97 -->
+
+A question born from a study's results is recorded as **emerged**: it carries the study whose
+results raised it as its origin, and is otherwise an open question. It needs neither an answer nor
+evidence; a study may address it through the study's `question` field like any other question; and
+it is answered or dropped like an open question, its origin line remaining in the body as history.
+
+- The origin names one study of this project, whatever its status: a follow-up seen in a draft's
+  trial results is recorded as faithfully as one seen in a reported result. The origin says where
+  a question came from, not what may be claimed from it; what may be claimed is governed by
+  *Evidence*.
+- An origin line is required while the status is `emerged` and, wherever present at any status,
+  names an existing study.
+- Emerged questions and their origin lines are written by `tophat question emerge`, never by hand.
+  `tophat check` validates their structure the way it validates answers, which are written by
+  editing `PROJECT.md` directly.
 
 ## Study Links <!-- rq-a147f8cf -->
 
 Every study whose `STUDY.md` parses and has a well-formed `question` field must name a question that
 exists in the tree. The diagnostic is reported on the study's `STUDY.md`. A study may name any
-question, at any depth, including one with sub-questions.
+question, at any depth, including one with sub-questions; an `emerged` question is nameable like
+any other. The link from an emerged question to the study that produced it is its origin line (see
+*Emerged Questions*); links between studies live in study front matter and are specified in
+`rqm/study/format.md`.
 
 ## Check Rules (`question` family) <!-- rq-ceffcdab -->
 
-Line numbers point at the offending heading, status line, answer line, evidence line or reason
-line in `PROJECT.md`, or at the `question` field of a study.
+Line numbers point at the offending heading, status line, answer line, evidence line, origin line
+or reason line in `PROJECT.md`, or at the `question` field of a study.
 
 | Rule | Severity | Condition |
 |---|---|---|
@@ -120,16 +165,19 @@ line in `PROJECT.md`, or at the `question` field of a study.
 | `question.duplicate-id` | error | An ID is used by more than one question (reported at every occurrence after the first) |
 | `question.level-skip` | error | The first question is not `##`, or a question is more than one level deeper than the previous question |
 | `question.status-missing` | error | The body's first non-blank line is not a status line |
-| `question.status-invalid` | error | The status line's value is not `open`, `answered` or `dropped` |
+| `question.status-invalid` | error | The status line's value is not `open`, `emerged`, `answered` or `dropped` |
 | `question.answer-missing` | error | An `answered` question has no answer line with text |
 | `question.evidence-missing` | error | An `answered` question has no evidence line, or it cites nothing |
-| `question.evidence-invalid` | error | A citation is neither a question ID nor a study ID, names a study or question that does not exist, or names a question that is not a descendant |
+| `question.evidence-invalid` | error | A citation is malformed — a label other than `exploratory` or `post hoc`, or a label on a question citation — names a study or question that does not exist, or names a question that is not a descendant |
 | `question.evidence-unreported` | error | A cited study is `draft` or `preregistered` |
 | `question.evidence-superseded` | error | A cited study is `superseded` |
-| `question.evidence-retrospective` | legacy | A cited study is `retrospective` |
+| `question.evidence-tag-mismatch` | error | A citation names a `reported` study whose `## Result` carries no line with the citation's tag (`pre-specified` when unlabelled); the hint names the tags the study's result lines do carry. Not checked for a study with a result line lacking a valid tag group |
+| `question.evidence-retrospective` | legacy | A cited `reported` study is in `retrospective` mode and has no `SUMMARY.md` (its result lines are hand-written and unverified) |
 | `question.evidence-unrelated` | warning | A cited study's `question` is not this question or one of its descendants |
-| `question.evidence-unanswered` | error | A cited question is `open` or `dropped` |
+| `question.evidence-unanswered` | error | A cited question is `open`, `emerged` or `dropped` |
 | `question.reason-missing` | error | A `dropped` question has no reason line with text |
+| `question.origin-missing` | error | An `emerged` question has no origin line with text |
+| `question.origin-invalid` | error | An origin line's value is not an existing study's ID |
 | `question.unknown-reference` | error | A study's `question` names an ID that is not in the tree (reported on the study's `STUDY.md`) |
 
 ## Feature API <!-- rq-4e7bac77 -->
@@ -147,33 +195,63 @@ line in `PROJECT.md`, or at the `question` field of a study.
   - Preserves every other byte of `PROJECT.md` and writes it atomically. Prints one line per
     stamped question (`q-<id> <text>`). With nothing to do, leaves the file untouched.
   - Fails without changes when `PROJECT.md` does not exist.
+- `tophat question emerge "<text>" --from <study-id> [--under <question-id>]` <!-- rq-7449b1fb -->
+  - Records a question born from the results of the study `<study-id>`, as specified under
+    *Emerged Questions*. Fails without changes when:
+    - `PROJECT.md` does not exist (`ProjectFileMissing`);
+    - the text is empty;
+    - the study does not exist or its `STUDY.md` cannot be parsed;
+    - the parent question — `<question-id>` when given, otherwise the study's `question` — is not
+      a stamped question in the tree;
+    - the parent question is at level 6, where no deeper heading exists.
+  - On success, inserts one question as the parent's last sub-question: the heading
+    `<hashes> q-<id> · <text>` at one level deeper than the parent, immediately followed by the
+    lines `status: emerged` and `Emerged from: <study-id>` and one blank line, placed immediately
+    before the next heading outside fenced code blocks at a level at most the parent's, or at the
+    end of the file. The ID is fresh, unique among all IDs already in `PROJECT.md`. Inserted
+    lines use the file's line endings; every other byte of `PROJECT.md` is preserved and the file
+    is written atomically.
+  - Prints `q-<id> <text>`.
 - `tophat question tree [--json]` <!-- rq-5d07156c -->
   - Prints the tree read-only: one line per question, indented two spaces per level below `##`, as
     `q-<id> [<status>] <text>`, followed by one indented line per attached study as
-    `study <study-id> [<study status>]`. Studies are listed under the question their `question`
-    field names, sorted by study ID, before that question's sub-questions. A question without a
-    valid ID shows `(no id)` in place of the ID; a missing or invalid status shows as `?`; a study
-    whose status cannot be read shows `?`.
+    `study <study-id> [<study status>]` (sorted by study ID), then, when the question's body has
+    an origin line, the line `emerged from <study-id> [<study status>]`; these lines precede the
+    question's sub-questions. Studies are listed under the question their `question` field names.
+    A question without a valid ID shows `(no id)` in place of the ID; a missing or invalid status
+    shows as `?`; a study or origin study whose status cannot be read shows `?`.
   - With `--json`, prints `{"questions": [...]}` where each question object has `id`, `text`,
-    `status`, `level`, `parent` (ID or `null`), `line`, and `studies` (a list of
-    `{"id", "status"}`), in file order. Unstamped questions appear with `id: null`.
+    `status`, `level`, `parent` (ID or `null`), `line`, `studies` (a list of
+    `{"id", "status"}`), and `origin` — `null`, or `{"id", "status"}` when the question's body has
+    an origin line naming an existing study (`status` is `null` when that study's status cannot
+    be read) — in file order. Unstamped questions appear with `id: null`.
   - Exits 0. It does not validate; `tophat check` does.
 
 ### Types <!-- rq-563ae19a -->
 
-- `QuestionStatus` — enum `Open`, `Answered`, `Dropped`. <!-- rq-f448ed00 -->
+- `QuestionStatus` — enum `Open`, `Emerged`, `Answered`, `Dropped`. <!-- rq-f448ed00 -->
+- `Citation` — one entry of an evidence line: `target: String` (a study ID or a question ID) and <!-- rq-ddd0dee1 -->
+  `label: Option<String>` — `Some("exploratory")` or `Some("post hoc")` on a labelled study
+  citation, `None` otherwise.
 - `Question` — a question parsed from `PROJECT.md`: <!-- rq-e956ef6a -->
   - `id: Option<String>` — `None` when unstamped or malformed.
   - `text: String`, `level: u8` (2–6), `heading_line: u32`.
   - `parent: Option<usize>` — index of the parent question in the tree.
   - `status: Option<(String, u32)>` — raw status value and its line, when a status line exists.
+  - `origin: Option<(String, u32)>` — raw origin value and its line, when an origin line exists.
   - `answer: Option<(String, u32)>`, `reason: Option<(String, u32)>`.
-  - `evidence: Option<(Vec<String>, u32)>` — citations and the evidence line.
+  - `evidence: Option<(Vec<Citation>, u32)>` — citations and the evidence line.
 - `QuestionTree` — the questions of `PROJECT.md` in file order, plus the problems found while <!-- rq-dcafcef0 -->
   parsing the structure (unstamped and malformed headings, level skips).
 - `QuestionError` — error type of the commands, with at minimum: <!-- rq-7bde5706 -->
-  - `ProjectFileMissing` — `PROJECT.md` does not exist (`stamp`).
+  - `ProjectFileMissing` — `PROJECT.md` does not exist (`stamp`, `emerge`).
   - `Unresolved(Vec<String>)` — `stamp` left malformed or duplicated IDs unchanged.
+  - `TextInvalid` — `emerge` with an empty question text.
+  - `OriginStudyInvalid(String)` — `emerge`'s `--from` study does not exist or its `STUDY.md`
+    cannot be parsed.
+  - `ParentInvalid(String)` — `emerge`'s parent question (`--under`, or the study's `question`) is
+    not a stamped question in the tree.
+  - `ParentTooDeep` — `emerge`'s parent question is at level 6.
   - `Io(String)`.
 
 ### Functions <!-- rq-d4c65f91 -->
@@ -184,6 +262,8 @@ line in `PROJECT.md`, or at the `question` field of a study.
   in `RULE_FAMILIES`.
 - `stamp(root: &Path) -> Result<Vec<(String, String)>, QuestionError>` — performs <!-- rq-ef3d43f8 -->
   `tophat question stamp`, returning the `(id, text)` pairs it assigned.
+- `emerge(root: &Path, text: &str, from: &str, under: Option<&str>) -> Result<(String, String), QuestionError>` — <!-- rq-a88520bf -->
+  performs `tophat question emerge`, returning the `(id, text)` pair it assigned.
 
 ## Assumptions <!-- rq-2b3be8cc -->
 
@@ -193,12 +273,23 @@ line in `PROJECT.md`, or at the `question` field of a study.
 - Question IDs are random rather than derived from position or text, so reorganizing the tree never
   changes them. Randomness need not be cryptographic; uniqueness is checked explicitly.
 - A study attached to a `dropped` question is not flagged.
+- An emerged question differs from an open one only in carrying its origin line: every rule that
+  applies to an open question applies to it, `tophat status` counts it under `emerged`
+  (see `rqm/workflow.md`), a study may address it, and it may be answered or dropped.
+- An origin line names one study at any status; an origin records where a question came from, not
+  what may be claimed from it.
+- Citation labels mirror the epistemic tags of result lines (`rqm/study/format.md`); an unlabelled
+  citation cites a study's `pre-specified` results. `tophat check` reads the cited study's result
+  lines, so a label is never trusted that the study's own results do not carry.
 
 ## Out of Scope <!-- rq-7aba8e5c -->
 
 - Questions in other TopHat projects, and private questions in a companion repository.
-- Creating questions with a command; questions are written as Markdown headings and stamped.
+- Creating questions with a command, other than emerged questions: ordinary questions are written
+  as Markdown headings and stamped.
 - Moving or deleting questions with a command.
+- Study-to-study relation fields and the commands that write them (`rqm/study/format.md`);
+  addressing an emerged question with a new study records no `follows_up` relation by itself.
 - Any rendering of `PROJECT.md` beyond `tophat question tree`.
 
 ## Gherkin Scenarios <!-- rq-e746f1bb -->
@@ -214,7 +305,8 @@ Feature: Question tree
   @rq-e75cad86
   Scenario: A well-formed tree passes the check
     Given PROJECT.md contains the example tree from this specification
-    And study "x-energy-accuracy" is reported with question "q-5e6f7a8b"
+    And study "x-energy-accuracy" is reported with question "q-5e6f7a8b" and a result line tagged "pre-specified"
+    And study "x-vs-docking" is a draft with question "q-9c0d1e2f"
     When "tophat check" is run
     Then no "question" diagnostic is reported
 
@@ -325,12 +417,59 @@ Feature: Question tree
     When "tophat check" is run
     Then no "question" diagnostic is reported for that question
 
+  # --- Emerged questions ---
+
+  @rq-f36436b8
+  Scenario: An emerged question needs neither answer nor evidence
+    Given a stamped question with status "emerged" and the origin line "Emerged from: x-vs-docking"
+    And study "x-vs-docking" exists
+    When "tophat check" is run
+    Then no "question" diagnostic is reported for that question
+
+  @rq-e75df1d9
+  Scenario: Emerged question without an origin
+    Given a stamped question with status "emerged" and no origin line
+    When "tophat check" is run
+    Then an error "question.origin-missing" is reported at the question heading
+
+  @rq-1b7579af
+  Scenario: Emerged question naming a study that does not exist
+    Given a stamped question with status "emerged" and the origin line "Emerged from: no-such-study"
+    When "tophat check" is run
+    Then an error "question.origin-invalid" is reported at the origin line
+
+  @rq-273c5387
+  Scenario: An emerged question is answered like an open one
+    Given question "q-9c0d1e2f" is answered with "Evidence: outlier-dig [exploratory]"
+    And its body carries the origin line "Emerged from: x-vs-docking"
+    And exploratory study "outlier-dig" is reported with question "q-9c0d1e2f" and the result line "- base/analyse: rho=0.42 [exploratory]"
+    And study "x-vs-docking" exists
+    When "tophat check" is run
+    Then no "question" diagnostic is reported for "q-9c0d1e2f"
+
+  @rq-a5a6c56e
+  Scenario: An emerged question is dropped like an open one
+    Given question "q-9c0d1e2f" is dropped with a reason
+    And its body carries the origin line "Emerged from: x-vs-docking"
+    And study "x-vs-docking" exists
+    When "tophat check" is run
+    Then no "question" diagnostic is reported for "q-9c0d1e2f"
+
+  @rq-ea31a640
+  Scenario: An answered question keeps a valid origin line
+    Given question "q-9c0d1e2f" is answered with "Evidence: x-energy-accuracy"
+    And its body carries the origin line "Emerged from: x-vs-docking"
+    And study "x-energy-accuracy" is reported with question "q-9c0d1e2f" and a result line tagged "pre-specified"
+    And study "x-vs-docking" exists
+    When "tophat check" is run
+    Then no "question" diagnostic is reported for "q-9c0d1e2f"
+
   # --- Evidence ---
 
   @rq-9cadbb01
   Scenario: Citing a reported study about this question
     Given question "q-5e6f7a8b" is answered with "Evidence: x-energy-accuracy"
-    And study "x-energy-accuracy" is reported with question "q-5e6f7a8b"
+    And study "x-energy-accuracy" is reported with question "q-5e6f7a8b" and a result line tagged "pre-specified"
     When "tophat check" is run
     Then no "question.evidence" diagnostic is reported
 
@@ -338,7 +477,7 @@ Feature: Question tree
   Scenario: Citing a reported study about a descendant question
     Given question "q-1a2b3c4d" is answered with "Evidence: x-energy-accuracy"
     And "q-5e6f7a8b" is a sub-question of "q-1a2b3c4d"
-    And study "x-energy-accuracy" is reported with question "q-5e6f7a8b"
+    And study "x-energy-accuracy" is reported with question "q-5e6f7a8b" and a result line tagged "pre-specified"
     When "tophat check" is run
     Then no "question.evidence-unrelated" diagnostic is reported
 
@@ -376,19 +515,78 @@ Feature: Question tree
     Then an error "question.evidence-superseded" is reported
     And its hint names "x-energy-accuracy-v2"
 
+  @rq-d47955a2
+  Scenario: Citing an exploratory study with its label
+    Given question "q-9c0d1e2f" is answered with "Evidence: outlier-dig [exploratory]"
+    And exploratory study "outlier-dig" is reported with question "q-9c0d1e2f" and the result line "- base/analyse: rho=0.42 [exploratory]"
+    When "tophat check" is run
+    Then no "question.evidence" diagnostic is reported
+
+  @rq-94b72fce
+  Scenario: Citing an exploratory study without a label
+    Given question "q-9c0d1e2f" is answered with "Evidence: outlier-dig"
+    And exploratory study "outlier-dig" is reported with question "q-9c0d1e2f" and the result line "- base/analyse: rho=0.42 [exploratory]"
+    When "tophat check" is run
+    Then an error "question.evidence-tag-mismatch" is reported at the evidence line
+    And its hint names "exploratory"
+
+  @rq-9e04442c
+  Scenario: Citing a confirmatory study's exploratory result
+    Given question "q-9c0d1e2f" is answered with "Evidence: x-vs-docking [exploratory]"
+    And study "x-vs-docking" is reported with question "q-9c0d1e2f" and the result lines "- base/score: n=120, rho=0.61 [pre-specified]" and "- pbe/analyse: rho=0.42 [exploratory]"
+    When "tophat check" is run
+    Then no "question.evidence" diagnostic is reported
+
+  @rq-9447b114
+  Scenario: A label the study has no result line for
+    Given question "q-9c0d1e2f" is answered with "Evidence: x-vs-docking [post hoc]"
+    And study "x-vs-docking" is reported with question "q-9c0d1e2f" and the result line "- base/score: n=120, rho=0.61 [pre-specified]"
+    When "tophat check" is run
+    Then an error "question.evidence-tag-mismatch" is reported
+    And its hint names "pre-specified"
+
+  @rq-f5e9098c
+  Scenario: A label that is not a citation label
+    Given question "q-9c0d1e2f" is answered with "Evidence: x-vs-docking [pre-specified]"
+    And study "x-vs-docking" is reported with question "q-9c0d1e2f" and the result line "- base/score: n=120, rho=0.61 [pre-specified]"
+    When "tophat check" is run
+    Then an error "question.evidence-invalid" is reported at the evidence line
+
+  @rq-c333e981
+  Scenario: A question citation carries no label
+    Given question "q-1a2b3c4d" is answered with "Evidence: q-5e6f7a8b [exploratory]"
+    And "q-5e6f7a8b" is an answered sub-question of "q-1a2b3c4d" with valid evidence
+    When "tophat check" is run
+    Then an error "question.evidence-invalid" is reported
+
+  @rq-df111cbc
+  Scenario: Citing a retrospective study with a verified summary
+    Given question "q-9c0d1e2f" is answered with "Evidence: old-benchmark [post hoc]"
+    And retrospective study "old-benchmark" is reported with question "q-9c0d1e2f" and the result line "- base/score: n=60, MAE=0.9 kcal/mol [post hoc]" from its SUMMARY.md
+    When "tophat check" is run
+    Then no "question.evidence-retrospective" diagnostic is reported
+
   @rq-db0d11c1
-  Scenario: Citing a retrospective study is flagged as legacy
-    Given question "q-5e6f7a8b" is answered with "Evidence: old-benchmark"
-    And study "old-benchmark" is retrospective with question "q-5e6f7a8b"
+  Scenario: Citing a retrospective study without a summary is flagged as legacy
+    Given question "q-9c0d1e2f" is answered with "Evidence: old-benchmark [post hoc]"
+    And retrospective study "old-benchmark" is reported with question "q-9c0d1e2f" and hand-written result lines without a SUMMARY.md
     When "tophat check --strict" is run
     Then a legacy diagnostic "question.evidence-retrospective" is reported
     And no "question" error or warning is reported
+
+  @rq-a7910365
+  Scenario: An untagged result line is left to the study rules
+    Given question "q-9c0d1e2f" is answered with "Evidence: x-vs-docking"
+    And the reported study "x-vs-docking" has a result line without a tag group
+    When "tophat check" is run
+    Then an error "study.tag-missing" is reported for "x-vs-docking"
+    And no "question.evidence-tag-mismatch" is reported
 
   @rq-e895c8ff
   Scenario: Citing a study about an unrelated question
     Given questions "q-5e6f7a8b" and "q-9c0d1e2f" are siblings
     And question "q-5e6f7a8b" is answered with "Evidence: x-vs-docking"
-    And study "x-vs-docking" is reported with question "q-9c0d1e2f"
+    And study "x-vs-docking" is reported with question "q-9c0d1e2f" and a result line tagged "pre-specified"
     When "tophat check" is run
     Then a warning "question.evidence-unrelated" is reported
 
@@ -403,6 +601,13 @@ Feature: Question tree
   Scenario: Citing an open sub-question
     Given question "q-1a2b3c4d" is answered with "Evidence: q-9c0d1e2f"
     And "q-9c0d1e2f" is an open sub-question of "q-1a2b3c4d"
+    When "tophat check" is run
+    Then an error "question.evidence-unanswered" is reported
+
+  @rq-6dc70288
+  Scenario: Citing an emerged sub-question
+    Given question "q-1a2b3c4d" is answered with "Evidence: q-9c0d1e2f"
+    And "q-9c0d1e2f" is an emerged sub-question of "q-1a2b3c4d"
     When "tophat check" is run
     Then an error "question.evidence-unanswered" is reported
 
@@ -424,7 +629,7 @@ Feature: Question tree
   Scenario: Mixed citations are each checked
     Given question "q-1a2b3c4d" is answered with "Evidence: q-5e6f7a8b, x-vs-docking , no-such-study"
     And "q-5e6f7a8b" is an answered sub-question with valid evidence
-    And study "x-vs-docking" is reported with a question below "q-1a2b3c4d"
+    And study "x-vs-docking" is reported with a question below "q-1a2b3c4d" and a result line tagged "pre-specified"
     When "tophat check" is run
     Then exactly one "question.evidence-invalid" error is reported, naming "no-such-study"
 
@@ -457,6 +662,14 @@ Feature: Question tree
     When "tophat check" is run
     Then "study.field-invalid" is reported for the question field
     And no "question.unknown-reference" diagnostic is reported
+
+  @rq-944a6f44
+  Scenario: A study may address an emerged question
+    Given study "outlier-dig" has "question: q-7d8e9f0a"
+    And question "q-7d8e9f0a" is emerged with the origin line "Emerged from: x-vs-docking"
+    And study "x-vs-docking" exists
+    When "tophat check" is run
+    Then no "question.unknown-reference" diagnostic is reported
 
   # --- tophat question stamp ---
 
@@ -524,6 +737,85 @@ Feature: Question tree
     Then the command fails with ProjectFileMissing
     And no file is created
 
+  # --- tophat question emerge ---
+
+  @rq-4044efe1
+  Scenario: Emerge records a question born from a study
+    Given PROJECT.md contains the example tree from this specification
+    And study "x-vs-docking" is a draft with question "q-9c0d1e2f"
+    When "tophat question emerge 'What causes the outlier structures?' --from x-vs-docking" is run
+    Then PROJECT.md gains the question heading "#### q-<8 hex> · What causes the outlier structures?" as the last question, a sub-question of "q-9c0d1e2f"
+    And the lines after the heading are "status: emerged" and "Emerged from: x-vs-docking"
+    And the command prints the new ID and the question text
+    And "tophat check" reports no "question" diagnostic
+
+  @rq-6c48cc09
+  Scenario: Emerge places the question as the parent's last sub-question
+    Given PROJECT.md has the questions "## q-1a2b3c4d · A?", "### q-5e6f7a8b · B?" and "## q-9c0d1e2f · C?" with status lines
+    And study "x-vs-docking" is a draft with question "q-1a2b3c4d"
+    When "tophat question emerge 'Why did B behave oddly?' --from x-vs-docking" is run
+    Then the new question's heading appears after the body of "q-5e6f7a8b" and before the heading of "q-9c0d1e2f"
+
+  @rq-7853bb0a
+  Scenario: Emerge with an explicit parent
+    Given PROJECT.md contains the example tree from this specification
+    And study "x-vs-docking" is a draft with question "q-9c0d1e2f"
+    When "tophat question emerge 'Is the reference data reliable?' --from x-vs-docking --under q-1a2b3c4d" is run
+    Then the new question is a sub-question of "q-1a2b3c4d" at level 3
+
+  @rq-9ff67f40
+  Scenario: Emerge from a study whose question is not in the tree
+    Given PROJECT.md contains the example tree from this specification
+    And study "x-vs-docking" is a draft with question "q-deadbeef"
+    When "tophat question emerge 'A?' --from x-vs-docking" is run
+    Then the command fails with ParentInvalid
+    And PROJECT.md is unchanged
+
+  @rq-1176e768
+  Scenario: Emerge from a study that does not exist
+    Given PROJECT.md contains the example tree from this specification
+    When "tophat question emerge 'A?' --from no-such-study" is run
+    Then the command fails with OriginStudyInvalid
+    And PROJECT.md is unchanged
+
+  @rq-9c8407f2
+  Scenario: Emerge at the maximum depth
+    Given PROJECT.md has questions at levels "##" through "######", each a child of the previous
+    And study "x-vs-docking" is a draft with the deepest question
+    When "tophat question emerge 'A?' --from x-vs-docking" is run
+    Then the command fails with ParentTooDeep
+    And PROJECT.md is unchanged
+
+  @rq-8848775c
+  Scenario: Emerge with an empty text
+    Given PROJECT.md contains the example tree from this specification
+    And study "x-vs-docking" is a draft with question "q-9c0d1e2f"
+    When "tophat question emerge '' --from x-vs-docking" is run
+    Then the command fails with TextInvalid
+    And PROJECT.md is unchanged
+
+  @rq-6248ce74
+  Scenario: Emerge preserves the rest of the file
+    Given PROJECT.md has a title, a preamble with HTML comments, CRLF line endings and a fenced code block
+    And study "x-vs-docking" is a draft with a question in PROJECT.md
+    When "tophat question emerge 'A?' --from x-vs-docking" is run
+    Then the only difference is the inserted question block
+    And the inserted lines use CRLF line endings
+
+  @rq-c7e4904d
+  Scenario: Emerged questions get distinct IDs
+    Given PROJECT.md contains the example tree from this specification
+    And study "x-vs-docking" is a draft with question "q-9c0d1e2f"
+    When "tophat question emerge 'A?' --from x-vs-docking" is run twice
+    Then PROJECT.md contains two new questions with distinct IDs matching "q-[0-9a-f]{8}"
+
+  @rq-cdad3c4b
+  Scenario: Emerge without PROJECT.md
+    Given PROJECT.md does not exist
+    When "tophat question emerge 'A?' --from x-vs-docking" is run
+    Then the command fails with ProjectFileMissing
+    And no file is created
+
   # --- tophat question tree ---
 
   @rq-c62bd382
@@ -540,6 +832,8 @@ Feature: Question tree
         q-9c0d1e2f [open] Does X rank binders better than docking?
           study x-vs-docking [draft]
           q-3b4c5d6e [dropped] Does the advantage hold for client targets?
+          q-7d8e9f0a [emerged] What is going on with the outlier structures?
+            emerged from x-vs-docking [draft]
       """
     And the exit code is 0
 
@@ -547,14 +841,22 @@ Feature: Question tree
   Scenario: Tree as JSON
     Given PROJECT.md contains the example tree from this specification
     When "tophat question tree --json" is run
-    Then the output is a JSON object with a "questions" array of 4 entries in file order
+    Then the output is a JSON object with a "questions" array of 5 entries in file order
     And the entry for "q-3b4c5d6e" has "level" 4 and "parent" "q-9c0d1e2f"
-    And the entry for "q-1a2b3c4d" has "parent" null
+    And the entry for "q-7d8e9f0a" has "parent" "q-9c0d1e2f" and "origin" with "id" "x-vs-docking"
+    And the entry for "q-1a2b3c4d" has "parent" null and "origin" null
 
   @rq-7d741e69
   Scenario: Tree does not validate
     Given PROJECT.md contains an unstamped heading "## B?" with no status line
     When "tophat question tree" is run
     Then the output contains a line for "B?" without an ID
+    And the exit code is 0
+
+  @rq-e03f0826
+  Scenario: Tree shows an origin line for a missing study
+    Given an emerged question with the origin line "Emerged from: no-such-study"
+    When "tophat question tree" is run
+    Then the question's line is followed by "emerged from no-such-study [?]"
     And the exit code is 0
 ```

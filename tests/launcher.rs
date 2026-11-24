@@ -430,6 +430,7 @@ fn the_agent_image_build_passes_every_agents_pinned_version() {
         "--build-arg CLAUDE_VERSION=2.1.301",
         "--build-arg CODEX_VERSION=0.166.0",
         "--build-arg OPENCODE_VERSION=1.19.5",
+        "--build-arg VIBE_VERSION=3.1.4",
         "--build-arg CODEX_SHA256=",
         "--build-arg OPENCODE_SHA256=",
         "--build-arg CODEX_ARCH=",
@@ -486,7 +487,7 @@ fn one_volume_per_selected_agent() {
     if !common::copier() {
         return;
     }
-    let env = Env::with_answers(&[("agents", "[claude-code, codex, opencode]")]);
+    let env = Env::with_answers(&[("agents", "[claude-code, codex, opencode, vibe]")]);
     let out = env.run(&["--dry-run"]);
     let session = env.session(&out);
     let id = env.id();
@@ -495,6 +496,7 @@ fn one_volume_per_selected_agent() {
         format!("-v tophat-{id}-claude:/opt/tophat/home/.claude"),
         format!("-v tophat-{id}-codex:/opt/tophat/home/.codex"),
         format!("-v tophat-{id}-opencode:/opt/tophat/home/.local/share/opencode"),
+        format!("-v tophat-{id}-vibe:/opt/tophat/home/.vibe"),
     ] {
         assert!(
             session.contains(&expected),
@@ -502,7 +504,7 @@ fn one_volume_per_selected_agent() {
         );
     }
     // Exactly the workspace, the pixi cache and one volume per agent are mounted.
-    assert_eq!(session.matches(" -v ").count(), 5, "{session}");
+    assert_eq!(session.matches(" -v ").count(), 6, "{session}");
 }
 
 #[test] // rq-1cc9f489 rq-3ca62dea
@@ -861,6 +863,24 @@ fn personal_skills_are_mounted_for_opencode() {
     );
 }
 
+#[test] // rq-6411c721 rq-c490844e
+fn personal_skills_are_mounted_for_vibe() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::with_answers(&[("agents", "[vibe]")]);
+    let folder = skill(&env.path("home/.config/tophat/skills"), "writing-clearly");
+    let session = env.session(&env.run(&["--dry-run"]));
+    assert_eq!(
+        binds_in(&session, "/opt/tophat/home/.vibe/skills"),
+        vec![format!(
+            "{}:/opt/tophat/home/.vibe/skills/writing-clearly:ro",
+            folder.display()
+        )],
+        "{session}"
+    );
+}
+
 #[test] // rq-3f41b27f rq-c490844e
 fn codex_and_opencode_share_one_personal_skills_mount() {
     if !common::copier() {
@@ -881,7 +901,7 @@ fn every_selected_agent_gets_the_personal_skills() {
     if !common::copier() {
         return;
     }
-    let env = Env::with_answers(&[("agents", "[claude-code, codex, opencode]")]);
+    let env = Env::with_answers(&[("agents", "[claude-code, codex, opencode, vibe]")]);
     let folder = skill(&env.path("home/.config/tophat/skills"), "writing-clearly");
     let session = env.session(&env.run(&["--dry-run"]));
     assert_eq!(
@@ -896,6 +916,14 @@ fn every_selected_agent_gets_the_personal_skills() {
         binds_in(&session, "/opt/tophat/home/.agents/skills"),
         vec![format!(
             "{}:/opt/tophat/home/.agents/skills/writing-clearly:ro",
+            folder.display()
+        )],
+        "{session}"
+    );
+    assert_eq!(
+        binds_in(&session, "/opt/tophat/home/.vibe/skills"),
+        vec![format!(
+            "{}:/opt/tophat/home/.vibe/skills/writing-clearly:ro",
             folder.display()
         )],
         "{session}"
@@ -1118,12 +1146,32 @@ fn personal_instructions_are_mounted_for_opencode() {
     );
 }
 
+#[test] // rq-b6502b86 rq-59768c6a
+fn personal_instructions_are_mounted_for_vibe() {
+    if !common::copier() {
+        return;
+    }
+    let env = Env::with_answers(&[("agents", "[vibe]")]);
+    let file = env.path("home/.config/tophat/CLAUDE.md");
+    fs::create_dir_all(file.parent().unwrap()).unwrap();
+    fs::write(&file, "Apply the honey skill.\n").unwrap();
+    let session = env.session(&env.run(&["--dry-run"]));
+    assert_eq!(
+        binds_in(&session, "/opt/tophat/home/.vibe/AGENTS.md"),
+        vec![format!(
+            "{}:/opt/tophat/home/.vibe/AGENTS.md:ro",
+            file.display()
+        )],
+        "{session}"
+    );
+}
+
 #[test] // rq-762ac795 rq-59768c6a
 fn every_selected_agent_gets_the_personal_instructions() {
     if !common::copier() {
         return;
     }
-    let env = Env::with_answers(&[("agents", "[claude-code, codex, opencode]")]);
+    let env = Env::with_answers(&[("agents", "[claude-code, codex, opencode, vibe]")]);
     let file = env.path("home/.config/tophat/CLAUDE.md");
     fs::create_dir_all(file.parent().unwrap()).unwrap();
     fs::write(&file, "Apply the honey skill.\n").unwrap();
@@ -1132,6 +1180,7 @@ fn every_selected_agent_gets_the_personal_instructions() {
         "/opt/tophat/home/.claude/CLAUDE.md",
         "/opt/tophat/home/.codex/AGENTS.md",
         "/opt/tophat/home/.config/opencode/AGENTS.md",
+        "/opt/tophat/home/.vibe/AGENTS.md",
     ] {
         assert_eq!(
             binds_in(&session, destination),
@@ -1803,19 +1852,16 @@ fn the_agent_layer_installs_only_the_selected_agents() {
     if !common::copier() {
         return;
     }
-    let env = Env::with_answers(&[("agents", "[codex]")]);
+    let env = Env::with_answers(&[("agents", "[vibe]")]);
     let file = fs::read_to_string(
         env.project()
             .join(".tophat/managed/container/Agent.Containerfile"),
     )
     .unwrap();
-    assert!(file.contains("/opt/tophat/bin/codex"), "{file}");
-    assert!(
-        file.contains("ENV CODEX_HOME=/opt/tophat/home/.codex"),
-        "{file}"
-    );
+    assert!(file.contains("mistral-vibe=="), "{file}");
     assert!(!file.contains("claude.ai/install.sh"), "{file}");
     assert!(!file.contains("CLAUDE_CONFIG_DIR"), "{file}");
+    assert!(!file.contains("ENV CODEX_HOME"), "{file}");
     assert!(!file.contains("opencode-linux"), "{file}");
 
     let env = Env::new();
@@ -1826,6 +1872,7 @@ fn the_agent_layer_installs_only_the_selected_agents() {
     .unwrap();
     assert!(file.contains("claude.ai/install.sh"), "{file}");
     assert!(!file.contains("ENV CODEX_HOME"), "{file}");
+    assert!(!file.contains("mistral-vibe=="), "{file}");
 }
 
 #[test] // rq-f419a09b rq-ad167d22
@@ -1833,16 +1880,17 @@ fn only_selected_agents_are_installed() {
     if !podman_enabled() {
         return;
     }
-    let env = Env::with_answers(&[("agents", "[codex]")]);
+    let env = Env::with_answers(&[("agents", "[vibe]")]);
     let image = build_image(&env);
-    assert!(in_image(&env, &image, "codex --version").status.success());
+    assert!(in_image(&env, &image, "vibe --version").status.success());
     let out = in_image(
         &env,
         &image,
-        "command -v claude || true; command -v opencode || true",
+        "command -v claude || true; command -v codex || true; command -v opencode || true",
     );
     let text = stdout(&out);
     assert!(!text.contains("claude"), "{text}");
+    assert!(!text.contains("codex"), "{text}");
     assert!(!text.contains("opencode"), "{text}");
 }
 

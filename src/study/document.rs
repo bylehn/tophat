@@ -6,7 +6,7 @@ use std::path::Path;
 
 use yaml_rust2::{Yaml, YamlLoader};
 
-use super::{STUDY_FILE, Status, StudyError};
+use super::{Mode, Relation, STUDY_FILE, Status, StudyError};
 use crate::markdown::{
     FenceState, FenceTracker, NumberedLine, Section, meaningful_lines, numbered_lines, sections,
     split_front_matter,
@@ -40,11 +40,18 @@ pub struct FrontMatter {
     pub title: Option<Field<String>>,
     pub question: Option<Field<String>>,
     pub status: Option<Field<String>>,
+    pub mode: Option<Field<String>>,
     pub visibility: Option<Field<String>>,
     pub variants: Option<Field<Vec<String>>>,
     pub preregistered: Option<Field<Preregistration>>,
     pub superseded_by: Option<Field<String>>,
     pub supersedes: Option<Field<Vec<String>>>,
+    pub follows_up: Option<Field<Vec<String>>>,
+    pub reanalyses: Option<Field<Vec<String>>>,
+    pub refutes: Option<Field<Vec<String>>>,
+    pub extends: Option<Field<Vec<String>>>,
+    pub derived_from: Option<Field<Vec<String>>>,
+    pub reproduces: Option<Field<String>>,
     /// Unknown top-level keys.
     pub unknown: Vec<Field<String>>,
 }
@@ -104,6 +111,27 @@ impl Study {
             .status
             .as_ref()
             .and_then(|f| Status::parse(&f.value))
+    }
+
+    /// The parsed mode, defaulting to `confirmatory` when the field is absent or invalid. A
+    /// missing or invalid mode is reported by the rules.
+    pub fn mode(&self) -> Mode {
+        self.front
+            .mode
+            .as_ref()
+            .and_then(|f| Mode::parse(&f.value))
+            .unwrap_or(Mode::Confirmatory)
+    }
+
+    /// The relation list stored under `relation`, when the field is present.
+    pub fn relation(&self, relation: Relation) -> Option<&Field<Vec<String>>> {
+        match relation {
+            Relation::FollowsUp => self.front.follows_up.as_ref(),
+            Relation::Reanalyses => self.front.reanalyses.as_ref(),
+            Relation::Refutes => self.front.refutes.as_ref(),
+            Relation::Extends => self.front.extends.as_ref(),
+            Relation::DerivesFrom => self.front.derived_from.as_ref(),
+        }
     }
 
     /// All sections named `name`, in file order.
@@ -332,8 +360,10 @@ fn parse_front(
             "title" => front.title = Some(scalar()?),
             "question" => front.question = Some(scalar()?),
             "status" => front.status = Some(scalar()?),
+            "mode" => front.mode = Some(scalar()?),
             "visibility" => front.visibility = Some(scalar()?),
             "superseded_by" => front.superseded_by = Some(scalar()?),
+            "reproduces" => front.reproduces = Some(scalar()?),
             "variants" => {
                 front.variants = Some(Field {
                     value: string_list(key, value).map_err(err)?,
@@ -342,6 +372,36 @@ fn parse_front(
             }
             "supersedes" => {
                 front.supersedes = Some(Field {
+                    value: string_list(key, value).map_err(err)?,
+                    line,
+                })
+            }
+            "follows_up" => {
+                front.follows_up = Some(Field {
+                    value: string_list(key, value).map_err(err)?,
+                    line,
+                })
+            }
+            "reanalyses" => {
+                front.reanalyses = Some(Field {
+                    value: string_list(key, value).map_err(err)?,
+                    line,
+                })
+            }
+            "refutes" => {
+                front.refutes = Some(Field {
+                    value: string_list(key, value).map_err(err)?,
+                    line,
+                })
+            }
+            "extends" => {
+                front.extends = Some(Field {
+                    value: string_list(key, value).map_err(err)?,
+                    line,
+                })
+            }
+            "derived_from" => {
+                front.derived_from = Some(Field {
                     value: string_list(key, value).map_err(err)?,
                     line,
                 })
@@ -524,11 +584,21 @@ pub fn parse_study_text(id: &str, path: &str, text: &str) -> Result<Study, Study
     let front = parse_front(&loaded, path, 1)?;
     let sections = sections(&split.body);
 
-    let (scenarios, tag_issues) = sections
-        .iter()
-        .find(|s| s.name == "Scenarios")
-        .map(parse_scenarios)
-        .unwrap_or_default();
+    let (scenarios, tag_issues) = if front
+        .mode
+        .as_ref()
+        .and_then(|f| Mode::parse(&f.value))
+        .unwrap_or(Mode::Confirmatory)
+        .preregisters()
+    {
+        sections
+            .iter()
+            .find(|s| s.name == "Scenarios")
+            .map(parse_scenarios)
+            .unwrap_or_default()
+    } else {
+        (Vec::new(), Vec::new())
+    };
 
     let mut amendments = Vec::new();
     let mut malformed_amendments = Vec::new();

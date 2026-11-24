@@ -5,7 +5,8 @@ then frozen), **declared** (existing data whose history TopHat did not observe),
 (produced by a study stage; see `rqm/pipeline/provenance.md`). Studies hand data to each other only
 through **published datasets**: named, numbered versions of a stage's output. This file specifies
 where data lives (data roots), dataset manifests, the commands that register, publish, verify and
-retire datasets, the lineage queries, and the `data` rule family evaluated by `tophat check`.
+retire datasets, the data splits that record which part of split data a result was computed on,
+the lineage queries, and the `data` rule family evaluated by `tophat check`.
 
 ## Data Roots <!-- rq-985dbe20 -->
 
@@ -103,6 +104,80 @@ retired:                 # present only after `tophat data retire`
 Stage inputs reference a dataset version as `dataset:<name>@v<n>` (see
 `rqm/pipeline/provenance.md`). A reference always names an exact version; there is no "latest".
 
+## Data Splits <!-- rq-4a8ef3c9 -->
+
+A **split** is a named group of pinned dataset versions: the training and held-out parts of a
+benchmark, a pilot sample — any part of the data a project needs to speak about as one unit.
+Splits are declared once per project in a committed registry and carry the data-reuse accounting
+of results: a result line states which split it was computed on (see `rqm/study/format.md`), and
+the parts of one partition are verified disjoint by content, so a confirmation claimed on one part
+is backed by a guarantee that none of its files appears in another.
+
+### The split registry <!-- rq-9f70c6e0 -->
+
+`datasets/splits.yaml` holds the splits of the project. A project without the file declares no
+splits. The registry is written by `tophat data split` and never by hand; it is committed like the
+manifests.
+
+```yaml
+splits:
+  holdout:
+    datasets:
+      - bench-holdout@v1
+    partition: bench
+    source: bench@v2
+  pilot:
+    datasets:
+      - bench-pilot@v1
+    source: bench@v2
+```
+
+- Split names match the dataset name pattern and are unique among splits; entries are sorted by
+  name, and each entry lists `datasets` first, then `partition` and `source` when present. Members
+  are written in the order they were given to `tophat data split`.
+- `datasets` holds at least one member reference `<name>@v<n>` (see *Referencing datasets*).
+- `partition`, when present, makes the split one part of the named partition. Partition names match
+  the dataset name pattern. The splits of one partition all name the same source, or none of them
+  names one.
+- `source`, when present, is the dataset version the split's data comes out of. A split without a
+  partition may have one: a pilot comes out of the full set without being a disjoint part of
+  anything.
+
+### Partitions and sources <!-- rq-48c1339c -->
+
+Both relations are verified against the SHA-256 values recorded in the committed manifests, so
+verification never reads data bytes, needs no data root, and is exact by content:
+
+- **Disjointness.** Two splits of one partition share no file SHA-256. Identical content at
+  different paths still overlaps: parts are disjoint by content, not by path or name.
+- **Containment.** Every file SHA-256 of a split with a source appears among the source's files.
+
+`tophat data split` verifies both relations before writing (see *Feature API*), and the check
+rules re-verify them on every `tophat check`.
+
+### Split tags on results <!-- rq-b138c677 -->
+
+A result line states, in its trailing tag group (specified in `rqm/study/format.md`), the split it
+was computed on, `split:<name>`. The split is derived from the line's lineage, never chosen by
+hand:
+
+1. The line's **consumed set** is the set of dataset versions in the lineage of its stage output —
+   the same tree `tophat data lineage` prints for `<study>/<stage>@<key>`: starting from the key
+   the line's `keys` entry names, through the `inputs` of the provenance records of its `stage:`
+   inputs, and on through published datasets into the records of their producing stages, every
+   dataset version the tree reaches.
+2. The line's split is the one split with at least one member in the consumed set. When no split
+   has a member in it, or when two or more do, the line carries no split: its data is unsplit or
+   spans parts. Datasets that belong to no split do not affect the outcome, and a split need not
+   be consumed entirely to be the line's split.
+3. `tophat study summarize` derives the split and writes it on the line (see
+   `rqm/study/format.md`); `tophat study report` copies the line verbatim, so the derived split
+   reaches `## Result` unchanged.
+
+The derivation needs the line's `keys` entry and the provenance records in the results root. Where
+either is unavailable — a summary without `keys`, records missing on this machine, an unconfigured
+results root — the split-tag check rules are skipped for that line.
+
 ## Verification <!-- rq-3301d594 -->
 
 ### Fast check <!-- rq-84e20fdc -->
@@ -167,12 +242,28 @@ loading a whole file into memory) and hashes several files in parallel.
 - `tophat data retire <name>@v<n> --reason <text>` <!-- rq-a7709a28 -->
   - Adds `retired` (today's local date and the reason) to the manifest. Retiring an already retired
     version fails.
+- `tophat data split <name> --datasets <ref>… [--partition <name>] [--source <ref>]` <!-- rq-c323764f -->
+  - Creates or replaces the split `<name>`: writes the registry with the entry (members in the
+    order given, then `partition` and `source` when present, all entries sorted by name),
+    atomically. `--datasets` is repeatable and names at least one member.
+  - Fails without writing when the existing registry cannot be parsed, the split or partition name
+    is invalid, a member reference is malformed, names no dataset version, or names a retired
+    version, when the splits of the partition would not all name the same source, when a member
+    shares a file SHA-256 with another split of the same partition, or when a member has a file
+    not contained in the source.
+  - Prints `<name>: <member references, comma-separated>`.
+- `tophat data split <name> --remove` <!-- rq-c4944da0 -->
+  - Deletes the split `<name>` from the registry (an empty registry stays as `splits: {}`), or
+    fails with `SplitUnknown` when no such split is declared. Fails without writing when the
+    registry cannot be parsed.
 - `tophat data lineage <target> [--json]` <!-- rq-1a97b91b -->
   - `<target>` is a dataset reference `<name>@v<n>`, or a stage output `<study>/<stage>@<key>`.
   - Prints the tree of everything the target was derived from: a published dataset leads to its
     producing stage output; a stage output leads to its inputs as recorded in its
     `provenance.json`; raw datasets are leaves; declared datasets are leaves marked
-    `[declared, not verified]`; outputs of a study whose plan was informed by its deciding data are
+    `[declared, not verified]`; a dataset that is a member of one or more splits is annotated
+    `[split <names>]` (the names, comma-separated, sorted); outputs of a study whose plan was
+    informed by its deciding data are
     marked `[plan informed by its deciding data]` (see `rqm/study/exploration.md`); outputs whose
     provenance cannot be read (unconfigured root or
     missing record) are leaves marked `[unavailable]`.
@@ -189,6 +280,9 @@ loading a whole file into memory) and hashes several files in parallel.
 
 - `DatasetKind` — enum `Raw`, `Declared`, `Published`. <!-- rq-eab2ab92 -->
 - `DatasetRef` — a parsed `<name>@v<n>`: `name: String`, `version: u32`. <!-- rq-0f8bd6f3 -->
+- `Split` — one registry entry: name, members (`Vec<DatasetRef>`), optional partition name, <!-- rq-9673eeec -->
+  optional source (`DatasetRef`).
+- `Splits` — the parsed registry: the splits, sorted by name. <!-- rq-bda61e61 -->
 - `Manifest` — a parsed manifest: name, version, kind, visibility, root, path, created, origin, <!-- rq-b2fecc6c -->
   produced by, files (path, size, sha256), content hash, retired.
 - `Roots` — declared root names and their resolved locations on this machine. <!-- rq-bb98136e -->
@@ -198,6 +292,9 @@ loading a whole file into memory) and hashes several files in parallel.
   - `PathOutsideRoot(String)`, `NoFiles(String)`, `SymbolicLink(String)`.
   - `DatasetNotFound(String)`, `AlreadyRetired(String)`.
   - `NotSealed(String)`, `NotClean(String)`, `OutputMismatch(Vec<String>)`.
+  - `RetiredReference(String)`, `SplitUnknown(String)`.
+  - `SplitOverlap { split: String, other: String }`, `SplitNotContained { split: String,
+    source: String }`, `SplitSourceConflict { partition: String }`.
   - `Manifest { path: String, message: String }`.
   - `Io(String)`.
 
@@ -206,6 +303,13 @@ loading a whole file into memory) and hashes several files in parallel.
 - `load_roots(root: &Path) -> Result<Roots, DataError>` — reads the declared roots and resolves <!-- rq-2960fd26 -->
   their locations from the environment and `.tophat/roots.local.yaml`.
 - `parse_manifest(text: &str) -> Result<Manifest, String>` — parses and validates a manifest. <!-- rq-adfff14c -->
+- `parse_splits(text: &str) -> Result<Splits, String>` — parses and validates the split registry <!-- rq-f9dd9929 -->
+  (names, member references, partition–source agreement).
+- `split_of(splits: &Splits, consumed: &[DatasetRef]) -> Option<String>` — the split a consumed <!-- rq-70fdb927 -->
+  set lies on: the unique split with a member in it.
+- `consumed_datasets(project: &Project, study: &str, stage: &str, key: &str) -> <!-- rq-367917d9 -->
+  Result<Option<Vec<DatasetRef>>, DataError>` — the dataset versions in the lineage of a stage
+  output, or `Ok(None)` when a record the walk needs is missing or unreadable.
 - `content_hash(files: &[(String, String)]) -> String` — the `content_hash` of `(path, sha256)` <!-- rq-da8648ca -->
   pairs sorted by path.
 - `hash_file(path: &Path) -> io::Result<(u64, String)>` — size and SHA-256 of a file, streamed. <!-- rq-6f389d0b -->
@@ -214,8 +318,9 @@ loading a whole file into memory) and hashes several files in parallel.
 
 ## Check Rules (`data` family) <!-- rq-5b6f6e50 -->
 
-Manifest diagnostics are reported on the manifest; reference diagnostics on the study configuration
-file that contains the reference, at the reference's line.
+Manifest diagnostics are reported on the manifest; reference diagnostics on the file that contains
+the reference — a study configuration file or the split registry — at the reference's line;
+split-tag diagnostics on the study's `SUMMARY.md`, at the result line.
 
 | Rule | Severity | Condition |
 |---|---|---|
@@ -228,8 +333,13 @@ file that contains the reference, at the reference's line.
 | `data.file-missing` | error | A manifest file does not exist in its configured root |
 | `data.file-changed` | error | A manifest file's size differs from the recorded size |
 | `data.unverified` | warning | The hash cache shows a manifest file was modified since it was last verified |
-| `data.reference-unknown` | error | A stage input references a dataset version that does not exist |
-| `data.reference-retired` | error | A stage input references a retired dataset version |
+| `data.reference-unknown` | error | A stage input or split member references a dataset version that does not exist |
+| `data.reference-retired` | error | A stage input or split member references a retired dataset version |
+| `data.splits-invalid` | error | `datasets/splits.yaml` cannot be parsed, a split or partition name is malformed, a split has no members, or the splits of a partition do not all name the same source |
+| `data.split-overlap` | error | Two splits of one partition share a file SHA-256 |
+| `data.split-not-contained` | error | A split with a source has a member file whose SHA-256 is not among the source's files |
+| `data.split-unknown` | error | A result line's `split:` names no declared split |
+| `data.split-tag-mismatch` | error | A result line's `split:` differs from the split derived from the line's consumed set, including a missing `split:` when one is derived; not evaluated for a line whose consumed set is not readable |
 | `data.newer-version` | warning | A `draft` or `preregistered` study references a version older than the newest non-retired version |
 | `data.producer-unreported` | warning or error | A study consumes a published dataset whose producing study is not `reported` (error once the consumer is `reported` without an accepting amendment) |
 | `data.visibility-leak` | error | A `public` study consumes a `private` dataset |
@@ -240,6 +350,11 @@ file that contains the reference, at the reference's line.
 - `.tophat/roots.local.yaml` and `.tophat/cache/` are git-ignored in every TopHat project; the
   project template's `.gitignore` lists them.
 - Hashing uses SHA-256 throughout.
+- Split disjointness and containment compare the SHA-256 values recorded in committed manifests;
+  they never read data bytes, so they are exact and offline by content.
+- A split pins exact member versions like every other reference; a member's newer version does
+  not warn, because a split records the structure of specific pinned data, not a consumer that
+  should track updates.
 - The fast check trusts file sizes and the local cache; integrity guarantees that require content
   hashes come from `tophat data verify`, which `publish` performs implicitly for what it publishes.
 
@@ -249,6 +364,14 @@ file that contains the reference, at the reference's line.
 - Datasets of other TopHat projects and private companion repositories.
 - Copying, moving or deleting data, and warning before deletion (retention).
 - Upgrading a declared dataset to verified.
+- Accounting for data a trial run saw through shared files rather than shared dataset versions
+  (for example a pilot whose files are a subset of the deciding dataset): `deciding_data_seen`
+  stays exact, as specified in `rqm/study/exploration.md`.
+- Warning when a study's deciding data was consumed by another study's exploration or by an
+  exploratory-mode study; reuse stays visible through `tophat data used-by`, split tags and the
+  partition checks.
+- Creating the parts of a split: copying a source's files or registering its parts is ordinary
+  data work (TopHat never copies data); the registry only records the result.
 
 ## Gherkin Scenarios <!-- rq-3460a0ee -->
 
@@ -548,6 +671,148 @@ Feature: Data roots, datasets and lineage
     When "tophat check --strict" is run
     Then a legacy diagnostic "data.declared-input" is reported
     And the exit code is not affected by it
+
+  # --- Splits ---
+
+  @rq-c7ad4a1c
+  Scenario: Declare a split
+    Given datasets "bench-train@v1" and "bench-holdout@v1" are registered with disjoint files
+    When "tophat data split holdout --datasets bench-holdout@v1" is run
+    Then "datasets/splits.yaml" declares the split "holdout" with the members ["bench-holdout@v1"]
+    And the command prints "holdout: bench-holdout@v1"
+    And "tophat check" reports no "data" diagnostic
+
+  @rq-aac98d90
+  Scenario: Declare the parts of one partition
+    Given "bench@v2" is registered with exactly the files of "bench-train@v1" and "bench-holdout@v1", which are disjoint
+    When "tophat data split train --datasets bench-train@v1 --partition bench --source bench@v2" is run
+    And "tophat data split holdout --datasets bench-holdout@v1 --partition bench --source bench@v2" is run
+    Then "datasets/splits.yaml" declares both splits in partition "bench" with source "bench@v2"
+    And "tophat check" reports no "data" diagnostic
+
+  @rq-95c1a006
+  Scenario: The split command refuses overlapping parts
+    Given the split "train" is declared in partition "bench"
+    And "bench-holdout@v1" shares one file's content with "bench-train@v1"
+    When "tophat data split holdout --datasets bench-holdout@v1 --partition bench" is run
+    Then the command fails with SplitOverlap naming "train"
+    And "datasets/splits.yaml" is unchanged
+
+  @rq-0317b8e4
+  Scenario: The split command refuses a part not contained in its source
+    Given "bench-holdout@v1" has a file whose content is not in "bench@v2"
+    When "tophat data split holdout --datasets bench-holdout@v1 --source bench@v2" is run
+    Then the command fails with SplitNotContained
+    And "datasets/splits.yaml" is unchanged
+
+  @rq-be0ec542
+  Scenario: The parts of a partition name one source
+    Given the split "train" is declared in partition "bench" with source "bench@v2"
+    When "tophat data split holdout --datasets bench-holdout@v1 --partition bench --source other-set@v1" is run
+    Then the command fails with SplitSourceConflict
+    And "datasets/splits.yaml" is unchanged
+
+  @rq-0f8176df
+  Scenario: Declaring a split replaces its members
+    Given the split "holdout" is declared with the members ["bench-holdout@v1"]
+    When "tophat data split holdout --datasets bench-holdout@v2" is run
+    Then "datasets/splits.yaml" declares "holdout" with the members ["bench-holdout@v2"] and nothing else
+
+  @rq-6c92aabb
+  Scenario: Overlapping parts of one partition fail the check
+    Given "datasets/splits.yaml" declares the splits "train" and "holdout" in partition "bench"
+    And "bench-train@v1" and "bench-holdout@v1" share one file's content
+    When "tophat check" is run
+    Then an error "data.split-overlap" is reported on "datasets/splits.yaml" naming both splits
+
+  @rq-47e0069b
+  Scenario: A part with files outside its source fails the check
+    Given "datasets/splits.yaml" declares the split "holdout" with source "bench@v2"
+    And "bench-holdout@v1" has a file whose content is not in "bench@v2"
+    When "tophat check" is run
+    Then an error "data.split-not-contained" is reported on "datasets/splits.yaml"
+
+  @rq-a8e08904
+  Scenario: An invalid registry fails the check
+    Given "datasets/splits.yaml" declares the split "holdout" with no members
+    When "tophat check" is run
+    Then an error "data.splits-invalid" is reported on "datasets/splits.yaml"
+
+  @rq-8359435d
+  Scenario: A retired split member fails the check
+    Given "datasets/splits.yaml" declares the split "holdout" with the member "bench-holdout@v1"
+    And "bench-holdout@v1" is retired
+    When "tophat check" is run
+    Then an error "data.reference-retired" is reported on "datasets/splits.yaml"
+
+  @rq-8595614d
+  Scenario: A result line's split tag matches its lineage
+    Given the splits "train" and "holdout" are declared as the parts of partition "bench"
+    And "holdout" has the members ["bench-structures-holdout@v1", "bench-labels-holdout@v1"]
+    And study "x-confirm" has the stages "prepare" and "analyse" (result)
+    And "prepare" consumed "dataset:bench-structures-holdout@v1" and "dataset:scores@v2"
+    And its summary maps "base/analyse" to the key of a sealed run of "analyse"
+    And its result line is "- base/analyse: rho=0.61 [pre-specified · split:holdout]"
+    When "tophat check" is run
+    Then no split diagnostic is reported for "x-confirm"
+
+  @rq-b62f0bca
+  Scenario: A wrong split tag is a mismatch
+    Given the splits "train" and "holdout" are declared as the parts of partition "bench"
+    And study "x-confirm" has the stages "prepare" and "analyse" (result)
+    And "prepare" consumed "dataset:bench-holdout@v1"
+    And its result line is "- base/analyse: rho=0.61 [pre-specified · split:train]"
+    When "tophat check" is run
+    Then an error "data.split-tag-mismatch" is reported on the summary of "x-confirm" naming "holdout"
+
+  @rq-169f1ba6
+  Scenario: A missing split tag where one is derived is a mismatch
+    Given the splits "train" and "holdout" are declared as the parts of partition "bench"
+    And study "x-confirm" has the stages "prepare" and "analyse" (result)
+    And "prepare" consumed "dataset:bench-holdout@v1"
+    And its result line is "- base/analyse: rho=0.61 [pre-specified]"
+    When "tophat check" is run
+    Then an error "data.split-tag-mismatch" is reported naming "holdout"
+
+  @rq-be571301
+  Scenario: A split tag naming no declared split
+    Given no split "old-split" is declared
+    And the result line of study "x-confirm" is "- base/analyse: rho=0.61 [pre-specified · split:old-split]"
+    When "tophat check" is run
+    Then an error "data.split-unknown" is reported on the summary of "x-confirm"
+
+  @rq-b37c775b
+  Scenario: A line whose data spans two splits carries no split
+    Given the splits "train" and "holdout" are declared as the parts of partition "bench"
+    And study "x-confirm" has the stages "prepare" and "analyse" (result)
+    And "prepare" consumed "dataset:bench-train@v1" and "dataset:bench-holdout@v1"
+    And its result line is "- base/analyse: rho=0.61 [pre-specified]"
+    When "tophat check" is run
+    Then no split diagnostic is reported for "x-confirm"
+
+  @rq-95a25436
+  Scenario: Lineage annotates split membership
+    Given "bench-holdout@v1" is a member of the split "holdout"
+    And the lineage of stage "analyse" of study "x-confirm" reaches "bench-holdout@v1"
+    When "tophat data lineage x-confirm/analyse@<key>" is run
+    Then the leaf "bench-holdout@v1" is annotated "[split holdout]"
+
+  @rq-9d5aadcf
+  Scenario: Removing a split
+    Given the split "holdout" is declared
+    And the summary of study "x-confirm" has a result line tagged "split:holdout"
+    When "tophat data split holdout --remove" is run
+    Then "datasets/splits.yaml" no longer declares "holdout"
+    And "tophat check" reports an error "data.split-unknown" on that line
+    When "tophat data split holdout --remove" is run again
+    Then the command fails with SplitUnknown
+
+  @rq-aebc6258
+  Scenario: Split tags are not checked without readable lineage
+    Given the summary of study "x-confirm" has the result line "- base/analyse: rho=0.61 [pre-specified · split:holdout]"
+    And the provenance record the line's key names cannot be read on this machine
+    When "tophat check" is run
+    Then no split-tag diagnostic is reported for "x-confirm"
 
   # --- Lineage ---
 

@@ -9,6 +9,7 @@ ARG CODEX_ARCH
 ARG OPENCODE_VERSION
 ARG OPENCODE_SHA256
 ARG OPENCODE_ARCH
+ARG VIBE_VERSION
 
 # Self-updaters are disabled: agents are installed at the versions in versions.yaml and change only
 # when the template does. Their configuration homes are left empty: they are mount points for the
@@ -54,6 +55,18 @@ RUN set -eu; \
     install -m 0755 /tmp/opencode /opt/tophat/bin/opencode; \
     rm -rf /tmp/opencode.tar.gz /tmp/opencode; \
     opencode --version
+{% endif %}
+{% if 'vibe' in agents %}
+
+# Vibe at the pinned version, installed with pipx so it never self-updates: the template changes
+# the version. Its configuration home is left empty: the session mounts the project's own volume
+# there.
+RUN set -eu; \
+    test -n "$VIBE_VERSION"; \
+    PIPX_HOME=/opt/tophat/pipx PIPX_BIN_DIR=/opt/tophat/bin \
+      pipx install --force "mistral-vibe==${VIBE_VERSION}"; \
+    rm -rf "$HOME/.vibe"; \
+    vibe --version
 {% endif %}
 
 RUN chmod -R a+rX /opt/tophat; \

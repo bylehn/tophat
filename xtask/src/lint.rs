@@ -11,10 +11,11 @@ use std::path::Path;
 const CANONICAL: &str = ".tophat/managed/skills";
 
 /// Each agent and the directory of its skill adapters.
-const ADAPTER_DIRS: [(&str, &str); 3] = [
+const ADAPTER_DIRS: [(&str, &str); 4] = [
     ("claude-code", ".claude/skills"),
     ("codex", ".agents/skills"),
     ("opencode", ".opencode/skills"),
+    ("vibe", ".vibe/skills"),
 ];
 
 /// Adapters may hold at most this many lines after their front matter.
@@ -191,7 +192,7 @@ fn known_mention(mention: &str, commands: &BTreeSet<String>) -> Result<(), Strin
 /// Agent-specific wording in a canonical skill line, if any.
 fn agent_specific(line: &str) -> Option<String> {
     let lower = line.to_ascii_lowercase();
-    for name in ["claude", "codex", "opencode"] {
+    for name in ["claude", "codex", "opencode", "vibe"] {
         for (at, _) in lower.match_indices(name) {
             let before = lower[..at].chars().next_back();
             let after = lower[at + name.len()..].chars().next();
@@ -451,6 +452,7 @@ mod tests {
     #[test]
     fn agent_wording_is_found() {
         assert!(agent_specific("use the Claude question tool").is_some());
+        assert!(agent_specific("use the Vibe question tool").is_some());
         assert!(agent_specific("invoke `/th-run` next").is_some());
         assert!(agent_specific("see .tophat/managed/skills/th-run/SKILL.md").is_none());
         assert!(agent_specific("use th-run next").is_none());

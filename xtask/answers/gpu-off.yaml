@@ -4,7 +4,7 @@ project_description: An example project for the TopHat render tests.
 author_name: Example Author
 author_email: example@example.org
 languages: []
-agents: [claude-code, codex, opencode]
+agents: [claude-code, codex, opencode, vibe]
 gpu: "off"
 license: MIT
 copyright_year: 2026

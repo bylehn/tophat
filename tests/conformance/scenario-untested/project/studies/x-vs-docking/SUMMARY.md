@@ -8,4 +8,4 @@ tophat_version: "0.1.0"
 
 ## Results
 
-- base/analyse: n=2 level=b3f
+- base/analyse: n=2 level=b3f [pre-specified]

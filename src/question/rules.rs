@@ -2,11 +2,11 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use super::{HeadingIssue, PROJECT_FILE, QuestionStatus, QuestionTree, parse_project};
+use super::{Citation, HeadingIssue, PROJECT_FILE, QuestionStatus, QuestionTree, parse_project};
 use crate::check::{Diagnostic, Project, Severity};
 use crate::study::{
-    STUDIES_DIR, STUDY_FILE, Status, Study, is_valid_question_id, is_valid_study_id,
-    parse_study_text,
+    Epistemic, Mode, STUDIES_DIR, STUDY_FILE, SUMMARY_FILE, Status, Study, TagProblem,
+    classify_tag, is_valid_question_id, is_valid_study_id, parse_study_text,
 };
 
 /// A study as seen from the question tree.
@@ -95,7 +95,8 @@ pub fn question_rules(project: &Project) -> Vec<Diagnostic> {
     let mut out = Vec::new();
     check_structure(&tree, &mut out);
     check_bodies(&tree, &mut out);
-    check_evidence(&tree, &studies, &mut out);
+    check_origins(&tree, &studies, &mut out);
+    check_evidence(&tree, &studies, project, &mut out);
     check_study_links(&tree, &studies, &mut out);
     out
 }
@@ -194,7 +195,34 @@ fn check_bodies(tree: &QuestionTree, out: &mut Vec<Diagnostic>) {
                     ));
                 }
             }
-            Some(QuestionStatus::Open) => {}
+            Some(QuestionStatus::Open | QuestionStatus::Emerged) => {}
+        }
+    }
+}
+
+// rq-7e178b97
+fn check_origins(
+    tree: &QuestionTree,
+    studies: &BTreeMap<String, StudyEntry>,
+    out: &mut Vec<Diagnostic>,
+) {
+    for q in &tree.questions {
+        match &q.origin {
+            None if q.parsed_status() == Some(QuestionStatus::Emerged) => out.push(error(
+                "question.origin-missing",
+                q.heading_line,
+                "Emerged question has no `Emerged from:` line".into(),
+                "Add `Emerged from: <study-id>`, or record it with `tophat question emerge`",
+            )),
+            Some((value, line)) if !is_valid_study_id(value) || !studies.contains_key(value) => {
+                out.push(error(
+                    "question.origin-invalid",
+                    *line,
+                    format!("`Emerged from: {value}` names no existing study"),
+                    "Name an existing study's directory",
+                ));
+            }
+            _ => {}
         }
     }
 }
@@ -203,6 +231,7 @@ fn check_bodies(tree: &QuestionTree, out: &mut Vec<Diagnostic>) {
 fn check_evidence(
     tree: &QuestionTree,
     studies: &BTreeMap<String, StudyEntry>,
+    project: &Project,
     out: &mut Vec<Diagnostic>,
 ) {
     for (index, q) in tree.questions.iter().enumerate() {
@@ -214,15 +243,36 @@ fn check_evidence(
         };
         let line = *line;
         for citation in citations {
-            if is_valid_question_id(citation) {
-                check_question_citation(tree, index, citation, line, out);
-            } else if is_valid_study_id(citation) {
-                check_study_citation(tree, index, citation, line, studies, out);
+            let target = &citation.target;
+            if is_valid_question_id(target) {
+                if citation.label.is_some() {
+                    out.push(error(
+                        "question.evidence-invalid",
+                        line,
+                        format!("Question citation `{target}` cannot carry a label"),
+                        "Question citations are bare question IDs",
+                    ));
+                    continue;
+                }
+                check_question_citation(tree, index, target, line, out);
+            } else if is_valid_study_id(target) {
+                if let Some(label) = &citation.label
+                    && !matches!(label.as_str(), "exploratory" | "post hoc")
+                {
+                    out.push(error(
+                        "question.evidence-invalid",
+                        line,
+                        format!("`{label}` is not a citation label"),
+                        "Labels are `exploratory` or `post hoc`; an unlabelled citation cites pre-specified results",
+                    ));
+                    continue;
+                }
+                check_study_citation(tree, index, citation, line, studies, project, out);
             } else {
                 out.push(error(
                     "question.evidence-invalid",
                     line,
-                    format!("`{citation}` is neither a question ID nor a study ID"),
+                    format!("`{target}` is neither a question ID nor a study ID"),
                     "Cite study IDs or sub-question IDs, separated by commas",
                 ));
             }
@@ -265,20 +315,44 @@ fn check_question_citation(
     }
 }
 
+/// The distinct tags a study's result lines carry, or `None` when a line has no valid tag group.
+fn study_result_tags(study: &Study) -> Option<Vec<Epistemic>> {
+    let lines = study.result_lines();
+    if lines.is_empty() {
+        return None;
+    }
+    let mut tags = Vec::new();
+    for (_, raw) in lines {
+        match classify_tag(&raw) {
+            Ok((_, tag)) => {
+                if !tags.contains(&tag.epistemic) {
+                    tags.push(tag.epistemic);
+                }
+            }
+            Err(TagProblem::Missing | TagProblem::Invalid | TagProblem::InvalidSplit(_)) => {
+                return None;
+            }
+        }
+    }
+    Some(tags)
+}
+
 fn check_study_citation(
     tree: &QuestionTree,
     citing: usize,
-    citation: &str,
+    citation: &Citation,
     line: u32,
     studies: &BTreeMap<String, StudyEntry>,
+    project: &Project,
     out: &mut Vec<Diagnostic>,
 ) {
-    let study = match studies.get(citation) {
+    let citation_id = &citation.target;
+    let study = match studies.get(citation_id) {
         None => {
             out.push(error(
                 "question.evidence-invalid",
                 line,
-                format!("Cited study `{citation}` does not exist"),
+                format!("Cited study `{citation_id}` does not exist"),
                 "Cite an existing study by its directory name",
             ));
             return;
@@ -286,27 +360,16 @@ fn check_study_citation(
         Some(StudyEntry::Unparseable) => return,
         Some(StudyEntry::Parsed(study)) => study,
     };
-    let related_check = match study.status() {
-        Some(Status::Reported) => true,
-        Some(Status::Retrospective) => {
-            out.push(diag(
-                "question.evidence-retrospective",
-                Severity::Legacy,
-                PROJECT_FILE,
-                Some(line),
-                format!("Cited study `{citation}` is retrospective (never pre-registered)"),
-                "Cite a reported study when one becomes available",
-            ));
-            true
-        }
+    match study.status() {
+        Some(Status::Reported) => {}
         Some(status @ (Status::Draft | Status::Preregistered)) => {
             out.push(error(
                 "question.evidence-unreported",
                 line,
-                format!("Cited study `{citation}` is {status}, not reported"),
+                format!("Cited study `{citation_id}` is {status}, not reported"),
                 "Cite only reported studies",
             ));
-            false
+            return;
         }
         Some(Status::Superseded) => {
             let hint = match &study.front.superseded_by {
@@ -316,15 +379,44 @@ fn check_study_citation(
             out.push(error(
                 "question.evidence-superseded",
                 line,
-                format!("Cited study `{citation}` has been superseded"),
+                format!("Cited study `{citation_id}` has been superseded"),
                 &hint,
             ));
-            false
+            return;
         }
-        None => false,
-    };
-    if !related_check {
-        return;
+        None => return,
+    }
+    let summary = format!("{STUDIES_DIR}/{citation_id}/{SUMMARY_FILE}");
+    if study.mode() == Mode::Retrospective && !project.is_file(&summary) {
+        out.push(diag(
+            "question.evidence-retrospective",
+            Severity::Legacy,
+            PROJECT_FILE,
+            Some(line),
+            format!(
+                "Cited study `{citation_id}` is retrospective and its results are hand-written and unverified"
+            ),
+            "Reproduce it with a pipeline, then cite its verified summary",
+        ));
+    } else if let Some(tags) = study_result_tags(study) {
+        let required = match citation.label.as_deref() {
+            None => Epistemic::PreSpecified,
+            Some("exploratory") => Epistemic::Exploratory,
+            Some("post hoc") => Epistemic::PostHoc,
+            Some(_) => unreachable!("labels checked before"),
+        };
+        if !tags.contains(&required) {
+            let present: Vec<&str> = tags.iter().map(|t| t.as_str()).collect();
+            out.push(error(
+                "question.evidence-tag-mismatch",
+                line,
+                format!(
+                    "Cited study `{citation_id}` has no result line tagged `{}`",
+                    required.as_str()
+                ),
+                &format!("The study's result lines carry: {}", present.join(", ")),
+            ));
+        }
     }
     let study_question = study.front.question.as_ref().map(|f| f.value.as_str());
     let related = study_question
@@ -337,7 +429,7 @@ fn check_study_citation(
             PROJECT_FILE,
             Some(line),
             format!(
-                "Cited study `{citation}` answers `{}`, which is not this question or below it",
+                "Cited study `{citation_id}` answers `{}`, which is not this question or below it",
                 study_question.unwrap_or("?")
             ),
             "Check that the right study is cited",

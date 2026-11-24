@@ -13,3 +13,5 @@ th.sh
 .opencode/plugins/**
 .opencode/skills/**
 opencode.json
+.vibe/config.toml
+.vibe/skills/**

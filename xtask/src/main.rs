@@ -16,7 +16,7 @@ Commands:
                                               Run the conformance suite
   adoption [--tophat <binary>] [--fixture <name>]...
                                               Run the adoption fixtures
-  eval [--agent claude-code|codex|opencode] [--eval <name>]... [--repeat <n>]
+  eval [--agent claude-code|codex|opencode|vibe] [--eval <name>]... [--repeat <n>]
                                               Run the skill evals
   release-pin --version <version> --url <base url> --binary <target>=<path>...
                                               Write the template's pinned tophat release

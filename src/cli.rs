@@ -8,7 +8,7 @@ use crate::data::{self, DataError, Origin, RegisterOptions};
 use crate::pipeline;
 use crate::question::{self, QuestionError};
 use crate::report::{render_human, render_json};
-use crate::study::{self, Console, StudyError};
+use crate::study::{self, Console, Mode, Relation, StudyError};
 use crate::workflow::{self, RunOptions};
 use std::io::{BufRead, Write};
 use std::path::{Path, PathBuf};
@@ -30,14 +30,22 @@ Commands:
   run <STUDY> [--variant V] [--cores N] [--draft] [-- SNAKEMAKE-ARGS...]
                                                  Run a study's pipeline
   check [--json] [--strict] [PATH...]            Check project integrity
-  study new <ID> --question <Q-ID> [--visibility public|private]
+  study new <ID> --question <Q-ID> [--mode MODE] [--visibility public|private]
                                                  Create a draft study
+  study replicate <ID> --question <Q-ID> --of <STUDY>@<COMMIT> [--visibility public|private]
+                                                 Create a replication study
+  study link <ID> --follows-up|--reanalyses|--refutes|--extends|--derives-from <STUDY>
+                                                 Record a relation to another study
+  study migrate <ID>...                          Add the mode of pre-mode studies
   study exploration <ID>                         Write EXPLORATION.md of a draft study
   study preregister <ID>                         Pre-register a draft (interactive, by a human)
   study report <ID>                              Copy SUMMARY.md results into STUDY.md
   study supersede <OLD-ID> --by <NEW-ID>         Mark a study as replaced by another
   study summarize <ID>                           Write SUMMARY.md from sealed result stages
+  study test <ID> --key <KEY>                    Run the study's scenario tests (used by the pipeline)
   question stamp                                 Assign IDs to new questions in PROJECT.md
+  question emerge <TEXT> --from <STUDY> [--under <Q-ID>]
+                                                 Record a question born from a study's results
   tools sync                                     Fetch and resolve pinned tool versions
   tools list [--json]                            Show tools, pins and cache state
   data add <NAME> --root <R> --path <P> --source <TEXT> [--date D] [--license L] [--visibility V]
@@ -60,6 +68,8 @@ Commands:
   stage instructions <STUDY> <STAGE> [--variant V]
                                                  Show the steps for an external stage
   data retire <NAME>@v<N> --reason <TEXT>        Mark a dataset version as defective
+  data split <NAME> --datasets <REF>... [--partition <P>] [--source <REF>] [--remove]
+                                                 Declare or remove a split
   data lineage <NAME>@v<N>|<STUDY>/<STAGE>@<KEY> [--json]
                                                  Show what a dataset or output derives from
   data used-by <NAME>[@v<N>] [--json]            List consumers of a dataset
@@ -189,7 +199,21 @@ enum StudyCommand {
         id: String,
         question: String,
         private: bool,
+        mode: Mode,
     },
+    Replicate {
+        id: String,
+        question: String,
+        private: bool,
+        target: String,
+        commit: String,
+    },
+    Link {
+        id: String,
+        relation: Relation,
+        other: String,
+    },
+    Migrate(Vec<String>),
     Preregister(String),
     Exploration(String),
     Report(String),
@@ -198,37 +222,111 @@ enum StudyCommand {
         new: String,
     },
     Summarize(String),
+    Test {
+        id: String,
+        key: String,
+    },
 }
 
 fn parse_study_args(args: &[String]) -> Result<StudyCommand, String> {
-    let (sub, rest) = args
-        .split_first()
-        .ok_or("missing study subcommand (new, exploration, preregister, report, supersede)")?;
+    let (sub, rest) = args.split_first().ok_or(
+        "missing study subcommand (new, replicate, link, migrate, exploration, preregister, \
+         report, supersede, summarize)",
+    )?;
     let one_id = |positionals: Vec<String>| match positionals.as_slice() {
         [id] => Ok(id.clone()),
         _ => Err(format!("`tophat study {sub}` takes exactly one study ID")),
     };
+    let visibility =
+        |options: &[(String, String)]| match option(options, "visibility").unwrap_or("public") {
+            "public" => Ok(false),
+            "private" => Ok(true),
+            other => Err(format!(
+                "--visibility must be public or private, not `{other}`"
+            )),
+        };
     match sub.as_str() {
         "new" => {
-            let (positionals, options) = parse_options(rest, &["question", "visibility"])?;
+            let (positionals, options) = parse_options(rest, &["question", "visibility", "mode"])?;
             let id = one_id(positionals)?;
             let question = option(&options, "question")
                 .ok_or("`tophat study new` requires --question <question-id>")?
                 .to_string();
-            let private = match option(&options, "visibility").unwrap_or("public") {
-                "public" => false,
-                "private" => true,
-                other => {
-                    return Err(format!(
-                        "--visibility must be public or private, not `{other}`"
-                    ));
+            let mode = match option(&options, "mode").unwrap_or("confirmatory") {
+                "replication" => {
+                    return Err("a replication study is created by `tophat study replicate`".into());
                 }
+                value => Mode::parse(value).ok_or_else(|| format!("unknown mode `{value}`"))?,
             };
             Ok(StudyCommand::New {
                 id,
                 question,
-                private,
+                private: visibility(&options)?,
+                mode,
             })
+        }
+        "replicate" => {
+            let (positionals, options) = parse_options(rest, &["question", "visibility", "of"])?;
+            let id = one_id(positionals)?;
+            let question = option(&options, "question")
+                .ok_or("`tophat study replicate` requires --question <question-id>")?
+                .to_string();
+            let target = option(&options, "of")
+                .ok_or("`tophat study replicate` requires --of <study-id>@<commit>")?;
+            let (study, commit) = target
+                .rsplit_once('@')
+                .ok_or("--of must be <study-id>@<commit>")?;
+            Ok(StudyCommand::Replicate {
+                id,
+                question,
+                private: visibility(&options)?,
+                target: study.to_string(),
+                commit: commit.to_string(),
+            })
+        }
+        "link" => {
+            let (positionals, options) = parse_options(
+                rest,
+                &[
+                    "follows-up",
+                    "reanalyses",
+                    "refutes",
+                    "extends",
+                    "derives-from",
+                ],
+            )?;
+            let id = one_id(positionals)?;
+            let mut found: Vec<(Relation, &str)> = Vec::new();
+            for (flag, relation) in [
+                ("follows-up", Relation::FollowsUp),
+                ("reanalyses", Relation::Reanalyses),
+                ("refutes", Relation::Refutes),
+                ("extends", Relation::Extends),
+                ("derives-from", Relation::DerivesFrom),
+            ] {
+                if let Some(other) = option(&options, flag) {
+                    found.push((relation, other));
+                }
+            }
+            let [(relation, other)] = found.as_slice() else {
+                return Err(
+                    "`tophat study link` needs exactly one of --follows-up, --reanalyses, \
+                     --refutes, --extends or --derives-from"
+                        .into(),
+                );
+            };
+            Ok(StudyCommand::Link {
+                id,
+                relation: *relation,
+                other: other.to_string(),
+            })
+        }
+        "migrate" => {
+            let (positionals, _) = parse_options(rest, &[])?;
+            if positionals.is_empty() {
+                return Err("`tophat study migrate` takes at least one study ID".into());
+            }
+            Ok(StudyCommand::Migrate(positionals))
         }
         "preregister" => Ok(StudyCommand::Preregister(one_id(
             parse_options(rest, &[])?.0,
@@ -240,6 +338,14 @@ fn parse_study_args(args: &[String]) -> Result<StudyCommand, String> {
         "summarize" => Ok(StudyCommand::Summarize(one_id(
             parse_options(rest, &[])?.0,
         )?)),
+        "test" => {
+            let (positionals, options) = parse_options(rest, &["key"])?;
+            let id = one_id(positionals)?;
+            let key = option(&options, "key")
+                .ok_or("`tophat study test` requires --key <key>")?
+                .to_string();
+            Ok(StudyCommand::Test { id, key })
+        }
         "supersede" => {
             let (positionals, options) = parse_options(rest, &["by"])?;
             let old = one_id(positionals)?;
@@ -282,15 +388,71 @@ fn run_study_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
             }
         };
     }
+    if let StudyCommand::Test { id, key } = &command {
+        return match pipeline::run_tests(&root, id, key) {
+            Ok(path) => {
+                let _ = writeln!(io.out, "Wrote {}", path.display());
+                EXIT_OK
+            }
+            Err(e) => {
+                let _ = writeln!(io.err, "tophat study test: {e}");
+                EXIT_FAILED
+            }
+        };
+    }
     let result: Result<(), StudyError> = match &command {
         StudyCommand::New {
             id,
             question,
             private,
-        } => study::new_study(&root, id, question, *private).map(|dir| {
+            mode,
+        } => study::new_study(&root, id, question, *private, *mode).map(|dir| {
             let rel = dir.strip_prefix(&root).unwrap_or(&dir);
             let _ = writeln!(io.out, "Created draft study at {}", rel.display());
         }),
+        StudyCommand::Replicate {
+            id,
+            question,
+            private,
+            target,
+            commit,
+        } => study::replicate(&root, id, question, *private, target, commit).map(|dir| {
+            let rel = dir.strip_prefix(&root).unwrap_or(&dir);
+            let _ = writeln!(
+                io.out,
+                "Created draft replication study at {}",
+                rel.display()
+            );
+        }),
+        StudyCommand::Link {
+            id,
+            relation,
+            other,
+        } => study::link(&root, id, *relation, other).map(|()| {
+            let _ = writeln!(
+                io.out,
+                "Recorded `{}` of `{other}` on `{id}`.",
+                relation.field()
+            );
+        }),
+        StudyCommand::Migrate(ids) => {
+            let mut result = Ok(());
+            for id in ids {
+                match study::migrate(&root, id) {
+                    Ok(true) => {
+                        let _ = writeln!(io.out, "Migrated study `{id}`.");
+                    }
+                    Ok(false) => {
+                        let _ = writeln!(io.out, "Study `{id}` needs no migration.");
+                    }
+                    Err(e) => {
+                        result = Err(e);
+                        break;
+                    }
+                }
+            }
+            result
+        }
         StudyCommand::Preregister(id) => {
             let today = chrono::Local::now().date_naive();
             let mut console = Console {
@@ -328,7 +490,9 @@ fn run_study_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
         StudyCommand::Supersede { old, new } => study::supersede(&root, old, new).map(|()| {
             let _ = writeln!(io.out, "Study `{old}` is now superseded by `{new}`.");
         }),
-        StudyCommand::Summarize(_) => unreachable!("handled above"),
+        StudyCommand::Summarize(_) | StudyCommand::Test { .. } => {
+            unreachable!("handled above")
+        }
     };
     match result {
         Ok(()) => EXIT_OK,
@@ -348,6 +512,18 @@ fn take_json_flag(args: &[String]) -> (bool, Vec<String>) {
     )
 }
 
+/// The member references of a split, for the confirmation line.
+fn load_split_members(root: &Path, name: &str) -> Vec<String> {
+    data::load_splits(&crate::check::Project::new(root))
+        .ok()
+        .and_then(|splits| {
+            splits
+                .get(name)
+                .map(|s| s.datasets.iter().map(|d| d.to_string()).collect())
+        })
+        .unwrap_or_default()
+}
+
 fn run_data_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
     let usage = |io: &mut Streams<'_>, message: &str| {
         let _ = writeln!(io.err, "tophat data: {message}\n\n{USAGE}");
@@ -357,12 +533,14 @@ fn run_data_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
         return usage(io, "missing data subcommand");
     };
     let (json, rest) = take_json_flag(rest);
+    let (remove, rest) = take_flag(&rest, "--remove");
     let known: &[&str] = match sub.as_str() {
         "add" => &["root", "path", "source", "date", "license", "visibility"],
         "declare" => &["root", "path", "statement", "visibility"],
         "retire" => &["reason"],
         "verify" | "lineage" | "used-by" | "roots" => &[],
         "publish" => &["stage", "variant", "as"],
+        "split" => &["datasets", "partition", "source"],
         other => return usage(io, &format!("unknown data subcommand `{other}`")),
     };
     let (positionals, options) = match parse_options(&rest, known) {
@@ -477,6 +655,44 @@ fn run_data_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i32 {
                 let _ = writeln!(io.out, "Retired {reference}.");
                 EXIT_OK
             })
+        }
+        "split" => {
+            let name = match one(&positionals) {
+                Ok(n) => n,
+                Err(m) => return usage(io, &m),
+            };
+            let project = crate::check::Project::new(&root);
+            if remove {
+                data::remove_split(&project, &name).map(|()| {
+                    let _ = writeln!(io.out, "Removed split {name}.");
+                    EXIT_OK
+                })
+            } else {
+                let mut datasets = Vec::new();
+                for (key, value) in &options {
+                    if key == "datasets" {
+                        match data::DatasetRef::parse(value) {
+                            Some(r) => datasets.push(r),
+                            None => {
+                                return usage(io, &format!("`{value}` is not a dataset reference"));
+                            }
+                        }
+                    }
+                }
+                let partition = opt("partition");
+                let source = match opt("source") {
+                    None => None,
+                    Some(value) => match data::DatasetRef::parse(&value) {
+                        Some(r) => Some(r),
+                        None => return usage(io, &format!("`{value}` is not a dataset reference")),
+                    },
+                };
+                data::declare_split(&project, &name, datasets, partition, source).map(|()| {
+                    let members: Vec<String> = load_split_members(&root, &name);
+                    let _ = writeln!(io.out, "{name}: {}", members.join(", "));
+                    EXIT_OK
+                })
+            }
         }
         "lineage" => {
             let target = match one(&positionals) {
@@ -957,20 +1173,17 @@ fn run_question_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i3
         let _ = writeln!(io.err, "tophat question: {message}\n\n{USAGE}");
         EXIT_UNABLE
     };
-    let (json, valid) = match args
-        .iter()
-        .map(String::as_str)
-        .collect::<Vec<_>>()
-        .as_slice()
-    {
-        ["stamp"] => (false, true),
-        ["tree"] => (false, true),
-        ["tree", "--json"] => (true, true),
-        _ => (false, false),
+    let (json, sub) = if args.len() == 1 && args[0] == "stamp" {
+        (false, "stamp")
+    } else if args.len() == 1 && args[0] == "tree" {
+        (false, "tree")
+    } else if args.len() == 2 && args[0] == "tree" && args[1] == "--json" {
+        (true, "tree")
+    } else if args.first().map(String::as_str) == Some("emerge") {
+        (false, "emerge")
+    } else {
+        return usage_error(io, "expected `stamp`, `emerge` or `tree [--json]`");
     };
-    if !valid {
-        return usage_error(io, "expected `stamp` or `tree [--json]`");
-    }
     let root = match find_project_root(cwd) {
         Ok(root) => root,
         Err(e) => {
@@ -978,7 +1191,24 @@ fn run_question_command(args: &[String], cwd: &Path, io: &mut Streams<'_>) -> i3
             return EXIT_UNABLE;
         }
     };
-    let result: Result<(), QuestionError> = if args[0] == "stamp" {
+    let result: Result<(), QuestionError> = if sub == "emerge" {
+        let (positionals, options) = match parse_options(&args[1..], &["from", "under"]) {
+            Ok(parsed) => parsed,
+            Err(message) => return usage_error(io, &message),
+        };
+        let [text] = positionals.as_slice() else {
+            return usage_error(
+                io,
+                "`tophat question emerge` takes one quoted question text",
+            );
+        };
+        let Some(from) = option(&options, "from") else {
+            return usage_error(io, "`tophat question emerge` requires --from <study-id>");
+        };
+        question::emerge(&root, text, from, option(&options, "under")).map(|(id, text)| {
+            let _ = writeln!(io.out, "{id} {text}");
+        })
+    } else if sub == "stamp" {
         question::stamp_outcome(&root).and_then(|outcome| {
             for (id, text) in &outcome.assigned {
                 let _ = writeln!(io.out, "{id} {text}");

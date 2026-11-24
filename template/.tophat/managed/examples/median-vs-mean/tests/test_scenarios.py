@@ -1,7 +1,5 @@
-"""Scenario tests of study median-vs-mean. Run from the study directory:
-
-    pixi run python -m unittest discover -s tests
-"""
+#!/usr/bin/env python3
+"""Scenario tests of study median-vs-mean, run as an executable test file by `tophat study test`."""
 
 import importlib.util
 import subprocess

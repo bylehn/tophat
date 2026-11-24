@@ -33,8 +33,9 @@ sets are:
 | `minimal-claude` | none | `claude-code` | `auto` |
 | `minimal-codex` | none | `codex` | `auto` |
 | `minimal-opencode` | none | `opencode` | `auto` |
-| `julia-all-agents` | `julia` | all three | `auto` |
-| `gpu-off` | none | all three | `off` |
+| `minimal-vibe` | none | `vibe` | `auto` |
+| `julia-all-agents` | `julia` | all four | `auto` |
+| `gpu-off` | none | all four | `off` |
 
 All sets use `project_name: Example Project`, a fixed description, a fixed author, `license: MIT`
 and `copyright_year: 2026`.
@@ -98,7 +99,7 @@ the container image build.
 
 ### `cargo xtask eval` <!-- rq-03d2afb2 -->
 
-`cargo xtask eval [--agent claude-code|codex|opencode] [--eval <name>]... [--repeat <n>]` runs the
+`cargo xtask eval [--agent claude-code|codex|opencode|vibe] [--eval <name>]... [--repeat <n>]` runs the
 skill evals of `rqm/testing.md`.
 
 ### `cargo xtask scenarios` <!-- rq-04882df1 -->

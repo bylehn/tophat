@@ -8,6 +8,7 @@ variants: [base]
 preregistered:
   date: "2026-01-01"
   frozen_hash: "sha256:af9db24ee914948c0c4377091dbe1d83d05b3f8fbc1d1e627b4a548765f5b6fb"
+mode: confirmatory
 ---
 
 # x-vs-docking
@@ -46,7 +47,7 @@ analyse
 
 ## Result
 
-- base/analyse: n=2 level=b3f
+- base/analyse: n=2 level=b3f [pre-specified]
 
 ## Interpretation
 
