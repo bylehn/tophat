@@ -566,7 +566,7 @@ fn report_hand_written(root: &Path, loaded: &Loaded, status: Status) -> Result<(
     Ok(())
 }
 
-// rq-9f2c5cd1
+// rq-f2c5cd1
 /// Marks `old` as superseded by `new` and links both studies.
 pub fn supersede(root: &Path, old: &str, new: &str) -> Result<(), StudyError> {
     study_dir(root, old)?;

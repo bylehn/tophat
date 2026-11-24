@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use tophat::check::{Diagnostic, Project, Severity, run_check};
 use tophat::question::{
-    QuestionError, parse_project, question_rules, render_tree, render_tree_json, stamp,
+    QuestionError, emerge, parse_project, question_rules, render_tree, render_tree_json, stamp,
     stamp_outcome,
 };
 
@@ -749,4 +749,360 @@ fn tree_does_not_validate() {
     let (code, stdout, _) = tophat_binary(p.root(), &["question", "tree"]);
     assert_eq!(code, 0);
     assert_eq!(stdout, "(no id) [?] B?\n");
+}
+
+// --- Emerged questions, labels and emerge (science workflow) --------------------------------
+
+/// Writes a reported study with the given mode and `## Result` lines.
+fn reported_study(p: &TempProject, id: &str, question: &str, mode: &str, result: &str) {
+    p.study(id, question, "reported", &[&format!("mode: {mode}")]);
+    let dir = p.root().join("studies").join(id);
+    let text =
+        fs::read_to_string(dir.join("STUDY.md")).unwrap() + &format!("\n## Result\n\n{result}\n");
+    fs::write(dir.join("STUDY.md"), text).unwrap();
+}
+
+#[test] // rq-e75df1d9
+fn emerged_question_without_an_origin() {
+    let p = TempProject::with_project("# P\n\n## q-1a2b3c4d · A?\nstatus: emerged\n");
+    let ds = diagnostics(&p);
+    let found = with_rule(&ds, "question.origin-missing");
+    assert_eq!(found.len(), 1);
+    assert_eq!(found[0].line, Some(3));
+}
+
+#[test] // rq-1b7579af
+fn emerged_question_naming_a_missing_study() {
+    let text = "# P\n\n## q-1a2b3c4d · A?\nstatus: emerged\n\nEmerged from: no-such-study\n";
+    let p = TempProject::with_project(text);
+    let ds = diagnostics(&p);
+    let found = with_rule(&ds, "question.origin-invalid");
+    assert_eq!(found.len(), 1);
+    assert_eq!(found[0].line, Some(line_of(text, "Emerged from")));
+}
+
+#[test] // rq-273c5387
+fn an_emerged_question_is_answered_like_an_open_one() {
+    let p = TempProject::with_project(&three(
+        OPEN,
+        &answered("x-energy-accuracy"),
+        "status: answered\n\n**Answer:** Yes.\nEvidence: outlier-dig [exploratory]\n\nEmerged from: x-vs-docking\n",
+    ));
+    p.study("x-vs-docking", "q-1a2b3c4d", "draft", &[]);
+    reported_study(
+        &p,
+        "outlier-dig",
+        "q-9c0d1e2f",
+        "exploratory",
+        "- base/analyse: rho=0.42 [exploratory]",
+    );
+    let ds = diagnostics(&p);
+    assert!(
+        !ds.iter().any(|d| d.rule.starts_with("question.")
+            && d.line == Some(line_of(&p.project_text(), "q-9c0d1e2f"))),
+        "{ds:#?}"
+    );
+}
+
+#[test] // rq-6dc70288
+fn citing_an_emerged_sub_question() {
+    let p = TempProject::with_project(&three(
+        &answered("q-9c0d1e2f"),
+        OPEN,
+        "status: emerged\n\nEmerged from: x-vs-docking\n",
+    ));
+    p.study("x-vs-docking", "q-1a2b3c4d", "draft", &[]);
+    let ds = diagnostics(&p);
+    assert_eq!(with_rule(&ds, "question.evidence-unanswered").len(), 1);
+}
+
+#[test] // rq-a5a6c56e
+fn an_emerged_question_is_dropped_like_an_open_one() {
+    let p = TempProject::with_project(&three(
+        OPEN,
+        OPEN,
+        "status: dropped\n\n**Reason:** Out of scope.\n\nEmerged from: x-vs-docking\n",
+    ));
+    p.study("x-vs-docking", "q-1a2b3c4d", "draft", &[]);
+    let ds = diagnostics(&p);
+    assert!(
+        !ds.iter().any(|d| d.rule.starts_with("question.")
+            && d.line == Some(line_of(&p.project_text(), "q-9c0d1e2f"))),
+        "{ds:#?}"
+    );
+}
+
+#[test] // rq-ea31a640
+fn an_answered_question_keeps_a_valid_origin_line() {
+    let p = TempProject::with_project(&three(
+        OPEN,
+        OPEN,
+        &format!(
+            "{}\nEmerged from: x-vs-docking\n",
+            answered("x-energy-accuracy")
+        ),
+    ));
+    p.study("x-vs-docking", "q-1a2b3c4d", "draft", &[]);
+    reported_study(
+        &p,
+        "x-energy-accuracy",
+        "q-9c0d1e2f",
+        "confirmatory",
+        "- base/score: n=120, rho=0.61 [pre-specified]",
+    );
+    let ds = diagnostics(&p);
+    assert!(
+        !ds.iter().any(|d| d.rule.starts_with("question.")
+            && d.line == Some(line_of(&p.project_text(), "q-9c0d1e2f"))),
+        "{ds:#?}"
+    );
+}
+
+#[test] // rq-944a6f44
+fn a_study_may_address_an_emerged_question() {
+    let p = TempProject::with_project(
+        "# P\n\n## q-1a2b3c4d · A?\nstatus: open\n\n### q-7d8e9f0a · B?\nstatus: emerged\n\nEmerged from: x-vs-docking\n",
+    );
+    p.study("x-vs-docking", "q-1a2b3c4d", "draft", &[]);
+    p.study("outlier-dig", "q-7d8e9f0a", "draft", &[]);
+    let ds = diagnostics(&p);
+    assert!(
+        with_rule(&ds, "question.unknown-reference").is_empty(),
+        "{ds:#?}"
+    );
+}
+
+#[test] // rq-d47955a2
+fn citing_an_exploratory_study_with_its_label() {
+    let p = TempProject::with_project(&three(OPEN, OPEN, &answered("outlier-dig [exploratory]")));
+    reported_study(
+        &p,
+        "outlier-dig",
+        "q-9c0d1e2f",
+        "exploratory",
+        "- base/analyse: rho=0.42 [exploratory]",
+    );
+    assert!(evidence_rules(&diagnostics(&p)).is_empty());
+}
+
+#[test] // rq-9e04442c
+fn citing_a_confirmatory_studys_exploratory_result() {
+    let p = TempProject::with_project(&three(OPEN, OPEN, &answered("x-vs-docking [exploratory]")));
+    reported_study(
+        &p,
+        "x-vs-docking",
+        "q-9c0d1e2f",
+        "confirmatory",
+        "- base/score: n=120, rho=0.61 [pre-specified]\n- pbe/analyse: rho=0.42 [exploratory]",
+    );
+    assert!(evidence_rules(&diagnostics(&p)).is_empty());
+}
+
+#[test] // rq-9447b114
+fn a_label_the_study_has_no_result_line_for() {
+    let p = TempProject::with_project(&three(OPEN, OPEN, &answered("x-vs-docking [post hoc]")));
+    reported_study(
+        &p,
+        "x-vs-docking",
+        "q-9c0d1e2f",
+        "confirmatory",
+        "- base/score: n=120, rho=0.61 [pre-specified]",
+    );
+    let ds = diagnostics(&p);
+    let found = with_rule(&ds, "question.evidence-tag-mismatch");
+    assert_eq!(found.len(), 1);
+    assert!(found[0].hint.as_deref().unwrap().contains("pre-specified"));
+}
+
+#[test] // rq-f5e9098c
+fn a_label_that_is_not_a_citation_label() {
+    let p = TempProject::with_project(&three(
+        OPEN,
+        OPEN,
+        &answered("x-vs-docking [pre-specified]"),
+    ));
+    p.study("x-vs-docking", "q-9c0d1e2f", "reported", &[]);
+    let ds = diagnostics(&p);
+    assert_eq!(with_rule(&ds, "question.evidence-invalid").len(), 1);
+}
+
+#[test] // rq-c333e981
+fn a_question_citation_carries_no_label() {
+    let p = TempProject::with_project(&three(
+        &answered("q-5e6f7a8b [exploratory]"),
+        &answered("x-energy-accuracy"),
+        OPEN,
+    ));
+    p.study("x-energy-accuracy", "q-5e6f7a8b", "reported", &[]);
+    let ds = diagnostics(&p);
+    assert_eq!(with_rule(&ds, "question.evidence-invalid").len(), 1);
+}
+
+#[test] // rq-df111cbc
+fn citing_a_retrospective_study_with_a_verified_summary() {
+    let p = TempProject::with_project(&three(OPEN, OPEN, &answered("old-benchmark [post hoc]")));
+    reported_study(
+        &p,
+        "old-benchmark",
+        "q-9c0d1e2f",
+        "retrospective",
+        "- base/score: n=60, MAE=0.9 kcal/mol [post hoc]",
+    );
+    let dir = p.root().join("studies/old-benchmark");
+    fs::write(
+        dir.join("SUMMARY.md"),
+        "---\nstudy: old-benchmark\ncommit: \"0123456789abcdef0123456789abcdef01234567\"\ndirty: false\ngenerated: \"2026-10-01T12:00:00Z\"\ntophat_version: \"0.1.0\"\n---\n\n## Results\n\n- base/score: n=60, MAE=0.9 kcal/mol [post hoc]\n",
+    )
+    .unwrap();
+    let ds = diagnostics(&p);
+    assert!(
+        with_rule(&ds, "question.evidence-retrospective").is_empty(),
+        "{ds:#?}"
+    );
+}
+
+#[test] // rq-a7910365
+fn an_untagged_result_line_is_left_to_the_study_rules() {
+    let p = TempProject::with_project(&three(OPEN, OPEN, &answered("x-vs-docking")));
+    reported_study(
+        &p,
+        "x-vs-docking",
+        "q-9c0d1e2f",
+        "retrospective",
+        "- base/score: n=120, rho=0.61",
+    );
+    let ds = run_check(p.root(), &[]).unwrap();
+    assert!(ds.iter().any(|d| d.rule == "study.tag-missing"));
+    assert!(with_rule(&ds, "question.evidence-tag-mismatch").is_empty());
+}
+
+#[test] // rq-e03f0826
+fn tree_shows_an_origin_line_for_a_missing_study() {
+    let p = TempProject::with_project(
+        "# P\n\n## q-1a2b3c4d · A?\nstatus: emerged\n\nEmerged from: no-such-study\n",
+    );
+    let out = render_tree(p.root()).unwrap();
+    let lines: Vec<&str> = out.lines().collect();
+    let idx = lines.iter().position(|l| l.contains("q-1a2b3c4d")).unwrap();
+    assert_eq!(lines[idx + 1].trim(), "emerged from no-such-study [?]");
+}
+
+#[test] // rq-1176e768
+fn emerge_from_a_study_that_does_not_exist() {
+    let p = TempProject::with_project(EXAMPLE);
+    let before = p.project_text();
+    let err = emerge(p.root(), "A?", "no-such-study", None).unwrap_err();
+    assert!(matches!(err, QuestionError::OriginStudyInvalid(s) if s == "no-such-study"));
+    assert_eq!(p.project_text(), before);
+}
+
+#[test] // rq-8848775c
+fn emerge_with_an_empty_text() {
+    let p = TempProject::with_project(EXAMPLE);
+    p.study("x-vs-docking", "q-9c0d1e2f", "draft", &[]);
+    let before = p.project_text();
+    let err = emerge(p.root(), "", "x-vs-docking", None).unwrap_err();
+    assert!(matches!(err, QuestionError::TextInvalid));
+    assert_eq!(p.project_text(), before);
+}
+
+#[test] // rq-cdad3c4b
+fn emerge_without_project_md() {
+    let p = TempProject::new();
+    p.study("x-vs-docking", "q-9c0d1e2f", "draft", &[]);
+    let err = emerge(p.root(), "A?", "x-vs-docking", None).unwrap_err();
+    assert!(matches!(err, QuestionError::ProjectFileMissing));
+    assert!(!p.root().join("PROJECT.md").exists());
+}
+
+#[test] // rq-9ff67f40
+fn emerge_from_a_study_whose_question_is_not_in_the_tree() {
+    let p = TempProject::with_project(EXAMPLE);
+    p.study("x-vs-docking", "q-deadbeef", "draft", &[]);
+    let err = emerge(p.root(), "A?", "x-vs-docking", None).unwrap_err();
+    assert!(matches!(err, QuestionError::ParentInvalid(_)));
+}
+
+#[test] // rq-6c48cc09
+fn emerge_places_the_question_as_the_parents_last_sub_question() {
+    let p = TempProject::with_project(&format!(
+        "# P\n\n{}{}{}",
+        q(2, "q-1a2b3c4d", "A?", OPEN),
+        q(3, "q-5e6f7a8b", "B?", OPEN),
+        q(2, "q-9c0d1e2f", "C?", OPEN)
+    ));
+    p.study("x-vs-docking", "q-1a2b3c4d", "draft", &[]);
+    let (id, _) = emerge(p.root(), "Why did B behave oddly?", "x-vs-docking", None).unwrap();
+    let text = p.project_text();
+    let pos_new = text.find(&id).unwrap();
+    let pos_b_body = text.find("B?").unwrap();
+    let pos_c = text.find("q-9c0d1e2f").unwrap();
+    assert!(pos_b_body < pos_new && pos_new < pos_c);
+}
+
+#[test] // rq-7853bb0a
+fn emerge_with_an_explicit_parent() {
+    let p = TempProject::with_project(EXAMPLE);
+    p.study("x-vs-docking", "q-9c0d1e2f", "draft", &[]);
+    let (id, _) = emerge(
+        p.root(),
+        "Is the reference data reliable?",
+        "x-vs-docking",
+        Some("q-1a2b3c4d"),
+    )
+    .unwrap();
+    let tree = parse_project(&p.project_text());
+    let i = tree.index_of(&id).unwrap();
+    assert_eq!(tree.questions[i].level, 3);
+    let parent = tree.questions[i].parent.unwrap();
+    assert_eq!(tree.questions[parent].id.as_deref(), Some("q-1a2b3c4d"));
+}
+
+#[test] // rq-9c8407f2
+fn emerge_at_the_maximum_depth() {
+    let mut text = String::from("# P\n\n");
+    let ids = [
+        "q-1a2b3c4d",
+        "q-5e6f7a8b",
+        "q-9c0d1e2f",
+        "q-3b4c5d6e",
+        "q-7d8e9f0a",
+    ];
+    for (i, id) in ids.iter().enumerate() {
+        text.push_str(&q(i + 2, id, "Q?", OPEN));
+    }
+    let p = TempProject::with_project(&text);
+    p.study("x-vs-docking", "q-7d8e9f0a", "draft", &[]);
+    let before = p.project_text();
+    let err = emerge(p.root(), "A?", "x-vs-docking", None).unwrap_err();
+    assert!(matches!(err, QuestionError::ParentTooDeep));
+    assert_eq!(p.project_text(), before);
+}
+
+#[test] // rq-6248ce74
+fn emerge_preserves_the_rest_of_the_file() {
+    let original = "# Title\n\n<!-- comment -->\n\n## q-1a2b3c4d · A?\nstatus: open\n\n```\n## not a question\n```\n";
+    let crlf = original.replace('\n', "\r\n");
+    let p = TempProject::with_project(&crlf);
+    p.study("x-vs-docking", "q-1a2b3c4d", "draft", &[]);
+    let (id, _) = emerge(p.root(), "A?", "x-vs-docking", None).unwrap();
+    let after = p.project_text();
+    assert!(after.contains(&id));
+    let inserted = after.lines().find(|l| l.contains(&id)).unwrap().to_string();
+    assert!(after.contains(&inserted.replace('\n', "\r\n")) || after.contains(&inserted));
+    assert!(after.starts_with("# Title\r\n"));
+    assert!(after.contains("<!-- comment -->"));
+    assert!(after.contains("## not a question"));
+}
+
+#[test] // rq-c7e4904d
+fn emerged_questions_get_distinct_ids() {
+    let p = TempProject::with_project(EXAMPLE);
+    p.study("x-vs-docking", "q-9c0d1e2f", "draft", &[]);
+    let (id1, _) = emerge(p.root(), "A?", "x-vs-docking", None).unwrap();
+    let (id2, _) = emerge(p.root(), "B?", "x-vs-docking", None).unwrap();
+    assert_ne!(id1, id2);
+    let tree = parse_project(&p.project_text());
+    assert!(tree.index_of(&id1).is_some());
+    assert!(tree.index_of(&id2).is_some());
 }

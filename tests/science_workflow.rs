@@ -152,7 +152,7 @@ fn the_pre_mode_retrospective_status_is_reported() {
 
 // --- Epistemic tags -------------------------------------------------------------------------
 
-#[test] // rq-5cca5697
+#[test] // rq-5cca5697 rq-6d57beba rq-9dd27343 rq-c5610a75 rq-f4564941
 fn classify_result_tags() {
     let (_, tag) = classify_tag("- base/score: n=1 [pre-specified]").unwrap();
     assert_eq!(tag.epistemic, Epistemic::PreSpecified);
@@ -340,7 +340,7 @@ fn split_registry_round_trips() {
     assert_eq!(parse_splits(&text).unwrap(), splits);
 }
 
-#[test] // rq-70fdb927
+#[test] // rq-70fdb927 rq-b37c775b
 fn split_of_finds_the_unique_split_on_a_consumed_set() {
     let splits = Splits {
         splits: vec![
@@ -445,4 +445,122 @@ fn replicate_creates_a_study_with_a_pinned_target() {
         !ds.iter()
             .any(|d| d.rule == "study.section-missing" && d.path.contains("rerun-score"))
     );
+}
+
+#[test] // rq-3c9a3c47
+fn migrate_converts_an_in_progress_pre_mode_retrospective_study() {
+    let p = TempProject::new();
+    p.write(
+        "studies/old-benchmark/STUDY.md",
+        "---\nstudy: old-benchmark\ntitle: \"A\"\nquestion: q-1a2b3c4d\n\
+         status: retrospective\nvisibility: public\nvariants: [base]\n---\n\n\
+         ## Question\n\nWhy?\n\n## Result\n",
+    );
+    p.write("studies/old-benchmark/config/base.yaml", "stages: []\n");
+    assert!(migrate(p.root(), "old-benchmark").unwrap());
+    let text = p.read("studies/old-benchmark/STUDY.md");
+    assert!(text.contains("mode: retrospective"));
+    assert!(text.contains("status: draft"));
+}
+
+#[test] // rq-2a8b349a
+fn replicate_refuses_a_missing_target() {
+    let p = TempProject::new();
+    let err = tophat::study::replicate(
+        p.root(),
+        "rerun-score",
+        "q-1a2b3c4d",
+        false,
+        "no-such-study",
+        "0123456789abcdef0123456789abcdef01234567",
+    )
+    .unwrap_err();
+    assert!(matches!(
+        err,
+        tophat::study::StudyError::ReproducesInvalid(_)
+    ));
+    assert!(!p.root().join("studies/rerun-score").exists());
+}
+
+#[test] // rq-4c09754e
+fn replicate_refuses_a_pin_that_is_not_a_commit() {
+    let p = TempProject::new();
+    write_linked_study(&p, "x-vs-docking", Mode::Confirmatory, "");
+    let err = tophat::study::replicate(
+        p.root(),
+        "rerun-score",
+        "q-1a2b3c4d",
+        false,
+        "x-vs-docking",
+        "latest",
+    )
+    .unwrap_err();
+    assert!(matches!(
+        err,
+        tophat::study::StudyError::ReproducesInvalid(_)
+    ));
+    assert!(!p.root().join("studies/rerun-score").exists());
+}
+
+#[test] // rq-5bdc928b
+fn pre_registering_a_replication_study_locks_its_target_and_match_criterion() {
+    use std::io::Cursor;
+    let p = TempProject::new();
+    write_linked_study(&p, "x-vs-docking", Mode::Confirmatory, "");
+    p.write(
+        "studies/x-vs-docking/SUMMARY.md",
+        "---\nstudy: x-vs-docking\ncommit: \"0123456789abcdef0123456789abcdef01234567\"\n\
+         dirty: false\ngenerated: \"2026-10-01T12:00:00Z\"\ntophat_version: \"0.1.0\"\n---\n\n\
+         ## Results\n\n- base/score: n=1 [pre-specified]\n",
+    );
+    git(&p, &["init", "-q"]);
+    git(&p, &["config", "user.email", "t@example.com"]);
+    git(&p, &["config", "user.name", "T"]);
+    git(&p, &["add", "-A"]);
+    git(&p, &["commit", "-qm", "target"]);
+    let commit = git(&p, &["rev-parse", "HEAD"]);
+    tophat::study::replicate(
+        p.root(),
+        "rerun-score",
+        "q-1a2b3c4d",
+        false,
+        "x-vs-docking",
+        &commit,
+    )
+    .unwrap();
+    let text = p
+        .read("studies/rerun-score/STUDY.md")
+        .replace("## Question\n", "## Question\n\nDoes it reproduce?\n")
+        .replace(
+            "## Match criterion\n",
+            "## Match criterion\n\nExact content hashes.\n",
+        )
+        .replace("## Scenarios\n", "## Scenarios\n\n- S1: Outputs match.\n");
+    p.write("studies/rerun-score/STUDY.md", &text);
+    let mut input = Cursor::new(b"rerun-score\n".to_vec());
+    let mut out = Vec::new();
+    tophat::study::preregister(
+        p.root(),
+        "rerun-score",
+        today(),
+        &mut tophat::study::Console {
+            interactive: true,
+            input: &mut input,
+            out: &mut out,
+        },
+    )
+    .unwrap();
+    let study = parse_study_text(
+        "rerun-score",
+        "STUDY.md",
+        &p.read("studies/rerun-score/STUDY.md"),
+    )
+    .unwrap();
+    assert_eq!(study.status(), Some(Status::Preregistered));
+    let changed = p.read("studies/rerun-score/STUDY.md").replace(
+        &format!("reproduces: \"x-vs-docking@{commit}\""),
+        "reproduces: \"other@0123456789abcdef0123456789abcdef01234567\"",
+    );
+    p.write("studies/rerun-score/STUDY.md", &changed);
+    assert!(has_rule(&diagnostics(&p), "study.frozen-modified"));
 }

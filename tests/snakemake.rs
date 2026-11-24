@@ -17,9 +17,9 @@ use chrono::NaiveDate;
 use tophat::check::{Diagnostic, Project, Severity};
 use tophat::data::{Origin, RegisterOptions, add, retire};
 use tophat::pipeline::{
-    KeyContext, PipelineError, ProvenanceRecord, SealRequest, Verdict, compute_keys,
-    generate_rules, items_of, load_pipeline, pipeline_rules, qc, qc_status, seal, stub, summarize,
-    write_summary,
+    KeyContext, PipelineError, ProvenanceRecord, SealRequest, Verdict, check_record_dir,
+    compute_keys, generate_rules, items_of, load_pipeline, pipeline_rules, qc, qc_status, seal,
+    stub, summarize, test_key, write_summary,
 };
 use tophat::study::{Console, Mode, StudyError, new_study, parse_summary, report};
 
@@ -1285,4 +1285,240 @@ fn summarize_does_not_rewrite_for_a_new_timestamp_only() {
     let again = summarize(&env.root(), "x-vs-docking").unwrap();
     assert!(!write_summary(&env.root(), &again).unwrap());
     assert_eq!(env.read("studies/x-vs-docking/SUMMARY.md"), before);
+}
+
+// --- The check job and epistemic overrides (science workflow) --------------------------------
+
+#[cfg(unix)]
+fn pixi_path(env: &Env) -> String {
+    use std::os::unix::fs::PermissionsExt;
+    let bin = env.base.join("bin");
+    let pixi = bin.join("pixi");
+    if !pixi.exists() {
+        fs::write(&pixi, FAKE_PIXI).unwrap();
+        fs::set_permissions(&pixi, fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    format!(
+        "{}:{}",
+        bin.display(),
+        std::env::var("PATH").unwrap_or_default()
+    )
+}
+
+#[cfg(unix)]
+fn study_test(env: &Env, key: &str) -> (i32, String, String) {
+    let out = Command::new(env!("CARGO_BIN_EXE_tophat"))
+        .args(["study", "test", "x-vs-docking", "--key", key])
+        .current_dir(env.root())
+        .env("PATH", pixi_path(env))
+        .output()
+        .unwrap();
+    (
+        out.status.code().unwrap(),
+        String::from_utf8(out.stdout).unwrap(),
+        String::from_utf8(out.stderr).unwrap(),
+    )
+}
+
+#[cfg(unix)]
+fn write_test(env: &Env, body: &str, executable: bool) {
+    use std::os::unix::fs::PermissionsExt;
+    env.write("studies/x-vs-docking/tests/test_scores.sh", body);
+    let path = env.root().join("studies/x-vs-docking/tests/test_scores.sh");
+    fs::set_permissions(
+        &path,
+        fs::Permissions::from_mode(if executable { 0o755 } else { 0o644 }),
+    )
+    .unwrap();
+}
+
+#[cfg(unix)]
+#[test] // rq-ee51b4e6
+fn the_check_job_runs_the_scenario_tests() {
+    let env = Env::new();
+    write_test(&env, "#!/bin/sh\n# th:S1\nexit 0\n", true);
+    env.commit();
+    let key = test_key(&env.root(), "x-vs-docking").unwrap().unwrap();
+    let (code, _, err) = study_test(&env, &key);
+    assert_eq!(code, 0, "{err}");
+    let dir = check_record_dir(&env.root(), "x-vs-docking", &key).unwrap();
+    assert!(dir.join("provenance.json").is_file());
+    env.run_all_by_hand();
+    let summary = summarize(&env.root(), "x-vs-docking").unwrap();
+    assert_eq!(summary.check.as_deref(), Some(key.as_str()));
+}
+
+#[cfg(unix)]
+#[test] // rq-87e05653
+fn a_test_file_without_the_executable_bit_fails_the_job() {
+    let env = Env::new();
+    write_test(&env, "#!/bin/sh\nexit 0\n", false);
+    env.commit();
+    let key = test_key(&env.root(), "x-vs-docking").unwrap().unwrap();
+    let (code, _, err) = study_test(&env, &key);
+    assert_eq!(code, 1);
+    assert!(err.contains("not executable"), "{err}");
+    assert!(
+        !check_record_dir(&env.root(), "x-vs-docking", &key)
+            .unwrap()
+            .join("provenance.json")
+            .exists()
+    );
+}
+
+#[cfg(unix)]
+#[test] // rq-138b025c
+fn a_test_edited_during_the_check_fails_with_a_key_mismatch() {
+    let env = Env::new();
+    write_test(&env, "#!/bin/sh\nexit 0\n", true);
+    env.commit();
+    let (code, _, err) = study_test(&env, "not-the-current-key");
+    assert_eq!(code, 1);
+    assert!(err.contains("the stage key is now"), "{err}");
+}
+
+#[cfg(unix)]
+#[test] // rq-2d800e95
+fn a_failing_scenario_test_blocks_the_summary() {
+    let env = Env::new();
+    write_test(&env, "#!/bin/sh\nexit 1\n", true);
+    env.commit();
+    let key = test_key(&env.root(), "x-vs-docking").unwrap().unwrap();
+    let (code, _, err) = study_test(&env, &key);
+    assert_eq!(code, 1);
+    assert!(err.contains("failed"), "{err}");
+    assert!(
+        !check_record_dir(&env.root(), "x-vs-docking", &key)
+            .unwrap()
+            .join("provenance.json")
+            .exists()
+    );
+}
+
+#[cfg(unix)]
+#[test] // rq-4f452155
+fn an_uncommitted_test_makes_the_summary_dirty() {
+    let env = Env::new();
+    write_test(&env, "#!/bin/sh\nexit 0\n", true);
+    env.commit();
+    let key = test_key(&env.root(), "x-vs-docking").unwrap().unwrap();
+    assert_eq!(study_test(&env, &key).0, 0);
+    env.run_all_by_hand();
+    env.write(
+        "studies/x-vs-docking/tests/test_scores.sh",
+        "#!/bin/sh\n# edited\nexit 0\n",
+    );
+    let new_key = test_key(&env.root(), "x-vs-docking").unwrap().unwrap();
+    assert_ne!(new_key, key);
+    assert_eq!(study_test(&env, &new_key).0, 0);
+    let summary = summarize(&env.root(), "x-vs-docking").unwrap();
+    assert!(summary.dirty);
+}
+
+#[cfg(unix)]
+#[test] // rq-3c5a51df
+fn the_summary_goes_stale_when_tests_change() {
+    let env = Env::new();
+    write_test(&env, "#!/bin/sh\nexit 0\n", true);
+    env.commit();
+    let key = test_key(&env.root(), "x-vs-docking").unwrap().unwrap();
+    assert_eq!(study_test(&env, &key).0, 0);
+    env.run_all_by_hand();
+    write_summary(
+        &env.root(),
+        &summarize(&env.root(), "x-vs-docking").unwrap(),
+    )
+    .unwrap();
+    env.commit();
+    env.write(
+        "studies/x-vs-docking/tests/test_scores.sh",
+        "#!/bin/sh\n# th:S1 changed\nexit 0\n",
+    );
+    env.commit();
+    let ds = pipeline_rules(&Project::new(env.root()));
+    assert!(
+        ds.iter().any(|d| d.rule == "pipeline.summary-stale"),
+        "{ds:#?}"
+    );
+}
+
+#[test] // rq-d8eefe11
+fn a_study_without_tests_has_no_check_job() {
+    let env = Env::new();
+    let rules = generate_rules(&env.root(), "x-vs-docking").unwrap();
+    assert!(!rules.contains("rule check_"), "{rules}");
+    env.run_all_by_hand();
+    let summary = summarize(&env.root(), "x-vs-docking").unwrap();
+    assert!(summary.check.is_none());
+}
+
+#[test] // rq-265cb93c
+fn trial_runs_have_no_check_job() {
+    let env = Env::with_status("draft");
+    env.write(
+        "studies/x-vs-docking/tests/test_scores.sh",
+        "#!/bin/sh\nexit 0\n",
+    );
+    env.commit();
+    let rules = generate_rules(&env.root(), "x-vs-docking").unwrap();
+    assert!(rules.contains("rule trial:"));
+    assert!(!rules.contains("rule check_"), "{rules}");
+}
+
+#[cfg(unix)]
+#[test] // rq-856a5dc4
+fn editing_a_test_re_runs_only_the_check_job() {
+    let env = Env::new();
+    write_test(&env, "#!/bin/sh\nexit 0\n", true);
+    env.commit();
+    let Some((ok, log)) = env.snakemake(&[]) else {
+        return;
+    };
+    assert!(ok, "{log}");
+    write_test(&env, "#!/bin/sh\n# th:S1 rerun\nexit 0\n", true);
+    env.commit();
+    let Some((ok, log)) = env.snakemake(&[]) else {
+        return;
+    };
+    assert!(ok, "{log}");
+    let jobs = stage_jobs(&log);
+    assert!(!jobs.is_empty(), "{log}");
+    assert!(jobs.keys().all(|j| j.starts_with("check_")), "{jobs:?}");
+}
+
+#[test] // rq-2e3e53d6
+fn a_confirmatory_study_overrides_a_secondary_result_stage_to_exploratory() {
+    let env = Env::new();
+    let base = env.read("studies/x-vs-docking/config/base.yaml");
+    env.write(
+        "studies/x-vs-docking/config/base.yaml",
+        &format!(
+            "{base}  - name: diagnose\n    run: sh scripts/analyse.sh {{in.scores}} {{out}}\n\
+             \x20   code: [scripts/analyse.sh]\n    inputs: {{scores: stage:score}}\n\
+             \x20   result: result.txt\n    epistemic: exploratory\n"
+        ),
+    );
+    env.commit();
+    env.run_all_by_hand();
+    for v in ["base", "pbe"] {
+        let keys = env.keys(v);
+        let dir = env.out_dir("diagnose", &keys["diagnose"]);
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("result.txt"), "diag\n").unwrap();
+        env.seal("diagnose", v, None).unwrap();
+    }
+    let summary = summarize(&env.root(), "x-vs-docking").unwrap();
+    let lines: Vec<&str> = summary.results.iter().map(|l| l.raw.as_str()).collect();
+    assert!(
+        lines.contains(&"- base/analyse: rho=0.61 [pre-specified]"),
+        "{lines:?}"
+    );
+    assert!(
+        lines.contains(&"- base/diagnose: diag [exploratory]"),
+        "{lines:?}"
+    );
+    assert!(
+        lines.contains(&"- pbe/diagnose: diag [exploratory]"),
+        "{lines:?}"
+    );
 }

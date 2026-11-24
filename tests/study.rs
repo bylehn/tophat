@@ -10,9 +10,11 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use chrono::NaiveDate;
 use tophat::check::{Diagnostic, Project, RULE_FAMILIES, Severity};
 use tophat::cli::{EXIT_OK, Streams, run};
+use tophat::pipeline::pipeline_rules;
 use tophat::study::{
-    Console, Mode, Status, StudyError, exploration_hash, frozen_fingerprint, governed_sections,
-    new_study, parse_exploration, parse_study_text, preregister, report, study_rules_at, supersede,
+    Console, Mode, Relation, Status, StudyError, exploration_hash, frozen_fingerprint,
+    governed_sections, link, migrate, new_study, parse_exploration, parse_study_text, preregister,
+    record_exploration, report, study_rules_at, supersede,
 };
 
 // --- Fixtures -------------------------------------------------------------------------------
@@ -527,7 +529,7 @@ fn headings_inside_code_fences_are_not_sections() {
     assert!(with_rule(&ds, "study.result-unexpected").is_empty());
 }
 
-#[test] // rq-9a610110
+#[test] // rq-9a610110 rq-5702c253
 fn extra_sections_are_allowed() {
     let p = TempProject::new();
     write_study(
@@ -1231,7 +1233,7 @@ fn report_refuses_a_draft() {
     ));
 }
 
-#[test] // rq-e7c71a2b rq-ecacda48
+#[test] // rq-e7c71a2b rq-ecacda48 rq-ca33392b
 fn re_reporting_refreshes_the_result() {
     let p = TempProject::new();
     write_reported(&p, "study-a");
@@ -1410,7 +1412,7 @@ fn supersede_diagnostics(ds: &[Diagnostic]) -> Vec<&Diagnostic> {
         .collect()
 }
 
-#[test] // rq-78ed7708 rq-9f2c5cd1
+#[test] // rq-78ed7708 rq-f2c5cd1
 fn supersede_a_reported_study() {
     let p = TempProject::new();
     write_reported(&p, "study-a");
@@ -1449,7 +1451,7 @@ fn superseded_study_keeps_its_frozen_section_check() {
     assert_eq!(found[0].path, "studies/study-a/STUDY.md");
 }
 
-#[test] // rq-a9de1b5b rq-9f2c5cd1
+#[test] // rq-a9de1b5b rq-f2c5cd1
 fn supersede_refuses_a_draft() {
     let p = TempProject::new();
     write_study(&p, &Doc::draft("study-a"));
@@ -1463,7 +1465,7 @@ fn supersede_refuses_a_draft() {
     assert_eq!(p.study_text("study-b"), b);
 }
 
-#[test] // rq-765490e4 rq-9f2c5cd1
+#[test] // rq-765490e4 rq-f2c5cd1
 fn supersede_refuses_a_missing_replacement() {
     let p = TempProject::new();
     write_reported(&p, "study-a");
@@ -1475,7 +1477,7 @@ fn supersede_refuses_a_missing_replacement() {
     assert_eq!(p.study_text("study-a"), a);
 }
 
-#[test] // rq-9f2c5cd1
+#[test] // rq-f2c5cd1
 fn supersede_refuses_the_same_study() {
     let p = TempProject::new();
     write_reported(&p, "study-a");
@@ -1570,4 +1572,308 @@ fn commands_write_atomically() {
         Err(StudyError::Io(_))
     ));
     assert_eq!(p.study_text("study-a"), before);
+}
+
+// --- Science-workflow coverage: modes, replication, links, tags (rqm/study/format.md) ------
+
+#[test] // rq-016794d2
+fn reproduction_target_missing_on_a_replication_study() {
+    let p = TempProject::new();
+    write_study(&p, &Doc::draft("rerun-score").mode("replication"));
+    let ds = diagnostics(&p);
+    assert_eq!(with_rule(&ds, "study.reproduces-missing").len(), 1);
+}
+
+#[test] // rq-07a5604f
+fn an_exploratory_study_cannot_pre_register() {
+    let p = TempProject::new();
+    write_study(&p, &Doc::draft("outlier-dig").mode("exploratory"));
+    let (result, _) = preregister_typing(&p, "outlier-dig", "outlier-dig");
+    assert!(matches!(result, Err(StudyError::WrongMode { .. })));
+}
+
+#[test] // rq-2a6c36db
+fn link_refuses_a_missing_study() {
+    let p = TempProject::new();
+    write_study(&p, &Doc::draft("study-a"));
+    let before = p.study_text("study-a");
+    let err = link(p.root(), "study-a", Relation::Refutes, "no-such-study").unwrap_err();
+    assert!(matches!(err, StudyError::LinkInvalid { .. }));
+    assert_eq!(p.study_text("study-a"), before);
+}
+
+#[test] // rq-43f53fc5
+fn a_reported_confirmatory_study_must_have_a_pre_specified_line() {
+    let p = TempProject::new();
+    write_study(
+        &p,
+        &Doc::reported("study-a").set("Result", "- base/score: n=120 [exploratory]"),
+    );
+    p.write(
+        "studies/study-a/SUMMARY.md",
+        &summary_text("study-a", false, &["- base/score: n=120 [exploratory]"]),
+    );
+    let ds = diagnostics(&p);
+    assert_eq!(with_rule(&ds, "study.no-pre-specified-result").len(), 1);
+}
+
+#[test] // rq-44085c48
+fn hand_written_retrospective_results_must_be_tagged_post_hoc() {
+    let p = TempProject::new();
+    write_study(
+        &p,
+        &Doc::draft("old-benchmark")
+            .mode("retrospective")
+            .set("Result", "- base/score: rho=0.5 [pre-specified]"),
+    );
+    let err = report(p.root(), "old-benchmark").unwrap_err();
+    assert!(matches!(err, StudyError::Summary(_)));
+    let study =
+        parse_study_text("old-benchmark", "STUDY.md", &p.study_text("old-benchmark")).unwrap();
+    assert_eq!(study.status(), Some(Status::Draft));
+}
+
+#[test] // rq-4a0634d3
+fn pre_registering_a_methods_study_locks_its_success_criteria() {
+    let p = TempProject::new();
+    write_study(
+        &p,
+        &Doc::draft("scoring-v2")
+            .mode("methods")
+            .without("Primary endpoint")
+            .without("Decision rule")
+            .set("Success criteria", "AUC above 0.9 on the benchmark set."),
+    );
+    let (result, _) = preregister_typing(&p, "scoring-v2", "scoring-v2");
+    result.unwrap();
+    let study = parse_study_text("scoring-v2", "STUDY.md", &p.study_text("scoring-v2")).unwrap();
+    assert_eq!(study.status(), Some(Status::Preregistered));
+    let text = p.study_text("scoring-v2").replace(
+        "AUC above 0.9 on the benchmark set.",
+        "AUC above 0.95 on the benchmark set.",
+    );
+    p.write("studies/scoring-v2/STUDY.md", &text);
+    assert_eq!(
+        with_rule(&diagnostics(&p), "study.frozen-modified").len(),
+        1
+    );
+}
+
+#[test] // rq-6422ad44
+fn links_are_not_frozen() {
+    let p = TempProject::new();
+    write_study(&p, &Doc::preregistered("study-b"));
+    write_study(&p, &Doc::draft("study-a"));
+    link(p.root(), "study-b", Relation::FollowsUp, "study-a").unwrap();
+    let ds = diagnostics(&p);
+    assert!(
+        with_rule(&ds, "study.frozen-modified").is_empty(),
+        "{ds:#?}"
+    );
+}
+
+#[test] // rq-7737c032
+fn supersede_an_exploratory_reported_study() {
+    let p = TempProject::new();
+    write_study(
+        &p,
+        &Doc::draft("outlier-dig")
+            .mode("exploratory")
+            .status("reported")
+            .set("Result", "- base/analyse: rho=0.42 [exploratory]"),
+    );
+    p.write(
+        "studies/outlier-dig/SUMMARY.md",
+        &summary_text(
+            "outlier-dig",
+            false,
+            &["- base/analyse: rho=0.42 [exploratory]"],
+        ),
+    );
+    write_study(&p, &Doc::draft("study-b"));
+    supersede(p.root(), "outlier-dig", "study-b").unwrap();
+    let study = parse_study_text("outlier-dig", "STUDY.md", &p.study_text("outlier-dig")).unwrap();
+    assert_eq!(study.status(), Some(Status::Superseded));
+    assert_eq!(
+        study.front.superseded_by.unwrap().value,
+        "study-b".to_string()
+    );
+}
+
+#[test] // rq-86197e5c
+fn an_exploratory_study_reports_from_a_draft() {
+    let p = TempProject::new();
+    write_study(
+        &p,
+        &Doc::draft("outlier-dig")
+            .mode("exploratory")
+            .set("Question", "What is going on with the outliers?"),
+    );
+    p.write(
+        "studies/outlier-dig/SUMMARY.md",
+        &summary_text(
+            "outlier-dig",
+            false,
+            &["- base/analyse: mean shift of 0.4 sigma [exploratory]"],
+        ),
+    );
+    report(p.root(), "outlier-dig").unwrap();
+    let study = parse_study_text("outlier-dig", "STUDY.md", &p.study_text("outlier-dig")).unwrap();
+    assert_eq!(study.status(), Some(Status::Reported));
+    assert!(
+        p.study_text("outlier-dig")
+            .contains("- base/analyse: mean shift of 0.4 sigma [exploratory]")
+    );
+}
+
+#[test] // rq-91befa97
+fn a_reported_exploratory_study_needs_a_non_empty_question() {
+    let p = TempProject::new();
+    write_study(
+        &p,
+        &Doc::draft("outlier-dig")
+            .mode("exploratory")
+            .status("reported")
+            .set("Question", "")
+            .set("Result", "- base/analyse: rho=0.42 [exploratory]"),
+    );
+    p.write(
+        "studies/outlier-dig/SUMMARY.md",
+        &summary_text(
+            "outlier-dig",
+            false,
+            &["- base/analyse: rho=0.42 [exploratory]"],
+        ),
+    );
+    let ds = diagnostics(&p);
+    assert_eq!(with_rule(&ds, "study.section-empty").len(), 1);
+}
+
+#[test] // rq-a779cb78
+fn reproduces_outside_replication_mode() {
+    let p = TempProject::new();
+    write_study(
+        &p,
+        &Doc::draft("study-a")
+            .front("reproduces: \"x-vs-docking@0123456789abcdef0123456789abcdef01234567\""),
+    );
+    let ds = diagnostics(&p);
+    assert_eq!(with_rule(&ds, "study.reproduces-unexpected").len(), 1);
+}
+
+#[test] // rq-ac7347b1
+fn reproduces_with_a_malformed_pin() {
+    let p = TempProject::new();
+    write_study(&p, &Doc::draft("x-vs-docking"));
+    write_study(
+        &p,
+        &Doc::draft("rerun-score")
+            .mode("replication")
+            .front("reproduces: \"x-vs-docking@main\""),
+    );
+    let ds = diagnostics(&p);
+    assert_eq!(with_rule(&ds, "study.reproduces-invalid").len(), 1);
+}
+
+#[test] // rq-ae6ec611
+fn a_retrospective_study_without_stages_reports_hand_written_results() {
+    let p = TempProject::new();
+    write_study(
+        &p,
+        &Doc::draft("old-benchmark")
+            .mode("retrospective")
+            .set("Result", "- base/score: rho=0.5 [post hoc]"),
+    );
+    report(p.root(), "old-benchmark").unwrap();
+    let study =
+        parse_study_text("old-benchmark", "STUDY.md", &p.study_text("old-benchmark")).unwrap();
+    assert_eq!(study.status(), Some(Status::Reported));
+    let ds = diagnostics(&p);
+    let found = with_rule(&ds, "study.result-unverified");
+    assert_eq!(found.len(), 1);
+    assert_eq!(found[0].severity, Severity::Legacy);
+}
+
+#[test] // rq-b096fd9e
+fn pre_specified_is_impossible_in_exploratory_mode() {
+    let p = TempProject::new();
+    write_study(
+        &p,
+        &Doc::draft("outlier-dig")
+            .mode("exploratory")
+            .status("reported")
+            .set("Result", "- base/analyse: rho=0.42 [pre-specified]"),
+    );
+    p.write(
+        "studies/outlier-dig/SUMMARY.md",
+        &summary_text(
+            "outlier-dig",
+            false,
+            &["- base/analyse: rho=0.42 [pre-specified]"],
+        ),
+    );
+    let ds = diagnostics(&p);
+    assert_eq!(with_rule(&ds, "study.tag-mode-invalid").len(), 1);
+}
+
+#[test] // rq-ed56d920
+fn migrate_leaves_a_current_study_untouched() {
+    let p = TempProject::new();
+    write_study(&p, &Doc::draft("study-a"));
+    let before = p.study_text("study-a");
+    assert!(!migrate(p.root(), "study-a").unwrap());
+    assert_eq!(p.study_text("study-a"), before);
+}
+
+#[test] // rq-2a055696
+fn an_exploration_record_without_pre_registration_is_an_error() {
+    let p = TempProject::new();
+    write_study(&p, &Doc::draft("outlier-dig").mode("exploratory"));
+    p.write("studies/outlier-dig/EXPLORATION.md", "# Exploration\n");
+    let ds = diagnostics(&p);
+    assert_eq!(with_rule(&ds, "study.exploration-unexpected").len(), 1);
+}
+
+#[test] // rq-a88d8dfe
+fn exploration_needs_a_mode_that_pre_registers() {
+    let p = TempProject::new();
+    write_study(&p, &Doc::draft("outlier-dig").mode("exploratory"));
+    let err = record_exploration(p.root(), "outlier-dig").unwrap_err();
+    assert!(matches!(err, StudyError::WrongMode { .. }));
+}
+
+#[test] // rq-d952ad20
+fn an_exploratory_study_cannot_declare_a_pre_specified_stage() {
+    let p = TempProject::new();
+    write_study(&p, &Doc::draft("outlier-dig").mode("exploratory"));
+    p.write(
+        "studies/outlier-dig/config/base.yaml",
+        "stages:\n  - name: score\n    run: sh score.sh\n    result: out.txt\n    epistemic: pre-specified\n",
+    );
+    let ds = pipeline_rules(&Project::new(p.root()));
+    assert!(
+        ds.iter().any(|d| d.rule == "pipeline.config-invalid"
+            && d.message.contains("epistemic: pre-specified")),
+        "{ds:#?}"
+    );
+}
+
+#[test] // rq-dd5fc8f7
+fn a_study_without_pre_registration_has_no_trial_inputs() {
+    let p = TempProject::new();
+    write_study(&p, &Doc::draft("outlier-dig").mode("exploratory"));
+    p.write(
+        "studies/outlier-dig/config/base.yaml",
+        "stages:\n  - name: score\n    run: sh score.sh\n    result: out.txt\n    trial: {params: {level: trial}}\n",
+    );
+    p.write(
+        "studies/outlier-dig/Snakefile",
+        &tophat::pipeline::stub("outlier-dig"),
+    );
+    let ds = pipeline_rules(&Project::new(p.root()));
+    assert!(
+        ds.iter().any(|d| d.rule == "pipeline.config-invalid"
+            && d.message.contains("`trial` is only allowed")),
+        "{ds:#?}"
+    );
 }
