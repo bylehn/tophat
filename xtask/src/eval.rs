@@ -435,8 +435,9 @@ fn agents(name: &str) -> Result<&'static str, String> {
         "claude-code" => Ok("claude"),
         "codex" => Ok("codex"),
         "opencode" => Ok("opencode"),
+        "vibe" => Ok("vibe"),
         other => Err(format!(
-            "unknown agent '{other}'; use claude-code, codex or opencode"
+            "unknown agent '{other}'; use claude-code, codex, opencode or vibe"
         )),
     }
 }
@@ -560,6 +561,9 @@ fn run_agent(
         }
         "opencode" => {
             command.args(["run", "--format", "json", prompt]);
+        }
+        "vibe" => {
+            command.args(["-p", prompt, "--output-format", "json"]);
         }
         _ => unreachable!("validated above"),
     }

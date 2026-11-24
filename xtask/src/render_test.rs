@@ -25,10 +25,11 @@ const SKILLS: [&str; 8] = [
 ];
 
 /// The agent adapter directories.
-const ADAPTER_DIRS: [(&str, &str); 3] = [
+const ADAPTER_DIRS: [(&str, &str); 4] = [
     ("claude-code", ".claude/skills"),
     ("codex", ".agents/skills"),
     ("opencode", ".opencode/skills"),
+    ("vibe", ".vibe/skills"),
 ];
 
 /// The files every rendered project has (rqm/template/project.md and container.md).

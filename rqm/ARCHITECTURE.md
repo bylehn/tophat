@@ -373,8 +373,8 @@ and never edits its frozen sections.
 ### Agent neutrality
 
 Canonical skills are written agent-neutrally in a managed directory. Each supported agent (Claude
-Code, Codex, OpenCode, …) gets thin adapters that point at the canonical skill. Skills must not depend
-on features unique to one agent.
+Code, Codex, OpenCode, Vibe) gets thin adapters that point at the canonical skill. Skills must not
+depend on features unique to one agent.
 
 ### Languages and environments
 

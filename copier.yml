@@ -73,6 +73,7 @@ agents:
     - claude-code
     - codex
     - opencode
+    - vibe
   default: [claude-code]
   validator: "{% if not agents %}Select at least one agent{% endif %}"
 

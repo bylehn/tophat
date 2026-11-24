@@ -1,0 +1,36 @@
+# TopHat-managed: Vibe configuration. `copier update` changes this file; put project conventions
+# in AGENTS.md instead. Each permission entry is a command prefix, so "bash: tophat stage qc *"
+# also denies "tophat stage qc-status". Deny lists can be evaded by wrapping a command; they are a
+# backstop to the hard rules in .tophat/managed/AGENTS.md, the CLI's refusal to run interactive
+# commands without a terminal, and a container without credentials.
+
+[permissions]
+deny = [
+  "bash: ssh *",
+  "bash: scp *",
+  "bash: sftp *",
+  "bash: rsync *",
+  "bash: sbatch *",
+  "bash: srun *",
+  "bash: salloc *",
+  "bash: git commit *",
+  "bash: git push *",
+  "bash: tophat study preregister *",
+  "bash: tophat stage qc *",
+  "bash: tophat tools sync *",
+]
+allow = [
+  "bash: tophat status *",
+  "bash: tophat check *",
+  "bash: tophat question tree *",
+  "bash: tophat pipeline keys *",
+  "bash: tophat tools list *",
+  "bash: tophat data lineage *",
+  "bash: tophat data used-by *",
+  "bash: tophat stage instructions *",
+]
+ask = ["bash: *"]
+
+# The container check runs before every prompt: an agent started on the host refuses to work.
+[hooks]
+pre_prompt = ["bash .tophat/managed/hooks/check-container.sh"]

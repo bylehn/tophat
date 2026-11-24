@@ -11,3 +11,4 @@ codex_sha256_aarch64: 94eb707605ec2646b2e05b7edf7c4e7b3ccf02b16237c34ae9beb8cfb7
 opencode_version: 1.19.5
 opencode_sha256_x86_64: 588310a336fa3b9df36b3f0225b26f679d453efaad0cf3d66c3651ef3ec1647a
 opencode_sha256_aarch64: fae5be262d693b7c5e562856cc473e59e741772936db0c0600ac0d5ed5bd088b
+vibe_version: 3.1.4

@@ -4961,6 +4961,18 @@
     "title": "No license is written by default",
     "type": "scenario"
   },
+  "rq-6411c721": {
+    "decl": "Scenario: Personal skills are mounted for Vibe",
+    "file": "template/container",
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Personal skills are mounted for Vibe",
+    "type": "scenario"
+  },
   "rq-6422ad44": {
     "decl": "Scenario: Links are not frozen",
     "file": "study/format",
@@ -5668,6 +5680,18 @@
     ],
     "title": "CI",
     "type": "section"
+  },
+  "rq-72d4d9f0": {
+    "decl": "Scenario: The Vibe adapter names Vibe's own mechanisms",
+    "file": "template/agents",
+    "refs": [
+      {
+        "file": "tests/skills.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "The Vibe adapter names Vibe's own mechanisms",
+    "type": "scenario"
   },
   "rq-731766dd": {
     "decl": "### Hash cache",
@@ -8238,7 +8262,7 @@
     "type": "scenario"
   },
   "rq-a70e0d9d": {
-    "decl": "# Feature: Codex and OpenCode",
+    "decl": "# Feature: Codex, OpenCode and Vibe",
     "file": "template/agents",
     "refs": [
       {
@@ -8246,7 +8270,7 @@
         "kind": "code"
       }
     ],
-    "title": "Feature: Codex and OpenCode",
+    "title": "Feature: Codex, OpenCode and Vibe",
     "type": "file"
   },
   "rq-a7314db6": {
@@ -9116,6 +9140,18 @@
       }
     ],
     "title": "A wrong split tag is a mismatch",
+    "type": "scenario"
+  },
+  "rq-b6502b86": {
+    "decl": "Scenario: Personal instructions are mounted for Vibe",
+    "file": "template/container",
+    "refs": [
+      {
+        "file": "tests/launcher.rs",
+        "kind": "code"
+      }
+    ],
+    "title": "Personal instructions are mounted for Vibe",
     "type": "scenario"
   },
   "rq-b6cac057": {

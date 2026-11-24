@@ -591,12 +591,17 @@ fn codex_rules(text: &str) -> Vec<(String, String)> {
 }
 
 #[test] // rq-1652b11e rq-a70e0d9d
-fn codex_and_opencode_adapters_are_written_for_every_selected_agent() {
+fn codex_opencode_and_vibe_adapters_are_written_for_every_selected_agent() {
     if !common::copier() {
         return;
     }
-    let p = Project::render(&[("agents", "[claude-code, codex, opencode]")]);
-    for dir in [".claude/skills", ".agents/skills", ".opencode/skills"] {
+    let p = Project::render(&[("agents", "[claude-code, codex, opencode, vibe]")]);
+    for dir in [
+        ".claude/skills",
+        ".agents/skills",
+        ".opencode/skills",
+        ".vibe/skills",
+    ] {
         for skill in SKILLS {
             assert!(
                 p.root().join(format!("{dir}/{skill}/SKILL.md")).is_file(),
@@ -616,9 +621,16 @@ fn no_adapters_for_unselected_agents() {
     if !common::copier() {
         return;
     }
-    let p = Project::render(&[("agents", "[codex]")]);
-    assert!(p.root().join(".agents/skills/th-study/SKILL.md").is_file());
-    for rel in [".claude", ".opencode", "CLAUDE.md", "opencode.json"] {
+    let p = Project::render(&[("agents", "[vibe]")]);
+    assert!(p.root().join(".vibe/skills/th-study/SKILL.md").is_file());
+    for rel in [
+        ".claude",
+        ".agents",
+        ".codex",
+        ".opencode",
+        "CLAUDE.md",
+        "opencode.json",
+    ] {
         assert!(!p.root().join(rel).exists(), "{rel} exists");
     }
 }
@@ -628,7 +640,7 @@ fn remote_access_and_human_only_commands_are_denied_for_every_agent() {
     if !common::copier() {
         return;
     }
-    let p = Project::render(&[("agents", "[claude-code, codex, opencode]")]);
+    let p = Project::render(&[("agents", "[claude-code, codex, opencode, vibe]")]);
     let claude_deny = claude_prefixes(&p, "deny");
     let claude_allow = claude_prefixes(&p, "allow");
 
@@ -666,6 +678,50 @@ fn remote_access_and_human_only_commands_are_denied_for_every_agent() {
     opencode_allow.sort();
     assert_eq!(opencode_deny, claude_deny);
     assert_eq!(opencode_allow, claude_allow);
+
+    // Vibe's config.toml lists the same command prefixes as "bash: <command> *" entries.
+    let vibe_rules = vibe_permissions(&p.read(".vibe/config.toml"));
+    let mut vibe_deny: Vec<String> = vibe_rules
+        .iter()
+        .filter(|(_, d)| d == "deny")
+        .map(|(c, _)| c.clone())
+        .collect();
+    let mut vibe_allow: Vec<String> = vibe_rules
+        .iter()
+        .filter(|(_, d)| d == "allow")
+        .map(|(c, _)| c.clone())
+        .collect();
+    vibe_deny.sort();
+    vibe_allow.sort();
+    assert_eq!(vibe_deny, claude_deny);
+    assert_eq!(vibe_allow, claude_allow);
+}
+
+/// The `(command prefix, decision)` pairs of a Vibe config.toml permissions block.
+fn vibe_permissions(text: &str) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    let mut decision = "";
+    for line in text.lines() {
+        let line = line.trim();
+        if line.ends_with("= [") {
+            decision = line.trim_end_matches("= [").trim();
+            continue;
+        }
+        if line == "]" {
+            decision = "";
+            continue;
+        }
+        let entry = line.trim_matches([',', '"']);
+        if !decision.is_empty()
+            && let Some(command) = entry.strip_prefix("bash: ")
+        {
+            out.push((
+                command.trim_end_matches(" *").to_string(),
+                decision.to_string(),
+            ));
+        }
+    }
+    out
 }
 
 #[test] // rq-d4406141
@@ -673,7 +729,7 @@ fn the_container_check_runs_before_every_prompt() {
     if !common::copier() {
         return;
     }
-    let p = Project::render(&[("agents", "[codex, opencode]")]);
+    let p = Project::render(&[("agents", "[codex, opencode, vibe]")]);
     assert!(
         p.read(".codex/hooks.json")
             .contains(".tophat/managed/hooks/check-container.sh")
@@ -682,6 +738,29 @@ fn the_container_check_runs_before_every_prompt() {
         p.read(".opencode/plugins/check-container.js")
             .contains(".tophat/managed/hooks/check-container.sh")
     );
+    assert!(
+        p.read(".vibe/config.toml")
+            .contains(".tophat/managed/hooks/check-container.sh")
+    );
+}
+
+#[test] // rq-72d4d9f0
+fn the_vibe_adapter_names_vibes_own_mechanisms() {
+    if !common::copier() {
+        return;
+    }
+    let p = Project::render(&[("agents", "[vibe]")]);
+    for skill in SKILLS {
+        let adapter = p.read(&format!(".vibe/skills/{skill}/SKILL.md"));
+        assert!(
+            adapter.contains("ask a concise textual question"),
+            "{skill} adapter does not say how to ask the human:\n{adapter}"
+        );
+        assert!(
+            adapter.contains(&format!("`/{skill}`")),
+            "{skill} adapter does not show the /th-<name> invocation:\n{adapter}"
+        );
+    }
 }
 
 // --- Worked example -----------------------------------------------------------------------------
