@@ -632,7 +632,7 @@ fn end_to_end_run_produces_sealed_outputs_and_a_summary() {
     }
     let summary = env.read("studies/x-vs-docking/SUMMARY.md");
     assert!(
-        summary.contains("- base/analyse: n=2 level=b3lyp\n- pbe/analyse: n=2 level=pbe\n"),
+        summary.contains("- base/analyse: n=2 level=b3lyp [pre-specified]\n- pbe/analyse: n=2 level=pbe [pre-specified]\n"),
         "{summary}"
     );
     assert!(summary.contains("dirty: false"));
@@ -1469,6 +1469,8 @@ fn trial_runs_have_no_check_job() {
 #[test] // rq-856a5dc4
 fn editing_a_test_re_runs_only_the_check_job() {
     let env = Env::new();
+    env.verdict("base", "pass");
+    env.verdict("pbe", "pass");
     write_test(&env, "#!/bin/sh\nexit 0\n", true);
     env.commit();
     let Some((ok, log)) = env.snakemake(&[]) else {
