@@ -439,7 +439,7 @@ fn check_initial_state(project: &Path, tophat: &Path) -> Result<(), String> {
         return Err(format!("`tophat status` failed: {}", text(&status.stderr)));
     }
     let summary = text(&status.stdout);
-    if !summary.contains("0 open, 0 answered, 0 dropped") {
+    if !summary.contains("0 open, 0 emerged, 0 answered, 0 dropped") {
         return Err(format!("`tophat status` printed {summary:?}"));
     }
     Ok(())
