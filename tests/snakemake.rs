@@ -17,10 +17,12 @@ use chrono::NaiveDate;
 use tophat::check::{Diagnostic, Project, Severity};
 use tophat::data::{Origin, RegisterOptions, add, retire};
 use tophat::pipeline::{
-    KeyContext, PipelineError, ProvenanceRecord, SealRequest, Verdict, check_record_dir,
-    compute_keys, generate_rules, items_of, load_pipeline, pipeline_rules, qc, qc_status, seal,
-    stub, summarize, test_key, write_summary,
+    KeyContext, PipelineError, ProvenanceRecord, SealRequest, Verdict, compute_keys,
+    generate_rules, items_of, load_pipeline, pipeline_rules, qc, qc_status, seal, stub, summarize,
+    write_summary,
 };
+#[cfg(unix)]
+use tophat::pipeline::{check_record_dir, test_key};
 use tophat::study::{Console, Mode, StudyError, new_study, parse_summary, report};
 
 // --- Fixtures -------------------------------------------------------------------------------

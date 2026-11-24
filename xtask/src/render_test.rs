@@ -125,6 +125,9 @@ fn tophat_binary(repo_root: &Path) -> Result<PathBuf, String> {
         }
     }
     candidates.push(repo_root.join("target/debug/tophat"));
+    if let Some(exe) = option_env!("CARGO_BIN_EXE_tophat") {
+        candidates.push(PathBuf::from(exe));
+    }
     if let Some(path) = candidates.iter().find(|path| path.is_file()) {
         Ok(path.clone())
     } else {
