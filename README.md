@@ -12,7 +12,7 @@
 ---
 
 TopHat sets up a research project in which you work with an AI coding agent, such as Claude Code,
-Codex or OpenCode.
+Codex, OpenCode or Mistral's Vibe.
 You talk to the agent about what you want to find out; it writes and runs the analysis. TopHat
 makes sure that you, not the agent, make the scientific decisions, and that every result can be
 traced back to how it was made.
@@ -38,7 +38,7 @@ works in any scientific field and any language your analysis needs (Python, R, J
 ### A study, step by step
 
 A TopHat project starts from your research questions. Each question is answered by one or more
-**studies**, and every study follows the same path:
+**studies**, and every study follows a path from question to report:
 
 1. **Ask.** You and the agent write down the question in `PROJECT.md`.
 2. **Explore.** You look at the data together in a scratch area, to learn what is worth measuring.
@@ -52,6 +52,16 @@ A TopHat project starts from your research questions. Each question is answered 
    whether an output looks right, the pipeline stops until you have looked.
 6. **Report.** The result is filled in from the recorded outputs, the decision rule is applied as
    written, and you write the interpretation.
+
+Every study carries a **mode**, recorded when it is created, that says how it produces knowledge.
+A `confirmatory` study follows the path above: the question, primary endpoint, decision rule and
+scenarios are pre-registered before any result is seen. An `exploratory` study investigates a
+pattern or anomaly and reports labelled findings; there is nothing to pre-register. A `descriptive`
+study publishes a measurement or dataset, a `methods` study evaluates a method against stated
+success criteria, and a `replication` study re-runs another study at a pinned commit and compares
+the outputs; each of these pre-registers what its mode locks. A `retrospective` study adopts past
+work, written up after the fact, and is never pre-registered. Every result is labelled with its
+epistemic status — pre-specified, exploratory or post hoc — wherever it is cited.
 
 Here is the decision rule of the worked example that ships with every project:
 
@@ -183,8 +193,8 @@ both. TopHat does not yet automate working this way, which means:
   cluster)
 - [Copier](https://copier.readthedocs.io/) 9 or later, which creates the project
 - An account with a supported agent: [Claude Code](https://claude.com/claude-code),
-  [Codex](https://github.com/openai/codex) or [OpenCode](https://opencode.ai). You choose which
-  agents to install when Copier asks.
+  [Codex](https://github.com/openai/codex), [OpenCode](https://opencode.ai) or
+  [Vibe](https://mistral.ai/vibe). You choose which agents to install when Copier asks.
 
 ### Create a project
 
@@ -192,7 +202,7 @@ both. TopHat does not yet automate working this way, which means:
 copier copy gh:bylehn/tophat my-project
 cd my-project
 ./th.sh       # builds and enters the container (the first build takes a few minutes)
-claude        # start your chosen agent: claude, codex or opencode
+claude        # start your chosen agent: claude, codex, opencode or vibe
 ```
 
 Copier asks for the project's name, description and author, which agents to install, any languages
@@ -206,8 +216,8 @@ Linux `tophat` binary built from this repository before running `./th.sh`.
 From here on you mostly talk to the agent, in your own words. It knows the TopHat workflow and
 runs the `tophat` commands itself. Some ways to begin:
 
-- *"What should I do next?"* It looks at the project and suggests the next step. In Claude Code and
-  OpenCode, `/th-next` does the same; in Codex, `$th-next`.
+- *"What should I do next?"* It looks at the project and suggests the next step. In Claude Code,
+  OpenCode and Vibe, `/th-next` does the same; in Codex, `$th-next`.
 - *"Help me write the main question of this project."*
 - *"My measurements are in /data/lab/2026-run. Register them."*
 - *"I want to test whether method X beats docking on this benchmark. Let's plan a study."*
