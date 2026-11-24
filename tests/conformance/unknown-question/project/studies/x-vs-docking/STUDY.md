@@ -5,6 +5,7 @@ question: q-deadbeef
 status: draft
 visibility: public
 variants: [base]
+mode: confirmatory
 ---
 
 # x-vs-docking

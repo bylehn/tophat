@@ -8,6 +8,7 @@ variants: [base]
 preregistered:
   date: "2026-01-01"
   frozen_hash: "sha256:56880d85c7b1cd10e8367f26cb3b7437fd330c399f186ac8273f7864c51c57bb"
+mode: confirmatory
 ---
 
 # producer
@@ -46,7 +47,7 @@ analyse
 
 ## Result
 
-- base/analyse: n=2 level=b3f
+- base/analyse: n=2 level=b3f [pre-specified]
 
 ## Interpretation
 

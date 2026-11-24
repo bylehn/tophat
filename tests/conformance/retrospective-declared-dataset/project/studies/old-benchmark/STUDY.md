@@ -2,9 +2,10 @@
 study: old-benchmark
 title: "old-benchmark"
 question: q-1a2b3c4d
-status: retrospective
+status: draft
 visibility: public
 variants: [base]
+mode: retrospective
 ---
 
 # old-benchmark

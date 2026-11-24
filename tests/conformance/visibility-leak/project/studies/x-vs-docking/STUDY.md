@@ -5,6 +5,7 @@ question: q-1a2b3c4d
 status: draft
 visibility: public
 variants: [base]
+mode: confirmatory
 ---
 
 # x-vs-docking
