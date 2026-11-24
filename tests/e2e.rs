@@ -353,6 +353,20 @@ fn the_example_study_runs_end_to_end() {
         study_md.replace("question: q-00000000", &format!("question: {question}")),
     )
     .unwrap();
+    // Copier does not preserve the executable bit, so make the example's test files executable
+    // the way a human would after copying them.
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        for entry in fs::read_dir(env.study("tests")).unwrap() {
+            let path = entry.unwrap().path();
+            if path.is_file() {
+                let mut perm = fs::metadata(&path).unwrap().permissions();
+                perm.set_mode(perm.mode() | 0o111);
+                fs::set_permissions(&path, perm).unwrap();
+            }
+        }
+    }
 
     // 2. A fixture tool providing the Julia scoring script, at two commits, with a
     //    project-supplied environment; `score` becomes a tool stage pinned to the first.
