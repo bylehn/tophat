@@ -159,6 +159,14 @@ impl Env {
             "echo \"n=$(ls \"$1\"/items | wc -l)\" > \"$2/result.txt\"\n",
         );
         env.write("studies/x-vs-docking/tests/test_s1.sh", "# th:S1\n");
+        // `tophat study test` refuses non-executable test files, so record 100755 like a real
+        // checkout of the script would.
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let path = env.root().join("studies/x-vs-docking/tests/test_s1.sh");
+            fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+        }
         env.git(&["init", "-q"]);
         env.commit();
         env

@@ -113,15 +113,27 @@ impl Drop for Temp {
     }
 }
 
-/// The `tophat` binary beside this one, built from the workspace.
+/// The `tophat` binary built from the workspace. The test executable may live in
+/// `target/debug/deps` or in `target/debug/build/<pkg>/<hash>/out` depending on the runner, so
+/// walk up to the `target` directory and look beside it; `CARGO_BIN_EXE_tophat` is only set for
+/// the test crate itself, not for this library, so it cannot be relied on here.
 fn tophat_binary(repo_root: &Path) -> Result<PathBuf, String> {
     let mut candidates = Vec::new();
-    if let Ok(exe) = std::env::current_exe()
-        && let Some(dir) = exe.parent()
-    {
-        candidates.push(dir.join("tophat"));
-        if let Some(parent) = dir.parent() {
-            candidates.push(parent.join("tophat"));
+    if let Ok(exe) = std::env::current_exe() {
+        let mut dir = exe.parent();
+        while let Some(d) = dir {
+            if d.file_name() == Some(OsStr::new("target")) {
+                candidates.push(d.join("debug").join("tophat"));
+                candidates.push(d.join("release").join("tophat"));
+                break;
+            }
+            dir = d.parent();
+        }
+        if let Some(dir) = exe.parent() {
+            candidates.push(dir.join("tophat"));
+            if let Some(parent) = dir.parent() {
+                candidates.push(parent.join("tophat"));
+            }
         }
     }
     candidates.push(repo_root.join("target/debug/tophat"));
