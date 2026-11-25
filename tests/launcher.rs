@@ -1299,6 +1299,16 @@ fn has_gpu_options(session: &str) -> bool {
     .any(|option| session.contains(option))
 }
 
+/// True when the dry-run command line holds `flag` and `value` as two consecutive words, so an
+/// option pair smuggled in as one argument containing a space cannot pass.
+fn has_option_pair(session: &str, flag: &str, value: &str) -> bool {
+    session
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .windows(2)
+        .any(|w| w == [flag, value])
+}
+
 #[test] // rq-7fb69dfd
 fn gpu_detection_from_simulated_hosts() {
     if !common::copier() {
@@ -1363,7 +1373,10 @@ fn an_nvidia_gpu_is_passed_through() {
     let env = Env::new();
     let out = gpu_launch(&env, None, "nvidia", None);
     let session = env.session(&out);
-    assert!(session.contains("--device nvidia.com/gpu=all"), "{session}");
+    assert!(
+        has_option_pair(&session, "--device", "nvidia.com/gpu=all"),
+        "{session}"
+    );
 }
 
 #[test] // rq-abe5670e
@@ -1374,12 +1387,15 @@ fn an_amd_gpu_is_passed_through() {
     let env = Env::new();
     let out = gpu_launch(&env, None, "amd", None);
     let session = env.session(&out);
-    for option in [
-        "--device /dev/kfd",
-        "--device /dev/dri",
-        "--group-add keep-groups",
+    for (flag, value) in [
+        ("--device", "/dev/kfd"),
+        ("--device", "/dev/dri"),
+        ("--group-add", "keep-groups"),
     ] {
-        assert!(session.contains(option), "{option} missing from {session}");
+        assert!(
+            has_option_pair(&session, flag, value),
+            "{flag} {value} missing from {session}"
+        );
     }
 }
 
