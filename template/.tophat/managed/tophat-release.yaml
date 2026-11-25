@@ -1,6 +1,6 @@
 # TopHat-managed: the tophat release this project uses. `copier update` changes it.
-version: 0.1.0
-url: https://github.com/bylehn/tophat/releases/download/v0.1.0
+version: 0.2.0
+url: https://github.com/bylehn/tophat/releases/download/v0.2.0
 sha256:
-  x86_64-unknown-linux-musl: 7f440eb5fddc507942050f95b73b9cd4d4cb716d457f20a7c9b2ddd24bd28d9b
-  aarch64-unknown-linux-musl: c6a4504e7439cafe76e2f4cc3bb9af10b6f8630d3f6a0ec46f647a001ee1d639
+  x86_64-unknown-linux-musl: 5fb8f2d8588904a250fcef3e5f655e7a50b66de0941bc570e6f078ecd4041e39
+  aarch64-unknown-linux-musl: 00e1029bd0b2db6e68ab559d7005fc8bf9c05c592986a28619846ee455a21fe1
