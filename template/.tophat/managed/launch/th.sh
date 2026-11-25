@@ -151,14 +151,15 @@ prepare_gpu() {
       if [ "$runtime" = apptainer ]; then
         gpu_options=--nv
       else
-        gpu_options="--device nvidia.com/gpu=all"
+        # One option per line: the command is split on newlines, not spaces.
+        gpu_options=$(printf '%s\n' --device nvidia.com/gpu=all)
       fi
       ;;
     amd)
       if [ "$runtime" = apptainer ]; then
         gpu_options=--rocm
       else
-        gpu_options="--device /dev/kfd --device /dev/dri --group-add keep-groups"
+        gpu_options=$(printf '%s\n' --device /dev/kfd --device /dev/dri --group-add keep-groups)
       fi
       ;;
     nvidia-no-cdi)
