@@ -2,7 +2,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --job-name=md
 #
-# External job for stage `md` of study `external-study`, key sk-37ff266a46ae1a06, written by tophat 0.2.0.
+# External job for stage `md` of study `external-study`, key sk-37ff266a46ae1a06, written by tophat 0.2.1.
 # You may edit the #SBATCH lines above. Any other change is detected when the folder returns.
 # README.md has the steps.
 
