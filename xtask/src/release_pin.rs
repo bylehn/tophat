@@ -34,14 +34,40 @@ fn sha256(path: &Path) -> Result<String, String> {
         .collect())
 }
 
-/// The version a runnable binary reports, or `None` when it does not run here.
+/// Whether a start failure means the binary cannot run on this host at all: `ENOEXEC` on
+/// Unix, i.e. it was built for another architecture.
+#[cfg(unix)]
+fn cannot_run_here(e: &std::io::Error) -> bool {
+    const ENOEXEC: i32 = 8;
+    e.raw_os_error() == Some(ENOEXEC)
+}
+
+#[cfg(not(unix))]
+fn cannot_run_here(_e: &std::io::Error) -> bool {
+    false
+}
+
+/// The version a runnable binary reports, or `None` when it cannot be read here. A binary for
+/// another architecture never starts (`ENOEXEC`) and is skipped by design; any other failure
+/// is usually transient — a loaded runner can refuse to fork (`EAGAIN`) or kill the child —
+/// so it is retried briefly before giving up.
 fn reported_version(path: &Path) -> Option<String> {
-    let output = Command::new(path).arg("--version").output().ok()?;
-    if !output.status.success() {
-        return None;
+    for attempt in 0..3 {
+        let version = match Command::new(path).arg("--version").output() {
+            Ok(output) if output.status.success() => {
+                let text = String::from_utf8_lossy(&output.stdout);
+                text.split_whitespace().last().map(str::to_string)
+            }
+            Ok(_) => None,
+            Err(e) if cannot_run_here(&e) => return None,
+            Err(_) => None,
+        };
+        if version.is_some() || attempt == 2 {
+            return version;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(100));
     }
-    let text = String::from_utf8_lossy(&output.stdout);
-    text.split_whitespace().last().map(str::to_string)
+    None
 }
 
 /// Replaces `path` atomically when the content differs.
